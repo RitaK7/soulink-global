@@ -1,3 +1,4 @@
+
 /* public/style.css */
 
 /* ─── GLOBAL ─────────────────────────────────────────────────────── */
@@ -158,25 +159,89 @@ footer.navigation a {
 }
 
 /* ─── RESPONSIVE ───────────────────────────────────────────────── */
+
 @media (max-width: 768px) {
   .main-nav {
+    padding: 1rem;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
   }
+
+  .main-nav .logo {
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
   .main-nav ul {
     flex-direction: column;
-    gap: 0.8rem;
-    margin-top: 0.8rem;
+    width: 100%;
+    gap: 0.5rem;
   }
+
+  .main-nav ul li {
+    width: 100%;
+  }
+
+  .main-nav ul li a {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    background: #004d4d;
+    border-radius: 6px;
+    justify-content: center;
+  }
+
+  .auth-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 1rem;
+  }
+
+  .auth-buttons a.btn-outline {
+    width: 100%;
+    text-align: center;
+    padding: 0.6rem 1rem;
+  }
+
   .photo-gallery img {
     flex: 1 1 100%;
     max-width: 100%;
   }
+
+  .buttons {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .buttons .btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
-/* Extra small padding on very narrow phones */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
 @media (max-width: 400px) {
   .container {
     padding: 0 1rem;
+  }
+  .card {
+    padding: 1rem;
+  }
+  .card h2 {
+    font-size: 1.4rem;
+  }
+  .card h3 {
+    font-size: 1.1rem;
+  }
+  .buttons .btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
   }
 }
