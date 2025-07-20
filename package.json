@@ -1,17 +1,7 @@
 {
-  "name": "soulink-ui",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "name": "soulink-ui-clean",
+  "version": "1.0.0",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "devDependencies": {
-    "vite": "^6.3.5"
-  },
-  "dependencies": {
-    "firebase": "^11.9.1"
+    "vercel-build": "echo \"Skipping build – serving static files\""
   }
 }
