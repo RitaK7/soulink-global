@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Page Not Found – Soulink</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="include.js" defer></script>
+  <style>
+    main {
+      text-align: center;
+      padding: 5rem 1rem;
+    }
+    h1 {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+    p {
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    a.button {
+      display: inline-block;
+      padding: 0.8rem 2rem;
+      font-size: 1rem;
+      background-color: #333;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main>
+    <h1>404</h1>
+    <p>Oops! The page you're looking for doesn't exist.</p>
+    <a class="button" href="home.html">Go to Home</a>
+    <br /><br />
+    <a class="button" href="quiz.html">Take the Soul Quiz</a>
+  </main>
+
+<script>
+// Firebase compat auth (or adapt to your setup)
+firebase.auth().onAuthStateChanged(user => {
+  document.getElementById('sign-in').style.display  = user ? 'none' : 'inline-block';
+  document.getElementById('sign-out').style.display = user ? 'inline-block' : 'none';
+});
+document.getElementById('sign-in').addEventListener('click', () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider).catch(console.error);
+});
+document.getElementById('sign-out').addEventListener('click', () => {
+  firebase.auth().signOut();
+});
+</script>
+
+
+  <!-- HEADER include + Firebase Auth -->
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_APP.firebaseapp.com",
+      projectId: "YOUR_APP",
+      storageBucket: "YOUR_APP.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    fetch('header.html')
+      .then(r => r.text())
+      .then(html => {
+        document.getElementById('site-header').innerHTML = html;
+        const btnSignUp = document.getElementById('sign-up');
+        const btnLogin  = document.getElementById('login');
+        const btnSignOut = document.getElementById('sign-out');
+        firebase.auth().onAuthStateChanged(user => {
+          if (user) {
+            btnSignUp.style.display = 'none';
+            btnLogin .style.display = 'none';
+            btnSignOut.style.display = 'inline-block';
+          } else {
+            btnSignUp.style.display = 'inline-block';
+            btnLogin .style.display = 'inline-block';
+            btnSignOut.style.display = 'none';
+          }
+        });
+        btnSignUp.addEventListener('click', ()=> window.location.href='signup.html');
+        btnLogin .addEventListener('click', ()=> window.location.href='login.html');
+        btnSignOut.addEventListener('click', ()=> firebase.auth().signOut());
+      });
+  </script>
+</body>
+</html>

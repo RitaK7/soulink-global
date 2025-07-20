@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Soulink Sign Up</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #003c43;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .signup-container {
+      background: #014c51;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.4);
+      width: 100%;
+      max-width: 400px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 6px;
+    }
+    button {
+      background-color: #00c896;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .message {
+      margin-top: 10px;
+      text-align: center;
+    }
+    a {
+      color: #00ffcc;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+<script>
+  if (!sessionStorage.getItem('soulinkBetaAccess')) {
+    window.location.href = 'beta-login.html';
+  }
+</script>
+  <div class="signup-container">
+    <h2>Create Your Soul Account</h2>
+    <form id="signupForm">
+      <input type="text" id="fullName" placeholder="Full Name" required />
+      <input type="email" id="email" placeholder="Email Address" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
+      <label>
+        <input type="checkbox" id="terms" />
+        I agree to the <a href="/terms.html" target="_blank">Terms & Conditions</a>
+      </label>
+      <button type="submit">Create Account</button>
+    </form>
+    <div id="message" class="message"></div>
+  </div>
+
+  <!-- Nuoroda į tavo Vite modulį -->
+  <script type="module" src="/src/signup.js"></script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+/* public/style.css */
+
+/* ─── GLOBAL ─────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #003c43;
+  color: #eefefe;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ─── LINKS ──────────────────────────────────────────────────────── */
+a {
+  color: #99ffe5;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* ─── CONTAINER ─────────────────────────────────────────────────── */
+.container {
+  width: 90%;
+  max-width: 900px;
+  margin: 2rem auto;
+}
+
+/* ─── NAVIGATION ────────────────────────────────────────────────── */
+.main-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  background-color: #002c2f;
+  padding: 1rem 2rem;
+}
+.main-nav .logo {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #2ae49d;
+  margin-right: auto;
+}
+.main-nav ul {
+  display: flex;
+  list-style: none;
+  gap: 1.5rem;
+}
+.main-nav ul li a {
+  display: flex;
+  align-items: center;
+  color: #eefefe;
+  font-weight: 500;
+}
+.main-nav .auth-buttons {
+  margin-left: auto;
+}
+.auth-buttons a.btn-outline {
+  margin-left: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #00ffd0;
+  border-radius: 8px;
+  background: transparent;
+  color: #00ffd0;
+  transition: background 0.3s;
+}
+.auth-buttons a.btn-outline:hover {
+  background: #00ffd0;
+  color: #003c43;
+}
+
+/* ─── CARD ──────────────────────────────────────────────────────── */
+.card {
+  background: #004d4d;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 15px rgba(42, 228, 157, 0.4);
+  overflow: hidden;
+}
+.card.highlight {
+  box-shadow: 0 0 25px rgba(42, 228, 157, 0.6);
+}
+.card h2,
+.card h3 {
+  color: #2ae49d;
+  margin-bottom: 0.75rem;
+}
+.card h2 { font-size: 1.6rem; }
+.card h3 { font-size: 1.3rem; }
+.card p {
+  margin-bottom: 0.6rem;
+}
+
+/* ─── PHOTO GALLERY ─────────────────────────────────────────────── */
+.photo-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.photo-gallery img {
+  flex: 1 1 30%;
+  max-width: 30%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 0 8px rgba(42, 228, 157, 0.6);
+}
+
+/* ─── BUTTON GROUP & PREV/NEXT ──────────────────────────────────── */
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+.buttons .btn {
+  background: #2ae49d;
+  color: #003c43;
+  padding: 0.8rem 1.2rem;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: opacity 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.buttons .btn:hover {
+  opacity: 0.9;
+}
+
+/* ─── PREMIUM NOTE ──────────────────────────────────────────────── */
+.premium-note {
+  text-align: center;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-top: 1rem;
+}
+.premium-note a {
+  color: #99ffe5;
+  font-weight: bold;
+}
+
+/* ─── FOOTER PREV/NEXT ──────────────────────────────────────────── */
+footer.navigation {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+footer.navigation a {
+  color: #2ae49d;
+}
+
+/* ─── RESPONSIVE ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .main-nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .main-nav ul {
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-top: 0.8rem;
+  }
+  .photo-gallery img {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+}
+
+/* Extra small padding on very narrow phones */
+@media (max-width: 400px) {
+  .container {
+    padding: 0 1rem;
+  }
+}
