@@ -1,59 +1,235 @@
-<!-- my-soul.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Soulink – My Soul</title>
+  <style>
+    :root {
+      --bg: #003c43;
+      --card-bg: #004d4d;
+      --text-light: #e0ffff;
+      --glow: rgba(42,228,157,0.6);
+      --radius: 16px;
+      --max-width: 800px;
+    }
+    * { box-sizing: border-box; margin:0; padding:0; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--text-light);
+      line-height: 1.5;
+    }
+    a { color: var(--text-light); text-decoration: underline; }
+    .container {
+      max-width: var(--max-width);
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
 
-  <!-- Main stylesheet -->
-  <link rel="stylesheet" href="style.css" />
+    /* NAVIGATION */
+    .nav-bar {
+      display: grid;
+      grid-template: auto / auto 1fr auto;
+      align-items: center;
+      background: #002f32;
+      padding: 1rem 2rem;
+      position: relative;
+    }
+    .logo { font-size:1.8rem; font-weight:bold; color:#2ae49d; }
+    .nav-links {
+      display: flex; gap:1rem; justify-content:center;
+      list-style:none;
+    }
+    .nav-links a {
+      padding:.4rem .6rem; border-radius:8px;
+      transition: background .3s, box-shadow .3s;
+    }
+    .nav-links a[aria-current="page"] {
+      background: rgba(42,228,157,0.2);
+      box-shadow: 0 0 8px var(--glow);
+    }
+    .auth-buttons {
+      display:flex; gap:.5rem;
+    }
+    .auth-buttons button {
+      padding:.4rem .8rem;
+      border:1px solid var(--text-light);
+      background:transparent; border-radius:8px;
+      color: var(--text-light); cursor: pointer;
+      transition: background .3s, color .3s, box-shadow .3s;
+    }
+    .auth-buttons .signup { border-color:#2ae49d; }
+    .auth-buttons button:hover {
+      background: var(--text-light);
+      color: var(--bg);
+      box-shadow: 0 0 8px var(--glow);
+    }
+    .hamburger {
+      display:none; background:none; border:none;
+      font-size:1.5rem; color:var(--text-light);
+      cursor:pointer;
+    }
+    @media (max-width:768px) {
+      .nav-bar { grid-template: auto / 1fr auto; }
+      .nav-links, .auth-buttons { display:none; }
+      .hamburger { display:block; }
+      .nav-links.open, .auth-buttons.open {
+        display:flex; flex-direction:column;
+        background:#002f32;
+        position:absolute; top:100%; left:0; right:0;
+        padding:1rem 2rem;
+        gap:1rem;
+      }
+    }
 
-  <!-- Bootstrap Icons -->
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-  />
+    /* CARDS & CONTENT */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 0 12px var(--glow);
+      opacity: 0; transform: translateY(20px);
+      animation: fadeUp 0.6s forwards;
+    }
+    @keyframes fadeUp {
+      to { opacity:1; transform: translateY(0); }
+    }
+    .card h2, .card h3 {
+      margin-bottom: .5rem;
+    }
+    .subtitle { color:#cde; margin-top:.4rem; }
+    .avatar {
+      width: 80px; height: 80px;
+      border-radius:50%; background:#005f5e;
+      display:inline-flex; align-items:center; justify-content:center;
+      font-size:2rem; margin-right:1rem;
+      box-shadow: 0 0 8px var(--glow);
+    }
+    .header-row {
+      display:flex; align-items:center; margin-bottom:1rem;
+    }
+    .badge {
+      margin-left:auto; font-weight:bold; font-size:0.9rem;
+    }
+    .badge.free { color:#99ffd0; }
+    .badge.premium { color:gold; }
+
+  </style>
 </head>
 <body>
 
-  <!-- Top nav -->
-  <header class="main-nav">
+  <header class="nav-bar">
     <div class="logo">Soulink</div>
-    <button class="nav-toggle" id="navToggle"><i class="bi bi-list"></i></button>
+    <button class="hamburger" id="navToggle">☰</button>
     <nav>
       <ul class="nav-links">
         <li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
-        <li><a href="quiz.html"><i class="bi bi-question-circle"></i>Quiz</a></li>
-        <li><a href="my-soul.html" class="active"><i class="bi bi-person"></i>My Soul</a></li>
-        <li><a href="edit-profile.html"><i class="bi bi-pencil-square"></i>Edit Profile</a></li>
-        <li><a href="soul-chart.html"><i class="bi bi-bar-chart-line"></i>Soul Chart</a></li>
-        <li><a href="soul-coach.html"><i class="bi bi-chat-dots"></i>Soul Coach</a></li>
-        <li><a href="match.html"><i class="bi bi-heart"></i>Match</a></li>
-        <li><a href="friends.html"><i class="bi bi-people"></i>Friends</a></li>
-        <li><a href="result.html"><i class="bi bi-bar-chart"></i>Results</a></li>
+        <li><a href="quiz.html">Quiz</a></li>
+        <li><a href="my-soul.html" aria-current="page">My Soul</a></li>
+        <li><a href="edit-profile.html">Edit Profile</a></li>
+        <li><a href="soul-chart.html">Soul Chart</a></li>
+        <li><a href="soul-coach.html">Soul Coach</a></li>
+        <li><a href="match.html">Match</a></li>
+        <li><a href="friends.html">Friends</a></li>
+        <li><a href="results.html">Results</a></li>
       </ul>
       <div class="auth-buttons">
-        <a href="login.html" class="btn-outline">Log In</a>
-        <a href="signup.html" class="btn-outline">Sign Up</a>
+        <button>Log In</button>
+        <button class="signup">Sign Up</button>
       </div>
     </nav>
   </header>
 
-  <!-- Main content -->
-  <main class="container">
-    <div id="soul-profile"><!-- content injected by my-soul.js --></div>
+  <main class="container" id="soul-container">
+    <!-- cards will be injected here -->
   </main>
 
-  <!-- Fallback footer navigation -->
-  <footer class="site-footer">
-    <div class="navigation">
-      <a href="quiz.html">← Quiz</a>
-      <a href="edit-profile.html">Edit Profile</a>
-      <a href="soul-coach.html">Soul Coach →</a>
-    </div>
-  </footer>
+  <script>
+  (function(){
+    const data = JSON.parse(localStorage.getItem('soulQuiz')||'{}');
+    const plan = localStorage.getItem('plan')||'free';
 
-  <script src="my-soul.js" defer></script>
+    function z(v){ return v || 'Unknown'; }
+    function fmt(arr){ return (Array.isArray(arr) && arr.length) ? arr.join(', ') : 'None'; }
+    function mkCard(html){ 
+      const s=document.createElement('section');
+      s.className='card'; s.innerHTML=html; return s;
+    }
+
+    const mount = document.getElementById('soul-container');
+    if(!data.name){
+      mount.appendChild(mkCard(`<p>No quiz data. <a href="quiz.html">Take the Quiz</a>.</p>`));
+      return;
+    }
+
+    // Avatar (initials fallback)
+    const initials = data.name.split(' ').map(n=>n[0]).join('').toUpperCase();
+    const avatarHTML = `<div class="avatar">${initials}</div>`;
+
+    // Plan badge
+    const badge = plan==='premium'
+      ? `<span class="badge premium">💎 Premium</span>`
+      : `<span class="badge free">🔓 Free</span>`;
+
+    // Welcome card
+    mount.appendChild(mkCard(`
+      <div class="header-row">
+        ${avatarHTML}
+        <div>
+          <h2>Welcome, ${z(data.name)}!</h2>
+          <p class="subtitle">Your Soul at a Glance</p>
+        </div>
+        ${badge}
+      </div>
+    `));
+
+    // Personal Info
+    mount.appendChild(mkCard(`
+      <h3>💖 Personal Info</h3>
+      <p><strong>Birth Date:</strong> ${z(data.birthdate)}</p>
+      <p><strong>Country:</strong> ${z(data.country)}</p>
+      <p><strong>Height:</strong> ${z(data.height)} cm</p>
+      <p><strong>Weight:</strong> ${z(data.weight)} kg</p>
+      <p><strong>Connection:</strong> ${z(data.connectionType)}</p>
+    `));
+
+    // Hobbies & Values
+    mount.appendChild(mkCard(`
+      <h3>🔮 Hobbies & Values</h3>
+      <p><strong>Hobbies:</strong> ${fmt(data.hobbies)}</p>
+      <p><strong>Values:</strong> ${fmt(data.values)}</p>
+    `));
+
+    // Boundaries & Essence
+    mount.appendChild(mkCard(`
+      <h3>🪷 Essence</h3>
+      <p><strong>Unacceptable:</strong> ${z(data.unacceptable)}</p>
+      <p><strong>Soul Message:</strong> ${z(data.about)}</p>
+    `));
+
+    // Zodiac & Life Path (data may already include these)
+    mount.appendChild(mkCard(`
+      <h3>✨ Western Zodiac</h3>
+      <p>${z(data.westernZodiac)}</p>
+    `));
+    mount.appendChild(mkCard(`
+      <h3>🐉 Chinese Zodiac</h3>
+      <p>${z(data.chineseZodiac)}</p>
+    `));
+    mount.appendChild(mkCard(`
+      <h3>🧬 Life Path Number</h3>
+      <p>${z(data.lifePath)}</p>
+    `));
+
+  })();
+
+  // Mobile nav toggle
+  document.getElementById('navToggle').addEventListener('click', ()=>{
+    document.querySelector('.nav-links').classList.toggle('open');
+    document.querySelector('.auth-buttons').classList.toggle('open');
+  });
+  </script>
 </body>
 </html>
