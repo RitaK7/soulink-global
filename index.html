@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,129 +6,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Welcome to Soulink</title>
   <link rel="stylesheet" href="style.css" />
-  <style>
-    /* ─── GLOBAL ─────────────────────────────────────────────────── */
-    body {
-      background-color: #003c43;
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    a { color: inherit; text-decoration: none; }
-
-    /* ─── NAVBAR ─────────────────────────────────────────────────── */
-    header {
-      background: #032f35;
-      padding: 1rem 2rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .nav-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    .nav-logo {
-      font-size: 1.8rem;
-      font-weight: bold;
-      color: #00ffd0;
-    }
-    nav a {
-      margin-left: 1.5rem;
-      font-weight: 500;
-      transition: color .2s;
-    }
-    nav a:hover {
-      color: #00ffd0;
-    }
-
-    /* ─── CONTENT ────────────────────────────────────────────────── */
-    .container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 2rem;
-    }
-    .welcome-card {
-      background-color: #032f35;
-      padding: 3rem;
-      border-radius: 2rem;
-      box-shadow: 0 0 40px #00ffcc33;
-      text-align: center;
-      max-width: 700px;
-    }
-    .welcome-card h1 {
-      font-size: 2.8rem;
-      color: #00ffd0;
-      margin-bottom: 1.5rem;
-    }
-    .welcome-card p {
-      font-size: 1.3rem;
-      line-height: 1.8;
-    }
-    .start-btn {
-      display: inline-block;
-      margin-top: 2rem;
-      padding: 1rem 2rem;
-      font-size: 1.2rem;
-      background: #00ffd0;
-      color: #003c43;
-      border: none;
-      border-radius: 2rem;
-      cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 0 10px #00ffd0aa;
-      transition: transform 0.2s;
-    }
-    .start-btn:hover {
-      transform: scale(1.05);
-    }
-
-    /* ─── FOOTER ─────────────────────────────────────────────────── */
-    footer {
-      text-align: center;
-      padding: 1rem;
-      font-size: 0.9rem;
-      background-color: transparent;
-      color: #ddd;
-    }
-  </style>
 </head>
 <body>
-  <!-- Redirect jei nėra prisijungęs -->
   <script>
     if (!sessionStorage.getItem('soulinkBetaAccess')) {
       window.location.href = 'beta-login.html';
     }
   </script>
 
-  <!-- NAVBAR -->
-  <header>
-    <div class="nav-wrap">
-      <div class="nav-logo">Soulink</div>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="quiz.html">Quiz</a>
-        <a href="result.html">Result</a>
-        <a href="my-soul.html">My Soul</a>
-        <a href="edit-profile.html">Edit Profile</a>
-        <a href="soul-chart.html">Soul Chart</a>
-        <a href="soul-coach.html">Soul Coach</a>
-        <a href="match.html">Match</a>
-        <a href="friends.html">Friends</a>
-      </nav>
-    </div>
+  <!-- NAVBAR with Mobile Support -->
+  <header class="main-nav">
+    <div class="logo">Soulink</div>
+    <button class="nav-toggle" onclick="document.querySelector('header').classList.toggle('active')">☰</button>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="quiz.html">Quiz</a></li>
+      <li><a href="result.html">Result</a></li>
+      <li><a href="my-soul.html">My Soul</a></li>
+      <li><a href="edit-profile.html">Edit Profile</a></li>
+      <li><a href="soul-chart.html">Soul Chart</a></li>
+      <li><a href="soul-coach.html">Soul Coach</a></li>
+      <li><a href="match.html">Match</a></li>
+      <li><a href="friends.html">Friends</a></li>
+    </ul>
   </header>
 
-  <!-- PAGRINDINIS TURINYS -->
+  <!-- CONTENT -->
   <div class="container">
     <div class="welcome-card">
       <h1>Welcome to Soulink 🌍💫</h1>
@@ -140,7 +44,6 @@
     </div>
   </div>
 
-  <!-- FOOTER -->
   <footer>
     © 2025 Soulink.global | All rights reserved
   </footer>
