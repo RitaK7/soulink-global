@@ -1,5 +1,5 @@
 
-// my-soul.js – Soul Profile with Insights & Navigation
+// my-soul.js – Soul Profile with Insights & Navigation (fixed Life Path)
 
 window.addEventListener('DOMContentLoaded', () => {
   const data = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
@@ -8,6 +8,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById(id);
     if (el) el.textContent = value || "Unknown";
   }
+
+  const lifePath = data.lifePath || data.lifePathNumber || data.life_path || null;
 
   fill("name", data.name);
   fill("birthdate", data.birthdate);
@@ -22,7 +24,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   fill("westernZodiac", data.westernZodiac);
   fill("chineseZodiac", data.chineseZodiac);
-  fill("lifePath", data.lifePath);
+  fill("lifePath", lifePath);
 
   // Avatar
   const avatar = document.getElementById("avatar");
@@ -91,5 +93,5 @@ window.addEventListener('DOMContentLoaded', () => {
   fill("loveLangDesc", loveLangMap[data.loveLanguage]);
   fill("westernDesc", westernMap[data.westernZodiac]);
   fill("chineseDesc", chineseMap[data.chineseZodiac]);
-  fill("lifePathDesc", lifePathMap[data.lifePath]);
+  fill("lifePathDesc", lifePathMap[lifePath]);
 });
