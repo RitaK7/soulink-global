@@ -14,7 +14,7 @@ const westernMap = {
   Capricorn:    "Disciplined and ambitious, steadily climbing to success.",
   Aquarius:     "Innovative and humanitarian, valuing freedom and progress.",
   Pisces:       "Empathetic dreamer, guided by emotion and artistic vision."
-};  // :contentReference[oaicite:0]{index=0}
+};
 
 const loveLangMap = {
   "Words of Affirmation": "You flourish on heartfelt compliments and spoken appreciation.",
@@ -22,7 +22,7 @@ const loveLangMap = {
   "Receiving Gifts":      "Tangible tokens show how much you’re cherished.",
   "Quality Time":         "Undivided attention and shared moments fill your soul.",
   "Physical Touch":       "Touch is your language of connection and security."
-};  // :contentReference[oaicite:1]{index=1}
+};
 
 const chineseMap = {
   Rat:     "Quick-witted and resourceful, often finding success in creative ways.",
@@ -37,7 +37,7 @@ const chineseMap = {
   Rooster: "Observant and hardworking, proud and courageous.",
   Dog:     "Loyal and honest, devoted protector and friend.",
   Pig:     "Generous and compassionate, valuing comfort and company."
-};  // :contentReference[oaicite:2]{index=2}
+};
 
 const lifePathMap = {
   1:  "Natural-born leader, independent and ambitious.",
@@ -51,7 +51,7 @@ const lifePathMap = {
   9:  "Humanitarian, generous and compassionate.",
   11: "Master Teacher: high ideals and deep intuition.",
   22: "Master Builder: turning dreams into reality."
-};  // :contentReference[oaicite:3]{index=3}
+};
 
 // ─── UTILS ────────────────────────────────────────────────────────
 function getWesternZodiac(dob) {
@@ -69,22 +69,21 @@ function getWesternZodiac(dob) {
   if ((m===1&&day>=20)||(m===2&&day<=18)) return "Aquarius";
   if ((m===2&&day>=19)||(m===3&&day<=20)) return "Pisces";
   return "Unknown";
-}  // :contentReference[oaicite:4]{index=4}
+}
 
 function getChineseZodiac(dob) {
   const year = new Date(dob).getFullYear();
-  const idx  = (year - 1900) % 12;
-  return ["Rat","Ox","Tiger","Rabbit","Dragon","Snake","Horse","Goat","Monkey","Rooster","Dog","Pig"][idx] || "Unknown";
-}  // :contentReference[oaicite:5]{index=5}
+  return ["Rat","Ox","Tiger","Rabbit","Dragon","Snake","Horse","Goat","Monkey","Rooster","Dog","Pig"][(year - 1900) % 12] || "Unknown";
+}
 
 function getLifePathNumber(dob) {
-  let sum = dob.replace(/[^0-9]/g,'').split('').map(Number)
-               .reduce((a,b)=>a+b,0);
+  let nums = dob.replace(/[^0-9]/g,'').split('').map(Number);
+  let sum = nums.reduce((a,b)=>a+b,0);
   while (sum > 9 && ![11,22].includes(sum)) {
     sum = sum.toString().split('').map(Number).reduce((a,b)=>a+b,0);
   }
   return sum;
-}  // :contentReference[oaicite:6]{index=6}
+}
 
 // ─── RENDER & NAV TOGGLE ─────────────────────────────────────────
 window.addEventListener("DOMContentLoaded", ()=> {
@@ -97,13 +96,13 @@ window.addEventListener("DOMContentLoaded", ()=> {
     return;
   }
 
+  // derive zodiacs & life path
   const west = getWesternZodiac(quiz.birthdate);
   const chi  = getChineseZodiac(quiz.birthdate);
   const life = getLifePathNumber(quiz.birthdate);
 
-  // Photos
-  const photos = [profile.photo1, profile.photo2, profile.photo3]
-    .filter(u => u && u.trim());
+  // photos gallery
+  const photos = [profile.photo1, profile.photo2, profile.photo3].filter(u=>u);
   const gallery = photos.length
     ? `<section class="card">
          <h3>🖼️ Your Photos</h3>
@@ -112,6 +111,9 @@ window.addEventListener("DOMContentLoaded", ()=> {
          </div>
        </section>`
     : "";
+
+  // format hobbies & values
+  const formatList = arr => (arr||[]).length ? (arr||[]).join(", ") : "None selected";
 
   mount.innerHTML = `
     ${gallery}
@@ -124,7 +126,14 @@ window.addEventListener("DOMContentLoaded", ()=> {
     <section class="card">
       <h3>📚 Personal Info</h3>
       <p><strong>Birth Date:</strong> ${quiz.birthdate}</p>
-      <p><strong>About Me:</strong> ${profile.bio||"Unknown"}</p>
+      <p><strong>Country:</strong> ${quiz.country || "Unknown"}</p>
+      <p><strong>Height:</strong> ${quiz.height ? quiz.height + " cm" : "N/A"}</p>
+      <p><strong>Weight:</strong> ${quiz.weight ? quiz.weight + " kg" : "N/A"}</p>
+      <p><strong>Connection Type:</strong> ${quiz.connectionType || "N/A"}</p>
+      <p><strong>Hobbies:</strong> ${formatList(quiz.hobbies)}</p>
+      <p><strong>Values:</strong> ${formatList(quiz.values)}</p>
+      <p><strong>Unacceptable:</strong> ${quiz.unacceptable || "None specified"}</p>
+      <p><strong>About Me:</strong> ${quiz.about || "None specified"}</p>
     </section>
 
     <section class="card">
@@ -166,9 +175,7 @@ window.addEventListener("DOMContentLoaded", ()=> {
   `;
 
   // Mobile nav toggle
-  const navToggle = document.getElementById('navToggle');
-  const header    = document.querySelector('.main-nav');
-  navToggle.addEventListener('click', () => {
-    header.classList.toggle('active');
-  });
+  const navToggle = document.getElementById("navToggle");
+  const header    = document.querySelector(".main-nav");
+  navToggle.addEventListener("click", ()=> header.classList.toggle("active"));
 });
