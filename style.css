@@ -76,12 +76,11 @@ a:hover {
 
 /* ─── CARD ──────────────────────────────────────────────────────── */
 .card {
-  background: #004d4d;
+  background-color: #004c4f;
+  padding: 20px;
+  margin-bottom: 20px;
   border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 0 15px rgba(42, 228, 157, 0.4);
-  overflow: hidden;
+  box-shadow: 0 0 10px rgba(153, 255, 229, 0.2);
 }
 .card.highlight {
   box-shadow: 0 0 25px rgba(42, 228, 157, 0.6);
