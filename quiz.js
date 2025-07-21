@@ -1,124 +1,33 @@
-// Apskaičiuoja Vakarų zodiako ženklą pagal gimimo datą
-function getWesternZodiac(d) {
-  const date = new Date(d);
-  const m = date.getMonth() + 1;
-  const day = date.getDate();
 
-  if ((m == 3 && day >= 21) || (m == 4 && day <= 19)) return 'Aries';
-  if ((m == 4 && day >= 20) || (m == 5 && day <= 20)) return 'Taurus';
-  if ((m == 5 && day >= 21) || (m == 6 && day <= 20)) return 'Gemini';
-  if ((m == 6 && day >= 21) || (m == 7 && day <= 22)) return 'Cancer';
-  if ((m == 7 && day >= 23) || (m == 8 && day <= 22)) return 'Leo';
-  if ((m == 8 && day >= 23) || (m == 9 && day <= 22)) return 'Virgo';
-  if ((m == 9 && day >= 23) || (m == 10 && day <= 22)) return 'Libra';
-  if ((m == 10 && day >= 23) || (m == 11 && day <= 21)) return 'Scorpio';
-  if ((m == 11 && day >= 22) || (m == 12 && day <= 21)) return 'Sagittarius';
-  if ((m == 12 && day >= 22) || (m == 1 && day <= 19)) return 'Capricorn';
-  if ((m == 1 && day >= 20) || (m == 2 && day <= 18)) return 'Aquarius';
-  if ((m == 2 && day >= 19) || (m == 3 && day <= 20)) return 'Pisces';
-  return '';
-}
+document.addEventListener("DOMContentLoaded", function () {
+  populateCountries();
 
-// Apskaičiuoja Kinijos zodiako ženklą pagal gimimo metus
-function getChineseZodiac(d) {
-  const year = new Date(d).getFullYear();
-  const animals = [
-    "Rat","Ox","Tiger","Rabbit","Dragon","Snake",
-    "Horse","Goat","Monkey","Rooster","Dog","Pig"
-  ];
-  return animals[(year - 1900) % 12];
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const countrySelect = document.getElementById('country');
-  const countries = [
-    "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Argentina", "Armenia", "Australia",
-    "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Belarus", "Belgium", "Belize",
-    "Benin", "Bhutan", "Bolivia", "Bosnia", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso",
-    "Burundi", "Cambodia", "Cameroon", "Canada", "Chad", "Chile", "China", "Colombia", "Costa Rica",
-    "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Dominican Republic", "Ecuador", "Egypt",
-    "El Salvador", "Estonia", "Ethiopia", "Fiji", "Finland", "France", "Georgia", "Germany", "Ghana",
-    "Greece", "Guatemala", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq",
-    "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kuwait",
-    "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein",
-    "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta",
-    "Mauritania", "Mexico", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique",
-    "Myanmar", "Namibia", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria",
-    "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palestine", "Panama", "Paraguay",
-    "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "San Marino",
-    "Saudi Arabia", "Senegal", "Serbia", "Singapore", "Slovakia", "Slovenia", "Somalia", "South Africa",
-    "South Korea", "Spain", "Sri Lanka", "Sudan", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan",
-    "Tanzania", "Thailand", "Togo", "Trinidad", "Tunisia", "Turkey", "Turkmenistan", "Uganda", "Ukraine",
-    "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Venezuela",
-    "Vietnam", "Yemen", "Zambia", "Zimbabwe"
-  ];
-  countries.forEach(c => {
-    const opt = document.createElement("option");
-    opt.value = c;
-    opt.text = c;
-    countrySelect.appendChild(opt);
-  });
-
-  const form = document.getElementById('quizForm');
-
-  // Perskaitome išsaugotus atsakymus (jei yra)
-  const saved = JSON.parse(localStorage.getItem('soulQuiz') || '{}');
-
-  // Atstatome kiekvieną lauką
-  for (const [key, value] of Object.entries(saved)) {
-    if (Array.isArray(value)) {
-      // Checkbox grupėms (hobbies, values)
-      value.forEach(v => {
-        const box = form.querySelector(`[name="${key}"][value="${v}"]`);
-        if (box) box.checked = true;
-      });
-    } else {
-      const el = form.querySelector(`[name="${key}"]`);
-      if (!el) continue;
-
-      if (el.type === 'radio') {
-        // Vienas iš radio mygtukų
-        const radio = form.querySelector(`[name="${key}"][value="${value}"]`);
-        if (radio) radio.checked = true;
-      } else {
-        // Text, date, number, select, textarea
-        el.value = value;
-      }
-    }
+  function populateCountries() {
+    const countries = [
+      "Select your country", "Afghanistan", "Argentina", "Australia", "Belgium", "Brazil",
+      "Canada", "Denmark", "France", "Germany", "India", "Italy", "Japan",
+      "Lithuania", "Netherlands", "Norway", "Poland", "Portugal", "Spain", "Sweden", "USA", "UK"
+    ];
+    const countrySelect = document.getElementById("country");
+    countries.forEach((country) => {
+      const option = document.createElement("option");
+      option.value = country;
+      option.text = country;
+      countrySelect.appendChild(option);
+    });
   }
-
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-
-    const data = {};
-    const formElements = form.querySelectorAll('input, select, textarea');
-    const checkboxGroups = ['hobbies', 'values'];
-
-    // Surenkame visų laukų reikšmes
-    formElements.forEach(el => {
-      if (!el.name) return;
-
-      if (el.type === 'checkbox') {
-        if (!data[el.name]) data[el.name] = [];
-        if (el.checked) data[el.name].push(el.value);
-      } else if (el.type === 'radio') {
-        if (el.checked) data[el.name] = el.value;
-      } else {
-        data[el.name] = el.value;
-      }
-    });
-
-    // Užtikriname, kad checkbox grupės visada būtų bent tušti masyvai
-    checkboxGroups.forEach(name => {
-      if (!data[name]) data[name] = [];
-    });
-
-    // Pridedame zodiako ženklus
-    data.zodiacSign = getWesternZodiac(data.birthdate);
-    data.chineseSign = getChineseZodiac(data.birthdate);
-
-    // Išsaugome ir nukreipiame
-    localStorage.setItem('soulQuiz', JSON.stringify(data));
-    window.location.href = 'my-soul.html';
-  });
 });
+
+function saveQuiz() {
+  const data = {
+    name: document.getElementById("name").value,
+    birthDate: document.getElementById("birthDate").value,
+    country: document.getElementById("country").value,
+    height: document.getElementById("height").value,
+    weight: document.getElementById("weight").value,
+    unacceptable: document.getElementById("unacceptable").value,
+    about: document.getElementById("about").value,
+  };
+  localStorage.setItem("soulQuiz", JSON.stringify(data));
+  window.location.href = "my-soul.html";
+}

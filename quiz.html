@@ -11,78 +11,81 @@
   <header class="main-nav">
     <div class="logo">Soulink</div>
     <nav>
-      <a href="index.html">Home</a>
+      <a href="home.html">Home</a>
       <a href="quiz.html" aria-current="page">Quiz</a>
       <a href="my-soul.html">My Soul</a>
       <a href="edit-profile.html">Edit Profile</a>
       <a href="soul-chart.html">Soul Chart</a>
       <a href="soul-coach.html">Soul Coach</a>
-      <a href="soulink-match.html">Match</a>
+      <a href="match.html">Match</a>
       <a href="friends.html">Friends</a>
       <a href="result.html">Results</a>
     </nav>
     <div class="auth-buttons">
-      <button onclick="location.href='login.html'">Log In</button>
-      <button onclick="location.href='signup.html'">Sign Up</button>
+      <button>Log In</button>
+      <button>Sign Up</button>
     </div>
   </header>
 
-  <main class="container">
+  <main class="quiz-container">
     <h1>🌈 Soul Compatibility Quiz</h1>
 
-    <div class="card">
+    <section class="quiz-card">
       <h2>Basic Info</h2>
-      <label>Name <input type="text" id="name"></label>
-      <label>Birth Date <input type="date" id="birthDate"></label>
-      <label>Country <select id="country"></select></label>
-      <label>Height (cm) <input type="number" id="height"></label>
-      <label>Weight (kg) <input type="number" id="weight"></label>
-    </div>
+      <label>Name <input type="text" id="name" /></label>
+      <label>Birth Date <input type="date" id="birthDate" /></label>
+      <label>Country
+        <select id="country"></select>
+      </label>
+      <label>Height (cm) <input type="number" id="height" /></label>
+      <label>Weight (kg) <input type="number" id="weight" /></label>
+    </section>
 
-    <div class="card">
+    <section class="quiz-card">
       <h2>Connection Type & Love Language</h2>
       <p>Type of Connection</p>
-      <label><input type="radio" name="connectionType" value="Romantic"> Romantic</label>
-      <label><input type="radio" name="connectionType" value="Friendship"> Friendship</label>
-      <label><input type="radio" name="connectionType" value="Both"> Both</label>
+      <label><input type="radio" name="connection" value="Romantic" /> Romantic</label>
+      <label><input type="radio" name="connection" value="Friendship" /> Friendship</label>
+      <label><input type="radio" name="connection" value="Both" /> Both</label>
 
       <p>Primary Love Language</p>
-      <label><input type="radio" name="loveLanguage" value="Words of Affirmation"> Words of Affirmation</label>
-      <label><input type="radio" name="loveLanguage" value="Acts of Service"> Acts of Service</label>
-      <label><input type="radio" name="loveLanguage" value="Receiving Gifts"> Receiving Gifts</label>
-      <label><input type="radio" name="loveLanguage" value="Quality Time"> Quality Time</label>
-      <label><input type="radio" name="loveLanguage" value="Physical Touch"> Physical Touch</label>
-    </div>
+      <label><input type="radio" name="loveLanguage" value="Words of Affirmation" /> Words of Affirmation</label>
+      <label><input type="radio" name="loveLanguage" value="Acts of Service" /> Acts of Service</label>
+      <label><input type="radio" name="loveLanguage" value="Receiving Gifts" /> Receiving Gifts</label>
+      <label><input type="radio" name="loveLanguage" value="Quality Time" /> Quality Time</label>
+      <label><input type="radio" name="loveLanguage" value="Physical Touch" /> Physical Touch</label>
+    </section>
 
-    <div class="card">
+    <section class="quiz-card">
       <h2>Hobbies, Values & More</h2>
       <p>Select Your Hobbies</p>
-      <label><input type="checkbox" value="Music" id="hobbyMusic"> Music</label>
-      <label><input type="checkbox" value="Sports" id="hobbySports"> Sports</label>
-      <label><input type="checkbox" value="Nature" id="hobbyNature"> Nature</label>
-      <label><input type="checkbox" value="Traveling" id="hobbyTraveling"> Traveling</label>
-      <label><input type="checkbox" value="Reading" id="hobbyReading"> Reading</label>
+      <label><input type="checkbox" value="Music" /> Music</label>
+      <label><input type="checkbox" value="Sports" /> Sports</label>
+      <label><input type="checkbox" value="Nature" /> Nature</label>
+      <label><input type="checkbox" value="Traveling" /> Traveling</label>
+      <label><input type="checkbox" value="Reading" /> Reading</label>
 
       <p>Values Most Important to You</p>
-      <label><input type="checkbox" value="Love" id="valueLove"> Love</label>
-      <label><input type="checkbox" value="Freedom" id="valueFreedom"> Freedom</label>
-      <label><input type="checkbox" value="Growth" id="valueGrowth"> Growth</label>
-      <label><input type="checkbox" value="Adventure" id="valueAdventure"> Adventure</label>
+      <label><input type="checkbox" value="Love" /> Love</label>
+      <label><input type="checkbox" value="Freedom" /> Freedom</label>
+      <label><input type="checkbox" value="Growth" /> Growth</label>
+      <label><input type="checkbox" value="Adventure" /> Adventure</label>
 
-      <p>What Is Unacceptable in Relationships?</p>
-      <textarea id="dealbreakers" placeholder="e.g. dishonesty, control..."></textarea>
+      <label>What Is Unacceptable in Relationships?
+        <textarea id="unacceptable"></textarea>
+      </label>
 
-      <p>Tell Us More About Yourself</p>
-      <textarea id="about" placeholder="Your story, lifestyle, intentions..."></textarea>
+      <label>Tell Us More About Yourself
+        <textarea id="about"></textarea>
+      </label>
+    </section>
+
+    <div class="quiz-actions">
+      <button onclick="saveQuiz()">See Results ➲</button>
     </div>
-
-    <button onclick="submitQuiz()">See Results ➲</button>
   </main>
 
-  <footer>
-    <p>© 2025 soulink.global</p>
-  </footer>
-
+  <footer class="footer">© 2025 soulink.global</footer>
   <script src="quiz.js"></script>
 </body>
 </html>
