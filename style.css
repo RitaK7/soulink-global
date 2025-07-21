@@ -16,10 +16,17 @@ a:hover { text-decoration: underline; }
 .main-nav {
   display: flex; align-items: center; flex-wrap: wrap;
   background-color: #002c2f; padding: 1rem 2rem;
+  position: relative;
 }
 .main-nav .logo {
   font-size: 1.8rem; font-weight: bold;
   color: #2ae49d; margin-right: auto;
+}
+.nav-toggle { 
+  display: none; 
+  background: none; border: none; 
+  color: #00ffd0; font-size: 1.8rem; 
+  cursor: pointer; 
 }
 .nav-links { display: flex; gap: 1.5rem; list-style: none; }
 .nav-links a {
@@ -34,7 +41,7 @@ a:hover { text-decoration: underline; }
   box-shadow: 0 0 8px rgba(42,228,157,0.6);
 }
 .auth-buttons {
-  margin-left: auto; display: flex; gap: 0.5rem;
+  display: flex; gap: 0.5rem; margin-left: auto;
 }
 .btn-outline {
   padding: 0.4rem 0.8rem; border:1px solid #00ffd0;
@@ -44,7 +51,6 @@ a:hover { text-decoration: underline; }
 .btn-outline:hover {
   background: #00ffd0; color: #003c43;
 }
-.nav-toggle { display:none; background:none; border:none; color:#00ffd0; font-size:1.8rem; cursor:pointer; }
 
 /* ─── CONTAINER ────────────────────────────────────────────────── */
 .container { width:90%; max-width:900px; margin:2rem auto; }
@@ -75,7 +81,11 @@ a:hover { text-decoration: underline; }
   transition: box-shadow 0.2s, border-color 0.2s;
   appearance:none;
 }
-.card select { padding-right:2.5rem; background-image:url("data:image/svg+xml;charset=UTF-8,<svg fill='%23eefefe' height='10' viewBox='0 0 10 6' width='10' xmlns='http://www.w3.org/2000/svg'><path d='M0 0l5 6 5-6z'/></svg>"); background-repeat:no-repeat; background-position:right 0.8rem center; }
+.card select {
+  padding-right:2.5rem;
+  background-image:url("data:image/svg+xml;charset=UTF-8,<svg fill='%23eefefe' height='10' viewBox='0 0 10 6' width='10' xmlns='http://www.w3.org/2000/svg'><path d='M0 0l5 6 5-6z'/></svg>");
+  background-repeat:no-repeat; background-position:right 0.8rem center;
+}
 .card input:focus,
 .card select:focus,
 .card textarea:focus {
@@ -111,8 +121,11 @@ a:hover { text-decoration: underline; }
 
 /* ─── RESPONSIVE ──────────────────────────────────────────────── */
 @media (max-width:768px) {
-  .nav-toggle { display:block; margin-left:auto; }
-  .nav-links, .auth-buttons { display:none; flex-direction:column; width:100%; margin-top:1rem; }
+  .nav-toggle { display:block; }
+  .nav-links, .auth-buttons {
+    display:none; flex-direction:column; width:100%;
+    background: #002c2f; padding:1rem 2rem;
+  }
   .main-nav.active .nav-links,
   .main-nav.active .auth-buttons { display:flex; }
   .cards { grid-template-columns:1fr; }

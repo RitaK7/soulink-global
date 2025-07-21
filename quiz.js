@@ -1,5 +1,7 @@
 // quiz.js
-// (logic unchanged; minor formatting)
+// 1) Quiz logic unchanged
+// 2) Added mobile nav toggle at the bottom
+
 function getWesternZodiac(d) {
   const m = d.getMonth()+1, day = d.getDate();
   if (m==1 && day>=20 || m==2 && day<=18) return 'Aquarius';
@@ -23,13 +25,17 @@ function getChineseZodiac(d) {
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('quizForm');
   const saved = JSON.parse(localStorage.getItem('soulQuiz')||'{}');
-
+  // restore
   for (let key in saved) {
     const el = form.elements[key];
     if (!el) continue;
-    if (el.type==='radio' || el.type==='checkbox') {
+    if (el.type==='radio'||el.type==='checkbox') {
       Array.from(el.length? el : [el]).forEach(inp => {
-        inp.checked = Array.isArray(saved[key]) && saved[key].includes(inp.value);
+        if (Array.isArray(saved[key])) {
+          inp.checked = saved[key].includes(inp.value);
+        } else {
+          inp.checked = inp.value === saved[key];
+        }
       });
     } else {
       el.value = saved[key];
@@ -56,5 +62,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     localStorage.setItem('soulQuiz', JSON.stringify(data));
     location.href = 'my-soul.html';
+  });
+
+  // Mobile nav toggle
+  const navToggle = document.getElementById('navToggle');
+  const header = document.querySelector('.main-nav');
+  navToggle.addEventListener('click', () => {
+    header.classList.toggle('active');
   });
 });
