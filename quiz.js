@@ -87,6 +87,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // Pridedame zodiako ženklus
     data.zodiacSign = getWesternZodiac(data.birthdate);
     data.chineseSign = getChineseZodiac(data.birthdate);
+    // Apskaičiuoja Vakarų zodiako ženklą
+function getWesternZodiac(d) { /* … */ }
+
+// Apskaičiuoja Kinijos zodiako ženklą
+function getChineseZodiac(d) { /* … */ }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('quizForm');
+  const saved = JSON.parse(localStorage.getItem('soulQuiz') || '{}');
+  // … restore inputs …
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const data = {};
+    // … collect inputs, add zodiac …
+    localStorage.setItem('soulQuiz', JSON.stringify(data));
+    window.location.href = 'my-soul.html';
+  });
+});
 
     // Išsaugome ir nukreipiame
     localStorage.setItem('soulQuiz', JSON.stringify(data));
