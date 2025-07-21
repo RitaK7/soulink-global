@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,9 +11,7 @@
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .card {
-      animation: fadeIn 0.8s ease both;
-    }
+    .card { animation: fadeIn 0.8s ease both; }
     .avatar {
       width: 60px;
       height: 60px;
@@ -36,6 +35,24 @@
       border-radius: var(--radius);
       box-shadow: 0 0 12px var(--glow);
       margin-bottom: 2rem;
+    }
+    .navigation-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2rem;
+    }
+    .navigation-buttons a {
+      padding: 0.6rem 1.2rem;
+      border: 1px solid #2ae49d;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #2ae49d;
+      font-weight: bold;
+      transition: background 0.3s, color 0.3s;
+    }
+    .navigation-buttons a:hover {
+      background: #2ae49d;
+      color: #003c43;
     }
   </style>
 </head>
@@ -76,8 +93,8 @@
         <h3>💖 Personal Info</h3>
         <p><strong>Birth Date:</strong> <span id="birthdate"></span></p>
         <p><strong>Country:</strong> <span id="country"></span></p>
-        <p><strong>Height:</strong> <span id="height"></span> cm</p>
-        <p><strong>Weight:</strong> <span id="weight"></span> kg</p>
+        <p><strong>Height:</strong> <span id="height"></span></p>
+        <p><strong>Weight:</strong> <span id="weight"></span></p>
         <p><strong>Connection:</strong> <span id="connection"></span></p>
       </div>
 
@@ -95,18 +112,26 @@
 
       <div class="card">
         <h3>✨ Western Zodiac</h3>
-        <p id="westernZodiac"></p>
+        <p><strong><span id="westernZodiac"></span></strong></p>
+        <p id="westernDesc"></p>
       </div>
 
       <div class="card">
         <h3>🐍 Chinese Zodiac</h3>
-        <p id="chineseZodiac"></p>
+        <p><strong><span id="chineseZodiac"></span></strong></p>
+        <p id="chineseDesc"></p>
       </div>
 
       <div class="card">
         <h3>🔮 Life Path Number</h3>
-        <p id="lifePath"></p>
+        <p><strong><span id="lifePath"></span></strong></p>
+        <p id="lifePathDesc"></p>
       </div>
+    </div>
+
+    <div class="navigation-buttons">
+      <a href="quiz.html">← Back to Quiz</a>
+      <a href="soul-coach.html">Go to Soul Coach →</a>
     </div>
   </main>
 
