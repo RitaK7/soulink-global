@@ -1,58 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Soulink – Soul Compatibility Quiz</title>
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css"/>
-
+  <link rel="stylesheet" href="style.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <script>
-    // Redirect if not logged into beta
-    if (!sessionStorage.getItem('soulinkBetaAccess') &&
-        !location.pathname.endsWith('beta-login.html')) {
-      window.location.href = 'beta-login.html';
+    // redirect if not in beta
+    if (!sessionStorage.getItem('soulinkBetaAccess') && !location.pathname.endsWith('beta-login.html')) {
+      location.href = 'beta-login.html';
     }
   </script>
 </head>
 <body>
-  <!-- HEADER -->
-  <header class="main-nav">
+  <!-- NAVBAR -->
+  <header class="navbar">
     <div class="logo">Soulink</div>
-    <button class="nav-toggle" id="navToggle"><i class="bi bi-list"></i></button>
     <nav>
-      <ul>
-        <li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
-        <li><a href="quiz.html" class="active"><i class="bi bi-question-circle"></i>Quiz</a></li>
-        <li><a href="my-soul.html"><i class="bi bi-person"></i>My Soul</a></li>
-        <li><a href="edit-profile.html"><i class="bi bi-pencil-square"></i>Edit Profile</a></li>
-        <li><a href="soul-chart.html"><i class="bi bi-graph-up"></i>Soul Chart</a></li>
-        <li><a href="soul-coach.html"><i class="bi bi-chat-dots"></i>Soul Coach</a></li>
-        <li><a href="soulink-match.html"><i class="bi bi-heart"></i>Match</a></li>
-        <li><a href="friends.html"><i class="bi bi-people"></i>Friends</a></li>
-        <li><a href="result.html"><i class="bi bi-bar-chart-line"></i>Results</a></li>
-      </ul>
+      <a href="index.html"><i class="bi bi-house"></i> Home</a>
+      <a href="quiz.html" aria-current="page"><i class="bi bi-question-circle"></i> Quiz</a>
+      <a href="my-soul.html"><i class="bi bi-person"></i> My Soul</a>
+      <a href="edit-profile.html"><i class="bi bi-pencil-square"></i> Edit Profile</a>
+      <a href="soul-chart.html"><i class="bi bi-graph-up"></i> Soul Chart</a>
+      <a href="soul-coach.html"><i class="bi bi-chat-dots"></i> Soul Coach</a>
+      <a href="soulink-match.html"><i class="bi bi-heart"></i> Match</a>
+      <a href="friends.html"><i class="bi bi-people"></i> Friends</a>
+      <a href="result.html"><i class="bi bi-bar-chart-line"></i> Results</a>
     </nav>
-    <div class="auth-buttons">
-      <a class="btn-outline" href="login.html">Log In</a>
-      <a class="btn-outline" href="signup.html">Sign Up</a>
+    <div class="auth">
+      <a class="btn-outline" href="login.html">Log In</a>
+      <a class="btn-outline" href="signup.html">Sign Up</a>
     </div>
+    <button class="nav-toggle"><i class="bi bi-list"></i></button>
   </header>
 
-  <!-- MAIN QUIZ -->
+  <!-- QUIZ FORM -->
   <main class="container">
-    <h1>🌈 Soul Compatibility Quiz</h1>
+    <h1>🌈 Soul Compatibility Quiz</h1>
     <form id="quizForm" class="quiz-form">
 
-      <!-- 1. Basic Info -->
+      <!-- Basic Info -->
       <section class="card">
-        <h2>Basic Info</h2>
+        <h2>🧍‍♂️ Basic Info</h2>
         <label for="name">Name</label>
-        <input id="name" name="name" type="text" required/>
+        <input id="name" name="name" type="text" required>
 
-        <label for="birthdate">Birth Date</label>
-        <input id="birthdate" name="birthdate" type="date" required/>
+        <label for="birthdate">Birth Date</label>
+        <input id="birthdate" name="birthdate" type="date" required>
 
         <label for="country">Country</label>
         <select id="country" name="country" required>
@@ -60,114 +55,103 @@
         </select>
 
         <label for="height">Height (cm)</label>
-        <input id="height" name="height" type="number" min="0"/>
+        <input id="height" name="height" type="number" min="0">
 
         <label for="weight">Weight (kg)</label>
-        <input id="weight" name="weight" type="number" min="0"/>
+        <input id="weight" name="weight" type="number" min="0">
       </section>
 
-      <!-- 2. Connection & Love Language -->
+      <!-- Connection & Love Language -->
       <section class="card">
-        <h2>Connection Type & Love Language</h2>
+        <h2>❤️ Connection Type & Love Language</h2>
 
-        <div class="form-section">
+        <div class="group">
           <label>Type of Connection</label>
-          <div class="inline-group">
-            <label><input type="radio" name="connectionType" value="Romantic" required/> Romantic</label>
-            <label><input type="radio" name="connectionType" value="Friendship"/> Friendship</label>
-            <label><input type="radio" name="connectionType" value="Both"/> Both</label>
+          <div class="inline">
+            <label><input type="radio" name="connectionType" value="Romantic" required> Romantic</label>
+            <label><input type="radio" name="connectionType" value="Friendship"> Friendship</label>
+            <label><input type="radio" name="connectionType" value="Both"> Both</label>
           </div>
         </div>
 
-        <div class="form-section">
+        <div class="group">
           <label>Primary Love Language</label>
-          <div class="radio-group">
-            <label><input type="radio" name="loveLanguage" value="Words of Affirmation" required/> Words of Affirmation</label>
-            <small class="desc">Expressing love through kind, encouraging words.</small>
-
-            <label><input type="radio" name="loveLanguage" value="Acts of Service"/> Acts of Service</label>
-            <small class="desc">Helping actions to show care.</small>
-
-            <label><input type="radio" name="loveLanguage" value="Receiving Gifts"/> Receiving Gifts</label>
-            <small class="desc">Thoughtful presents & symbols.</small>
-
-            <label><input type="radio" name="loveLanguage" value="Quality Time"/> Quality Time</label>
-            <small class="desc">Undivided attention & shared moments.</small>
-
-            <label><input type="radio" name="loveLanguage" value="Physical Touch"/> Physical Touch</label>
-            <small class="desc">Hugs, kisses, and closeness.</small>
+          <div class="inline">
+            <label><input type="radio" name="loveLanguage" value="Words of Affirmation" required> Words of Affirmation</label>
+            <label><input type="radio" name="loveLanguage" value="Acts of Service"> Acts of Service</label>
+            <label><input type="radio" name="loveLanguage" value="Receiving Gifts"> Receiving Gifts</label>
+            <label><input type="radio" name="loveLanguage" value="Quality Time"> Quality Time</label>
+            <label><input type="radio" name="loveLanguage" value="Physical Touch"> Physical Touch</label>
           </div>
         </div>
       </section>
 
-      <!-- 3. Hobbies, Values & More -->
+      <!-- Hobbies, Values & More -->
       <section class="card">
-        <h2>Hobbies, Values &amp; More</h2>
+        <h2>🎨 Hobbies, Values & More</h2>
 
-        <div class="form-section">
+        <div class="group">
           <label>Select Your Hobbies</label>
-          <div class="inline-group">
-            <label><input type="checkbox" name="hobbies" value="Music"/> Music</label>
-            <label><input type="checkbox" name="hobbies" value="Sports"/> Sports</label>
-            <label><input type="checkbox" name="hobbies" value="Nature"/> Nature</label>
-            <label><input type="checkbox" name="hobbies" value="Traveling"/> Traveling</label>
-            <label><input type="checkbox" name="hobbies" value="Reading"/> Reading</label>
+          <div class="inline">
+            <label><input type="checkbox" name="hobbies" value="Music"> Music</label>
+            <label><input type="checkbox" name="hobbies" value="Sports"> Sports</label>
+            <label><input type="checkbox" name="hobbies" value="Nature"> Nature</label>
+            <label><input type="checkbox" name="hobbies" value="Traveling"> Traveling</label>
+            <label><input type="checkbox" name="hobbies" value="Reading"> Reading</label>
           </div>
         </div>
 
-        <div class="form-section">
+        <div class="group">
           <label>Values Most Important to You</label>
-          <div class="inline-group">
-            <label><input type="checkbox" name="values" value="Love"/> Love</label>
-            <label><input type="checkbox" name="values" value="Freedom"/> Freedom</label>
-            <label><input type="checkbox" name="values" value="Growth"/> Growth</label>
-            <label><input type="checkbox" name="values" value="Adventure"/> Adventure</label>
+          <div class="inline">
+            <label><input type="checkbox" name="values" value="Love"> Love</label>
+            <label><input type="checkbox" name="values" value="Freedom"> Freedom</label>
+            <label><input type="checkbox" name="values" value="Growth"> Growth</label>
+            <label><input type="checkbox" name="values" value="Adventure"> Adventure</label>
           </div>
         </div>
 
         <label for="unacceptable">What Is Unacceptable in Relationships?</label>
-        <textarea id="unacceptable" name="unacceptable" rows="2" placeholder="e.g. dishonesty, control…"></textarea>
+        <textarea id="unacceptable" name="unacceptable" rows="2" placeholder="e.g. dishonesty…"></textarea>
 
         <label for="about">Tell Us More About Yourself</label>
-        <textarea id="about" name="about" rows="4" placeholder="Your story, lifestyle…"></textarea>
+        <textarea id="about" name="about" rows="4" placeholder="Your story…"></textarea>
       </section>
 
-      <!-- SUBMIT BUTTON -->
-      <div class="buttons">
+      <div class="actions">
         <button type="submit" class="btn-submit">
-          See Results <i class="bi bi-arrow-right-circle"></i>
+          See Results <i class="bi bi-arrow-right-circle"></i>
         </button>
       </div>
     </form>
   </main>
 
-  <!-- FOOTER -->
-  <footer class="site-footer">
-    © 2025 soulink.global
-  </footer>
+  <footer class="footer">© 2025 soulink.global</footer>
 
   <script src="quiz.js"></script>
   <script>
-    // Populate country list
-    (function() {
+    // Populate country dropdown
+    (function(){
       const countries = [
-        "Afghanistan","Albania","Algeria","Andorra","Angola","Argentina","Armenia","Australia",
-        /* … all other ISO country names … */ "United States","Uruguay","Uzbekistan","Vanuatu",
-        "Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"
+        "Afghanistan","Albania","Algeria","Andorra","Angola","Antigua & Barbuda",
+        "Argentina","Armenia","Australia","Austria","Azerbaijan","Bahamas","Bahrain",
+        "Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia",
+        /* … include all ISO country names … */
+        "Zambia","Zimbabwe"
       ];
       const sel = document.getElementById('country');
       countries.sort().forEach(c => {
-        const o = document.createElement('option');
-        o.value = c;
-        o.textContent = c;
-        sel.append(o);
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        sel.append(opt);
       });
     })();
 
-    // Mobile menu toggle
-    document.getElementById('navToggle').onclick = () => {
-      document.querySelector('header.main-nav').classList.toggle('active');
-    };
+    // Mobile nav toggle
+    document.querySelector('.nav-toggle').addEventListener('click', () => {
+      document.querySelector('header.navbar').classList.toggle('open');
+    });
   </script>
 </body>
 </html>
