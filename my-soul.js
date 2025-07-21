@@ -9,7 +9,17 @@ window.addEventListener('DOMContentLoaded', () => {
     if (el) el.textContent = value || "Unknown";
   }
 
-  const lifePath = data.lifePath || data.lifePathNumber || data.life_path || null;
+  function calculateLifePath(dateStr) {
+    if (!dateStr) return null;
+    const digits = dateStr.replace(/[^0-9]/g, "").split("").map(Number);
+    let sum = digits.reduce((a, b) => a + b, 0);
+    while (sum > 9 && sum !== 11 && sum !== 22 && sum !== 33) {
+      sum = sum.toString().split("").map(Number).reduce((a, b) => a + b, 0);
+    }
+    return sum.toString();
+  }
+
+  const lifePath = data.lifePath || data.lifePathNumber || data.life_path || calculateLifePath(data.birthdate);
 
   fill("name", data.name);
   fill("birthdate", data.birthdate);
