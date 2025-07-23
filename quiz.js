@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     data.chineseZodiac = getChineseZodiac(bd);
 
     localStorage.setItem('soulQuiz', JSON.stringify(data));
-    location.href = 'my-soul.html';
+    location.href = 'edit-profile.html';
   });
 
   // Mobile nav toggle
