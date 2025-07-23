@@ -1,18 +1,29 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Welcome to Soulink</title>
-<link href="style.css" rel="stylesheet"/>
-<style>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Welcome to Soulink</title>
+  <style>
+    /* ─── VARIABLES ──────────────────────────────────────────────── */
+    :root {
+      --bg: #003c43;
+      --nav-bg: #032f35;
+      --card-bg: #032f35;
+      --accent: #00ffd0;
+      --text-light: #fff;
+      --shadow: rgba(0,0,0,0.5);
+      --glow: #00ffd0aa;
+      --radius: 2rem;
+      --max-width: 1200px;
+    }
+
     /* ─── GLOBAL ─────────────────────────────────────────────────── */
+    * { box-sizing: border-box; margin:0; padding:0; }
     body {
-      background-color: #003c43;
-      margin: 0;
+      background: var(--bg);
       font-family: 'Segoe UI', sans-serif;
-      color: white;
+      color: var(--text-light);
       display: flex;
       flex-direction: column;
       min-height: 100vh;
@@ -21,35 +32,46 @@
 
     /* ─── NAVBAR ─────────────────────────────────────────────────── */
     header {
-      background: #032f35;
-      padding: 1rem 2rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      background: var(--nav-bg);
+      position: sticky; top:0; z-index:100;
+      box-shadow: 0 2px 8px var(--shadow);
     }
     .nav-wrap {
+      max-width: var(--max-width);
+      margin: 0 auto;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      max-width: 1200px;
-      margin: 0 auto;
+      padding: 1rem 2rem;
+      position: relative;
     }
     .nav-logo {
       font-size: 1.8rem;
       font-weight: bold;
-      color: #00ffd0;
+      color: var(--accent);
+    }
+    /* mobile toggle button */
+    .nav-toggle {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      color: var(--accent);
+      cursor: pointer;
+    }
+    nav {
+      display: flex;
+      gap: 1.5rem;
     }
     nav a {
-      margin-left: 1.5rem;
       font-weight: 500;
       transition: color .2s;
     }
     nav a:hover {
-      color: #00ffd0;
+      color: var(--accent);
     }
 
-    /* ─── CONTENT ────────────────────────────────────────────────── */
+    /* ─── MAIN CONTENT ───────────────────────────────────────────── */
     .container {
       flex: 1;
       display: flex;
@@ -58,16 +80,17 @@
       padding: 2rem;
     }
     .welcome-card {
-      background-color: #032f35;
+      background: var(--card-bg);
       padding: 3rem;
-      border-radius: 2rem;
-      box-shadow: 0 0 40px #00ffcc33;
+      border-radius: var(--radius);
+      box-shadow: 0 0 40px var(--glow);
       text-align: center;
       max-width: 700px;
+      width: 100%;
     }
     .welcome-card h1 {
       font-size: 2.8rem;
-      color: #00ffd0;
+      color: var(--accent);
       margin-bottom: 1.5rem;
     }
     .welcome-card p {
@@ -79,13 +102,13 @@
       margin-top: 2rem;
       padding: 1rem 2rem;
       font-size: 1.2rem;
-      background: #00ffd0;
-      color: #003c43;
+      background: var(--accent);
+      color: var(--bg);
       border: none;
-      border-radius: 2rem;
+      border-radius: var(--radius);
       cursor: pointer;
       font-weight: bold;
-      box-shadow: 0 0 10px #00ffd0aa;
+      box-shadow: 0 0 10px var(--glow);
       transition: transform 0.2s;
     }
     .start-btn:hover {
@@ -97,50 +120,85 @@
       text-align: center;
       padding: 1rem;
       font-size: 0.9rem;
-      background-color: transparent;
       color: #ddd;
+    }
+
+    /* ─── MOBILE ─────────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .nav-toggle {
+        display: block;
+      }
+      nav {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--nav-bg);
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem 2rem;
+        display: none;
+      }
+      nav.open {
+        display: flex;
+      }
+      .nav-wrap {
+        padding: 1rem 1rem;
+      }
     }
   </style>
 </head>
 <body>
-<!-- Redirect jei nėra prisijungęs -->
-<script>
+
+  <!-- Redirect if not logged in -->
+  <script>
     if (!sessionStorage.getItem('soulinkBetaAccess')) {
       window.location.href = 'beta-login.html';
     }
   </script>
-<!-- NAVBAR -->
-<header>
-<button class="nav-toggle" onclick="document.querySelector('header').classList.toggle('active')">☰</button><div class="nav-wrap">
-<div class="nav-logo">Soulink</div>
-<nav>
-<a href="index.html">Home</a>
-<a href="quiz.html">Quiz</a>
-<a href="result.html">Result</a>
-<a href="my-soul.html">My Soul</a>
-<a href="edit-profile.html">Edit Profile</a>
-<a href="soul-chart.html">Soul Chart</a>
-<a href="soul-coach.html">Soul Coach</a>
-<a href="match.html">Match</a>
-<a href="friends.html">Friends</a>
-</nav>
-</div>
-</header>
-<!-- PAGRINDINIS TURINYS -->
-<div class="container">
-<div class="welcome-card">
-<h1>Welcome to Soulink 🌍💫</h1>
-<p>
+
+  <!-- NAVBAR -->
+  <header>
+    <div class="nav-wrap">
+      <button class="nav-toggle" id="navToggle">☰</button>
+      <div class="nav-logo">Soulink</div>
+      <nav id="navMenu">
+        <a href="index.html">Home</a>
+        <a href="quiz.html">Quiz</a>
+        <a href="result.html">Result</a>
+        <a href="my-soul.html">My Soul</a>
+        <a href="edit-profile.html">Edit Profile</a>
+        <a href="soul-chart.html">Soul Chart</a>
+        <a href="soul-coach.html">Soul Coach</a>
+        <a href="match.html">Match</a>
+        <a href="friends.html">Friends</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <div class="container">
+    <div class="welcome-card">
+      <h1>Welcome to Soulink 🌍💫</h1>
+      <p>
         You've just stepped into a new world of meaningful connections.<br/><br/>
         Soulink is more than a platform – it's a bridge between souls.<br/><br/>
         Whether you're here for love, friendship, or soul growth, your journey starts with one click.
       </p>
-<a class="start-btn" href="quiz.html">Enter My Soul Journey ✨</a>
-</div>
-</div>
-<!-- FOOTER -->
-<footer>
+      <a class="start-btn" href="quiz.html">Enter My Soul Journey ✨</a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
     © 2025 Soulink.global | All rights reserved
   </footer>
+
+  <!-- NAV TOGGLE SCRIPT -->
+  <script>
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.getElementById('navMenu').classList.toggle('open');
+    });
+  </script>
 </body>
 </html>
