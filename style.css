@@ -104,6 +104,36 @@ a:hover {
   margin: 2rem auto;
 }
 
+/* ─── PROFILE HEADER & AVATAR ─────────────────────────────────── */
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--card-bg);
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: 0 0 12px var(--glow);
+  margin-bottom: 2rem;
+}
+.profile-header .profile-intro {
+  display: flex;
+  align-items: center;
+}
+.avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  color: var(--bg);
+  font-size: 1.8rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 10px var(--glow);
+  margin-right: 1rem;
+}
+
 /* ─── CARD STYLES ───────────────────────────────────────────────── */
 .cards {
   display: grid;
@@ -267,6 +297,27 @@ a:hover {
 #feedback button[type="submit"]:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 20px rgba(0,255,208,0.9);
+}
+
+/* ─── BOTTOM NAVIGATION BUTTONS ───────────────────────────────── */
+.navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 2rem 0;
+}
+.navigation-buttons a {
+  padding: 0.6rem 1.2rem;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--accent);
+  font-weight: bold;
+  transition: background 0.3s, color 0.3s;
+}
+.navigation-buttons a:hover {
+  background: var(--accent);
+  color: var(--bg);
 }
 
 /* ─── RESPONSIVE ───────────────────────────────────────────────── */

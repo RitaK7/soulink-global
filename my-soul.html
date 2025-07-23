@@ -38,9 +38,9 @@
 
   <!-- MAIN CONTENT -->
   <main class="container">
-    <!-- PROFILE HEADER (no .card class here) -->
+    <!-- PROFILE HEADER -->
     <section class="profile-header">
-      <div style="display:flex; align-items:center;">
+      <div class="profile-intro">
         <div class="avatar" id="avatar">R</div>
         <div>
           <h2>Welcome, <span id="name">Rita</span>!</h2>
@@ -88,7 +88,7 @@
     </div>
 
     <!-- BOTTOM NAVIGATION BUTTONS -->
-    <div class="navigation-buttons" style="justify-content: space-between;">
+    <div class="navigation-buttons">
       <a href="quiz.html">← Back to Quiz</a>
       <a href="soul-coach.html">Go to Soul Coach →</a>
     </div>
@@ -97,14 +97,14 @@
   <!-- SCRIPTS -->
   <script src="my-soul.js" defer></script>
   <script>
-    // hide Connection if no data
+    // Hide connection row if empty
     window.addEventListener('DOMContentLoaded', () => {
       if (!document.getElementById('connection').textContent.trim()) {
         document.getElementById('connRow').style.display = 'none';
       }
     });
 
-    // mobile nav toggle
+    // Mobile nav toggle
     document.getElementById('navToggle').addEventListener('click', () => {
       document.querySelector('.nav-links').classList.toggle('open');
       document.querySelector('.auth-buttons').classList.toggle('open');
