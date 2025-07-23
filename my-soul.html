@@ -13,7 +13,6 @@
 
   <!-- Main CSS -->
   <link rel="stylesheet" href="style.css" />
-
 </head>
 <body>
   <!-- NAVBAR -->
@@ -39,7 +38,8 @@
 
   <!-- MAIN CONTENT -->
   <main class="container">
-    <div class="profile-header card">
+    <!-- PROFILE HEADER (no .card class here) -->
+    <section class="profile-header">
       <div style="display:flex; align-items:center;">
         <div class="avatar" id="avatar">R</div>
         <div>
@@ -47,43 +47,39 @@
           <p>Your Soul at a Glance</p>
         </div>
       </div>
-      <div id="planTag">🔓 Free</div>
-    </div>
+      <div id="planTag">🔓 Free</div>
+    </section>
 
+    <!-- CARDS LIST -->
     <div class="cards">
       <div class="card">
         <h3>💖 Personal Info</h3>
-        <p><strong>Birth Date:</strong> <span id="birthdate"></span></p>
-        <p><strong>Country:</strong> <span id="country"></span></p>
-        <p><strong>Height:</strong> <span id="height"></span></p>
-        <p><strong>Weight:</strong> <span id="weight"></span></p>
-        <p id="connRow"><strong>Connection:</strong> <span id="connection"></span></p>
+        <p><strong>Birth Date:</strong> <span id="birthdate"></span></p>
+        <p><strong>Country:</strong> <span id="country"></span></p>
+        <p><strong>Height:</strong> <span id="height"></span></p>
+        <p><strong>Weight:</strong> <span id="weight"></span></p>
+        <p id="connRow"><strong>Connection:</strong> <span id="connection"></span></p>
       </div>
-
       <div class="card">
         <h3>🧠 Hobbies & Values</h3>
-        <p><strong>Hobbies:</strong> <span id="hobbies"></span></p>
-        <p><strong>Values:</strong> <span id="values"></span></p>
+        <p><strong>Hobbies:</strong> <span id="hobbies"></span></p>
+        <p><strong>Values:</strong> <span id="values"></span></p>
       </div>
-
       <div class="card">
         <h3>🪷 Essence</h3>
-        <p><strong>Unacceptable:</strong> <span id="unacceptable"></span></p>
-        <p><strong>Soul Message:</strong> <span id="about"></span></p>
+        <p><strong>Unacceptable:</strong> <span id="unacceptable"></span></p>
+        <p><strong>Soul Message:</strong> <span id="about"></span></p>
       </div>
-
       <div class="card">
         <h3>✨ Western Zodiac</h3>
         <p><strong><span id="westernZodiac"></span></strong></p>
         <p id="westernDesc"></p>
       </div>
-
       <div class="card">
         <h3>🐍 Chinese Zodiac</h3>
         <p><strong><span id="chineseZodiac"></span></strong></p>
         <p id="chineseDesc"></p>
       </div>
-
       <div class="card">
         <h3>🔮 Life Path Number</h3>
         <p><strong><span id="lifePath"></span></strong></p>
@@ -91,25 +87,27 @@
       </div>
     </div>
 
-    <div class="navigation-buttons">
-      <a href="quiz.html">← Back to Quiz</a>
-      <a href="soul-coach.html">Go to Soul Coach →</a>
+    <!-- BOTTOM NAVIGATION BUTTONS -->
+    <div class="navigation-buttons" style="justify-content: space-between;">
+      <a href="quiz.html">← Back to Quiz</a>
+      <a href="soul-coach.html">Go to Soul Coach →</a>
     </div>
   </main>
 
   <!-- SCRIPTS -->
   <script src="my-soul.js" defer></script>
   <script>
-    // hamburger toggle
-    document.getElementById('navToggle').addEventListener('click', () => {
-      document.querySelector('.nav-links').classList.toggle('open');
-      document.querySelector('.auth-buttons').classList.toggle('open');
-    });
-    // hide connection if empty
+    // hide Connection if no data
     window.addEventListener('DOMContentLoaded', () => {
       if (!document.getElementById('connection').textContent.trim()) {
         document.getElementById('connRow').style.display = 'none';
       }
+    });
+
+    // mobile nav toggle
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.querySelector('.nav-links').classList.toggle('open');
+      document.querySelector('.auth-buttons').classList.toggle('open');
     });
   </script>
 </body>
