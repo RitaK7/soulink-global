@@ -130,3 +130,78 @@ a:hover { text-decoration: underline; }
   .main-nav.active .auth-buttons { display:flex; }
   .cards { grid-template-columns:1fr; }
 }
+/* ─── FEEDBACK CARD ─────────────────────────────────────────────── */
+#feedback {
+  background: #004d4d;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin: 2rem 0;
+  box-shadow: 0 0 12px rgba(42,228,157,0.4);
+}
+#feedback h3 {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  color: #eefefe;
+}
+#feedback h3::before {
+  content: "💬";
+  margin-right: 0.6rem;
+}
+#feedback form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 2rem;
+}
+#feedback label {
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+  grid-column: span 2;
+}
+#feedback input[type="email"],
+#feedback input[name="page"],
+#feedback select,
+#feedback textarea {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #007066;
+  border-radius: 6px;
+  background: #005f56;
+  color: #eefefe;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+#feedback input:focus,
+#feedback select:focus,
+#feedback textarea:focus {
+  outline: none;
+  border-color: #2ae49d;
+  box-shadow: 0 0 8px rgba(42,228,157,0.6);
+}
+/* Make the rating stars gold */
+#feedback select option[value="5"] {
+  color: gold;
+}
+/* Single-column on small screens */
+@media (max-width: 600px) {
+  #feedback form {
+    grid-template-columns: 1fr;
+  }
+}
+/* Styled submit button */
+#feedback button[type="submit"] {
+  grid-column: span 2;
+  padding: 0.8rem;
+  background: linear-gradient(135deg,#00ffd0,#00bfa5);
+  color: #002c2f;
+  border: none;
+  border-radius: 30px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(0,255,208,0.7);
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+#feedback button[type="submit"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(0,255,208,0.9);
+}

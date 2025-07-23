@@ -129,31 +129,31 @@
     </div>
 
     <!-- FEEDBACK FORM -->
-    <section id="feedback">
-      <h3>💬 Your Feedback</h3>
-      <form id="feedback-form">
-        <label>Your Email:</label>
-        <input type="email" name="user_email" required />
+   <section id="feedback">
+  <h3>Your Feedback</h3>
+  <form id="feedback-form">
+    <label for="user_email">Your Email:</label>
+    <input id="user_email" type="email" name="user_email" required />
 
-        <label>Page You Are On:</label>
-        <input type="text" name="page" value="result.html" readonly />
+    <label for="page">Page You Are On:</label>
+    <input id="page" type="text" name="page" value="result.html" readonly />
 
-        <label>How would you rate it? (1–5)</label>
-        <select name="rating">
-          <option value="1">★☆☆☆☆ Poor</option>
-          <option value="2">★★☆☆☆ Fair</option>
-          <option value="3">★★★☆☆ Good</option>
-          <option value="4">★★★★☆ Very Good</option>
-          <option value="5" selected>★★★★★ Excellent</option>
-        </select>
+    <label for="rating">How would you rate it? (1–5)</label>
+    <select id="rating" name="rating">
+      <option value="1">★☆☆☆☆ Poor</option>
+      <option value="2">★★☆☆☆ Fair</option>
+      <option value="3">★★★☆☆ Good</option>
+      <option value="4">★★★★☆ Very Good</option>
+      <option value="5" selected>★★★★★ Excellent</option>
+    </select>
 
-        <label>Your Feedback:</label>
-        <textarea name="feedback" rows="4" placeholder="Write your thoughts…" required></textarea>
+    <label for="feedback">Your Feedback:</label>
+    <textarea id="feedback" name="feedback" rows="4" placeholder="Write your thoughts…" required></textarea>
 
-        <button type="submit" class="btn">Send Feedback</button>
-      </form>
-      <p id="feedback-message"></p>
-    </section>
+    <button type="submit">Send Feedback</button>
+  </form>
+  <p id="feedback-message"></p>
+</section>
   </main>
 
   <!-- LOGOUT SCRIPT -->
