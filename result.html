@@ -4,45 +4,90 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Soulink – Your Soulprint Results</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"/>
-  <!-- PDF generavimui -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
-  <!-- EmailJS v3 -->
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
+  <!-- Bootstrap Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+  />
+
+  <!-- Your global stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Inline tweaks just for this page -->
   <style>
-    /* … (jūsų esami CSS) … */
-    * { box-sizing: border-box; margin:0; padding:0; }
-    body { font-family: 'Poppins', sans-serif; background: #002f33; color: #eefefe; line-height: 1.6; }
-    a { color: inherit; text-decoration: none; }
-    .container { width: 90%; max-width: 900px; margin: 0 auto; padding: 2rem 0; }
-    header { background: #003d41; position: sticky; top: 0; z-index:1000; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
-    .nav-wrap { display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; }
-    .nav-logo { font-size: 1.8rem; font-weight: bold; color: #2ae49d; }
-    nav a { margin-left: 1.5rem; font-weight: 500; transition: color .2s; }
-    nav a:hover { color: #2ae49d; }
-    .page-header { text-align: center; margin-bottom: 2rem; }
-    .page-header h1 { font-size: 2.4rem; color: #2ae49d; margin-bottom: .5rem; }
-    .page-header p { font-style: italic; opacity: .8; }
-    .card { background: #004d4d; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,.5); }
-    .card h3 { margin-bottom: .8rem; color: #2ae49d; font-size: 1.3rem; }
-    .card p { margin-bottom: .6rem; }
-    .btn { display: inline-block; background: linear-gradient(90deg, #2ae49d, #1bc08b); color: #002f33; padding: .8rem 1.6rem; border-radius: 50px; font-weight: 600; cursor: pointer; transition: opacity .2s; text-align: center; }
-    .btn:hover { opacity: .85; }
-    #feedback { background: #003d41; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
-    #feedback h3 { text-align: center; color: #2ae49d; margin-bottom: 1rem; }
-    #feedback form label { display: block; margin-top: .8rem; font-weight: 500; }
-    #feedback input, #feedback select, #feedback textarea { width: 100%; padding: .6rem; margin-top: .4rem; border: none; border-radius: 6px; }
-    #feedback button { margin-top: 1rem; width: 100%; background: #2ae49d; color: #002f33; font-weight: 600; padding: .8rem; border: none; border-radius: 6px; cursor: pointer; transition: opacity .2s; }
-    #feedback button:hover { opacity: .9; }
-    #feedback-message { margin-top: .8rem; text-align: center; }
+    body {
+      background-color: #003c43;
+      color: #eefefe;
+    }
+    header {
+      background-color: #002c2f;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .nav-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1rem 2rem;
+    }
+    .nav-logo {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #2ae49d;
+    }
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .nav-links a {
+      display: flex;
+      align-items: center;
+      color: #eefefe;
+      font-weight: 500;
+      padding: 0.4rem;
+      border-radius: 8px;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .nav-links a i {
+      margin-right: 0.4rem;
+    }
+    .nav-links a:hover,
+    .nav-links a[aria-current="page"] {
+      background: rgba(42,228,157,0.2);
+      box-shadow: 0 0 8px rgba(42,228,157,0.6);
+    }
+    .auth-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .btn-outline {
+      padding: 0.4rem 0.8rem;
+      border: 1px solid #00ffd0;
+      border-radius: 8px;
+      background: transparent;
+      color: #00ffd0;
+      transition: background 0.3s, color 0.3s;
+    }
+    .btn-outline:hover {
+      background: #00ffd0;
+      color: #003c43;
+    }
   </style>
 </head>
 <body>
+  <!-- NAVBAR -->
   <header>
-    <div class="nav-wrap container">
+    <div class="nav-wrap">
       <div class="nav-logo">Soulink</div>
-      <nav>
-       <li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
+      <ul class="nav-links">
+        <li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
         <li><a href="quiz.html"><i class="bi bi-question-circle"></i>Quiz</a></li>
         <li><a href="edit-profile.html"><i class="bi bi-pencil-square"></i>Edit Profile</a></li>
         <li><a href="my-soul.html"><i class="bi bi-person"></i>My Soul</a></li>
@@ -50,12 +95,20 @@
         <li><a href="soul-coach.html"><i class="bi bi-chat-dots"></i>Soul Coach</a></li>
         <li><a href="soulink-match.html"><i class="bi bi-heart"></i>Match</a></li>
         <li><a href="friends.html"><i class="bi bi-people"></i>Friends</a></li>
-        <li><a href="result.html"><i class="bi bi-bar-chart-line"></i>Results</a></li>
+        <li>
+          <a href="result.html" aria-current="page">
+            <i class="bi bi-bar-chart-line"></i>Results
+          </a>
+        </li>
       </ul>
-      </nav>
+      <div class="auth-buttons">
+        <a href="login.html" class="btn-outline">Log In</a>
+        <a href="signup.html" class="btn-outline">Sign Up</a>
+      </div>
     </div>
   </header>
 
+  <!-- MAIN CONTENT -->
   <main class="container">
     <div class="page-header">
       <h1>🌟 Your Soul Results</h1>
@@ -63,6 +116,7 @@
     </div>
 
     <div id="results-output">
+      <!-- Your existing cards -->
       <div class="card" id="greeting-card"></div>
       <div class="card" id="love-card"></div>
       <div class="card" id="western-card"></div>
@@ -74,7 +128,7 @@
       </div>
     </div>
 
-    <div style="text-align:center; margin-bottom:2rem;">
+    <div style="text-align:center; margin:2rem 0;">
       <button id="download-pdf" class="btn">⬇️ Download Your Soul PDF</button>
     </div>
 
@@ -99,12 +153,15 @@
         <label>Your Feedback:</label>
         <textarea name="feedback" rows="4" placeholder="Write your thoughts…" required></textarea>
 
-        <button type="submit">Send Feedback</button>
+        <button type="submit" class="btn">Send Feedback</button>
       </form>
       <p id="feedback-message"></p>
     </section>
   </main>
 
+  <!-- PDF + EmailJS scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
   <script src="results.js" defer></script>
 </body>
 </html>
