@@ -5,7 +5,6 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title>Welcome to Soulink</title>
   <style>
-    /* ─── VARIABLES ──────────────────────────────────────────────── */
     :root {
       --bg: #003c43;
       --nav-bg: #032f35;
@@ -17,8 +16,6 @@
       --radius: 2rem;
       --max-width: 1200px;
     }
-
-    /* ─── GLOBAL ─────────────────────────────────────────────────── */
     * { box-sizing: border-box; margin:0; padding:0; }
     body {
       background: var(--bg);
@@ -30,7 +27,7 @@
     }
     a { color: inherit; text-decoration: none; }
 
-    /* ─── NAVBAR ─────────────────────────────────────────────────── */
+    /* NAVBAR */
     header {
       background: var(--nav-bg);
       position: sticky; top:0; z-index:100;
@@ -50,7 +47,6 @@
       font-weight: bold;
       color: var(--accent);
     }
-    /* mobile toggle button */
     .nav-toggle {
       display: none;
       background: none;
@@ -58,6 +54,7 @@
       font-size: 1.8rem;
       color: var(--accent);
       cursor: pointer;
+      margin-right: 1rem;
     }
     nav {
       display: flex;
@@ -70,8 +67,28 @@
     nav a:hover {
       color: var(--accent);
     }
+    .auth-buttons {
+      display: flex;
+      gap: .5rem;
+      margin-left: 2rem;
+    }
+    .auth-buttons button {
+      padding: .4rem .8rem;
+      border: 1px solid var(--text-light);
+      background: transparent;
+      border-radius: 8px;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: background .3s, color .3s, box-shadow .3s;
+    }
+    .auth-buttons .signup { border-color: #2ae49d; }
+    .auth-buttons button:hover {
+      background: var(--text-light);
+      color: var(--bg);
+      box-shadow: 0 0 8px var(--glow);
+    }
 
-    /* ─── MAIN CONTENT ───────────────────────────────────────────── */
+    /* MAIN CONTENT */
     .container {
       flex: 1;
       display: flex;
@@ -115,7 +132,7 @@
       transform: scale(1.05);
     }
 
-    /* ─── FOOTER ─────────────────────────────────────────────────── */
+    /* FOOTER */
     footer {
       text-align: center;
       padding: 1rem;
@@ -123,12 +140,12 @@
       color: #ddd;
     }
 
-    /* ─── MOBILE ─────────────────────────────────────────────────── */
+    /* MOBILE */
     @media (max-width: 768px) {
       .nav-toggle {
         display: block;
       }
-      nav {
+      nav, .auth-buttons {
         position: absolute;
         top: 100%;
         left: 0;
@@ -139,11 +156,15 @@
         padding: 1rem 2rem;
         display: none;
       }
-      nav.open {
+      nav.open, .auth-buttons.open {
         display: flex;
       }
       .nav-wrap {
+        justify-content: space-between;
         padding: 1rem 1rem;
+      }
+      .auth-buttons {
+        margin-left: 0;
       }
     }
   </style>
@@ -173,6 +194,10 @@
         <a href="match.html">Match</a>
         <a href="friends.html">Friends</a>
       </nav>
+      <div class="auth-buttons" id="authButtons">
+        <button>Log In</button>
+        <button class="signup">Sign Up</button>
+      </div>
     </div>
   </header>
 
@@ -198,6 +223,7 @@
   <script>
     document.getElementById('navToggle').addEventListener('click', () => {
       document.getElementById('navMenu').classList.toggle('open');
+      document.getElementById('authButtons').classList.toggle('open');
     });
   </script>
 </body>
