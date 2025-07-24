@@ -338,9 +338,8 @@ a:hover {
     padding: 1rem 2rem;
     border-radius: 0 0 0.5rem 0.5rem;
   }
-  .nav-links,
-  .auth-buttons {
-    width: 200px;
+  .nav-links.open,
+  .auth-buttons.open {
     display: flex;
   }
   .cards {
