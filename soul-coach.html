@@ -2,140 +2,195 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Soulink – Soul Coach</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+
+  <!-- Bootstrap Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+  />
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="style.css" />
+
   <style>
-    body {
-      margin: 0;
-      background-color: #003c43;
-      color: white;
-      font-family: 'Segoe UI', sans-serif;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-      background-color: #002c2f;
-    }
-
-    .logo {
-      font-size: 1.5rem;
-      color: #00fdd8;
-      font-weight: bold;
-    }
-
-    nav a {
-      color: white;
-      margin-left: 1rem;
-      text-decoration: none;
-    }
-
-    .container {
-      max-width: 800px;
-      margin: 2rem auto;
-      padding: 1rem;
-    }
-
-    .card {
-      background-color: #004d4d;
-      border-radius: 15px;
-      box-shadow: 0 0 10px #00fdd8;
+    /* Card overrides for this page */
+    .cards { display: grid; gap: 1.5rem; margin-top: 2rem; }
+    @media(min-width:600px){ .cards { grid-template-columns: 1fr 1fr; } }
+    .cards .card {
+      background: #004d4d;
+      border-radius: 16px;
       padding: 1.5rem;
-      margin-bottom: 1.5rem;
+      box-shadow: 0 0 12px rgba(42,228,157,0.4);
+      animation: fadeIn 0.8s ease both;
     }
-
-    .card h2 {
-      color: #99ffe5;
+    @keyframes fadeIn {
+      from { opacity:0; transform: translateY(20px) }
+      to   { opacity:1; transform: translateY(0) }
     }
-
-    .card p {
-      margin: 0.5rem 0 0 0;
-    }
-
-    .nav-buttons {
+    .cards .card h3 {
+      margin-bottom: .8rem;
+      color: #2ae49d;
       display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .no-data {
+      text-align:center;
+      color: #99ffe5;
+      margin: 4rem 0;
+      font-size:1.2rem;
+    }
+    .bottom-nav {
+      display:flex;
       justify-content: space-between;
-      margin-top: 2rem;
+      margin: 3rem 0;
     }
-
-    .nav-buttons a {
-      background: #00fdd8;
-      color: #003c43;
-      padding: 0.75rem 1.5rem;
-      border-radius: 30px;
-      font-weight: bold;
-      text-decoration: none;
-      box-shadow: 0 0 10px #00fdd8;
+    .bottom-nav a {
+      padding:.6rem 1.2rem;
+      border:1px solid #2ae49d;
+      border-radius:8px;
+      color:#2ae49d;
+      text-decoration:none;
+      font-weight:500;
+      transition: background .2s, color .2s;
     }
-
-    @media (max-width: 768px) {
-      header {
-        flex-direction: column;
-      }
-
-      nav {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        margin-top: 1rem;
-      }
+    .bottom-nav a:hover {
+      background:#2ae49d;
+      color:#003c43;
     }
   </style>
 </head>
 <body>
-  <header>
+  <!-- NAVBAR -->
+  <nav class="main-nav">
     <div class="logo">Soulink</div>
-    <nav>
-      <a href="home.html">Home</a>
-      <a href="quiz.html">Quiz</a>
-      <a href="edit-profile.html">Edit Profile</a>
-      <a href="my-soul.html">My Soul</a>
-      <a href="soul-chart.html">Soul Chart</a>
-      <a href="soul-coach.html">Soul Coach</a>
-      <a href="friends.html">Match</a>
-      <a href="friends.html">Friends</a>
-      <a href="result.html">Results</a>
-    </nav>
-  </header>
+    <button class="nav-toggle" id="navToggle"><i class="bi bi-list"></i></button>
+    <ul class="nav-links">
+      <li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
+      <li><a href="quiz.html"><i class="bi bi-question-circle"></i>Quiz</a></li>
+      <li><a href="edit-profile.html"><i class="bi bi-pencil-square"></i>Edit Profile</a></li>
+      <li><a href="my-soul.html"><i class="bi bi-person"></i>My Soul</a></li>
+      <li><a href="soul-chart.html"><i class="bi bi-graph-up"></i>Soul Chart</a></li>
+      <li aria-current="page"><a href="soul-coach.html"><i class="bi bi-chat-dots"></i>Soul Coach</a></li>
+      <li><a href="soulink-match.html"><i class="bi bi-heart"></i>Match</a></li>
+      <li><a href="friends.html"><i class="bi bi-people"></i>Friends</a></li>
+      <li><a href="result.html"><i class="bi bi-bar-chart-line"></i>Results</a></li>
+    </ul>
+    <div class="auth-buttons">
+      <button class="btn-outline">Log Out</button>
+    </div>
+  </nav>
 
-  <div class="container">
+  <main class="container">
     <h1>Your Soul Coach Insights</h1>
 
-    <div class="card">
-      <h2>💖 Love Language</h2>
-      <p id="loveLanguage">Loading...</p>
-    </div>
+    <div id="content">
+      <!-- if no data, show .no-data, else .cards -->
+      <div class="no-data" id="noDataMsg" style="display:none;">
+        No data available – please take the quiz first.
+      </div>
 
-    <div class="card">
-      <h2>🪐 Western Zodiac</h2>
-      <p id="westernZodiac">Loading...</p>
-    </div>
+      <div class="cards" id="insightCards" style="display:none;">
+        <div class="card">
+          <h3>❤️ Love Language</h3>
+          <p id="loveLangInsight"></p>
+        </div>
+        <div class="card">
+          <h3>🔮 Western Zodiac</h3>
+          <p id="westZodiacInsight"></p>
+        </div>
+        <div class="card">
+          <h3>🐉 Chinese Zodiac</h3>
+          <p id="chinZodiacInsight"></p>
+        </div>
+        <div class="card">
+          <h3>🔢 Numerology</h3>
+          <p id="numInsight"></p>
+        </div>
+      </div>
 
-    <div class="card">
-      <h2>🐉 Chinese Zodiac</h2>
-      <p id="chineseZodiac">Loading...</p>
+      <div class="bottom-nav" id="btnNav" style="display:none;">
+        <a href="soul-chart.html">← Back to Soul Chart</a>
+        <a href="soulink-match.html">Go to Your Match →</a>
+      </div>
     </div>
-
-    <div class="card">
-      <h2>🔢 Numerology</h2>
-      <p id="lifePath">Loading...</p>
-    </div>
-
-    <div class="nav-buttons">
-      <a href="soul-chart.html">← Back to Soul Chart</a>
-      <a href="friends.html">Go to Your Match →</a>
-    </div>
-  </div>
+  </main>
 
   <script>
-    const data = JSON.parse(localStorage.getItem('soulQuiz')) || {};
-    document.getElementById('loveLanguage').textContent = data.loveLanguage || 'Complete the Soul Quiz to see this insight.';
-    document.getElementById('westernZodiac').textContent = data.westernZodiac || 'Not provided.';
-    document.getElementById('chineseZodiac').textContent = data.chineseZodiac || 'Not provided.';
-    document.getElementById('lifePath').textContent = data.lifePath ? `Your Life Path Number is ${data.lifePath}.` : 'Not provided.';
+    // mobile menu toggle
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.querySelector('.nav-links').classList.toggle('open');
+      document.querySelector('.auth-buttons').classList.toggle('open');
+    });
+
+    // load and render
+    window.addEventListener('DOMContentLoaded', () => {
+      const data = JSON.parse(localStorage.getItem('soulQuiz') || 'null');
+      if (!data) {
+        document.getElementById('noDataMsg').style.display = '';
+        return;
+      }
+      const get = (key, fallback) => data[key] || fallback;
+
+      // insights map
+      const loveMap = {
+        "Words of Affirmation": "Your heart thrives on kind words and encouragement.",
+        "Acts of Service": "You show love through caring actions and thoughtful help.",
+        "Receiving Gifts": "Tokens and gifts speak volumes of love to you.",
+        "Quality Time": "Moments shared are your deepest form of connection.",
+        "Physical Touch": "Closeness and touch are your languages of love."
+      };
+      const westMap = {
+        "Aries":"Bold pioneer, always charging ahead.",
+        "Taurus":"Steadfast and grounded, enjoying life’s comforts.",
+        "Gemini":"Curious communicator, adaptable and witty.",
+        "Cancer":"Nurturing soul, guided by intuition.",
+        "Leo":"Radiant leader, generous and warm.",
+        "Virgo":"Detail‑oriented helper, striving for perfection.",
+        "Libra":"Harmony seeker, balancing all things.",
+        "Scorpio":"Intense transformer, exploring life’s depths.",
+        "Sagittarius":"Adventurous philosopher, chasing truth.",
+        "Capricorn":"Ambitious builder, disciplined achiever.",
+        "Aquarius":"Visionary humanitarian, breaking boundaries.",
+        "Pisces":"Empathetic dreamer, flowing with creativity."
+      };
+      const chiMap = {
+        "Rat":"Resourceful survivor, finding creative success.",
+        "Ox":"Dependable worker, honest and strong.",
+        "Tiger":"Brave spirit, winning admiration boldly.",
+        "Rabbit":"Gentle heart, seeking peace and comfort.",
+        "Dragon":"Energetic visionary, destined for greatness.",
+        "Snake":"Wise strategist, trusting inner intuition.",
+        "Horse":"Free wanderer, thriving on independence.",
+        "Goat":"Artistic nurturer, cherishing beauty.",
+        "Monkey":"Clever problem-solver, playful innovator.",
+        "Rooster":"Practical organizer, precise and honest.",
+        "Dog":"Loyal protector, valuing integrity deeply.",
+        "Pig":"Sincere giver, generous and compassionate."
+      };
+
+      // fill
+      document.getElementById('loveLangInsight')
+        .textContent = loveMap[get('loveLanguage','')] 
+          || "Your energy is still aligning.";
+      document.getElementById('westZodiacInsight')
+        .textContent = westMap[get('westernZodiac','')] 
+          || "Your stars are still settling.";
+      document.getElementById('chinZodiacInsight')
+        .textContent = chiMap[get('chineseZodiac','')] 
+          || "Your Chinese zodiac path is unfolding.";
+      const lp = get('lifePathNumber','');
+      document.getElementById('numInsight')
+        .textContent = lp
+          ? `Your life path ${lp} guides your soul’s journey.`
+          : "Your numerology is yet to reveal its wisdom.";
+
+      // show cards & buttons
+      document.getElementById('insightCards').style.display = '';
+      document.getElementById('btnNav').style.display = '';
+    });
   </script>
 </body>
 </html>
