@@ -2,80 +2,140 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Soulink – Soul Coach</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+  <style>
+    body {
+      margin: 0;
+      background-color: #003c43;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+    }
 
-  <!-- Bootstrap Icons -->
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-  />
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background-color: #002c2f;
+    }
 
-  <!-- Main CSS -->
-  <link rel="stylesheet" href="style.css" />
+    .logo {
+      font-size: 1.5rem;
+      color: #00fdd8;
+      font-weight: bold;
+    }
+
+    nav a {
+      color: white;
+      margin-left: 1rem;
+      text-decoration: none;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+
+    .card {
+      background-color: #004d4d;
+      border-radius: 15px;
+      box-shadow: 0 0 10px #00fdd8;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card h2 {
+      color: #99ffe5;
+    }
+
+    .card p {
+      margin: 0.5rem 0 0 0;
+    }
+
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2rem;
+    }
+
+    .nav-buttons a {
+      background: #00fdd8;
+      color: #003c43;
+      padding: 0.75rem 1.5rem;
+      border-radius: 30px;
+      font-weight: bold;
+      text-decoration: none;
+      box-shadow: 0 0 10px #00fdd8;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+      }
+
+      nav {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 1rem;
+      }
+    }
+  </style>
 </head>
 <body>
-  <!-- NAVBAR -->
-  <nav class="main-nav">
+  <header>
     <div class="logo">Soulink</div>
-    <button class="nav-toggle" id="navToggle"><i class="bi bi-list"></i></button>
-    <ul class="nav-links">
-      <li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
-      <li><a href="quiz.html"><i class="bi bi-question-circle"></i>Quiz</a></li>
-      <li><a href="edit-profile.html"><i class="bi bi-pencil-square"></i>Edit Profile</a></li>
-      <li><a href="my-soul.html"><i class="bi bi-person"></i>My Soul</a></li>
-      <li><a href="soul-chart.html"><i class="bi bi-graph-up"></i>Soul Chart</a></li>
-      <li aria-current="page"><a href="soul-coach.html"><i class="bi bi-chat-dots"></i>Soul Coach</a></li>
-      <li><a href="soulink-match.html"><i class="bi bi-heart"></i>Match</a></li>
-      <li><a href="friends.html"><i class="bi bi-people"></i>Friends</a></li>
-      <li><a href="result.html"><i class="bi bi-bar-chart-line"></i>Results</a></li>
-    </ul>
-    <div class="auth-buttons">
-      <button class="btn-outline">Log Out</button>
+    <nav>
+      <a href="home.html">Home</a>
+      <a href="quiz.html">Quiz</a>
+      <a href="edit-profile.html">Edit Profile</a>
+      <a href="my-soul.html">My Soul</a>
+      <a href="soul-chart.html">Soul Chart</a>
+      <a href="soul-coach.html">Soul Coach</a>
+      <a href="friends.html">Match</a>
+      <a href="friends.html">Friends</a>
+      <a href="result.html">Results</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <h1>Your Soul Coach Insights</h1>
+
+    <div class="card">
+      <h2>💖 Love Language</h2>
+      <p id="loveLanguage">Loading...</p>
     </div>
-  </nav>
 
-  <!-- MAIN CONTENT -->
-  <main class="container">
-    <h2>Your Soul Coach Insights</h2>
-
-    <div class="cards">
-      <section class="card section">
-        <h3>💖 Love Language</h3>
-        <div id="loveLanguageInsight">Loading love language insight...</div>
-      </section>
-
-      <section class="card section">
-        <h3>🔮 Western Zodiac</h3>
-        <div id="horoscopeInsight">Loading zodiac insight...</div>
-      </section>
-
-      <section class="card section">
-        <h3>🐉 Chinese Zodiac</h3>
-        <div id="chineseZodiacInsight">Loading Chinese zodiac insight...</div>
-      </section>
-
-      <section class="card section">
-        <h3>🔢 Numerology</h3>
-        <div id="numerologyInsight">Loading numerology insight...</div>
-      </section>
+    <div class="card">
+      <h2>🪐 Western Zodiac</h2>
+      <p id="westernZodiac">Loading...</p>
     </div>
-  </main>
 
-  <!-- BOTTOM NAV -->
-  <nav class="bottom-nav">
-    <a href="soul-chart.html" class="bottom-link"><i class="bi bi-arrow-left"></i> Back to Soul Chart</a>
-    <a href="soulink-match.html" class="bottom-link">Go to Your Match <i class="bi bi-arrow-right"></i></a>
-  </nav>
+    <div class="card">
+      <h2>🐉 Chinese Zodiac</h2>
+      <p id="chineseZodiac">Loading...</p>
+    </div>
 
-  <!-- Soul Coach Script -->
-  <script src="soul-coach.js" defer></script>
+    <div class="card">
+      <h2>🔢 Numerology</h2>
+      <p id="lifePath">Loading...</p>
+    </div>
+
+    <div class="nav-buttons">
+      <a href="soul-chart.html">← Back to Soul Chart</a>
+      <a href="friends.html">Go to Your Match →</a>
+    </div>
+  </div>
+
   <script>
-    // Mobile nav toggle
-    document.getElementById('navToggle').addEventListener('click', () => {
-      document.querySelector('.nav-links').classList.toggle('open');
-      document.querySelector('.auth-buttons').classList.toggle('open');
-    });
+    const data = JSON.parse(localStorage.getItem('soulQuiz')) || {};
+    document.getElementById('loveLanguage').textContent = data.loveLanguage || 'Complete the Soul Quiz to see this insight.';
+    document.getElementById('westernZodiac').textContent = data.westernZodiac || 'Not provided.';
+    document.getElementById('chineseZodiac').textContent = data.chineseZodiac || 'Not provided.';
+    document.getElementById('lifePath').textContent = data.lifePath ? `Your Life Path Number is ${data.lifePath}.` : 'Not provided.';
   </script>
 </body>
 </html>
