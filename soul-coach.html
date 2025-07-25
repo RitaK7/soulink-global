@@ -25,19 +25,24 @@
     .container {
       max-width: 800px;
       margin: 2rem auto;
-      padding: 1rem;
+      padding: 0 1rem;
+    }
+    h1, h2 {
+      text-align: center;
+      margin-top: 1rem;
+      color: #2ae49d;
     }
     .cards {
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
-      margin-top: 1rem;
+      margin-top: 1.5rem;
     }
     .cards .card {
       background: #004d4d;
       border-radius: 16px;
       padding: 1.5rem;
-      box-shadow: 0 0 12px rgba(42,228,157,0.4);
+      box-shadow: 0 0 12px #00fdd8;
       animation: fadeIn 0.8s ease both;
     }
     @keyframes fadeIn {
@@ -50,6 +55,29 @@
       gap: .5rem;
       color: #2ae49d;
       margin-bottom: .8rem;
+    }
+    .card p, .card ul, .card blockquote {
+      margin: .5rem 0;
+      line-height: 1.4;
+    }
+    .card blockquote {
+      font-style: italic;
+      padding-left: 1rem;
+      border-left: 4px solid #2ae49d;
+    }
+    .card .btn {
+      margin-top: .8rem;
+      padding: .6rem 1.2rem;
+      background: #2ae49d;
+      color: #003c43;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(0,255,208,0.6);
+      transition: transform .2s;
+    }
+    .card .btn:hover {
+      transform: translateY(-2px);
     }
     .no-data {
       text-align: center;
@@ -75,6 +103,77 @@
       background: #2ae49d;
       color: #003c43;
     }
+
+    /* Mobile nav */
+    .main-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #002c2f;
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .main-nav .logo {
+      font-size: 1.8rem;
+      color: #2ae49d;
+      font-weight: bold;
+    }
+    .nav-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: #2ae49d;
+      font-size: 1.8rem;
+      cursor: pointer;
+    }
+    .nav-links {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+    }
+    .nav-links a {
+      color: #eefefe;
+      text-decoration: none;
+      font-weight: 500;
+      padding: .4rem;
+      border-radius: 6px;
+      transition: background .2s;
+    }
+    .nav-links a:hover,
+    .nav-links a[aria-current="page"] {
+      background: rgba(42,228,157,0.2);
+    }
+    .auth-buttons {
+      display: flex;
+    }
+    .btn-outline {
+      margin-left: 1rem;
+      padding: .4rem .8rem;
+      border: 1px solid #2ae49d;
+      border-radius: 6px;
+      background: transparent;
+      color: #2ae49d;
+      cursor: pointer;
+    }
+
+    @media(max-width:768px) {
+      .nav-toggle { display: block; }
+      .nav-links, .auth-buttons {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        flex-direction: column;
+        background: #002c2f;
+        padding: 1rem 2rem;
+        gap: 1rem;
+      }
+      .nav-links.open, .auth-buttons.open {
+        display: flex;
+      }
+    }
   </style>
 </head>
 <body>
@@ -85,13 +184,10 @@
     <ul class="nav-links">
       <li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
       <li><a href="quiz.html"><i class="bi bi-question-circle"></i>Quiz</a></li>
-      <li><a href="edit-profile.html"><i class="bi bi-pencil-square"></i>Edit Profile</a></li>
       <li><a href="my-soul.html"><i class="bi bi-person"></i>My Soul</a></li>
       <li><a href="soul-chart.html"><i class="bi bi-graph-up"></i>Soul Chart</a></li>
       <li aria-current="page"><a href="soul-coach.html"><i class="bi bi-chat-dots"></i>Soul Coach</a></li>
       <li><a href="soulink-match.html"><i class="bi bi-heart"></i>Match</a></li>
-      <li><a href="friends.html"><i class="bi bi-people"></i>Friends</a></li>
-      <li><a href="result.html"><i class="bi bi-bar-chart-line"></i>Results</a></li>
     </ul>
     <div class="auth-buttons">
       <button class="btn-outline">Log Out</button>
@@ -106,26 +202,66 @@
     </div>
 
     <div class="cards" id="cards" style="display:none;">
-      <!-- Love Language -->
-      <div class="card">
+      <!-- Existing insights -->
+      <section class="card">
         <h3>❤️ Love Language</h3>
         <p id="loveInsight"></p>
-      </div>
-      <!-- Western Zodiac -->
-      <div class="card">
+      </section>
+      <section class="card">
         <h3>🔮 Western Zodiac</h3>
         <p id="westInsight"></p>
-      </div>
-      <!-- Chinese Zodiac -->
-      <div class="card">
+      </section>
+      <section class="card">
         <h3>🐉 Chinese Zodiac</h3>
         <p id="chineseInsight"></p>
-      </div>
-      <!-- Numerology -->
-      <div class="card">
+      </section>
+      <section class="card">
         <h3>🔢 Numerology</h3>
         <p id="numInsight"></p>
-      </div>
+      </section>
+
+      <!-- New personalized coaching sections -->
+      <section class="card">
+        <h3><i class="bi bi-compass"></i> Soul Path Insight</h3>
+        <p id="pathInsight">You are a seeker of truth and meaning. Make space for solitude this week – your soul finds strength in silence and reflection.</p>
+      </section>
+
+      <section class="card">
+        <h3><i class="bi bi-heart-pulse"></i> Love Language Coaching</h3>
+        <p id="loveCoach">Your primary love language is <strong id="loveLangLabel">Acts of Service</strong>. Offer help sincerely, but remember: allowing others to help you is also an act of love.</p>
+      </section>
+
+      <section class="card">
+        <h3><i class="bi bi-moon-stars"></i> Zodiac Season Energy</h3>
+        <p id="seasonInsight">We are in Leo season – a time to express your inner fire and shine confidently. Use this time to lead, create, and celebrate yourself.</p>
+      </section>
+
+      <section class="card">
+        <h3><i class="bi bi-journal-check"></i> Soul Mission of the Week</h3>
+        <p id="missionInsight">Your mission: Share a kind word with someone who feels unseen. One small act can light up a soul.</p>
+      </section>
+
+      <section class="card">
+        <h3><i class="bi bi-stars"></i> Soul Mantra</h3>
+        <blockquote id="mantra">"I honor my inner truth, even when it whispers."</blockquote>
+        <button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('mantra').textContent)">
+          Copy Mantra
+        </button>
+      </section>
+
+      <section class="card">
+        <h3><i class="bi bi-people"></i> Connection Tip</h3>
+        <p id="connectionTip">You’re looking for real friends. Show up authentically in spaces that align with your passions – your tribe will find you.</p>
+      </section>
+
+      <section class="card">
+        <h3><i class="bi bi-lightbulb"></i> Soul Wisdom</h3>
+        <ul id="wisdomList">
+          <li><strong>Life Path 7:</strong> Teaches you to trust inner wisdom and value silence.</li>
+          <li><strong>Sagittarius:</strong> Inspires truth-seeking, adventure, and growth.</li>
+          <li><strong>Rat:</strong> Symbolizes cleverness, adaptability, and quick insight.</li>
+        </ul>
+      </section>
     </div>
 
     <div class="bottom-nav" id="btns" style="display:none;">
@@ -135,69 +271,30 @@
   </main>
 
   <script>
-    // Mobile menu toggle
+    // Mobile nav
     document.getElementById('navToggle').addEventListener('click', () => {
       document.querySelector('.nav-links').classList.toggle('open');
       document.querySelector('.auth-buttons').classList.toggle('open');
     });
 
-    // Load data & render insights
     window.addEventListener('DOMContentLoaded', () => {
       const data = JSON.parse(localStorage.getItem('soulQuiz') || 'null');
       if (!data) {
         document.getElementById('noData').style.display = '';
         return;
       }
-      const get = (k, def) => data[k] || def;
-      // Insight maps
-      const loveMap = {
-        "Words of Affirmation": "Your heart thrives on kind words and encouragement.",
-        "Acts of Service": "You show love through caring actions and thoughtful help.",
-        "Receiving Gifts": "Tokens and gifts speak volumes of love to you.",
-        "Quality Time": "Shared moments are your deepest connection.",
-        "Physical Touch": "Closeness and touch are your language of love."
-      };
-      const westMap = {
-        Aries:"Bold pioneer, charging ahead.",
-        Taurus:"Steadfast and grounded, loving comfort.",
-        Gemini:"Curious communicator, adaptable and bright.",
-        Cancer:"Nurturing soul, guided by intuition.",
-        Leo:"Radiant leader, generous and creative.",
-        Virgo:"Meticulous helper, striving for perfection.",
-        Libra:"Harmony seeker, balancing all things.",
-        Scorpio:"Intense transformer, exploring depth.",
-        Sagittarius:"Adventurous philosopher, chasing truth.",
-        Capricorn:"Ambitious builder, disciplined achiever.",
-        Aquarius:"Visionary humanitarian, breaking boundaries.",
-        Pisces:"Empathetic dreamer, flowing creatively."
-      };
-      const chiMap = {
-        Rat:"Resourceful and quick‑witted in life’s challenges.",
-        Ox:"Dependable and strong, building on honesty.",
-        Tiger:"Brave spirit, winning admiration boldly.",
-        Rabbit:"Gentle heart, seeking peace and comfort.",
-        Dragon:"Energetic visionary, destined for greatness.",
-        Snake:"Wise strategist, trusting inner intuition.",
-        Horse:"Free wanderer, thriving on independence.",
-        Goat:"Kind nurturer, appreciating beauty.",
-        Monkey:"Clever innovator, playful and bright.",
-        Rooster:"Precise organizer, honest and dedicated.",
-        Dog:"Loyal protector, valuing integrity deeply.",
-        Pig:"Sincere giver, generous and compassionate."
-      };
-      // Fill insights
-      const love  = get('loveLanguage','');
-      const west  = get('westernZodiac','');
-      const chi   = get('chineseZodiac','');
-      const num   = get('lifePathNumber','');
-      document.getElementById('loveInsight').textContent   = loveMap[love]   || "Your energy is still aligning.";
-      document.getElementById('westInsight').textContent   = westMap[west]   || "Your stars are still settling.";
-      document.getElementById('chineseInsight').textContent= chiMap[chi]     || "Your Chinese path is unfolding.";
-      document.getElementById('numInsight').textContent    = num
-        ? `Your life path ${num} guides your soul’s journey.`
+      // fill existing
+      document.getElementById('loveInsight').textContent   = data.loveLanguage || "Your energy is still aligning.";
+      document.getElementById('westInsight').textContent   = data.westernZodiac || "Your stars are still settling.";
+      document.getElementById('chineseInsight').textContent= data.chineseZodiac  || "Your Chinese path is unfolding.";
+      document.getElementById('numInsight').textContent     = data.lifePathNumber
+        ? `Your life path ${data.lifePathNumber} guides your soul’s journey.`
         : "Your numerology is yet to reveal its wisdom.";
 
-      // Show cards and nav
+      // fill love language coaching
+      document.getElementById('loveLangLabel').textContent = data.loveLanguage || "Unknown";
+
+      // show all
       document.getElementById('cards').style.display = '';
       document.getElementById('btns').style.display  = '';
     });
