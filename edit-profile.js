@@ -1,56 +1,60 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("profile-form");
+// edit-profile.js
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('profile-form');
+  const fields = ['name','birthday','about','relationshipType','connection'];
   const photoInputs = [
-    document.getElementById("photo1"),
-    document.getElementById("photo2"),
-    document.getElementById("photo3")
+    { input: document.getElementById('photo1'), preview: document.getElementById('preview1'), key: 'profilePhoto1' },
+    { input: document.getElementById('photo2'), preview: document.getElementById('preview2'), key: 'profilePhoto2' },
+    { input: document.getElementById('photo3'), preview: document.getElementById('preview3'), key: 'profilePhoto3' }
   ];
+  const saveMsg = document.getElementById('saveMessage');
 
-  const saved = JSON.parse(localStorage.getItem("profile")) || {};
-  if (saved.name)        form.name.value        = saved.name;
-  if (saved.birthday)    form.birthday.value    = saved.birthday;
-  if (saved.bio)         form.bio.value         = saved.bio;
-  if (saved.relationshipType) form.relationshipType.value = saved.relationshipType;
-  if (saved.connection) form.connection.value = saved.connection;
-
-  const showPreview = (input, previewId, src) => {
-    const img = document.getElementById(previewId);
-    if (src) img.src = src;
-    input.addEventListener("change", () => {
+  // load existing
+  const data = JSON.parse(localStorage.getItem('soulQuiz')||'{}');
+  // populate basic fields
+  fields.forEach(k => {
+    if (data[k]) {
+      const el = form.elements[k];
+      if (el) el.value = data[k];
+    }
+  });
+  // populate previews
+  photoInputs.forEach(({ input, preview, key }) => {
+    if (data[key]) preview.src = data[key];
+    // wire change->preview
+    input.addEventListener('change', () => {
       const file = input.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = () => img.src = reader.result;
+      reader.onload = () => preview.src = reader.result;
       reader.readAsDataURL(file);
     });
-  };
+  });
 
-  showPreview(photoInputs[0], "preview1", saved.photo1);
-  showPreview(photoInputs[1], "preview2", saved.photo2);
-  showPreview(photoInputs[2], "preview3", saved.photo3);
-
-  form.addEventListener("submit", async e => {
-    e.preventDefault();
-    const data = {
-      name: form.name.value,
-      birthday: form.birthday.value,
-      bio: form.bio.value,
-      relationshipType: form.relationshipType.value,
-      connection: form.connection.value
-    };
-
-    const readImage = file => new Promise(resolve => {
+  // helper: read a file to base64 or fallback
+  function readFile(file) {
+    return new Promise(resolve => {
       if (!file) return resolve(null);
       const r = new FileReader();
       r.onload = () => resolve(r.result);
       r.readAsDataURL(file);
     });
+  }
 
-    data.photo1 = await readImage(photoInputs[0].files[0]) || saved.photo1 || null;
-    data.photo2 = await readImage(photoInputs[1].files[0]) || saved.photo2 || null;
-    data.photo3 = await readImage(photoInputs[2].files[0]) || saved.photo3 || null;
-
-    localStorage.setItem("profile", JSON.stringify(data));
-    window.location.href = "my-soul.html";
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    // gather
+    const out = {};
+    fields.forEach(k => out[k] = form.elements[k].value || '');
+    // photos
+    for (let { input, key } of photoInputs) {
+      const file = input.files[0];
+      out[key] = (await readFile(file)) || data[key] || '';
+    }
+    // save
+    localStorage.setItem('soulQuiz', JSON.stringify(out));
+    // show confirmation
+    saveMsg.classList.add('visible');
+    setTimeout(() => saveMsg.classList.remove('visible'), 2500);
   });
 });
