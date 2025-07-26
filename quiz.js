@@ -95,8 +95,7 @@ document.addEventListener("DOMContentLoaded", function () {
     form.appendChild(wrapper);
   });
 
-  
-  // Add auto-description for love language
+  // Auto-description and tooltips
   const loveLangRadios = document.querySelectorAll('input[name="loveLanguage"]');
   const loveDescInput = document.getElementById("loveLanguageDesc");
   const descriptions = {
@@ -106,7 +105,6 @@ document.addEventListener("DOMContentLoaded", function () {
     "Quality Time": "Giving undivided attention and shared moments.",
     "Physical Touch": "Love felt through hugs, kisses, and closeness."
   };
-
   loveLangRadios.forEach(radio => {
     radio.addEventListener("change", function () {
       if (radio.checked && descriptions[radio.value]) {
@@ -117,7 +115,8 @@ document.addEventListener("DOMContentLoaded", function () {
     radio.title = descriptions[radio.value] || "Choose your primary love language";
   });
 
-  
+  // Submit handler (atstatyta)
+  form.addEventListener("submit", function (e) {
     e.preventDefault();
     const data = {};
     fields.forEach(field => {
@@ -162,4 +161,4 @@ document.addEventListener("DOMContentLoaded", function () {
     const animals = ["Rat","Ox","Tiger","Rabbit","Dragon","Snake","Horse","Goat","Monkey","Rooster","Dog","Pig"];
     return animals[year % 12];
   }
-
+});
