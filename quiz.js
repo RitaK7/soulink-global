@@ -1,6 +1,3 @@
-// quiz.js
-// (Only the restoration logic is updated; the submit/save logic is unchanged)
-
 function getWesternZodiac(d) {
   const m = d.getMonth() + 1, day = d.getDate();
   if ((m === 1 && day >= 20) || (m === 2 && day <= 18)) return 'Aquarius';
@@ -26,12 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('quizForm');
   const saved = JSON.parse(localStorage.getItem('soulQuiz') || '{}');
 
-  // Restore simple fields + single radios
   for (let key in saved) {
     const val = saved[key];
 
     if (Array.isArray(val)) {
-      // Multi‑value fields (checkbox groups like hobbies, values, etc.)
       document.querySelectorAll(`input[name="${key}"]`).forEach(inp => {
         inp.checked = val.includes(inp.value);
       });
@@ -40,11 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!el) continue;
 
       if (el.type === 'radio') {
-        // single radio-group
         const opts = form.querySelectorAll(`input[name="${key}"]`);
         opts.forEach(r => { r.checked = (r.value === val); });
       } else {
-        // text, date, select, textarea, number...
         el.value = val;
       }
     }
@@ -74,7 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
     location.href = 'edit-profile.html';
   });
 
-  // Mobile nav toggle
   const navToggle = document.getElementById('navToggle');
   const header = document.querySelector('.main-nav');
   navToggle.addEventListener('click', () => {
