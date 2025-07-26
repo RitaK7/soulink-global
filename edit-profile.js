@@ -9,8 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
     data = {};
   }
 
-  // 1) Render inline fields
-  const fieldsContainer = document.getElementById('fields');
   const fieldDefs = [
     { id:'name',        label:'Name' },
     { id:'birthday',    label:'Birthday (YYYY-MM-DD)' },
@@ -34,93 +32,101 @@ document.addEventListener('DOMContentLoaded', () => {
     'Physical Touch':'Feeling love through hugs, kisses, and closeness.'
   };
 
-  function createField(def) {
+  const fieldsContainer = document.getElementById('fields');
+  fieldDefs.forEach(def => {
     const row = document.createElement('div');
     row.className = 'field-row';
+
     const lbl = document.createElement('div');
     lbl.className = 'field-label';
     lbl.textContent = def.label;
+
     const val = document.createElement('div');
-    val.id = 'edit-'+def.id;
     val.className = 'field-value';
-    if (!data[def.id]) val.classList.add('empty');
+    val.id = 'edit-' + def.id;
     val.textContent = data[def.id] || '–';
+    if (!data[def.id]) val.classList.add('empty');
+
     const icon = document.createElement('i');
-    icon.className = def.readonly
-      ? 'bi bi-info-circle'
-      : 'bi bi-pencil-square';
+    icon.className = def.readonly ? 'bi bi-info-circle' : 'bi bi-pencil-square';
     if (!def.readonly) {
       icon.addEventListener('click', () => editField(def));
     } else {
       icon.title = 'Auto-generated from Love Language';
     }
-    row.append(lbl,val,icon);
-    return row;
-  }
 
-  fieldDefs.forEach(def => {
-    fieldsContainer.appendChild(createField(def));
+    row.append(lbl, val, icon);
+    fieldsContainer.append(row);
   });
 
-  // 2) Photo grid
+  // Photo grid
   const photoGrid = document.getElementById('photoGrid');
-  for (let i=1; i<=3; i++) {
+  for (let i = 1; i <= 3; i++) {
     const slot = document.createElement('div');
     slot.className = 'photo-slot';
+
     const img = document.createElement('img');
-    img.id = 'photoPreview'+i;
-    img.src = data['photo'+i]||'';
+    img.id = 'photoPreview' + i;
+    img.src = data['photo' + i] || '';
     img.alt = `Photo ${i}`;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.id = 'photoInput'+i;
+    img.addEventListener('click', () => fileInput.click());
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.id = 'photoInput' + i;
+    fileInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        data['photo' + i] = reader.result;
+        img.src = reader.result;
+        localStorage.setItem(key, JSON.stringify(data));
+      };
+      reader.readAsDataURL(file);
+    });
+
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.textContent = 'Choose Photo';
-    btn.addEventListener('click', ()=> input.click());
-    input.addEventListener('change', e => {
-      const f = e.target.files[0];
-      if (!f) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        data['photo'+i] = reader.result;
-        img.src = reader.result;
-        localStorage.setItem(key,JSON.stringify(data));
-      };
-      reader.readAsDataURL(f);
-    });
-    slot.append(img,input,btn);
+    btn.addEventListener('click', () => fileInput.click());
+
+    slot.append(img, fileInput, btn);
     photoGrid.append(slot);
   }
 
-  // 3) editField prompt
+  // Inline edit function
   window.editField = def => {
     const current = data[def.id] || '';
-    let promptMsg = `Enter ${def.label}`;
-    if (def.opts) promptMsg += `\nOptions: ${def.opts.join(', ')}`;
-    let newVal = prompt(promptMsg, current);
-    if (newVal===null) return;
+    let promptText = `Enter ${def.label}`;
+    if (def.opts) promptText += `\nOptions: ${def.opts.join(', ')}`;
+    let newVal = prompt(promptText, current);
+    if (newVal === null) return;
     newVal = newVal.trim();
     if (def.opts && !def.opts.includes(newVal)) {
       alert('Please choose one of: ' + def.opts.join(', '));
       return;
     }
+
     data[def.id] = newVal;
-    // auto‑gen loveDescription
-    if (def.id==='loveLanguage') {
-      data.loveLanguageDesc = loveMap[newVal]||'';
-      document.getElementById('edit-loveLanguageDesc').textContent = data.loveLanguageDesc || '–';
-      document.getElementById('edit-loveLanguageDesc').classList.toggle('empty', !data.loveLanguageDesc);
+    const valEl = document.getElementById('edit-' + def.id);
+    valEl.textContent = newVal || '–';
+    valEl.classList.toggle('empty', !newVal);
+
+    // Auto-generate loveLanguageDesc
+    if (def.id === 'loveLanguage') {
+      data.loveLanguageDesc = loveMap[newVal] || '';
+      const descEl = document.getElementById('edit-loveLanguageDesc');
+      descEl.textContent = data.loveLanguageDesc || '–';
+      descEl.classList.toggle('empty', !data.loveLanguageDesc);
     }
-    const el = document.getElementById('edit-'+def.id);
-    el.textContent = newVal||'–';
-    el.classList.toggle('empty', !newVal);
-    localStorage.setItem(key,JSON.stringify(data));
+
+    localStorage.setItem(key, JSON.stringify(data));
   };
 
-  // 4) Save button
-  document.getElementById('saveBtn').addEventListener('click', e=> {
+  // Save button
+  document.getElementById('saveBtn').addEventListener('click', e => {
     e.preventDefault();
     location.href = 'my-soul.html';
   });
