@@ -14,8 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     { id:'birthday',    label:'Birthday (YYYY-MM-DD)' },
     { id:'about',       label:'About / Bio' },
     {
-      id:'relationshipType', 
-      label:'Connection', 
+      id:'relationshipType',
+      label:'Connection',
       opts:['Romantic','Friendship','Both']
     },
     {
@@ -118,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Please choose one of: ' + def.opts.join(', '));
       return;
     }
+
     data[def.id] = newVal;
     const valEl = document.getElementById('edit-' + def.id);
     valEl.textContent = newVal || '–';
@@ -134,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem(key, JSON.stringify(data));
   };
 
-  // Save and redirect
+  // Save
   document.getElementById('saveBtn').addEventListener('click', e => {
     e.preventDefault();
     location.href = 'my-soul.html';
