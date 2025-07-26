@@ -1,15 +1,101 @@
+<!-- edit-profile.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Edit Your Soul Profile</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Soulink – Edit Profile</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #003c43;
+      --card: #004d4d;
+      --text: #eefefe;
+      --accent: #00fdd8;
+      --glow: rgba(0,253,216,0.6);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin:0; padding:0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', sans-serif;
+    }
+    header {
+      background: var(--card);
+      padding: 0.8rem 1rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    header .logo { font-size:1.4rem; color: var(--accent); }
+    nav ul { list-style:none; margin:0; padding:0; display:flex; gap:1rem; }
+    nav a { color: var(--text); text-decoration:none; font-size:0.9rem; display:flex; align-items:center; }
+    nav a i { margin-right:0.3rem; }
+    main {
+      padding:1rem;
+      display:flex; justify-content:center;
+    }
+    .profile-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 0 12px var(--glow);
+    }
+    .field-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding:0.7rem 0; border-bottom:1px solid rgba(255,255,255,0.1);
+    }
+    .field-row:last-child { border-bottom:none; }
+    .field-label { font-weight:600; }
+    .field-value { flex:1; margin:0 0.5rem; word-break:break-word; }
+    .field-value.empty { opacity:0.6; }
+    .field-row i {
+      cursor:pointer; color: var(--accent); font-size:1.1rem;
+      transition: transform .2s;
+    }
+    .field-row i:hover { transform: scale(1.2); }
+    .photos {
+      display:flex; gap:0.7rem; padding:0.7rem 0;
+    }
+    .photos img {
+      width:80px; height:80px; object-fit:cover;
+      border-radius:8px;
+      box-shadow:0 0 8px var(--glow);
+      cursor:pointer;
+    }
+    .photos input {
+      display:none;
+    }
+    .btn-save {
+      margin-top:1rem;
+      width:100%;
+      padding:0.8rem;
+      background: var(--accent);
+      color: var(--bg);
+      border:none; border-radius:30px;
+      font-size:1rem; font-weight:600;
+      box-shadow:0 0 20px var(--glow);
+      cursor:pointer;
+      transition: transform .2s, box-shadow .3s;
+    }
+    .btn-save:hover {
+      transform: translateY(-2px);
+      box-shadow:0 0 30px var(--glow);
+    }
+    @media(max-width:480px) {
+      .field-row { flex-direction: column; align-items: flex-start; }
+      .field-row i { align-self: flex-end; margin-top:0.3rem; }
+      .photos { justify-content: space-between; }
+    }
+  </style>
 </head>
 <body>
+
   <header>
-    <nav>
-      <a href="index.html" aria-current="page"><i class="bi bi-house"></i> Home</a>
+    <div class="logo">Soulink</div>
+    <nav id="navMenu">
+        <a href="index.html" aria-current="page"><i class="bi bi-house"></i> Home</a>
         <a href="quiz.html"><i class="bi bi-question-circle"></i> Quiz</a>
         <a href="edit-profile.html"><i class="bi bi-pencil-square"></i> Edit Profile</a>
         <a href="my-soul.html"><i class="bi bi-person"></i> My Soul</a>
@@ -18,29 +104,86 @@
         <a href="match.html"><i class="bi bi-link-45deg"></i> Match</a>
         <a href="friends.html"><i class="bi bi-people"></i> Friends</a>
         <a href="result.html"><i class="bi bi-award"></i> Result</a>
-    </nav>
+      </nav>
   </header>
 
-  <main class="container">
-    <h2>✨ Edit Your Soul Profile</h2>
-    <div class="profile-section">
-      <div><strong>Name:</strong> <span id="nameDisplay"></span> <button id="edit-name">✎</button></div>
-      <div><strong>Birthday:</strong> <span id="birthdayDisplay"></span> <button id="edit-birthday">✎</button></div>
-      <div><strong>Type:</strong> <span id="typeDisplay"></span> <button id="edit-type">✎</button></div>
-      <div><strong>Love Language:</strong> <span id="languageDisplay"></span> <button id="edit-language">✎</button></div>
-      <div><strong>Hobbies:</strong> <span id="hobbiesDisplay"></span> <button id="edit-hobbies">✎</button></div>
-      <div><strong>Values:</strong> <span id="valuesDisplay"></span> <button id="edit-values">✎</button></div>
-      <div><strong>Unacceptable:</strong> <span id="unacceptableDisplay"></span> <button id="edit-unacceptable">✎</button></div>
-      <div><strong>About:</strong> <span id="aboutDisplay"></span> <button id="edit-about">✎</button></div>
-      <div><strong>Profile Photos:</strong>
-        <div class="photos">
-          <img id="photo1Preview" src="" width="100" height="100" />
-          <img id="photo2Preview" src="" width="100" height="100" />
-          <img id="photo3Preview" src="" width="100" height="100" />
-        </div>
+  <main>
+    <div class="profile-card" id="profileCard">
+      <!-- Inline editable fields -->
+      <div class="field-row">
+        <div class="field-label">Name</div>
+        <div class="field-value empty" id="edit-name">–</div>
+        <i class="bi bi-pencil-square" onclick="editField('name')"></i>
       </div>
+      <div class="field-row">
+        <div class="field-label">Birthday</div>
+        <div class="field-value empty" id="edit-birthday">–</div>
+        <i class="bi bi-pencil-square" onclick="editField('birthday')"></i>
+      </div>
+      <div class="field-row">
+        <div class="field-label">About / Bio</div>
+        <div class="field-value empty" id="edit-about">–</div>
+        <i class="bi bi-pencil-square" onclick="editField('about')"></i>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Connection</div>
+        <div class="field-value empty" id="edit-relationshipType">–</div>
+        <i class="bi bi-pencil-square" onclick="editField('relationshipType','Romantic,Friendship,Both')"></i>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Love Language</div>
+        <div class="field-value empty" id="edit-loveLanguage">–</div>
+        <i class="bi bi-pencil-square" onclick="editField('loveLanguage','Words of Affirmation,Acts of Service,Receiving Gifts,Quality Time,Physical Touch')"></i>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Love Description</div>
+        <div class="field-value empty" id="edit-loveLanguageDesc">–</div>
+        <i class="bi bi-pencil-square" onclick="alert('This is auto‑generated from Love Language.')"></i>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Hobbies</div>
+        <div class="field-value empty" id="edit-hobbies">–</div>
+        <i class="bi bi-pencil-square" onclick="editField('hobbies')"></i>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Values</div>
+        <div class="field-value empty" id="edit-values">–</div>
+        <i class="bi bi-pencil-square" onclick="editField('values')"></i>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Unacceptable</div>
+        <div class="field-value empty" id="edit-unacceptable">–</div>
+        <i class="bi bi-pencil-square" onclick="editField('unacceptable')"></i>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Country</div>
+        <div class="field-value empty" id="edit-country">–</div>
+        <i class="bi bi-pencil-square" onclick="editField('country')"></i>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Height (cm)</div>
+        <div class="field-value empty" id="edit-height">–</div>
+        <i class="bi bi-pencil-square" onclick="editField('height')"></i>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Weight (kg)</div>
+        <div class="field-value empty" id="edit-weight">–</div>
+        <i class="bi bi-pencil-square" onclick="editField('weight')"></i>
+      </div>
+
+      <!-- Photos -->
+      <div class="field-label" style="padding-top:0.7rem;">Profile Photos</div>
+      <div class="photos">
+        <label><img id="photoPreview1" src="" alt="Photo 1" onclick="document.getElementById('photoInput1').click()"/></label>
+        <label><img id="photoPreview2" src="" alt="Photo 2" onclick="document.getElementById('photoInput2').click()"/></label>
+        <label><img id="photoPreview3" src="" alt="Photo 3" onclick="document.getElementById('photoInput3').click()"/></label>
+      </div>
+      <input type="file" id="photoInput1" accept="image/*"/>
+      <input type="file" id="photoInput2" accept="image/*"/>
+      <input type="file" id="photoInput3" accept="image/*"/>
+
+      <button class="btn-save" onclick="saveAndGo()">Save Profile 💾</button>
     </div>
-    <button id="saveBtn">💾 Save Profile</button>
   </main>
 
   <script src="edit-profile.js"></script>
