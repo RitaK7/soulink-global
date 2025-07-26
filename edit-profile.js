@@ -13,8 +13,16 @@ document.addEventListener('DOMContentLoaded', () => {
     { id:'name',        label:'Name' },
     { id:'birthday',    label:'Birthday (YYYY-MM-DD)' },
     { id:'about',       label:'About / Bio' },
-    { id:'relationshipType', label:'Connection', opts:['Romantic','Friendship','Both'] },
-    { id:'loveLanguage',    label:'Love Language', opts:['Words of Affirmation','Acts of Service','Receiving Gifts','Quality Time','Physical Touch'] },
+    {
+      id:'relationshipType', 
+      label:'Connection', 
+      opts:['Romantic','Friendship','Both']
+    },
+    {
+      id:'loveLanguage',
+      label:'Love Language',
+      opts:['Words of Affirmation','Acts of Service','Receiving Gifts','Quality Time','Physical Touch']
+    },
     { id:'loveLanguageDesc', label:'Love Description', readonly:true },
     { id:'hobbies',     label:'Hobbies (comma‑sep)' },
     { id:'values',      label:'Values (comma‑sep)' },
@@ -32,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     'Physical Touch':'Feeling love through hugs, kisses, and closeness.'
   };
 
+  // Render fields
   const fieldsContainer = document.getElementById('fields');
   fieldDefs.forEach(def => {
     const row = document.createElement('div');
@@ -67,36 +76,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const img = document.createElement('img');
     img.id = 'photoPreview' + i;
-    img.src = data['photo' + i] || '';
     img.alt = `Photo ${i}`;
-    img.addEventListener('click', () => fileInput.click());
+    img.src = data['photo'+i] || '';
+    slot.appendChild(img);
 
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*';
-    fileInput.id = 'photoInput' + i;
-    fileInput.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (!file) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.id = 'photoInput' + i;
+    input.addEventListener('change', e => {
+      const f = e.target.files[0];
+      if (!f) return;
       const reader = new FileReader();
       reader.onload = () => {
-        data['photo' + i] = reader.result;
+        data['photo'+i] = reader.result;
         img.src = reader.result;
         localStorage.setItem(key, JSON.stringify(data));
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(f);
     });
+    slot.appendChild(input);
 
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.textContent = 'Choose Photo';
-    btn.addEventListener('click', () => fileInput.click());
+    btn.addEventListener('click', () => input.click());
+    slot.appendChild(btn);
 
-    slot.append(img, fileInput, btn);
-    photoGrid.append(slot);
+    photoGrid.appendChild(slot);
   }
 
-  // Inline edit function
+  // Inline edit
   window.editField = def => {
     const current = data[def.id] || '';
     let promptText = `Enter ${def.label}`;
@@ -108,13 +118,12 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Please choose one of: ' + def.opts.join(', '));
       return;
     }
-
     data[def.id] = newVal;
     const valEl = document.getElementById('edit-' + def.id);
     valEl.textContent = newVal || '–';
     valEl.classList.toggle('empty', !newVal);
 
-    // Auto-generate loveLanguageDesc
+    // Auto‑gen loveLanguageDesc
     if (def.id === 'loveLanguage') {
       data.loveLanguageDesc = loveMap[newVal] || '';
       const descEl = document.getElementById('edit-loveLanguageDesc');
@@ -125,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem(key, JSON.stringify(data));
   };
 
-  // Save button
+  // Save and redirect
   document.getElementById('saveBtn').addEventListener('click', e => {
     e.preventDefault();
     location.href = 'my-soul.html';
