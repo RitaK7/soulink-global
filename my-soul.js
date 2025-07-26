@@ -1,13 +1,13 @@
 
-// my-soul.js – Soul Profile with Insights & Navigation (Full Version with Life Path Support)
-
 window.addEventListener('DOMContentLoaded', () => {
   const data = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
 
-  function fill(id, value) {
+  const fill = (id, value) => {
     const el = document.getElementById(id);
-    if (el) el.textContent = value || "Unknown";
-  }
+    if (el) el.textContent = value && value !== "" ? value : "–";
+  };
+
+  const arrayToString = (arr) => Array.isArray(arr) ? arr.join(", ") : "–";
 
   function calculateLifePath(dateStr) {
     if (!dateStr) return null;
@@ -19,37 +19,35 @@ window.addEventListener('DOMContentLoaded', () => {
     return sum.toString();
   }
 
-  const lifePath = data.lifePath || data.lifePathNumber || data.life_path || calculateLifePath(data.birthdate);
+  const lifePath = data.lifePath || data.lifePathNumber || calculateLifePath(data.birthdate || data.birthday);
 
   fill("name", data.name);
-  fill("birthdate", data.birthdate);
+  fill("birthdate", data.birthdate || data.birthday);
   fill("country", data.country);
-  fill("height", data.height ? data.height + " cm" : "");
-  fill("weight", data.weight ? data.weight + " kg" : "");
+  fill("height", data.height ? data.height + " cm" : "–");
+  fill("weight", data.weight ? data.weight + " kg" : "–");
   fill("connection", data.connection);
-  fill("hobbies", (data.hobbies || []).join(", "));
-  fill("values", (data.values || []).join(", "));
+  fill("relationshipType", data.relationshipType);
+  fill("hobbies", arrayToString(data.hobbies));
+  fill("values", arrayToString(data.values));
   fill("unacceptable", data.unacceptable);
   fill("about", data.about);
-
+  fill("loveLanguage", data.loveLanguage);
   fill("westernZodiac", data.westernZodiac);
   fill("chineseZodiac", data.chineseZodiac);
   fill("lifePath", lifePath);
 
-  // Avatar
   const avatar = document.getElementById("avatar");
   if (avatar && data.name) {
     avatar.textContent = data.name.charAt(0).toUpperCase();
   }
 
-  // Plan (Free or Premium)
   const planTag = document.getElementById("planTag");
   const plan = localStorage.getItem("plan") || "free";
   if (planTag) {
     planTag.textContent = plan === "premium" ? "💎 Premium" : "🔓 Free";
   }
 
-  // AI Insight Maps
   const loveLangMap = {
     "Words of Affirmation": "You flourish on heartfelt compliments and spoken appreciation.",
     "Acts of Service": "Actions speak louder than words – you feel loved when help arrives.",
