@@ -1,202 +1,95 @@
-<!-- edit-profile.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Soulink – Edit Profile</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css">
   <style>
-    :root {
-      --bg: #003c43;
-      --card: #004d4d;
-      --text: #eefefe;
-      --accent: #00fdd8;
-      --glow: rgba(0,253,216,0.6);
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin:0; padding:0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', sans-serif;
-    }
-    header {
-      background: var(--card);
-      padding: 0.8rem 1rem;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .logo { font-size:1.4rem; color: var(--accent); }
-    nav { display:flex; gap:1rem; }
-    nav a {
-      color: var(--text); text-decoration:none;
-      font-size:0.9rem; display:flex; align-items:center;
-    }
-    nav a i { margin-right:0.3rem; }
-    main { padding:1rem; display:flex; justify-content:center; }
-    .profile-card {
-      background: var(--card);
-      border-radius:12px;
-      padding:1.5rem;
-      width:100%; max-width:600px;
-      box-shadow:0 0 12px var(--glow);
-    }
-    .field-row {
-      display:flex; justify-content:space-between; align-items:center;
-      padding:0.7rem 0; border-bottom:1px solid rgba(255,255,255,0.1);
-    }
-    .field-row:last-child { border-bottom:none; }
-    .field-label { font-weight:600; }
-    .field-value { flex:1; margin:0 0.5rem; word-break:break-word; }
-    .field-value.empty { opacity:0.6; }
-    .field-row i {
-      cursor:pointer; color: var(--accent);
-      font-size:1.1rem; transition:transform .2s;
-    }
-    .field-row i:hover { transform:scale(1.2); }
-    .photos {
-      display:flex; gap:0.7rem; padding:0.7rem 0;
-      flex-wrap:wrap; justify-content:center;
-    }
-    .photo-slot {
-      text-align:center;
+    /* Only overrides specific to edit‑profile */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px,1fr));
+      gap: 1rem;
+      margin-top: 0.5rem;
     }
     .photo-slot img {
-      width:80px; height:80px; object-fit:cover;
-      border-radius:8px; box-shadow:0 0 8px var(--glow);
-      cursor:pointer;
+      width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,253,216,0.6);
+      cursor: pointer;
     }
     .photo-slot button {
-      margin-top:0.3rem;
-      padding:0.3rem 0.6rem;
-      background: var(--accent); border:none; border-radius:6px;
-      color: var(--bg); cursor:pointer;
-      font-size:0.8rem;
+      width: 100%;
+      margin-top: 0.3rem;
+      background: #00fdd8;
+      color: #003c43;
+      border: none;
+      border-radius: 6px;
+      padding: 0.3rem;
+      font-size: 0.85rem;
+      cursor: pointer;
     }
-    .photo-slot input[type=file] { display:none; }
-    .btn-save {
-      margin-top:1.5rem;
-      width:100%;
-      padding:0.8rem;
-      background: var(--accent);
-      color: var(--bg);
-      border:none; border-radius:30px;
-      font-size:1rem; font-weight:600;
-      box-shadow:0 0 20px var(--glow);
-      cursor:pointer;
-      transition:transform .2s,box-shadow .3s;
-    }
-    .btn-save:hover {
-      transform:translateY(-2px);
-      box-shadow:0 0 30px var(--glow);
-    }
-    @media(max-width:480px) {
-      .field-row { flex-direction:column; align-items:flex-start; }
-      .field-row i { align-self:flex-end; margin-top:0.3rem; }
+    @media(max-width: 600px) {
+      /* stack photos on mobile */
+      .photo-grid {
+        grid-template-columns: 1fr 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <header>
+  <!-- NAVBAR (same as quiz.html) -->
+  <header class="main-nav">
     <div class="logo">Soulink</div>
+    <button id="navToggle" class="nav-toggle"><i class="bi bi-list"></i></button>
     <nav>
-      <a href="index.html"><i class="bi bi-house"></i>Home</a>
-      <a href="quiz.html"><i class="bi bi-question-circle"></i>Quiz</a>
-      <a href="edit-profile.html" aria-current="page"><i class="bi bi-pencil-square"></i>Edit Profile</a>
-      <a href="my-soul.html"><i class="bi bi-person"></i>My Soul</a>
+      <ul class="nav-links">
+        <li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
+        <li><a href="quiz.html"><i class="bi bi-question-circle"></i>Quiz</a></li>
+        <li><a href="edit-profile.html" aria-current="page"><i class="bi bi-pencil-square"></i>Edit Profile</a></li>
+        <li><a href="my-soul.html"><i class="bi bi-person"></i>My Soul</a></li>
+        <li><a href="soul-chart.html"><i class="bi bi-graph-up"></i>Soul Chart</a></li>
+        <li><a href="soul-coach.html"><i class="bi bi-chat-dots"></i>Soul Coach</a></li>
+        <li><a href="soulink-match.html"><i class="bi bi-heart"></i>Match</a></li>
+        <li><a href="friends.html"><i class="bi bi-people"></i>Friends</a></li>
+        <li><a href="result.html"><i class="bi bi-bar-chart-line"></i>Results</a></li>
+      </ul>
+      <div class="auth-buttons">
+        <a class="btn-outline" href="login.html">Log In</a>
+        <a class="btn-outline" href="signup.html">Sign Up</a>
+      </div>
     </nav>
   </header>
 
-  <main>
-    <div class="profile-card" id="profileCard">
-      <!-- Fields -->
-      <div class="field-row">
-        <div class="field-label">Name</div>
-        <div class="field-value empty" id="edit-name">–</div>
-        <i class="bi bi-pencil-square" onclick="editField('name')"></i>
-      </div>
-      <div class="field-row">
-        <div class="field-label">Birthday</div>
-        <div class="field-value empty" id="edit-birthday">–</div>
-        <i class="bi bi-pencil-square" onclick="editField('birthday')"></i>
-      </div>
-      <div class="field-row">
-        <div class="field-label">About / Bio</div>
-        <div class="field-value empty" id="edit-about">–</div>
-        <i class="bi bi-pencil-square" onclick="editField('about')"></i>
-      </div>
-      <div class="field-row">
-        <div class="field-label">Connection</div>
-        <div class="field-value empty" id="edit-relationshipType">–</div>
-        <i class="bi bi-pencil-square"
-           onclick="editField('relationshipType','Romantic,Friendship,Both')"></i>
-      </div>
-      <div class="field-row">
-        <div class="field-label">Love Language</div>
-        <div class="field-value empty" id="edit-loveLanguage">–</div>
-        <i class="bi bi-pencil-square"
-           onclick="editField('loveLanguage','Words of Affirmation,Acts of Service,Receiving Gifts,Quality Time,Physical Touch')"></i>
-      </div>
-      <div class="field-row">
-        <div class="field-label">Love Description</div>
-        <div class="field-value empty" id="edit-loveLanguageDesc">–</div>
-        <i class="bi bi-info-circle" title="Auto-generated from your Love Language"></i>
-      </div>
-      <div class="field-row">
-        <div class="field-label">Hobbies</div>
-        <div class="field-value empty" id="edit-hobbies">–</div>
-        <i class="bi bi-pencil-square" onclick="editField('hobbies')"></i>
-      </div>
-      <div class="field-row">
-        <div class="field-label">Values</div>
-        <div class="field-value empty" id="edit-values">–</div>
-        <i class="bi bi-pencil-square" onclick="editField('values')"></i>
-      </div>
-      <div class="field-row">
-        <div class="field-label">Unacceptable</div>
-        <div class="field-value empty" id="edit-unacceptable">–</div>
-        <i class="bi bi-pencil-square" onclick="editField('unacceptable')"></i>
-      </div>
-      <div class="field-row">
-        <div class="field-label">Country</div>
-        <div class="field-value empty" id="edit-country">–</div>
-        <i class="bi bi-pencil-square" onclick="editField('country')"></i>
-      </div>
-      <div class="field-row">
-        <div class="field-label">Height (cm)</div>
-        <div class="field-value empty" id="edit-height">–</div>
-        <i class="bi bi-pencil-square" onclick="editField('height')"></i>
-      </div>
-      <div class="field-row">
-        <div class="field-label">Weight (kg)</div>
-        <div class="field-value empty" id="edit-weight">–</div>
-        <i class="bi bi-pencil-square" onclick="editField('weight')"></i>
-      </div>
+  <!-- EDIT PROFILE FORM -->
+  <main class="container">
+    <div class="card rounded shadow p-4 mt-4">
+      <h2 class="text-accent mb-4">✨ Edit Your Soul Profile</h2>
+      <!-- Inline fields -->
+      <div id="fields"></div>
 
       <!-- Photos -->
-      <div class="field-label" style="padding-top:0.7rem;">Profile Photos</div>
-      <div class="photos">
-        <div class="photo-slot">
-          <img id="photoPreview1" src="" alt="Photo 1" onclick="triggerPhoto(1)"/>
-          <input type="file" id="photoInput1" accept="image/*"/>
-          <button type="button" onclick="triggerPhoto(1)">Choose Photo</button>
-        </div>
-        <div class="photo-slot">
-          <img id="photoPreview2" src="" alt="Photo 2" onclick="triggerPhoto(2)"/>
-          <input type="file" id="photoInput2" accept="image/*"/>
-          <button type="button" onclick="triggerPhoto(2)">Choose Photo</button>
-        </div>
-        <div class="photo-slot">
-          <img id="photoPreview3" src="" alt="Photo 3" onclick="triggerPhoto(3)"/>
-          <input type="file" id="photoInput3" accept="image/*"/>
-          <button type="button" onclick="triggerPhoto(3)">Choose Photo</button>
-        </div>
-      </div>
+      <h3 class="mt-4">Profile Photos</h3>
+      <div class="photo-grid" id="photoGrid"></div>
 
-      <button class="btn-save" onclick="saveAndGo()">Save Profile 💾</button>
+      <button id="saveBtn" class="btn-submit w-full mt-4">Save Profile 💾</button>
     </div>
   </main>
 
-  <script src="edit-profile.js"></script>
+  <footer class="site-footer mt-auto py-3">
+    © 2025 soulink.global
+  </footer>
+
+  <script src="edit-profile.js" defer></script>
+  <script>
+    // Mobile nav toggle
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.querySelector('.nav-links').classList.toggle('open');
+      document.querySelector('.auth-buttons').classList.toggle('open');
+    });
+  </script>
 </body>
 </html>
