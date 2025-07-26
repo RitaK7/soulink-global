@@ -1,3 +1,4 @@
+
 // quiz.js
 (function() {
   // Zodiac calculators
@@ -51,10 +52,12 @@
         form.chineseZodiac.value  = getChineseZodiac(bd);
       }
     }
+
     function updateLoveDesc() {
-      const sel = form.loveLanguage.value;
-      form.loveDescription.value = loveLangDesc[sel] || '';
+      const selected = form.querySelector('input[name="loveLanguage"]:checked');
+      form.loveDescription.value = selected ? loveLangDesc[selected.value] || '' : '';
     }
+
     form.birthdate.addEventListener('change', updateZodiacFields);
     form.querySelectorAll('input[name="loveLanguage"]')
         .forEach(r => r.addEventListener('change', updateLoveDesc));
