@@ -1,60 +1,48 @@
-// edit-profile.js
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('profile-form');
-  const fields = ['name','birthday','about','relationshipType','connection'];
-  const photoInputs = [
-    { input: document.getElementById('photo1'), preview: document.getElementById('preview1'), key: 'profilePhoto1' },
-    { input: document.getElementById('photo2'), preview: document.getElementById('preview2'), key: 'profilePhoto2' },
-    { input: document.getElementById('photo3'), preview: document.getElementById('preview3'), key: 'profilePhoto3' }
-  ];
-  const saveMsg = document.getElementById('saveMessage');
 
-  // load existing
-  const data = JSON.parse(localStorage.getItem('soulQuiz')||'{}');
-  // populate basic fields
-  fields.forEach(k => {
-    if (data[k]) {
-      const el = form.elements[k];
-      if (el) el.value = data[k];
-    }
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("edit-profile-form");
+
+  // Load existing data from localStorage
+  const storedData = JSON.parse(localStorage.getItem("soulQuiz")) || {};
+  document.getElementById("name").value = storedData.name || "";
+  document.getElementById("birthday").value = storedData.birthday || "";
+  document.getElementById("about").value = storedData.about || "";
+  document.getElementById("relationshipType").value = storedData.relationshipType || "";
+  document.getElementById("connection").value = storedData.connection || "";
+
+  // Handle Save
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const updatedData = {
+      ...storedData,
+      name: document.getElementById("name").value,
+      birthday: document.getElementById("birthday").value,
+      about: document.getElementById("about").value,
+      relationshipType: document.getElementById("relationshipType").value,
+      connection: document.getElementById("connection").value,
+    };
+    localStorage.setItem("soulQuiz", JSON.stringify(updatedData));
+    window.location.href = "my-soul.html";
   });
-  // populate previews
-  photoInputs.forEach(({ input, preview, key }) => {
-    if (data[key]) preview.src = data[key];
-    // wire change->preview
-    input.addEventListener('change', () => {
+
+  // Preview image uploads
+  function previewImage(inputId, previewId) {
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+
+    input.addEventListener("change", function () {
       const file = input.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => preview.src = reader.result;
-      reader.readAsDataURL(file);
-    });
-  });
-
-  // helper: read a file to base64 or fallback
-  function readFile(file) {
-    return new Promise(resolve => {
-      if (!file) return resolve(null);
-      const r = new FileReader();
-      r.onload = () => resolve(r.result);
-      r.readAsDataURL(file);
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          preview.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
     });
   }
 
-  form.addEventListener('submit', async e => {
-    e.preventDefault();
-    // gather
-    const out = {};
-    fields.forEach(k => out[k] = form.elements[k].value || '');
-    // photos
-    for (let { input, key } of photoInputs) {
-      const file = input.files[0];
-      out[key] = (await readFile(file)) || data[key] || '';
-    }
-    // save
-    localStorage.setItem('soulQuiz', JSON.stringify(out));
-    // show confirmation
-    saveMsg.classList.add('visible');
-    setTimeout(() => saveMsg.classList.remove('visible'), 2500);
-  });
+  previewImage("photo1", "preview1");
+  previewImage("photo2", "preview2");
+  previewImage("photo3", "preview3");
 });
