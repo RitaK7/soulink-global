@@ -1,244 +1,67 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Soulink – Edit Profile</title>
-  <!-- Bootstrap Icons -->
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-  />
-  <style>
-    :root {
-      --bg: #003c43;
-      --nav-bg: #002c2f;
-      --card-bg: #004d4d;
-      --accent: #2ae49d;
-      --text-light: #eefefe;
-      --glow: rgba(42,228,157,0.6);
-      --radius: 16px;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: "Segoe UI", system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text-light);
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    /* ─── NAV ───────────────────────────────────────────────── */
-    header {
-      background: var(--nav-bg);
-      position: sticky; top: 0; z-index: 10;
-    }
-    .nav-wrap {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 0.75rem 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .nav-logo { font-size: 1.5rem; font-weight: bold; color: var(--accent); }
-    .nav-links {
-      list-style: none;
-      display: flex;
-      gap: 1rem;
-      margin: 0; padding: 0;
-    }
-    .nav-links a {
-      text-decoration: none;
-      color: var(--text-light);
-      font-weight: 500;
-      padding: 0.3rem 0.5rem;
-      border-radius: 8px;
-      transition: background 0.3s, box-shadow 0.3s;
-    }
-    .nav-links a[aria-current="page"],
-    .nav-links a:hover {
-      background: rgba(42,228,157,0.2);
-      box-shadow: 0 0 6px var(--glow);
-    }
-    .nav-toggle {
-      display: none; background: none; border: none;
-      font-size: 1.5rem; color: var(--accent); cursor: pointer;
-    }
-    @media (max-width: 700px) {
-      .nav-toggle { display: block; }
-      .nav-links { display: none; flex-direction: column; background: var(--nav-bg); width: 100%; padding: 1rem; }
-      .nav-links.open { display: flex; }
-    }
-
-    /* ─── FORM ──────────────────────────────────────────────── */
-    main.container {
-      flex: 1;
-      max-width: 600px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-    }
-    .form-card {
-      background: var(--card-bg);
-      border-radius: var(--radius);
-      padding: 2rem;
-      box-shadow: 0 0 12px var(--glow);
-    }
-    .form-card h1 {
-      margin-top: 0;
-      color: var(--accent);
-      font-size: 1.6rem;
-      text-align: center;
-    }
-    .form-card label {
-      display: block;
-      margin: 1rem 0 0.25rem;
-      font-weight: 500;
-    }
-    .form-card input[type="text"],
-    .form-card input[type="date"],
-    .form-card select,
-    .form-card textarea {
-      width: 100%;
-      padding: 0.6rem;
-      border: none;
-      border-radius: 8px;
-      background: #005f56;
-      color: var(--text-light);
-      font-size: 1rem;
-      transition: box-shadow 0.2s;
-    }
-    .form-card input:focus,
-    .form-card select:focus,
-    .form-card textarea:focus {
-      outline: none;
-      box-shadow: 0 0 8px var(--glow);
-    }
-    .form-card input[type="file"] {
-      margin-top: 0.5rem;
-    }
-    .form-card .preview {
-      margin-top: 0.5rem;
-      width: 100px; height: 100px;
-      object-fit: cover;
-      border-radius: 8px;
-      box-shadow: 0 0 8px var(--glow);
-    }
-    .form-card .btn-save {
-      display: block;
-      width: 100%;
-      margin-top: 1.5rem;
-      padding: 0.8rem;
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: var(--bg);
-      background: linear-gradient(135deg, #00ffd0, #00bfa5);
-      border: none;
-      border-radius: 30px;
-      box-shadow: 0 0 20px rgba(0,255,208,0.7);
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.3s;
-    }
-    .form-card .btn-save:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 30px rgba(0,255,208,0.9);
-    }
-    .save-message {
-      text-align: center;
-      margin-top: 1rem;
-      font-size: 1rem;
-      opacity: 0;
-      transition: opacity 0.4s;
-    }
-    .save-message.visible {
-      opacity: 1;
-    }
-
-    /* ─── BOTTOM NAV ────────────────────────────────────────── */
-    .bottom-nav {
-      background: var(--nav-bg);
-      text-align: center;
-      padding: 1rem 0;
-    }
-    .bottom-nav a {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 500;
-      margin: 0 1rem;
-      font-size: 1rem;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Profile</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <header>
-    <div class="nav-wrap">
-      <button id="navToggle" class="nav-toggle"><i class="bi bi-list"></i></button>
-      <div class="nav-logo">Soulink</div>
-      <ul class="nav-links" id="navLinks">
-        <li><a href="index.html"><i class="bi bi-house"></i> Home</a></li>
-        <li><a href="quiz.html"><i class="bi bi-question-circle"></i> Quiz</a></li>
-        <li><a href="edit-profile.html" aria-current="page"><i class="bi bi-pencil-square"></i> Edit Profile</a></li>
-        <li><a href="my-soul.html"><i class="bi bi-person"></i> My Soul</a></li>
-        <li><a href="soul-chart.html"><i class="bi bi-graph-up"></i> Soul Chart</a></li>
-        <li><a href="soul-coach.html"><i class="bi bi-chat-dots"></i> Soul Coach</a></li>
-      </ul>
-    </div>
+<body class="edit-profile-body">
+  <header class="navbar">
+    <div class="logo">Soulink</div>
+    <nav>
+      <a href="quiz.html">← Back to Quiz</a>
+      <a href="my-soul.html">Go to My Soul →</a>
+    </nav>
   </header>
 
-  <main class="container">
-    <div class="form-card">
-      <h1>Edit Your Soul Profile</h1>
-      <form id="profile-form" autocomplete="off">
-        <label for="name">Name</label>
-        <input id="name" name="name" type="text" required/>
+  <main>
+    <h1>Edit Your Soul Profile ✨</h1>
+    <form id="editProfileForm" class="form-container">
+      <label>Name:<input type="text" name="name" id="name" /></label>
+      <label>Birthday:<input type="text" name="birthday" id="birthday" placeholder="YYYY-MM-DD"/></label>
+      <label>About:<textarea name="about" id="about" placeholder="Tell us more about you..."></textarea></label>
 
-        <label for="birthday">Birthday</label>
-        <input id="birthday" name="birthday" type="text" placeholder="e.g. 1972-11-22" required/>
-
-        <label for="about">About</label>
-        <textarea id="about" name="about" rows="3"></textarea>
-
-        <label for="relationshipType">Relationship Type</label>
+      <label>Type of Connection:
         <select id="relationshipType" name="relationshipType">
-          <option value="">– Select –</option>
-          <option>Romantic</option>
-          <option>Friendship</option>
-          <option>Both</option>
+          <option value="Romantic">Romantic</option>
+          <option value="Friendship">Friendship</option>
+          <option value="Both">Both</option>
         </select>
+      </label>
 
-        <label for="connection">Connection</label>
-        <input id="connection" name="connection" type="text" placeholder="e.g. Discord ID, LinkedIn"/>
+      <label>Love Language:
+        <select id="loveLanguage" name="loveLanguage">
+          <option value="Words of Affirmation">Words of Affirmation</option>
+          <option value="Acts of Service">Acts of Service</option>
+          <option value="Receiving Gifts">Receiving Gifts</option>
+          <option value="Quality Time">Quality Time</option>
+          <option value="Physical Touch">Physical Touch</option>
+        </select>
+      </label>
 
-        <label>Profile Photo 1</label>
-        <input id="photo1" type="file" accept="image/*"/>
-        <img id="preview1" class="preview" alt="Preview 1"/>
+      <label>Hobbies:<input type="text" name="hobbies" id="hobbies" placeholder="Reading, dancing, hiking..."/></label>
+      <label>Values:<input type="text" name="values" id="values" placeholder="Honesty, kindness..."/></label>
+      <label>Unacceptable in Relationship:<textarea id="unacceptable" name="unacceptable" placeholder="Dishonesty, aggression..."></textarea></label>
 
-        <label>Profile Photo 2</label>
-        <input id="photo2" type="file" accept="image/*"/>
-        <img id="preview2" class="preview" alt="Preview 2"/>
+      <div class="photo-section">
+        <label>Profile Photo 1:<input type="file" id="profilePhoto1" accept="image/*"/></label>
+        <img id="preview1" class="photo-preview" alt="Preview 1"/>
+        <label>Profile Photo 2:<input type="file" id="profilePhoto2" accept="image/*"/></label>
+        <img id="preview2" class="photo-preview" alt="Preview 2"/>
+        <label>Profile Photo 3:<input type="file" id="profilePhoto3" accept="image/*"/></label>
+        <img id="preview3" class="photo-preview" alt="Preview 3"/>
+      </div>
 
-        <label>Profile Photo 3</label>
-        <input id="photo3" type="file" accept="image/*"/>
-        <img id="preview3" class="preview" alt="Preview 3"/>
-
-        <button type="submit" class="btn-save">Save 💾</button>
-        <div id="saveMessage" class="save-message">✅ Saved!</div>
-      </form>
-    </div>
+      <button type="submit" class="save-btn">💾 Save Profile</button>
+    </form>
   </main>
 
-  <nav class="bottom-nav">
-    <a href="quiz.html"><i class="bi bi-arrow-left"></i> Back to Quiz</a>
-    <a href="my-soul.html">Go to My Soul <i class="bi bi-arrow-right"></i></a>
-  </nav>
+  <footer>
+    <p>© 2025 Soulink. All rights reserved.</p>
+  </footer>
 
-  <script>
-    // mobile nav toggle
-    document.getElementById('navToggle').addEventListener('click', () => {
-      document.getElementById('navLinks').classList.toggle('open');
-    });
-  </script>
-  <script src="edit-profile.js" defer></script>
+  <script src="edit-profile.js"></script>
 </body>
 </html>
