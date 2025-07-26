@@ -95,7 +95,29 @@ document.addEventListener("DOMContentLoaded", function () {
     form.appendChild(wrapper);
   });
 
-  form.addEventListener("submit", function (e) {
+  
+  // Add auto-description for love language
+  const loveLangRadios = document.querySelectorAll('input[name="loveLanguage"]');
+  const loveDescInput = document.getElementById("loveLanguageDesc");
+  const descriptions = {
+    "Words of Affirmation": "Expressing love through kind and encouraging words.",
+    "Acts of Service": "Doing helpful, caring actions to show love.",
+    "Receiving Gifts": "Feeling loved through thoughtful presents and symbols.",
+    "Quality Time": "Giving undivided attention and shared moments.",
+    "Physical Touch": "Love felt through hugs, kisses, and closeness."
+  };
+
+  loveLangRadios.forEach(radio => {
+    radio.addEventListener("change", function () {
+      if (radio.checked && descriptions[radio.value]) {
+        loveDescInput.value = descriptions[radio.value];
+        loveDescInput.placeholder = descriptions[radio.value];
+      }
+    });
+    radio.title = descriptions[radio.value] || "Choose your primary love language";
+  });
+
+  
     e.preventDefault();
     const data = {};
     fields.forEach(field => {
@@ -140,4 +162,4 @@ document.addEventListener("DOMContentLoaded", function () {
     const animals = ["Rat","Ox","Tiger","Rabbit","Dragon","Snake","Horse","Goat","Monkey","Rooster","Dog","Pig"];
     return animals[year % 12];
   }
-});
+
