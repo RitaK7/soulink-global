@@ -3,65 +3,132 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Edit Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Soul Profile</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background-color: #003c43;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    input[type="text"],
+    input[type="date"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background-color: #004d4d;
+      color: white;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    .photo-preview {
+      max-width: 150px;
+      border-radius: 10px;
+      margin-top: 10px;
+      box-shadow: 0 0 12px #00fdd8;
+    }
+    .btn-save {
+      background-color: #00fdd8;
+      color: black;
+      font-weight: bold;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 10px #00fdd8;
+    }
+    .nav-buttons {
+      margin-bottom: 20px;
+    }
+    .nav-buttons a {
+      color: #00fdd8;
+      margin-right: 20px;
+      text-decoration: none;
+    }
+  </style>
 </head>
-<body class="edit-profile-body">
-  <header class="navbar">
-    <div class="logo">Soulink</div>
-    <nav>
-      <a href="quiz.html">← Back to Quiz</a>
-      <a href="my-soul.html">Go to My Soul →</a>
-    </nav>
-  </header>
-
-  <main>
-    <h1>Edit Your Soul Profile ✨</h1>
-    <form id="editProfileForm" class="form-container">
-      <label>Name:<input type="text" name="name" id="name" /></label>
-      <label>Birthday:<input type="text" name="birthday" id="birthday" placeholder="YYYY-MM-DD"/></label>
-      <label>About:<textarea name="about" id="about" placeholder="Tell us more about you..."></textarea></label>
-
-      <label>Type of Connection:
-        <select id="relationshipType" name="relationshipType">
-          <option value="Romantic">Romantic</option>
-          <option value="Friendship">Friendship</option>
-          <option value="Both">Both</option>
-        </select>
-      </label>
-
-      <label>Love Language:
-        <select id="loveLanguage" name="loveLanguage">
-          <option value="Words of Affirmation">Words of Affirmation</option>
-          <option value="Acts of Service">Acts of Service</option>
-          <option value="Receiving Gifts">Receiving Gifts</option>
-          <option value="Quality Time">Quality Time</option>
-          <option value="Physical Touch">Physical Touch</option>
-        </select>
-      </label>
-
-      <label>Hobbies:<input type="text" name="hobbies" id="hobbies" placeholder="Reading, dancing, hiking..."/></label>
-      <label>Values:<input type="text" name="values" id="values" placeholder="Honesty, kindness..."/></label>
-      <label>Unacceptable in Relationship:<textarea id="unacceptable" name="unacceptable" placeholder="Dishonesty, aggression..."></textarea></label>
-
-      <div class="photo-section">
-        <label>Profile Photo 1:<input type="file" id="profilePhoto1" accept="image/*"/></label>
-        <img id="preview1" class="photo-preview" alt="Preview 1"/>
-        <label>Profile Photo 2:<input type="file" id="profilePhoto2" accept="image/*"/></label>
-        <img id="preview2" class="photo-preview" alt="Preview 2"/>
-        <label>Profile Photo 3:<input type="file" id="profilePhoto3" accept="image/*"/></label>
-        <img id="preview3" class="photo-preview" alt="Preview 3"/>
-      </div>
-
-      <button type="submit" class="save-btn">💾 Save Profile</button>
-    </form>
-  </main>
-
-  <footer>
-    <p>© 2025 Soulink. All rights reserved.</p>
-  </footer>
-
+<body>
+  <div class="nav-buttons">
+    <a href="quiz.html">← Back to Quiz</a>
+    <a href="my-soul.html">Go to My Soul →</a>
+  </div>
+  <h1>✨ Edit Your Soul Profile</h1>
+  <form id="editProfileForm">
+    <div class="form-group">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name">
+    </div>
+    <div class="form-group">
+      <label for="birthday">Birthday:</label>
+      <input type="text" id="birthday" name="birthday">
+    </div>
+    <div class="form-group">
+      <label for="about">About:</label>
+      <textarea id="about" name="about" rows="2"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="relationshipType">Type of Connection:</label>
+      <select id="relationshipType" name="relationshipType">
+        <option value="Romantic">Romantic</option>
+        <option value="Friendship">Friendship</option>
+        <option value="Both">Both</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="loveLanguage">Love Language:</label>
+      <select id="loveLanguage" name="loveLanguage">
+        <option value="Words of Affirmation">Words of Affirmation</option>
+        <option value="Acts of Service">Acts of Service</option>
+        <option value="Receiving Gifts">Receiving Gifts</option>
+        <option value="Quality Time">Quality Time</option>
+        <option value="Physical Touch">Physical Touch</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="hobbies">Hobbies:</label>
+      <input type="text" id="hobbies" name="hobbies">
+    </div>
+    <div class="form-group">
+      <label for="values">Values:</label>
+      <input type="text" id="values" name="values">
+    </div>
+    <div class="form-group">
+      <label for="unacceptable">Unacceptable in Relationship:</label>
+      <textarea id="unacceptable" name="unacceptable" rows="2"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="profilePhoto1">Profile Photo 1:</label>
+      <input type="file" id="profilePhoto1" accept="image/*">
+      <img id="preview1" class="photo-preview">
+    </div>
+    <div class="form-group">
+      <label for="profilePhoto2">Profile Photo 2:</label>
+      <input type="file" id="profilePhoto2" accept="image/*">
+      <img id="preview2" class="photo-preview">
+    </div>
+    <div class="form-group">
+      <label for="profilePhoto3">Profile Photo 3:</label>
+      <input type="file" id="profilePhoto3" accept="image/*">
+      <img id="preview3" class="photo-preview">
+    </div>
+    <button type="button" class="btn-save" onclick="saveProfile()">💾 Save Profile</button>
+  </form>
+  <footer style="margin-top: 2rem;">© 2025 Soulink. All rights reserved.</footer>
   <script src="edit-profile.js"></script>
 </body>
 </html>
