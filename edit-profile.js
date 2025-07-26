@@ -1,86 +1,42 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const soulData = JSON.parse(localStorage.getItem("soulQuiz")) || {};
+  const soulQuiz = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
 
-  function setText(id, value) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = value || "Not provided";
-  }
-
-  function setImagePreview(id, src) {
-    const img = document.getElementById(id);
-    if (img) {
-      if (src && src.startsWith("data:image")) {
-        img.src = src;
-      } else {
-        img.src = ""; // no default placeholder, just empty
-        img.alt = "No image selected";
-      }
-    }
-  }
-
-  setText("name", soulData.name);
-  setText("birthday", soulData.birthday);
-  setText("type", soulData.relationshipType);
-  setText("loveLanguage", soulData.loveLanguage);
-  setText("hobbies", soulData.hobbies);
-  setText("values", soulData.values);
-  setText("unacceptable", soulData.unacceptable);
-  setText("about", soulData.about);
-
-  setImagePreview("preview1", soulData.profilePhoto1);
-  setImagePreview("preview2", soulData.profilePhoto2);
-  setImagePreview("preview3", soulData.profilePhoto3);
-
-  // Edit + Save logic
-  const editableFields = [
-    "name",
-    "birthday",
-    "type",
-    "loveLanguage",
-    "hobbies",
-    "values",
-    "unacceptable",
-    "about"
+  const fields = [
+    { id: "name", label: "Name" },
+    { id: "birthday", label: "Birthday" },
+    { id: "type", label: "Type" },
+    { id: "language", label: "Love Language" },
+    { id: "hobbies", label: "Hobbies" },
+    { id: "values", label: "Values" },
+    { id: "unacceptable", label: "Unacceptable" },
+    { id: "about", label: "About" },
   ];
 
-  editableFields.forEach(field => {
-    const btn = document.getElementById(`edit-${field}`);
-    if (btn) {
-      btn.addEventListener("click", function () {
-        const newValue = prompt(`Edit ${field}:`, soulData[field] || "");
-        if (newValue !== null) {
-          soulData[field] = newValue;
-          setText(field, newValue);
-          localStorage.setItem("soulQuiz", JSON.stringify(soulData));
-        }
-      });
-    }
+  fields.forEach(field => {
+    const span = document.getElementById(`${field.id}Display`);
+    span.textContent = soulQuiz[field.id] || "Not provided";
+
+    const btn = document.getElementById(`edit-${field.id}`);
+    btn?.addEventListener("click", () => {
+      const newVal = prompt(`Edit your ${field.label}`, soulQuiz[field.id] || "");
+      if (newVal !== null) {
+        soulQuiz[field.id] = newVal;
+        span.textContent = newVal;
+      }
+    });
   });
 
-  // Image upload handlers
+  // Load photos
   for (let i = 1; i <= 3; i++) {
-    const input = document.getElementById(`photo${i}`);
-    const preview = document.getElementById(`preview${i}`);
-
-    if (input) {
-      input.addEventListener("change", function () {
-        const file = this.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = function (e) {
-            preview.src = e.target.result;
-            soulData[`profilePhoto${i}`] = e.target.result;
-            localStorage.setItem("soulQuiz", JSON.stringify(soulData));
-          };
-          reader.readAsDataURL(file);
-        }
-      });
+    const img = document.getElementById(`photo${i}Preview`);
+    if (soulQuiz[`profilePhoto${i}`]) {
+      img.src = soulQuiz[`profilePhoto${i}`];
     }
   }
 
-  // Save Button
-  document.getElementById("saveBtn").addEventListener("click", function () {
-    localStorage.setItem("soulQuiz", JSON.stringify(soulData));
+  // Save button
+  document.getElementById("saveBtn")?.addEventListener("click", () => {
+    localStorage.setItem("soulQuiz", JSON.stringify(soulQuiz));
     alert("✅ Profile saved!");
   });
 });
