@@ -4,10 +4,8 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Soulink – Edit Profile</title>
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
-  <link 
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" 
-    rel="stylesheet"/>
+  <link rel="icon" href="favicon.ico" type="image/x-icon"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
   <style>
     :root {
       --bg: #003c43;
@@ -20,152 +18,209 @@
     }
     * { box-sizing: border-box; }
     body {
-      margin:0; padding:0;
+      margin: 0;
+      padding: 0;
       background: var(--bg);
       color: var(--text);
-      font-family: "Segoe UI", system-ui, sans-serif;
-      display: flex; flex-direction: column; min-height: 100vh;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
     header.main-nav {
       background: var(--card-bg);
       padding: var(--spacing);
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .logo { font-size:1.5rem; color:var(--accent); font-weight:bold; }
-    .nav-toggle { display:none; background:none; border:none; color:var(--text); font-size:1.5rem; }
-    nav { display:flex; gap:1rem; align-items:center; }
+    .logo {
+      font-size: 1.5rem;
+      color: var(--accent);
+      font-weight: bold;
+    }
+    .nav-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    nav {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
     nav a {
-      color:var(--text);
-      text-decoration:none;
-      padding:0.4rem 0.8rem;
-      border-radius:6px;
-      transition:background .2s,box-shadow .2s;
-      font-size:0.9rem;
-      display:flex; align-items:center;
+      color: var(--text);
+      text-decoration: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      transition: background 0.2s, box-shadow 0.2s;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
     }
-    nav a[aria-current="page"], nav a:hover {
-      background: rgba(0,253,216,0.2);
-      box-shadow:0 0 8px var(--glow);
+    nav a[aria-current="page"],
+    nav a:hover {
+      background: rgba(0, 253, 216, 0.2);
+      box-shadow: 0 0 8px var(--glow);
     }
-    .auth-buttons { display:flex; gap:0.5rem; }
+    .auth-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
     .btn-outline {
-      color:var(--text);
-      border:1px solid var(--accent);
-      padding:0.3rem 0.6rem;
-      border-radius:6px;
-      transition:background .2s,color .2s;
-      font-size:0.9rem;
+      color: var(--text);
+      border: 1px solid var(--accent);
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      transition: background 0.2s, color 0.2s;
+      font-size: 0.9rem;
     }
     .btn-outline:hover {
-      background:var(--accent);
-      color:var(--bg);
+      background: var(--accent);
+      color: var(--bg);
     }
-
     main.container {
-      flex:1;
-      width:90%;
-      max-width:800px;
+      flex: 1;
+      width: 90%;
+      max-width: 800px;
       margin: var(--spacing) auto;
-      padding:0 var(--spacing);
+      padding: 0 var(--spacing);
     }
     .card {
       background: var(--card-bg);
       border-radius: var(--radius);
-      box-shadow:0 0 12px var(--glow);
+      box-shadow: 0 0 12px var(--glow);
       padding: var(--spacing);
       margin-bottom: var(--spacing);
     }
     .card h2 {
-      margin:0 0 var(--spacing);
-      color:var(--accent);
-      font-size:1.4rem;
+      margin: 0 0 var(--spacing);
+      color: var(--accent);
+      font-size: 1.4rem;
     }
-
     .field-row {
       display: grid;
       grid-template-columns: 1fr auto;
       align-items: center;
-      padding:0.6rem 0;
-      border-bottom:1px solid rgba(255,255,255,0.1);
+      padding: 0.6rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
-    .field-row:last-child { border-bottom:none; }
-    .field-label { font-weight:600; font-size:0.95rem; }
+    .field-row:last-child {
+      border-bottom: none;
+    }
+    .field-label {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
     .field-value {
-      margin-left:var(--spacing);
-      font-size:0.93rem;
-      overflow-wrap:anywhere;
+      margin-left: var(--spacing);
+      font-size: 0.93rem;
+      overflow-wrap: anywhere;
     }
-    .field-value.empty { opacity:0.7; }
+    .field-value.empty {
+      opacity: 0.7;
+    }
     .field-row i {
-      color:var(--accent);
-      cursor:pointer;
-      font-size:1.1rem;
-      transition:transform .2s;
-      margin-left:var(--spacing);
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: transform 0.2s;
+      margin-left: var(--spacing);
     }
-    .field-row i:hover { transform:scale(1.2); }
-
+    .field-row i:hover {
+      transform: scale(1.2);
+    }
     .photo-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit,minmax(100px,1fr));
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
       gap: 1rem;
       margin-top: var(--spacing);
     }
-    .photo-slot { text-align:center; }
+    .photo-slot {
+      text-align: center;
+    }
     .photo-slot img {
-      width:100%; height:100px; object-fit:cover;
-      border-radius:8px; box-shadow:0 0 8px var(--glow);
-      cursor:pointer;
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 8px;
+      box-shadow: 0 0 8px var(--glow);
+      cursor: pointer;
     }
     .photo-slot button {
-      margin-top:0.4rem;
-      width:100%;
-      padding:0.4rem;
-      background:var(--accent);
-      color:var(--bg);
-      border:none; border-radius:6px;
-      font-size:0.85rem; cursor:pointer;
+      margin-top: 0.4rem;
+      width: 100%;
+      padding: 0.4rem;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
     }
-    .photo-slot input[type=file] { display:none; }
-
+    .photo-slot input[type="file"] {
+      display: none;
+    }
     .btn-save {
-      display:block;
-      width:100%;
-      padding:0.8rem;
-      margin:var(--spacing) 0;
-      background:var(--accent);
-      color:var(--bg);
-      border:none;
-      border-radius:30px;
-      font-size:1.1rem;
-      font-weight:600;
-      box-shadow:0 0 20px var(--glow);
-      cursor:pointer;
-      transition:transform .2s,box-shadow .3s;
+      display: block;
+      width: 100%;
+      padding: 0.8rem;
+      margin: var(--spacing) 0;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: 30px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      box-shadow: 0 0 20px var(--glow);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s;
     }
     .btn-save:hover {
-      transform:translateY(-2px);
-      box-shadow:0 0 30px var(--glow);
+      transform: translateY(-2px);
+      box-shadow: 0 0 30px var(--glow);
     }
-
     footer.site-footer {
-      text-align:center;
-      padding:1rem 0;
-      font-size:0.85rem;
+      text-align: center;
+      padding: 1rem 0;
+      font-size: 0.85rem;
     }
-
-    @media(max-width:700px) {
-      nav { display:none; position:absolute; top:100%; left:0; right:0; flex-direction:column; background:var(--card-bg); padding:1rem; gap:1rem;}
-      nav.open { display:flex; }
-      .nav-toggle { display:block; }
-      .auth-buttons { display:none; }
-      .field-row { grid-template-columns: 1fr; }
-      .field-row i { justify-self:end; margin-top:0.3rem; }
+    @media (max-width: 700px) {
+      nav {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background: var(--card-bg);
+        padding: 1rem;
+        gap: 1rem;
+      }
+      nav.open {
+        display: flex;
+      }
+      .nav-toggle {
+        display: block;
+      }
+      .auth-buttons {
+        display: none;
+      }
+      .field-row {
+        grid-template-columns: 1fr;
+      }
+      .field-row i {
+        justify-self: end;
+        margin-top: 0.3rem;
+      }
     }
   </style>
 </head>
 <body>
-
   <header class="main-nav">
     <div class="logo">Soulink</div>
     <button id="navToggle" class="nav-toggle"><i class="bi bi-list"></i></button>
@@ -187,21 +242,16 @@
       </div>
     </nav>
   </header>
-
   <main class="container">
     <div class="card">
       <h2>✨ Edit Your Soul Profile</h2>
       <div id="fields"></div>
-
       <h3>Profile Photos</h3>
       <div class="photo-grid" id="photoGrid"></div>
-
       <button id="saveBtn" class="btn-save">💾 Save Profile</button>
     </div>
   </main>
-
   <footer class="site-footer">© 2025 soulink.global</footer>
-
   <script src="edit-profile.js"></script>
   <script>
     document.getElementById('navToggle').addEventListener('click', ()=> {
