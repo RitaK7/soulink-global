@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 
+<!-- quiz.html -->
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Soulink – Soul Compatibility Quiz</title>
-<link href="favicon.ico" rel="icon" type="image/x-icon"/>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-<link href="style.css" rel="stylesheet"/>
-<script>
-    if (!sessionStorage.getItem('soulinkBetaAccess') && location.pathname !== '/beta-login.html') {
-      window.location.href = 'beta-login.html';
-    }
-  </script>
-</link></head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Soulink – Soul Compatibility Quiz</title>
+  <link href="favicon.ico" rel="icon" type="image/x-icon" />
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    rel="stylesheet"
+  />
+  <link href="style.css" rel="stylesheet" />
+</head>
 <body>
 <!-- NAVBAR -->
 <header class="main-nav">
@@ -39,20 +39,28 @@
 </header>
 <!-- QUIZ FORM -->
 <main class="container">
-<h1>🌈 Soul Compatibility Quiz</h1>
-<form class="quiz-form" id="quizForm">
-<div class="cards">
-<!-- Name -->
-<div class="card">
-<label for="name">Name</label>
-<input id="name" name="name" required="" type="text"/>
-</div>
-<!-- Birthdate as text -->
-<div class="card">
-<label for="birthdate">Birth Date <small>(YYYY‑MM‑DD)</small></label>
-<input id="birthdate" name="birthdate" pattern="\d{4}-\d{2}-\d{2}" placeholder="1978-11-22" required="" type="text"/>
-</div>
-<!-- Country -->
+    <h1>🌈 Soul Compatibility Quiz</h1>
+    <form id="quizForm" class="quiz-form">
+      <!-- Name -->
+      <div class="card-group">
+        <div class="card">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" required />
+        </div>
+        <div class="card">
+          <label for="birthdate">
+            Birth Date <small>(YYYY‑MM‑DD)</small>
+          </label>
+          <input
+            type="text"
+            id="birthdate"
+            name="birthdate"
+            pattern="\d{4}-\d{2}-\d{2}"
+            placeholder="1978-11-22"
+            required
+          />
+        </div>
+      </div>
 <!-- Country -->
 <div class="card">
 <label for="country">Country</label>
@@ -256,95 +264,93 @@
 </select>
 </div>
 <!-- Height & Weight -->
-<div class="card inline-group">
-<div class="flex-1">
-<label for="height">Height (cm)</label>
-<input id="height" min="0" name="height" type="number"/>
-</div>
-<div class="flex-1">
-<label for="weight">Weight (kg)</label>
-<input id="weight" min="0" name="weight" type="number"/>
-</div>
-</div>
-<!-- Connection -->
-<div class="card">
-<label>Type of Connection</label>
-<div class="inline-group">
-<label><input name="connectionType" required="" type="radio" value="Romantic"/> Romantic</label>
-<label><input name="connectionType" type="radio" value="Friendship"/> Friendship</label>
-<label><input name="connectionType" type="radio" value="Both"/> Both</label>
-</div>
-</div>
-<!-- Love Language -->
-<div class="card">
-<label>Primary Love Language</label>
-<div class="radio-group">
-<label><input name="loveLanguage" required="" type="radio" value="Words of Affirmation"/> Words of Affirmation</label>
-<small class="desc">Expressing love through kind and encouraging words.</small>
-<label><input name="loveLanguage" type="radio" value="Acts of Service"/> Acts of Service</label>
-<small class="desc">Doing helpful, caring actions to show love.</small>
-<label><input name="loveLanguage" type="radio" value="Receiving Gifts"/> Receiving Gifts</label>
-<small class="desc">Feeling loved through thoughtful presents and symbols.</small>
-<label><input name="loveLanguage" type="radio" value="Quality Time"/> Quality Time</label>
-<small class="desc">Giving undivided attention and shared moments.</small>
-<label><input name="loveLanguage" type="radio" value="Physical Touch"/> Physical Touch</label>
-<small class="desc">Love felt through hugs, kisses, and closeness.</small>
-</div>
-</div>
-<!-- Hobbies -->
-<div class="card">
-<label>Select Your Hobbies</label>
-<div class="inline-group">
-<label><input name="hobbies" type="checkbox" value="Music"/>Music</label>
-<label><input name="hobbies" type="checkbox" value="Sports"/>Sports</label>
-<label><input name="hobbies" type="checkbox" value="Nature"/>Nature</label>
-<label><input name="hobbies" type="checkbox" value="Traveling"/>Traveling</label>
-<label><input name="hobbies" type="checkbox" value="Reading"/>Reading</label>
-<label><input name="hobbies" type="checkbox" value="Dancing"/>Dancing</label>
-<label><input name="hobbies" type="checkbox" value="Art"/>Art</label>
-<label><input name="hobbies" type="checkbox" value="Spirituality"/>Spirituality</label>
-<label><input name="hobbies" type="checkbox" value="Fitness"/>Fitness</label>
-<label><input name="hobbies" type="checkbox" value="Volunteering"/>Volunteering</label>
-</div>
-</div>
-<!-- Values -->
-<div class="card">
-<label>Values Most Important to You</label>
-<div class="inline-group">
-<label><input name="values" type="checkbox" value="Love"/>Love</label>
-<label><input name="values" type="checkbox" value="Freedom"/>Freedom</label>
-<label><input name="values" type="checkbox" value="Growth"/>Growth</label>
-<label><input name="values" type="checkbox" value="Adventure"/>Adventure</label>
-<label><input name="values" type="checkbox" value="Security"/>Security</label>
-<label><input name="values" type="checkbox" value="Creativity"/>Creativity</label>
-<label><input name="values" type="checkbox" value="Honesty"/>Honesty</label>
-<label><input name="values" type="checkbox" value="Compassion"/>Compassion</label>
-</div>
-</div>
-<!-- Free‐text fields -->
-<div class="card">
-<label for="unacceptable">What Is Unacceptable in Relationships?</label>
-<textarea id="unacceptable" name="unacceptable" placeholder="e.g. dishonesty…" rows="2"></textarea>
-</div>
-<div class="card">
-<label for="about">Tell Us More About Yourself</label>
-<textarea id="about" name="about" placeholder="Your story…" rows="4"></textarea>
-</div>
+<div class="card-group">
+        <div class="card">
+          <label for="height">Height (cm)</label>
+          <input type="number" id="height" name="height" min="0" required />
+        </div>
+        <div class="card">
+          <label for="weight">Weight (kg)</label>
+          <input type="number" id="weight" name="weight" min="0" required />
+        </div>
+      </div>
 
-<button class="btn-submit" type="submit">
-        Edit Profile <i class="bi bi-arrow-right-circle"></i>
-</button>
-</form>
-</main>
-<footer class="site-footer">© 2025 soulink.global</footer>
-<!-- your quiz logic -->
-<script defer="" src="quiz.js"></script>
-<!-- mobile nav toggle -->
-<script>
-    document.getElementById('navToggle').addEventListener('click', () => {
+      <!-- Connection -->
+      <div class="card">
+        <label>Type of Connection</label>
+        <div class="inline-group">
+          <label><input type="radio" name="connectionType" value="Romantic" required /> Romance</label>
+          <label><input type="radio" name="connectionType" value="Friendship" /> Friendship</label>
+          <label><input type="radio" name="connectionType" value="Both" /> Both</label>
+        </div>
+      </div>
+
+      <!-- Love Language -->
+      <div class="card">
+        <label>Primary Love Language</label>
+        <div class="radio-group">
+          <label><input type="radio" name="loveLanguage" value="Words of Affirmation" required /> Words of Affirmation</label>
+          <small class="desc">Kind and encouraging words.</small>
+          <label><input type="radio" name="loveLanguage" value="Acts of Service" /> Acts of Service</label>
+          <small class="desc">Helpful actions.</small>
+          <label><input type="radio" name="loveLanguage" value="Receiving Gifts" /> Receiving Gifts</label>
+          <small class="desc">Thoughtful presents.</small>
+          <label><input type="radio" name="loveLanguage" value="Quality Time" /> Quality Time</label>
+          <small class="desc">Undivided attention.</small>
+          <label><input type="radio" name="loveLanguage" value="Physical Touch" /> Physical Touch</label>
+          <small class="desc">Hugs and closeness.</small>
+        </div>
+      </div>
+
+      <!-- Hobbies -->
+      <div class="card">
+        <label>Select Your Hobbies</label>
+        <div class="inline-group">
+          <label><input type="checkbox" name="hobbies" value="Music" /> Music</label>
+          <label><input type="checkbox" name="hobbies" value="Sports" /> Sports</label>
+          <label><input type="checkbox" name="hobbies" value="Traveling" /> Traveling</label>
+          <label><input type="checkbox" name="hobbies" value="Reading" /> Reading</label>
+          <label><input type="checkbox" name="hobbies" value="Art" /> Art</label>
+        </div>
+      </div>
+
+      <!-- Values -->
+      <div class="card">
+        <label>Values Most Important to You</label>
+        <div class="inline-group">
+          <label><input type="checkbox" name="values" value="Honesty" /> Honesty</label>
+          <label><input type="checkbox" name="values" value="Compassion" /> Compassion</label>
+          <label><input type="checkbox" name="values" value="Adventure" /> Adventure</label>
+          <label><input type="checkbox" name="values" value="Growth" /> Growth</label>
+        </div>
+      </div>
+
+      <!-- Free‑text -->
+      <div class="card">
+        <label for="unacceptable">Unacceptable Behavior</label>
+        <textarea id="unacceptable" name="unacceptable" rows="2" required></textarea>
+      </div>
+      <div class="card">
+        <label for="about">About Me</label>
+        <textarea id="about" name="about" rows="4" required></textarea>
+      </div>
+
+      <button type="submit" class="btn-submit">
+        Edit Profile <i class="bi bi-arrow-right-circle"></i>
+      </button>
+    </form>
+  </main>
+
+  <footer class="site-footer">© 2025 soulink.global</footer>
+
+  <!-- quiz logic -->
+  <script src="quiz.js" defer></script>
+
+  <!-- mobile nav toggle -->
+  <script>
+    document.getElementById('navToggle').onclick = () => {
       document.querySelector('.nav-links').classList.toggle('open');
-      document.querySelector('.auth-buttons').classList.toggle('open');
-    });
+    };
   </script>
 </body>
 </html>
