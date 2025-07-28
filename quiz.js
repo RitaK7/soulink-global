@@ -1,69 +1,77 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("quizForm");
-  if (!form) return;
 
+  // 1. Auto-fill from localStorage if available
+  const storedData = localStorage.getItem("soulQuiz");
+  if (storedData) {
+    const data = JSON.parse(storedData);
+    for (const [key, value] of Object.entries(data)) {
+      const el = document.getElementById(key);
+      if (el) {
+        if (el.type === "radio" || el.type === "checkbox") {
+          const inputs = document.querySelectorAll(`[name="${key}"]`);
+          inputs.forEach(input => {
+            if (Array.isArray(value)) {
+              input.checked = value.includes(input.value);
+            } else {
+              input.checked = input.value === value;
+            }
+          });
+        } else {
+          el.value = value;
+        }
+      }
+    }
+  }
+
+  // 2. Save on submit
   form.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const getCheckedValues = (name) =>
-      Array.from(form.querySelectorAll(`input[name="${name}"]:checked`)).map(
-        (el) => el.value
-      );
+    const formData = new FormData(form);
+    const data = {};
+    for (const [key, value] of formData.entries()) {
+      if (data[key]) {
+        if (Array.isArray(data[key])) {
+          data[key].push(value);
+        } else {
+          data[key] = [data[key], value];
+        }
+      } else {
+        data[key] = value;
+      }
+    }
 
-    const formData = {
-      name: form.name.value.trim(),
-      birthday: form.birthday.value.trim(),
-      country: form.country.value,
-      height: form.height.value.trim(),
-      weight: form.weight.value.trim(),
-      relationshipType: form.querySelector('input[name="relationshipType"]:checked')?.value || "",
-      loveLanguage: form.querySelector('input[name="loveLanguage"]:checked')?.value || "",
-      hobbies: getCheckedValues("hobbies"),
-      values: getCheckedValues("values"),
-      boundaries: form.boundaries.value.trim(),
-      about: form.about.value.trim(),
-    };
+    // Add zodiac calculation
+    const birthdate = data.birthdate;
+    if (birthdate) {
+      const month = parseInt(birthdate.split("-")[1]);
+      const day = parseInt(birthdate.split("-")[2]);
+      data.westernZodiac = getZodiac(month, day);
+    }
 
-    // Compute zodiac
-    const bday = new Date(formData.birthday);
-    const month = bday.getUTCMonth() + 1;
-    const day = bday.getUTCDate();
+    localStorage.setItem("soulQuiz", JSON.stringify(data));
 
-    const zodiacSigns = [
-      { sign: "Capricorn", end: [1, 19] },
-      { sign: "Aquarius", end: [2, 18] },
-      { sign: "Pisces", end: [3, 20] },
-      { sign: "Aries", end: [4, 19] },
-      { sign: "Taurus", end: [5, 20] },
-      { sign: "Gemini", end: [6, 20] },
-      { sign: "Cancer", end: [7, 22] },
-      { sign: "Leo", end: [8, 22] },
-      { sign: "Virgo", end: [9, 22] },
-      { sign: "Libra", end: [10, 22] },
-      { sign: "Scorpio", end: [11, 21] },
-      { sign: "Sagittarius", end: [12, 21] },
-      { sign: "Capricorn", end: [12, 31] }, // wrap around
-    ];
-    const zodiac = zodiacSigns.find(
-      ({ end }) =>
-        month < end[0] || (month === end[0] && day <= end[1])
-    ).sign;
+    // Success message
+    const success = document.createElement("div");
+    success.textContent = "✅ Duomenys išsaugoti";
+    success.style.color = "#00fdd8";
+    success.style.marginTop = "1rem";
+    form.appendChild(success);
 
-    const chineseZodiacAnimals = [
-      "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake",
-      "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"
-    ];
-    const birthYear = bday.getUTCFullYear();
-    const chineseZodiac = chineseZodiacAnimals[birthYear % 12];
-
-    formData.westernZodiac = zodiac;
-    formData.chineseZodiac = chineseZodiac;
-
-    // Save to localStorage
-    localStorage.setItem("soulQuiz", JSON.stringify(formData));
-
-    // Redirect or confirmation
-    window.location.href = "edit-profile.html";
+    setTimeout(() => {
+      window.location.href = "edit-profile.html";
+    }, 1000);
   });
+
+  // Zodiac helper
+  function getZodiac(month, day) {
+    const signs = [
+      "Capricorn", "Aquarius", "Pisces", "Aries", "Taurus", "Gemini",
+      "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius"
+    ];
+    const lastDay = [19, 18, 20, 19, 20, 20, 22, 22, 22, 22, 21, 21];
+    return day > lastDay[month - 1] ? signs[month] : signs[month - 1];
+  }
 });
