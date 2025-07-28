@@ -1,5 +1,5 @@
 // quiz.js
-// (Only the restoration logic is updated; the submit/save logic is unchanged)
+console.log("📘 quiz.js loaded");
 
 function getWesternZodiac(d) {
   const m = d.getMonth() + 1, day = d.getDate();
@@ -23,37 +23,13 @@ function getChineseZodiac(d) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  console.log("📗 DOM ready");
   const form = document.getElementById('quizForm');
-  const saved = JSON.parse(localStorage.getItem('soulQuiz') || '{}');
-
-  // Restore simple fields + single radios
-  for (let key in saved) {
-    const val = saved[key];
-
-    if (Array.isArray(val)) {
-      // Multi‑value fields (checkbox groups like hobbies, values, etc.)
-      document.querySelectorAll(`input[name="${key}"]`).forEach(inp => {
-        inp.checked = val.includes(inp.value);
-      });
-    } else {
-      const el = form.elements[key];
-      if (!el) continue;
-
-      if (el.type === 'radio') {
-        // single radio-group
-        const opts = form.querySelectorAll(`input[name="${key}"]`);
-        opts.forEach(r => { r.checked = (r.value === val); });
-      } else {
-        // text, date, select, textarea, number...
-        el.value = val;
-      }
-    }
-  }
+  console.log("🔎 form element:", form);
 
   form.addEventListener('submit', e => {
     e.preventDefault();
     const data = {};
-
     Array.from(form.elements).forEach(inp => {
       if (!inp.name) return;
       if (inp.type === 'radio') {
@@ -61,23 +37,17 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (inp.type === 'checkbox') {
         data[inp.name] = data[inp.name] || [];
         if (inp.checked) data[inp.name].push(inp.value);
-      } else if (inp.type !== 'button') {
+      } else {
         data[inp.name] = inp.value;
       }
     });
 
+    console.log("📝 Saving soulQuiz:", data);
     const bd = new Date(data.birthdate);
     data.westernZodiac = getWesternZodiac(bd);
     data.chineseZodiac = getChineseZodiac(bd);
 
     localStorage.setItem('soulQuiz', JSON.stringify(data));
-    location.href = 'edit-profile.html';
-  });
-
-  // Mobile nav toggle
-  const navToggle = document.getElementById('navToggle');
-  const header = document.querySelector('.main-nav');
-  navToggle.addEventListener('click', () => {
-    header.classList.toggle('active');
+    location.href = 'my-soul.html';
   });
 });
