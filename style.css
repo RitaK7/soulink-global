@@ -346,3 +346,21 @@ a:hover {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ─── EDIT PROFILE EXTENSIONS ─── */
+
+.section-title {
+  font-size: 1.4rem;
+  color: var(--accent);
+  margin: 2rem 0 1rem;
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 0.3rem;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1.2rem;
+  margin-top: 1rem;
+}

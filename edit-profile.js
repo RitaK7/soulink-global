@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   // Load saved profile
-  const saved = JSON.parse(localStorage.getItem("profile")) || {};
+  const saved = JSON.parse(localStorage.getItem("soulQuiz")) || {};
   if (saved.name)        form.name.value        = saved.name;
   if (saved.birthday)    form.birthday.value    = saved.birthday;
   if (saved.bio)         form.bio.value         = saved.bio;
@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
     data.photo2 = await readImage(photoInputs[1].files[0]) || saved.photo2 || null;
     data.photo3 = await readImage(photoInputs[2].files[0]) || saved.photo3 || null;
 
-    localStorage.setItem("profile", JSON.stringify(data));
+    localStorage.setItem("soulQuiz", JSON.stringify(data));
     window.location.href = "my-soul.html";
   });
 });

@@ -196,7 +196,10 @@
   <main class="container">
     <div class="form-card">
       <h2>Edit Your Soul Profile</h2>
-      <form id="profile-form">
+      
+<h3 class="section-title">🧍 About You</h3>
+<form id="profile-form">
+
         <label for="name">Name:</label>
         <input id="name" type="text" name="name" required/>
 
@@ -206,15 +209,34 @@
         <label for="bio">Tell me something about yourself:</label>
         <textarea id="bio" name="bio" rows="3" placeholder="I am looking for real friends"></textarea>
 
-        <label for="photo1">Profile Photo 1:</label>
+        
+<h3 class="section-title">📸 Profile Photos</h3>
+<div class="photo-grid">
+  <div>
+    <label for="photo1">Photo 1:</label>
+    <input type="file" id="photo1" accept="image/*"/>
+    <img id="preview1" class="preview" alt="Preview 1"/>
+  </div>
+  <div>
+    <label for="photo2">Photo 2:</label>
+    <input type="file" id="photo2" accept="image/*"/>
+    <img id="preview2" class="preview" alt="Preview 2"/>
+  </div>
+  <div>
+    <label for="photo3">Photo 3:</label>
+    <input type="file" id="photo3" accept="image/*"/>
+    <img id="preview3" class="preview" alt="Preview 3"/>
+  </div>
+</div>
+
         <input type="file" id="photo1" accept="image/*"/>
         <img id="preview1" class="preview" alt="Preview 1"/>
 
-        <label for="photo2">Profile Photo 2:</label>
+        
         <input type="file" id="photo2" accept="image/*"/>
         <img id="preview2" class="preview" alt="Preview 2"/>
 
-        <label for="photo3">Profile Photo 3:</label>
+        
         <input type="file" id="photo3" accept="image/*"/>
         <img id="preview3" class="preview" alt="Preview 3"/>
 
