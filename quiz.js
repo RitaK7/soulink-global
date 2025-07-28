@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   form.addEventListener('submit', e => {
     e.preventDefault();
     const data = {};
+
     Array.from(form.elements).forEach(inp => {
       if (!inp.name) return;
       if (inp.type === 'radio') {
@@ -42,12 +43,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    console.log("📝 Saving soulQuiz:", data);
+    // compute zodiacs
     const bd = new Date(data.birthdate);
     data.westernZodiac = getWesternZodiac(bd);
     data.chineseZodiac = getChineseZodiac(bd);
 
+    console.log("📝 Saving soulQuiz:", data);
     localStorage.setItem('soulQuiz', JSON.stringify(data));
+
+    // redirect to profile view
     location.href = 'edit-profile.html';
   });
 });
