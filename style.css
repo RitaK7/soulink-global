@@ -347,20 +347,40 @@ a:hover {
   }
 }
 
+/* --- PATCHED BY ZUIKIS 💚 --- */
 
-/* ─── EDIT PROFILE EXTENSIONS ─── */
-
-.section-title {
-  font-size: 1.4rem;
-  color: var(--accent);
-  margin: 2rem 0 1rem;
-  border-bottom: 1px solid var(--accent);
-  padding-bottom: 0.3rem;
+button,
+.btn-logout {
+  background: linear-gradient(135deg, #00ffd0, #00bfa5);
+  color: #002c2f;
+  font-weight: bold;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 30px;
+  box-shadow: 0 0 12px var(--glow);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+button:hover,
+.btn-logout:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(0,255,208,0.9);
 }
 
-.photo-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 1.2rem;
-  margin-top: 1rem;
+.bottom-nav {
+  background: var(--nav-bg);
+  text-align: center;
+  padding: 1.5rem 0 2rem;
+  margin-top: 3rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.bottom-nav a {
+  color: var(--accent);
+  font-weight: 500;
+  text-decoration: none;
+  margin: 0 1rem;
+  transition: color 0.3s;
+}
+.bottom-nav a:hover {
+  color: #ffffff;
 }
