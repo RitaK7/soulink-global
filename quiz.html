@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Soulink – Soul Compatibility Quiz</title>
-  <link href="favicon.ico" rel="icon" type="image/x-icon" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Soulink – Soul Compatibility Quiz</title>
+  <link href="favicon.ico" rel="icon" type="image/x-icon"/>
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
     rel="stylesheet"
   />
-  <link href="style.css" rel="stylesheet" />
+  <link href="style.css" rel="stylesheet"/>
 </head>
 <body>
   <!-- NAVBAR -->
@@ -38,26 +38,17 @@
   <!-- QUIZ FORM -->
   <main class="container">
     <h1>🌈 Soul Compatibility Quiz</h1>
-
     <form id="quizForm" class="quiz-form">
-      <!-- Step 1: Basic Info -->
+      <!-- Basic Info -->
       <div class="card-group">
         <div class="card">
           <label for="name">Name</label>
-          <input type="text" id="name" name="name" required />
+          <input type="text" id="name" name="name" required/>
         </div>
         <div class="card">
-          <label for="birthdate">
-            Birth Date <small>(YYYY‑MM‑DD)</small>
-          </label>
-          <input
-            type="text"
-            id="birthdate"
-            name="birthdate"
-            pattern="\d{4}-\d{2}-\d{2}"
-            placeholder="1978-11-22"
-            required
-          />
+          <label for="birthdate">Birth Date <small>(YYYY‑MM‑DD)</small></label>
+          <input type="text" id="birthdate" name="birthdate"
+                 pattern="\d{4}-\d{2}-\d{2}" placeholder="1978-11-22" required/>
         </div>
       </div>
 
@@ -264,81 +255,78 @@
           <option value="Zimbabwe">Zimbabwe</option>
         </select>
       </div>
-
-      <!-- Step 2: Height & Weight -->
+      
+      <!-- Height & Weight -->
       <div class="card-group">
         <div class="card">
           <label for="height">Height (cm)</label>
-          <input type="number" id="height" name="height" min="0" required />
+          <input type="number" id="height" name="height" min="0" required/>
         </div>
         <div class="card">
           <label for="weight">Weight (kg)</label>
-          <input type="number" id="weight" name="weight" min="0" required />
+          <input type="number" id="weight" name="weight" min="0" required/>
         </div>
       </div>
 
-      <!-- Step 3: Connection -->
+      <!-- Connection -->
       <div class="card">
         <label>Type of Connection</label>
         <div class="inline-group">
-          <label><input type="radio" name="connectionType" value="Romantic" required /> Romance</label>
-          <label><input type="radio" name="connectionType" value="Friendship" /> Friendship</label>
-          <label><input type="radio" name="connectionType" value="Both" /> Both</label>
+          <label><input type="radio" name="connectionType" value="Romantic" required/> Romance</label>
+          <label><input type="radio" name="connectionType" value="Friendship"/> Friendship</label>
+          <label><input type="radio" name="connectionType" value="Both"/> Both</label>
         </div>
       </div>
 
-      <!-- Step 4: Love Language -->
+      <!-- Love Language -->
       <div class="card">
         <label>Primary Love Language</label>
         <div class="radio-group">
-          <label><input type="radio" name="loveLanguage" value="Words of Affirmation" required /> Words of Affirmation</label>
-          <small class="desc">Encouraging words and compliments.</small>
-          <label><input type="radio" name="loveLanguage" value="Acts of Service" /> Acts of Service</label>
-          <small class="desc">Helpful actions and support.</small>
-          <label><input type="radio" name="loveLanguage" value="Receiving Gifts" /> Receiving Gifts</label>
-          <small class="desc">Thoughtful presents and surprises.</small>
-          <label><input type="radio" name="loveLanguage" value="Quality Time" /> Quality Time</label>
-          <small class="desc">Undivided attention and shared moments.</small>
-          <label><input type="radio" name="loveLanguage" value="Physical Touch" /> Physical Touch</label>
-          <small class="desc">Hugs, kisses, and physical closeness.</small>
+          <label><input type="radio" name="loveLanguage" value="Words of Affirmation" required/> Words of Affirmation</label>
+          <small class="desc">Encouraging words</small>
+          <label><input type="radio" name="loveLanguage" value="Acts of Service"/> Acts of Service</label>
+          <small class="desc">Helpful actions</small>
+          <label><input type="radio" name="loveLanguage" value="Receiving Gifts"/> Receiving Gifts</label>
+          <small class="desc">Thoughtful presents</small>
+          <label><input type="radio" name="loveLanguage" value="Quality Time"/> Quality Time</label>
+          <small class="desc">Undivided attention</small>
+          <label><input type="radio" name="loveLanguage" value="Physical Touch"/> Physical Touch</label>
+          <small class="desc">Hugs & closeness</small>
         </div>
       </div>
 
-      <!-- Step 5: Hobbies -->
+      <!-- Hobbies -->
       <div class="card">
         <label>Select Your Hobbies</label>
         <div class="inline-group">
-          <label><input type="checkbox" name="hobbies" value="Music" /> Music</label>
-          <label><input type="checkbox" name="hobbies" value="Sports" /> Sports</label>
-          <label><input type="checkbox" name="hobbies" value="Traveling" /> Traveling</label>
-          <label><input type="checkbox" name="hobbies" value="Reading" /> Reading</label>
-          <label><input type="checkbox" name="hobbies" value="Art" /> Art</label>
-          <label><input type="checkbox" name="hobbies" value="Cooking" /> Cooking</label>
-          <label><input type="checkbox" name="hobbies" value="Gaming" /> Gaming</label>
-          <label><input type="checkbox" name="hobbies" value="Gardening" /> Gardening</label>
-          <label><input type="checkbox" name="hobbies" value="Yoga" /> Yoga</label>
-          <label><input type="checkbox" name="hobbies" value="Photography" /> Photography</label>
+          <label><input type="checkbox" name="hobbies" value="Music"/> Music</label>
+          <label><input type="checkbox" name="hobbies" value="Sports"/> Sports</label>
+          <label><input type="checkbox" name="hobbies" value="Traveling"/> Traveling</label>
+          <label><input type="checkbox" name="hobbies" value="Reading"/> Reading</label>
+          <label><input type="checkbox" name="hobbies" value="Cooking"/> Cooking</label>
+          <label><input type="checkbox" name="hobbies" value="Gaming"/> Gaming</label>
+          <label><input type="checkbox" name="hobbies" value="Photography"/> Photography</label>
         </div>
       </div>
 
-      <!-- Step 6: Values -->
+      <!-- Values -->
       <div class="card">
         <label>Values Most Important to You</label>
         <div class="inline-group">
-          <label><input type="checkbox" name="values" value="Honesty" /> Honesty</label>
-          <label><input type="checkbox" name="values" value="Compassion" /> Compassion</label>
-          <label><input type="checkbox" name="values" value="Adventure" /> Adventure</label>
-          <label><input type="checkbox" name="values" value="Growth" /> Growth</label>
-          <label><input type="checkbox" name="values" value="Family" /> Family</label>
-          <label><input type="checkbox" name="values" value="Health" /> Health</label>
-          <label><input type="checkbox" name="values" value="Creativity" /> Creativity</label>
-          <label><input type="checkbox" name="values" value="Freedom" /> Freedom</label>
-          <label><input type="checkbox" name="values" value="Security" /> Security</label>
-          <label><input type="checkbox" name="values" value="Spirituality" /> Spirituality</label>
+          <label><input type="checkbox" name="values" value="Honesty"/> Honesty</label>
+          <label><input type="checkbox" name="values" value="Compassion"/> Compassion</label>
+          <label><input type="checkbox" name="values" value="Adventure"/> Adventure</label>
+          <label><input type="checkbox" name="values" value="Growth"/> Growth</label>
+          <label><input type="checkbox" name="values" value="Family"/> Family</label>
+          <label><input type="checkbox" name="values" value="Health"/> Health</label>
+          <label><input type="checkbox" name="values" value="Creativity"/> Creativity</label>
+          <label><input type="checkbox" name="values" value="Freedom"/> Freedom</label>
+          <label><input type="checkbox" name="values" value="Security"/> Security</label>
+          <label><input type="checkbox" name="values" value="Spirituality"/> Spirituality</label>
         </div>
       </div>
 
-      <!-- Step 7: Free‑text -->
+      <!-- Unacceptable & About Me -->
       <div class="card">
         <label for="unacceptable">Unacceptable Behavior</label>
         <textarea id="unacceptable" name="unacceptable" rows="2" required></textarea>
@@ -355,13 +343,12 @@
     </form>
   </main>
 
-  <!-- Footer -->
   <footer class="site-footer">© 2025 soulink.global</footer>
 
   <!-- quiz logic -->
   <script src="quiz.js" defer></script>
 
-  <!-- mobile nav toggle -->
+  <!-- nav toggle -->
   <script>
     document.getElementById('navToggle').onclick = () => {
       document.querySelector('.nav-links').classList.toggle('open');
