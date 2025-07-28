@@ -1,4 +1,3 @@
-/* style.css */
 :root {
   --bg: #003c43;
   --card: #004d4d;
@@ -7,19 +6,19 @@
   --radius: 0.5rem;
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
-* { box-sizing: border-box; }
 body {
-  margin: 0; padding: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  margin: 0; font-family: 'Segoe UI', sans-serif;
+  background: var(--bg); color: var(--text);
 }
 .main-nav {
   display: flex; align-items: center; padding: 1rem;
-  background: var(--card); position: sticky; top: 0;
+  background: var(--card);
 }
 .logo { font-size: 1.5rem; flex: 1; }
-.nav-toggle { background: none; border: none; color: var(--text); font-size: 1.5rem; display: none; }
+.nav-toggle {
+  background: none; border: none; color: var(--text); font-size: 1.5rem;
+  display: none;
+}
 .nav-links {
   list-style: none; display: flex; gap: 1rem; margin: 0; padding: 0;
 }
@@ -34,56 +33,38 @@ body {
 .container {
   max-width: 700px; margin: 2rem auto; padding: 0 1rem;
 }
-h1 { text-align: center; margin-bottom: 1rem; }
 .section-title {
   margin-top: 2rem; margin-bottom: 1rem;
   border-bottom: 1px solid var(--accent);
-  padding-bottom: 0.5rem;
 }
-.quiz-form .card-group {
+.card-group {
   display: flex; gap: 1rem; flex-wrap: wrap;
 }
 .card {
-  background: var(--card);
-  padding: 1rem; margin-bottom: 1rem;
+  background: var(--card); padding: 1rem;
   border-radius: var(--radius); box-shadow: var(--shadow);
   flex: 1 1 45%;
   display: flex; flex-direction: column; gap: 0.5rem;
 }
-.card input,
-.card select,
-.card textarea {
+.card input, .card select, .card textarea {
   padding: 0.5rem; border: none; border-radius: var(--radius);
-  outline: none; font: inherit;
   background: var(--bg); color: var(--text);
 }
-.card input:focus,
-.card select:focus,
-.card textarea:focus {
+.card input:focus, .card select:focus, .card textarea:focus {
   box-shadow: 0 0 6px var(--accent);
 }
-.inline-group,
-.radio-group {
-  display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.5rem;
+.inline-group, .radio-group {
+  display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.5rem;
 }
-.inline-group label,
-.radio-group label {
+.inline-group label, .radio-group label {
   display: flex; align-items: center; gap: 0.25rem;
-  cursor: pointer;
-}
-.inline-group input,
-.radio-group input {
-  width: 1.1rem; height: 1.1rem;
-}
-.desc {
-  font-size: 0.85rem; opacity: 0.8; margin: 0 0 0 1.5rem;
 }
 .btn-submit {
-  width: 100%; padding: 0.75rem;
+  margin-top: 2rem; width: 100%; padding: 0.75rem;
   background: var(--accent); color: var(--bg);
-  font-size: 1.1rem; border: none;
-  border-radius: var(--radius); box-shadow: var(--shadow);
-  cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 0.5rem;
+  border: none; border-radius: var(--radius);
+  font-size: 1.1rem; box-shadow: var(--shadow);
+  display: flex; justify-content: center; align-items: center; gap: 0.5rem;
 }
 .btn-submit:hover {
   box-shadow: 0 0 12px var(--accent);
@@ -92,12 +73,9 @@ h1 { text-align: center; margin-bottom: 1rem; }
   text-align: center; padding: 1rem; margin-top: 2rem;
   opacity: 0.6;
 }
-
-/* Responsive */
 @media (max-width: 768px) {
   .nav-toggle { display: block; }
-  .nav-links { display: none; flex-direction: column; gap: 0; }
-  .nav-links.open { display: flex; background: var(--card); position: absolute; top: 100%; left: 0; width: 100%; }
-  .nav-links li { margin: 0.5rem 0; text-align: center; }
+  .nav-links { display: none; flex-direction: column; width: 100%; }
+  .nav-links.open { display: flex; background: var(--card); }
   .card { flex: 1 1 100%; }
 }

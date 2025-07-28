@@ -1,9 +1,7 @@
-// quiz.js
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('quizForm');
   const storageKey = 'soulQuiz';
 
-  // Zodiac helpers
   function getWesternZodiac(date) {
     const m = date.getMonth() + 1, d = date.getDate();
     const zodiacDates = [
@@ -19,12 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (m < mm || (m === mm && d <= dd)) return sign;
     }
   }
+
   function getChineseZodiac(year) {
     const animals = ['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig'];
     return animals[(year - 4) % 12];
   }
 
-  // populate form if saved
   const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
   for (let [k, v] of Object.entries(saved)) {
     const el = form.elements[k];
@@ -32,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el.type === 'radio' || el.type === 'checkbox') {
       if (Array.isArray(v)) {
         v.forEach(val => {
-          [...form.elements[k]].filter(inp => inp.value === val).forEach(i=>i.checked = true);
+          [...form.elements[k]].filter(inp => inp.value === val).forEach(i => i.checked = true);
         });
       } else {
         [...form.elements[k]].find(i => i.value === v)?.checked = true;
@@ -56,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
         data[el.name] = el.value;
       }
     }
-    // compute zodiacs
     const bd = new Date(data.birthdate);
     data.westernZodiac = getWesternZodiac(bd);
     data.chineseZodiac = getChineseZodiac(bd.getFullYear());
