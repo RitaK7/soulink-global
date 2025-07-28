@@ -78,12 +78,16 @@
       <!-- Connection -->
       <div class="card">
         <label>Type of Connection</label>
-        <div class="inline-group">
-          <label><input type="radio" name="connectionType" value="Romantic" required/> Romance</label>
-          <label><input type="radio" name="connectionType" value="Friendship"/> Friendship</label>
-          <label><input type="radio" name="connectionType" value="Both"/> Both</label>
-        </div>
-      </div>
+      <div>
+         <input type="radio" id="romantic" name="connectionType" value="Romantic" />
+         <label for="romantic">Romantic</label>
+
+         <input type="radio" id="friendship" name="connectionType" value="Friendship" />
+         <label for="friendship">Friendship</label>
+
+         <input type="radio" id="both" name="connectionType" value="Both" />
+         <label for="both">Both</label>
+     </div>
 
       <!-- Love Language -->
       <div class="card">
