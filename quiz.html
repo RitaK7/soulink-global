@@ -38,7 +38,7 @@
   <!-- QUIZ FORM -->
   <main class="container">
     <h1>🌈 Soul Compatibility Quiz</h1>
-    <form id="quizForm" class="quiz-form">
+    <form id="quizForm">
       <!-- Basic Info -->
       <div class="card-group">
         <div class="card">
@@ -336,21 +336,31 @@
         <textarea id="about" name="about" rows="4" required></textarea>
       </div>
 
-       <!-- Submit -->
-      <button type="submit" class="btn-submit">
-        Edit Profile <i class="bi bi-arrow-right-circle"></i>
-      </button>
-    </form>
-  </main>
+       <!-- Submit button inside form -->
+<button type="submit" class="btn-submit">
+  Edit Profile <i class="bi bi-arrow-right-circle"></i>
+</button>
+</form>
 
-  <footer class="site-footer">© 2025 soulink.global</footer>
+</main>
 
-  <script src="quiz.js" defer></script>
-  <script>
-    document.getElementById('navToggle').onclick = () => {
-      document.querySelector('.nav-links').classList.toggle('open');
-      document.querySelector('.auth-buttons').classList.toggle('open');
-    };
-  </script>
+<!-- Footer -->
+<footer class="site-footer">© 2025 soulink.global</footer>
+
+<!-- Scripts -->
+<script src="quiz.js" defer></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.getElementById('navToggle');
+    if (toggle) {
+      toggle.onclick = () => {
+        document.querySelector('.nav-links')?.classList.toggle('open');
+        document.querySelector('.auth-buttons')?.classList.toggle('open');
+      };
+    }
+  });
+</script>
+
 </body>
 </html>
+
