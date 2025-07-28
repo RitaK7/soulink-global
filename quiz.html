@@ -1,4 +1,3 @@
-<!-- quiz.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,6 +38,7 @@
   <!-- QUIZ FORM -->
   <main class="container">
     <h1>🌈 Soul Compatibility Quiz</h1>
+
     <form id="quizForm" class="quiz-form">
       <!-- Step 1: Basic Info -->
       <div class="card-group">
@@ -61,11 +61,12 @@
         </div>
       </div>
 
-      <!-- Country (full list unchanged) -->
+      <!-- Country -->
       <div class="card">
         <label for="country">Country</label>
         <select id="country" name="country" required>
           <option value="">— Select your country —</option>
+          <!-- full list unchanged -->
           <option value="Afghanistan">Afghanistan</option>
           <option value="Albania">Albania</option>
           <option value="Algeria">Algeria</option>
@@ -347,12 +348,14 @@
         <textarea id="about" name="about" rows="4" required></textarea>
       </div>
 
+      <!-- Submit -->
       <button type="submit" class="btn-submit">
         Edit Profile <i class="bi bi-arrow-right-circle"></i>
       </button>
     </form>
   </main>
 
+  <!-- Footer -->
   <footer class="site-footer">© 2025 soulink.global</footer>
 
   <!-- quiz logic -->
