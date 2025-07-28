@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded", function () {
   const data = JSON.parse(localStorage.getItem("soulQuiz")) || {};
 
@@ -17,4 +16,15 @@ document.addEventListener("DOMContentLoaded", function () {
   display("unacceptable", data.unacceptable);
   display("soulMessage", data.about);
   display("loveLanguage", data.loveLanguage);
+  display("name", data.name);
+
+  display("westernSign", data.westernZodiac?.sign);
+  display("westernDescription", data.westernZodiac?.description);
+
+  display("chineseSign", data.chineseZodiac?.sign);
+  display("chineseDescription", data.chineseZodiac?.description);
+
+  display("lifePathNumber", data.lifePath?.number);
+  display("lifePathDescription", data.lifePath?.description);
+
 });
