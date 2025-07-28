@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Radio buttons
-    data.relationship = formData.get("relationship") || "";
+    data.connection = formData.get("connection") || "";
     data.loveLanguage = formData.get("loveLanguage") || "";
 
     // Checkboxes
