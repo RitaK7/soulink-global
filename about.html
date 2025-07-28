@@ -1,0 +1,74 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About Soulink</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-pink-100 text-gray-800 font-sans">
+  <header class="p-6 text-center bg-white shadow sticky top-0 z-10">
+    <h1 class="text-3xl font-bold">🌐 About Soulink</h1>
+    <p class="mt-2 text-sm text-gray-600 italic">Where soul meets technology</p>
+  </header>
+  <main class="max-w-3xl mx-auto p-6 space-y-4">
+    <p>Soulink is a global platform that blends the art of deep human connection with the power of AI. Whether you're seeking friendship, romance, or self-discovery, Soulink helps you find meaningful relationships aligned with your soulprint.</p>
+    <p>Our mission is to foster conscious, sustainable, and loving connections around the world through compatibility in love languages, values, numerology, and more.</p>
+    <p>Welcome to your soulful journey! 🌟</p>
+  </main>
+
+<script>
+// Firebase compat auth (or adapt to your setup)
+firebase.auth().onAuthStateChanged(user => {
+  document.getElementById('sign-in').style.display  = user ? 'none' : 'inline-block';
+  document.getElementById('sign-out').style.display = user ? 'inline-block' : 'none';
+});
+document.getElementById('sign-in').addEventListener('click', () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider).catch(console.error);
+});
+document.getElementById('sign-out').addEventListener('click', () => {
+  firebase.auth().signOut();
+});
+</script>
+
+
+  <!-- HEADER include + Firebase Auth -->
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_APP.firebaseapp.com",
+      projectId: "YOUR_APP",
+      storageBucket: "YOUR_APP.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    fetch('header.html')
+      .then(r => r.text())
+      .then(html => {
+        document.getElementById('site-header').innerHTML = html;
+        const btnSignUp = document.getElementById('sign-up');
+        const btnLogin  = document.getElementById('login');
+        const btnSignOut = document.getElementById('sign-out');
+        firebase.auth().onAuthStateChanged(user => {
+          if (user) {
+            btnSignUp.style.display = 'none';
+            btnLogin .style.display = 'none';
+            btnSignOut.style.display = 'inline-block';
+          } else {
+            btnSignUp.style.display = 'inline-block';
+            btnLogin .style.display = 'inline-block';
+            btnSignOut.style.display = 'none';
+          }
+        });
+        btnSignUp.addEventListener('click', ()=> window.location.href='signup.html');
+        btnLogin .addEventListener('click', ()=> window.location.href='login.html');
+        btnSignOut.addEventListener('click', ()=> firebase.auth().signOut());
+      });
+  </script>
+</body>
+</html>

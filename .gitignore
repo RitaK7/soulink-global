@@ -1,0 +1,14 @@
+# Ignore environment variables
+.env
+
+# Ignore node modules
+node_modules/
+
+# Ignore Vite build output
+dist/
+
+# Ignore Mac system files (optional)
+.DS_Store
+# Ignore both dev and production env files
+.env
+.env.production

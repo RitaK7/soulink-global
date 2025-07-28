@@ -1,0 +1,151 @@
+<!-- quiz.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Soulink – Soul Compatibility Quiz</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- NAVBAR -->
+  <header class="main-nav">
+    <div class="logo">Soulink</div>
+    <button class="nav-toggle" id="navToggle"><i class="bi bi-list"></i></button>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="quiz.html" class="active">Quiz</a></li>
+        <li><a href="edit-profile.html">Edit Profile</a></li>
+        <li><a href="my-soul.html">My Soul</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- QUIZ FORM -->
+  <main class="container">
+    <h1>🌈 Soul Compatibility Quiz</h1>
+    <form id="quizForm" class="quiz-form">
+      <!-- Step 1 -->
+      <h3 class="section-title">Step 1 – About You</h3>
+      <div class="card-group">
+        <div class="card">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" required />
+        </div>
+        <div class="card">
+          <label for="birthdate">Birth Date <small>(YYYY‑MM‑DD)</small></label>
+          <input
+            type="text"
+            id="birthdate"
+            name="birthdate"
+            placeholder="1978-11-22"
+            pattern="\d{4}-\d{2}-\d{2}"
+            required
+          />
+        </div>
+        <div class="card">
+          <label for="country">Country</label>
+          <select id="country" name="country" required>
+            <option value="">— Select your country —</option>
+            <!-- abbreviated list for brevity -->
+            <option>United States</option>
+            <option>Canada</option>
+            <option>United Kingdom</option>
+            <!-- add the rest -->
+          </select>
+        </div>
+      </div>
+
+      <div class="card-group">
+        <div class="card">
+          <label for="height">Height (cm)</label>
+          <input type="number" id="height" name="height" min="0" required />
+        </div>
+        <div class="card">
+          <label for="weight">Weight (kg)</label>
+          <input type="number" id="weight" name="weight" min="0" required />
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <h3 class="section-title">Step 2 – Connection & Love</h3>
+      <div class="card">
+        <label>Type of Connection</label>
+        <div class="inline-group">
+          <label><input type="radio" name="connectionType" value="Romantic" required /> Romance</label>
+          <label><input type="radio" name="connectionType" value="Friendship" /> Friendship</label>
+          <label><input type="radio" name="connectionType" value="Both" /> Both</label>
+        </div>
+      </div>
+
+      <div class="card">
+        <label>Primary Love Language</label>
+        <div class="radio-group">
+          <label><input type="radio" name="loveLanguage" value="Words of Affirmation" required /> Words of Affirmation</label>
+          <small class="desc">Kind and encouraging words.</small>
+          <label><input type="radio" name="loveLanguage" value="Acts of Service" /> Acts of Service</label>
+          <small class="desc">Helpful, caring actions.</small>
+          <label><input type="radio" name="loveLanguage" value="Receiving Gifts" /> Receiving Gifts</label>
+          <small class="desc">Thoughtful presents.</small>
+          <label><input type="radio" name="loveLanguage" value="Quality Time" /> Quality Time</label>
+          <small class="desc">Undivided attention.</small>
+          <label><input type="radio" name="loveLanguage" value="Physical Touch" /> Physical Touch</label>
+          <small class="desc">Hugs, kisses, closeness.</small>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <h3 class="section-title">Step 3 – Interests & Values</h3>
+      <div class="card">
+        <label>Select Your Hobbies</label>
+        <div class="inline-group">
+          <label><input type="checkbox" name="hobbies" value="Music" /> Music</label>
+          <label><input type="checkbox" name="hobbies" value="Sports" /> Sports</label>
+          <label><input type="checkbox" name="hobbies" value="Traveling" /> Traveling</label>
+          <label><input type="checkbox" name="hobbies" value="Reading" /> Reading</label>
+          <label><input type="checkbox" name="hobbies" value="Art" /> Art</label>
+        </div>
+      </div>
+
+      <div class="card">
+        <label>Values Most Important to You</label>
+        <div class="inline-group">
+          <label><input type="checkbox" name="values" value="Honesty" /> Honesty</label>
+          <label><input type="checkbox" name="values" value="Compassion" /> Compassion</label>
+          <label><input type="checkbox" name="values" value="Adventure" /> Adventure</label>
+          <label><input type="checkbox" name="values" value="Growth" /> Growth</label>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <h3 class="section-title">Step 4 – Tell Us More</h3>
+      <div class="card">
+        <label for="unacceptable">Unacceptable Behavior</label>
+        <textarea id="unacceptable" name="unacceptable" rows="2" placeholder="e.g. dishonesty…" required></textarea>
+      </div>
+      <div class="card">
+        <label for="about">About Me</label>
+        <textarea id="about" name="about" rows="4" placeholder="Your story…" required></textarea>
+      </div>
+
+      <button type="submit" class="btn-submit">Edit Profile <i class="bi bi-arrow-right-circle"></i></button>
+    </form>
+  </main>
+
+  <footer class="site-footer">© 2025 soulink.global</footer>
+
+  <script src="quiz.js" defer></script>
+  <script>
+    // mobile nav toggle
+    document.getElementById('navToggle').onclick = () => {
+      document.querySelector('.nav-links').classList.toggle('open');
+    };
+  </script>
+</body>
+</html>
