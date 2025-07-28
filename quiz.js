@@ -1,56 +1,69 @@
-console.log("📘 quiz.js loaded");
 
-function getWesternZodiac(d) {
-  const m = d.getMonth() + 1, day = d.getDate();
-  if ((m===1&&day>=20)||(m===2&&day<=18)) return 'Aquarius';
-  if ((m===2&&day>=19)||(m===3&&day<=20)) return 'Pisces';
-  if ((m===3&&day>=21)||(m===4&&day<=19)) return 'Aries';
-  if ((m===4&&day>=20)||(m===5&&day<=20)) return 'Taurus';
-  if ((m===5&&day>=21)||(m===6&&day<=20)) return 'Gemini';
-  if ((m===6&&day>=21)||(m===7&&day<=22)) return 'Cancer';
-  if ((m===7&&day>=23)||(m===8&&day<=22)) return 'Leo';
-  if ((m===8&&day>=23)||(m===9&&day<=22)) return 'Virgo';
-  if ((m===9&&day>=23)||(m===10&&day<=22)) return 'Libra';
-  if ((m===10&&day>=23)||(m===11&&day<=21)) return 'Scorpio';
-  if ((m===11&&day>=22)||(m===12&&day<=21)) return 'Sagittarius';
-  return 'Capricorn';
-}
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("quizForm");
+  if (!form) return;
 
-function getChineseZodiac(d) {
-  const signs = ['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig'];
-  return signs[(d.getFullYear() - 4) % 12];
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  console.log("📗 DOM ready");
-  const form = document.getElementById('quizForm');
-  console.log("🔎 form element:", form);
-
-  form.addEventListener('submit', e => {
+  form.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const data = {};
-    Array.from(form.elements).forEach(inp => {
-      if (!inp.name) return;
-      if (inp.type === 'radio') {
-        if (inp.checked) data[inp.name] = inp.value;
-      } else if (inp.type === 'checkbox') {
-        data[inp.name] = data[inp.name] || [];
-        if (inp.checked) data[inp.name].push(inp.value);
-      } else {
-        data[inp.name] = inp.value;
-      }
-    });
+    const getCheckedValues = (name) =>
+      Array.from(form.querySelectorAll(`input[name="${name}"]:checked`)).map(
+        (el) => el.value
+      );
 
-    // compute zodiacs
-    const bd = new Date(data.birthdate);
-    data.westernZodiac = getWesternZodiac(bd);
-    data.chineseZodiac = getChineseZodiac(bd);
+    const formData = {
+      name: form.name.value.trim(),
+      birthday: form.birthday.value.trim(),
+      country: form.country.value,
+      height: form.height.value.trim(),
+      weight: form.weight.value.trim(),
+      relationshipType: form.querySelector('input[name="relationshipType"]:checked')?.value || "",
+      loveLanguage: form.querySelector('input[name="loveLanguage"]:checked')?.value || "",
+      hobbies: getCheckedValues("hobbies"),
+      values: getCheckedValues("values"),
+      boundaries: form.boundaries.value.trim(),
+      about: form.about.value.trim(),
+    };
 
-    console.log("📝 Saving soulQuiz:", data);
-    localStorage.setItem('soulQuiz', JSON.stringify(data));
+    // Compute zodiac
+    const bday = new Date(formData.birthday);
+    const month = bday.getUTCMonth() + 1;
+    const day = bday.getUTCDate();
 
-    // redirect
-    window.location.href = 'edit-profile.html';
+    const zodiacSigns = [
+      { sign: "Capricorn", end: [1, 19] },
+      { sign: "Aquarius", end: [2, 18] },
+      { sign: "Pisces", end: [3, 20] },
+      { sign: "Aries", end: [4, 19] },
+      { sign: "Taurus", end: [5, 20] },
+      { sign: "Gemini", end: [6, 20] },
+      { sign: "Cancer", end: [7, 22] },
+      { sign: "Leo", end: [8, 22] },
+      { sign: "Virgo", end: [9, 22] },
+      { sign: "Libra", end: [10, 22] },
+      { sign: "Scorpio", end: [11, 21] },
+      { sign: "Sagittarius", end: [12, 21] },
+      { sign: "Capricorn", end: [12, 31] }, // wrap around
+    ];
+    const zodiac = zodiacSigns.find(
+      ({ end }) =>
+        month < end[0] || (month === end[0] && day <= end[1])
+    ).sign;
+
+    const chineseZodiacAnimals = [
+      "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake",
+      "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"
+    ];
+    const birthYear = bday.getUTCFullYear();
+    const chineseZodiac = chineseZodiacAnimals[birthYear % 12];
+
+    formData.westernZodiac = zodiac;
+    formData.chineseZodiac = chineseZodiac;
+
+    // Save to localStorage
+    localStorage.setItem("soulQuiz", JSON.stringify(formData));
+
+    // Redirect or confirmation
+    window.location.href = "edit-profile.html";
   });
 });
