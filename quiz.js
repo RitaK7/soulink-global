@@ -6,7 +6,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   for (const [key, value] of Object.entries(saved)) {
     const field = form.elements[key];
-    if (!field) continue;
+
+    if (!field) {
+      const radios = form.querySelectorAll(`[name="${key}"]`);
+      if (radios.length && typeof value === "string") {
+        const radio = form.querySelector(`[name="${key}"][value="${value}"]`);
+        if (radio) radio.checked = true;
+      }
+      const checkboxes = form.querySelectorAll(`[name="${key}[]"]`);
+      if (checkboxes.length && Array.isArray(value)) {
+        value.forEach(val => {
+          const checkbox = form.querySelector(`[name="${key}[]"][value="${val}"]`);
+          if (checkbox) checkbox.checked = true;
+        });
+      }
+      continue;
+    }
 
     if (Array.isArray(value)) {
       value.forEach(val => {
@@ -47,6 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const day = birth.getDate();
       const year = birth.getFullYear();
 
+      // Western Zodiac
       const zodiacs = [
         ["Capricorn", 1, 19], ["Aquarius", 2, 18], ["Pisces", 3, 20],
         ["Aries", 4, 19], ["Taurus", 5, 20], ["Gemini", 6, 20],
@@ -56,6 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ];
       data.westernZodiac = zodiacs.find(([sign, m, d]) => (month === m && day <= d))?.[0] || "Capricorn";
 
+      // Chinese Zodiac
       const signs = [
         "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake",
         "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"
