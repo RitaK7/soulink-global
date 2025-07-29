@@ -1,34 +1,41 @@
 document.addEventListener("DOMContentLoaded", () => {
   const data = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
-  const soulCard = document.getElementById("soulCard");
-  const userNameEl = document.getElementById("userName");
-  if (data.name) userNameEl.textContent = data.name;
 
   const summaryBox = `
-    <div class="summary-box">
-      🌟 <em>${data.name} is a soulful person who seeks ${data.connectionType?.toLowerCase() || "connections"}.
-      With a heart tuned to ${data.loveLanguage || "love"}, and guided by ${data.values?.join(", ") || "deep values"},
-      they’re looking for meaningful relationships. ${data.bio || ""}</em>
+    <div class="soul-summary-box card glow-box">
+      <p><i class="bi bi-stars"></i> <strong>${data.name || "This soul"}</strong> is a radiant being seeking ${data.connectionType?.toLowerCase() || "genuine"} connections. 
+      Their heart resonates with <strong>${data.loveLanguage || "deep love"}</strong>, guided by values like 
+      <strong>${(data.values || []).join(", ") || "authenticity"}</strong>. 
+      <br/><em>${data.about || ""}</em></p>
     </div>
   `;
+  document.getElementById("soul-summary").innerHTML = summaryBox;
 
-  const content = `
-    <p><strong>Birthday:</strong> ${data.birthday || "–"}</p>
-    <p><strong>Country:</strong> ${data.country || "–"}</p>
-    <p><strong>Height:</strong> ${data.height || "–"} cm</p>
-    <p><strong>Weight:</strong> ${data.weight || "–"} kg</p>
-    <p><strong>Connection Type:</strong> ${data.connectionType || "–"}</p>
-    <p><strong>Love Language:</strong> ${data.loveLanguage || "–"}</p>
-    <p><strong>Hobbies:</strong> ${Array.isArray(data.hobbies) ? data.hobbies.join(", ") : "–"}</p>
-    <p><strong>Values:</strong> ${Array.isArray(data.values) ? data.values.join(", ") : "–"}</p>
-    <p><strong>Unacceptable Behaviour:</strong> ${data.unacceptable || "–"}</p>
-    <p><strong>About Me:</strong> ${data.bio || "–"}</p>
-    <hr />
-    <p><strong>Western Zodiac:</strong> ${data.westernZodiac || "–"}</p>
-    <p><strong>Chinese Zodiac:</strong> ${data.chineseZodiac || "–"}</p>
-    <p><strong>Life Path Number:</strong> ${data.lifePathNumber || "–"}</p>
+  const createCard = (icon, title, content) => {
+    if (!content || (Array.isArray(content) && content.length === 0)) return "";
+    const formatted = Array.isArray(content) ? content.join(", ") : content;
+    return `
+      <div class="card glow-box">
+        <h3><i class="bi ${icon}"></i> ${title}</h3>
+        <p>${formatted}</p>
+      </div>
+    `;
+  };
+
+  const soulCard = document.getElementById("soulCard");
+  soulCard.innerHTML = `
+    ${createCard("bi-calendar-heart", "Birthdate", data.birthday)}
+    ${createCard("bi-geo-alt", "Country", data.country)}
+    ${createCard("bi-rulers", "Height", data.height ? `${data.height} cm` : "")}
+    ${createCard("bi-weight", "Weight", data.weight ? `${data.weight} kg` : "")}
+    ${createCard("bi-people", "Connection Type", data.connectionType)}
+    ${createCard("bi-heart-pulse", "Love Language", data.loveLanguage)}
+    ${createCard("bi-stars", "Hobbies", data.hobbies)}
+    ${createCard("bi-gem", "Values", data.values)}
+    ${createCard("bi-exclamation-triangle", "Unacceptable Behaviour", data.unacceptable)}
+    ${createCard("bi-chat-quote", "About Me", data.about)}
+    ${createCard("bi-moon-stars", "Western Zodiac", data.westernZodiac)}
+    ${createCard("bi-kanban", "Chinese Zodiac", data.chineseZodiac)}
+    ${createCard("bi-123", "Life Path Number", data.lifePath)}
   `;
-
-  soulCard.innerHTML = summaryBox + soulCard.innerHTML;
-  document.getElementById("soulContent").innerHTML = content;
 });
