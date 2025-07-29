@@ -1,247 +1,245 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Edit Profile – Soulink</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Soulink – Edit Your Soul Profile</title>
 
-  <!-- Segoe UI font and core styles -->
+  <!-- Bootstrap Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+  />
+
+  <!-- Main stylesheet -->
+  <link rel="stylesheet" href="style.css"/>
+
   <style>
+    :root {
+      --bg: #003c43;
+      --nav-bg: #002c2f;
+      --card-bg: #004d4d;
+      --accent: #2ae49d;
+      --text-light: #eefefe;
+      --glow: rgba(42,228,157,0.6);
+      --radius: 16px;
+    }
+
     body {
+      background: var(--bg);
+      color: var(--text-light);
+      font-family: 'Poppins', sans-serif;
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #003c43;
-      color: #ffffff;
-    }
-    .navbar {
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ─── NAVBAR ─────────────────────────────────────────────────── */
+    header {
+      background: var(--nav-bg);
+      position: sticky; top:0; z-index:100;
+    }
+    .nav-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
       align-items: center;
-      background-color: #004d4d;
-      padding: 0.5rem 1rem;
+      justify-content: space-between;
+      padding: 1rem 2rem;
     }
-    .navbar .logo {
-      font-size: 1.5rem;
-      font-weight: bold;
-    }
+    .nav-logo { font-size:1.8rem; font-weight:bold; color:var(--accent); }
     .nav-links {
-      display: flex;
-      list-style: none;
-      margin: 0;
-      padding: 0;
+      display:flex; gap:1.5rem; list-style:none; margin:0; padding:0;
     }
-    .nav-links li a {
-      color: #ffffff;
-      text-decoration: none;
-      padding: 0.5rem 1rem;
+    .nav-links a {
+      display:flex; align-items:center;
+      color:var(--text-light); font-weight:500;
+      padding:.4rem; border-radius:8px;
+      transition:background .3s,box-shadow .3s;
+    }
+    .nav-links a i { margin-right:.4rem; }
+    .nav-links a:hover,
+    .nav-links a[aria-current="page"] {
+      background: rgba(42,228,157,0.2);
+      box-shadow: 0 0 8px var(--glow);
+    }
+    .auth-buttons {
+      display:flex; gap:.5rem;
+    }
+    .btn-logout {
+      padding:.4rem .8rem; border:1px solid var(--accent);
+      border-radius:8px; background:transparent;
+      color:var(--accent); cursor:pointer;
+      transition:background .3s,color .3s;
+    }
+    .btn-logout:hover {
+      background: var(--accent);
+      color: var(--bg);
     }
     .nav-toggle {
       display: none;
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      color: #ffffff;
+      background: none; border: none;
+      font-size: 1.8rem; color: var(--accent);
       cursor: pointer;
     }
-    @media (max-width: 768px) {
-      .nav-links {
-        display: none;
-        flex-direction: column;
-        position: absolute;
-        top: 60px;
-        right: 0;
-        background-color: #004d4d;
-        width: 200px;
-      }
-      .nav-links.active {
-        display: flex;
-      }
-      .nav-toggle {
-        display: block;
-      }
+
+    /* ─── FORM CARD ───────────────────────────────────────────────── */
+    main.container {
+      flex:1;
+      max-width:900px;
+      margin:2rem auto;
+      padding:0 1rem;
     }
-    .container {
-      max-width: 800px;
-      margin: 2rem auto;
-      padding: 1rem;
+    .form-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: 0 0 12px var(--glow);
     }
-    .card {
-      background-color: #004d4d;
-      padding: 1rem;
+    .form-card h2 {
+      color: var(--accent);
       margin-bottom: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
-    .card label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: bold;
+    .form-card label {
+      display:block; margin-top:1rem; font-weight:500;
     }
-    .card input[type="text"],
-    .card input[type="date"],
-    .card textarea,
-    .card select {
-      width: 100%;
-      padding: 0.5rem;
-      border: none;
-      border-radius: 4px;
-      margin-bottom: 0.5rem;
-      font-size: 1rem;
-      background-color: #003c43;
-      color: #ffffff;
+    .form-card input[type="text"],
+    .form-card textarea {
+      width:100%; padding:.6rem; margin-top:.4rem;
+      border:none; border-radius:6px;
+      background:#005f56; color:var(--text-light);
+      transition:box-shadow .2s;
     }
-    .checkbox-group label {
-      display: inline-block;
-      margin-right: 1rem;
-      margin-bottom: 0.5rem;
+    .form-card input[type="text"]:focus,
+    .form-card textarea:focus {
+      outline:none;
+      box-shadow:0 0 8px var(--glow);
     }
-    .photo-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-      gap: 1rem;
+    .form-card input[type="file"] {
+      margin-top:.6rem;
     }
-    .photo-grid input[type="file"] {
-      display: block;
-      background-color: #003c43;
-      color: #ffffff;
-      border: none;
-      padding: 0.5rem;
-      border-radius: 4px;
-      box-shadow: 0 0 8px #00fdd8;
-      cursor: pointer;
-      margin-bottom: 0.5rem;
+    .form-card img.preview {
+      display:block;
+      margin-top:.6rem;
+      width:120px; height:120px;
+      object-fit:cover;
+      border-radius:6px;
+      box-shadow:0 0 8px var(--glow);
     }
-    .photo-grid img {
-      width: 100%;
-      height: auto;
-      border-radius: 4px;
-      background-color: #002b2c;
+    .form-card button {
+      margin-top:2rem;
+      background: linear-gradient(135deg,#00ffd0,#00bfa5);
+      color: var(--bg);
+      padding:.8rem 1.6rem;
+      border:none; border-radius:30px;
+      font-weight:bold; cursor:pointer;
+      box-shadow:0 0 20px rgba(0,255,208,0.7);
+      transition:transform .2s,box-shadow .3s;
     }
-    .btn-submit {
-      background-color: #00fdd8;
-      color: #003c43;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-      border-radius: 4px;
-      cursor: pointer;
-      box-shadow: 0 0 8px #00fdd8;
+    .form-card button:hover {
+      transform: translateY(-2px);
+      box-shadow:0 0 30px rgba(0,255,208,0.9);
     }
-    .site-footer {
-      text-align: center;
-      padding: 1rem;
-      background-color: #004d4d;
-      color: #ffffff;
-      margin-top: 2rem;
+
+    /* ─── BOTTOM NAV ─────────────────────────────────────────────── */
+    .bottom-nav {
+      background: var(--nav-bg);
+      text-align:center;
+      padding: 1rem 0;
+    }
+    .bottom-nav a {
+      color: var(--accent);
+      font-weight:500;
+      text-decoration:none;
+      margin:0 1rem;
+    }
+
+    /* ─── RESPONSIVE ────────────────────────────────────────────── */
+    @media (max-width:768px) {
+      .nav-toggle { display:block; }
+      .nav-links, .auth-buttons {
+        display:none;
+        position:absolute; top:100%; left:0; right:0;
+        background: var(--nav-bg);
+        flex-direction:column; gap:1rem;
+        padding:1rem 2rem;
+      }
+      .nav-links.open, .auth-buttons.open { display:flex; }
     }
   </style>
 </head>
 <body>
-  <header class="navbar">
-    <div class="logo">Soulink</div>
-    <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
-    <nav>
+  <!-- NAVBAR -->
+  <header>
+    <div class="nav-wrap">
+      <button class="nav-toggle" id="navToggle">☰</button>
+      <div class="nav-logo">Soulink</div>
       <ul class="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="quiz.html">Quiz</a></li>
-        <li><a href="my-soul.html">My Soul</a></li>
-        <li><a href="edit-profile.html" aria-current="page">Edit Profile</a></li>
+        <li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
+        <li><a href="quiz.html"><i class="bi bi-question-circle"></i>Quiz</a></li>
+        <li><a href="edit-profile.html" aria-current="page"><i class="bi bi-pencil-square"></i>Edit Profile</a></li>
+        <li><a href="my-soul.html"><i class="bi bi-person"></i>My Soul</a></li>
+        <li><a href="soul-chart.html"><i class="bi bi-graph-up"></i>Soul Chart</a></li>
+        <li><a href="soul-coach.html"><i class="bi bi-chat-dots"></i>Soul Coach</a></li>
+        <li><a href="soulink-match.html"><i class="bi bi-heart"></i>Match</a></li>
+        <li><a href="friends.html"><i class="bi bi-people"></i>Friends</a></li>
+        <li><a href="result.html"><i class="bi bi-bar-chart-line"></i>Results</a></li>
       </ul>
-    </nav>
+      <div class="auth-buttons">
+        <button class="btn-logout" onclick="logout()">Log Out</button>
+      </div>
+    </div>
   </header>
 
+  <!-- EDIT PROFILE FORM -->
   <main class="container">
-    <h1>Edit Your Soul Profile</h1>
-    <form id="profile-form">
-      <div class="card">
-        <label for="name">Name</label>
-        <input type="text" id="name" name="name" required />
-      </div>
+    <div class="form-card">
+      <h2>Edit Your Soul Profile</h2>
+      <form id="profile-form">
+        <label for="name">Name:</label>
+        <input id="name" type="text" name="name" required/>
 
-      <div class="card">
-        <label for="birthdate">Birth Date</label>
-        <input type="date" id="birthdate" name="birthdate" required />
-      </div>
+        <label for="birthday">Birthday (YYYY-MM-DD):</label>
+        <input id="birthday" type="text" name="birthday" placeholder="1972-11-22" required/>
 
-      <div class="card">
-        <label for="bio">About Me</label>
-        <textarea id="bio" name="bio"></textarea>
-      </div>
+        <label for="bio">Tell me something about yourself:</label>
+        <textarea id="bio" name="bio" rows="3" placeholder="I am looking for real friends"></textarea>
 
-      <div class="card">
-        <label for="relationshipType">Type of Connection</label>
-        <select id="relationshipType" name="relationshipType">
-          <option value="">-- Choose --</option>
-          <option value="Romantic">Romantic</option>
-          <option value="Friendship">Friendship</option>
-          <option value="Both">Both</option>
-        </select>
-      </div>
+        <label for="photo1">Profile Photo 1:</label>
+        <input type="file" id="photo1" accept="image/*"/>
+        <img id="preview1" class="preview" alt="Preview 1"/>
 
-      <div class="card">
-        <label for="loveLanguage">Primary Love Language</label>
-        <select id="loveLanguage" name="loveLanguage">
-          <option value="">-- Choose --</option>
-          <option value="Words of Affirmation">Words of Affirmation</option>
-          <option value="Acts of Service">Acts of Service</option>
-          <option value="Receiving Gifts">Receiving Gifts</option>
-          <option value="Quality Time">Quality Time</option>
-          <option value="Physical Touch">Physical Touch</option>
-        </select>
-      </div>
+        <label for="photo2">Profile Photo 2:</label>
+        <input type="file" id="photo2" accept="image/*"/>
+        <img id="preview2" class="preview" alt="Preview 2"/>
 
-      <div class="card">
-        <label>Hobbies</label>
-        <div class="checkbox-group">
-          <label><input type="checkbox" name="hobbies" value="Music" /> Music</label>
-          <label><input type="checkbox" name="hobbies" value="Art" /> Art</label>
-          <label><input type="checkbox" name="hobbies" value="Travel" /> Travel</label>
-          <label><input type="checkbox" name="hobbies" value="Sports" /> Sports</label>
-          <label><input type="checkbox" name="hobbies" value="Reading" /> Reading</label>
-          <label><input type="checkbox" name="hobbies" value="Nature" /> Nature</label>
-        </div>
-      </div>
+        <label for="photo3">Profile Photo 3:</label>
+        <input type="file" id="photo3" accept="image/*"/>
+        <img id="preview3" class="preview" alt="Preview 3"/>
 
-      <div class="card">
-        <label>Core Values</label>
-        <div class="checkbox-group">
-          <label><input type="checkbox" name="values" value="Honesty" /> Honesty</label>
-          <label><input type="checkbox" name="values" value="Compassion" /> Compassion</label>
-          <label><input type="checkbox" name="values" value="Loyalty" /> Loyalty</label>
-          <label><input type="checkbox" name="values" value="Freedom" /> Freedom</label>
-          <label><input type="checkbox" name="values" value="Creativity" /> Creativity</label>
-          <label><input type="checkbox" name="values" value="Spirituality" /> Spirituality</label>
-        </div>
-      </div>
-
-      <div class="card">
-        <label for="unacceptableBehavior">Unacceptable Behavior</label>
-        <textarea id="unacceptableBehavior" name="unacceptableBehavior"></textarea>
-      </div>
-
-      <div class="card">
-        <label>Photos</label>
-        <div class="photo-grid">
-          <div>
-            <input type="file" id="photo1" accept="image/*" />
-            <img id="preview1" src="" alt="Photo 1 Preview" />
-          </div>
-          <div>
-            <input type="file" id="photo2" accept="image/*" />
-            <img id="preview2" src="" alt="Photo 2 Preview" />
-          </div>
-          <div>
-            <input type="file" id="photo3" accept="image/*" />
-            <img id="preview3" src="" alt="Photo 3 Preview" />
-          </div>
-        </div>
-      </div>
-
-      <button type="submit" class="btn-submit">Save My Soul</button>
-    </form>
+        <button type="submit">Save 💾</button>
+      </form>
+    </div>
   </main>
 
-  <footer class="site-footer">© 2025 soulink.global</footer>
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <a href="quiz.html"><i class="bi bi-arrow-left"></i> Back to Quiz</a>
+    <a href="my-soul.html">Go to My Soul <i class="bi bi-arrow-right"></i></a>
+  </nav>
+
+  <script>
+    // Mobile nav toggle
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.querySelector('.nav-links').classList.toggle('open');
+      document.querySelector('.auth-buttons').classList.toggle('open');
+    });
+    function logout() {
+      sessionStorage.removeItem('soulinkBetaAccess');
+      window.location.href = 'index.html';
+    }
+  </script>
   <script src="edit-profile.js" defer></script>
 </body>
 </html>

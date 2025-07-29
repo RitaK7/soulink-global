@@ -7,8 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("photo3")
   ];
 
-  // Load saved profile from soulQuiz
-  const saved = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
+  // Load saved profile
+  const saved = JSON.parse(localStorage.getItem("profile")) || {};
   if (saved.name)        form.name.value        = saved.name;
   if (saved.birthday)    form.birthday.value    = saved.birthday;
   if (saved.bio)         form.bio.value         = saved.bio;
@@ -35,7 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
   form.addEventListener("submit", async e => {
     e.preventDefault();
     const data = {
-      ...saved,
       name: form.name.value,
       birthday: form.birthday.value,
       bio: form.bio.value
@@ -53,8 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
     data.photo2 = await readImage(photoInputs[1].files[0]) || saved.photo2 || null;
     data.photo3 = await readImage(photoInputs[2].files[0]) || saved.photo3 || null;
 
-    localStorage.setItem("soulQuiz", JSON.stringify(data));
-    alert("✅ Profili sėkmingai išsaugotas!");
+    localStorage.setItem("profile", JSON.stringify(data));
     window.location.href = "my-soul.html";
   });
 });
