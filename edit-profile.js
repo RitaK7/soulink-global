@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   form.name.value = saved.name || "";
   form.birthday.value = saved.birthday || "";
-  form.bio.value = saved.bio || "";
+  form.bio.value = saved.about || saved.bio || "";
   form.unacceptable.value = saved.unacceptable || "";
 
   if (saved.connectionType) {
