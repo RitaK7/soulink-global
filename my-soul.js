@@ -1,57 +1,34 @@
-
 document.addEventListener("DOMContentLoaded", () => {
   const data = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
-  const container = document.getElementById("soulCard");
+  const soulCard = document.getElementById("soulCard");
   const userNameEl = document.getElementById("userName");
   if (data.name) userNameEl.textContent = data.name;
 
-  if (!data.name) {
-    container.innerHTML = "<p>No data found. Please complete the quiz.</p>";
-    return;
-  }
-
-  function renderList(arr) {
-    return arr && arr.length ? arr.map(i => `<span class='pill'>${i}</span>`).join(" ") : "<em>–</em>";
-  }
-
-  container.innerHTML = `
-    <section class="section-box">
-      <h2><i class="bi bi-person-vcard"></i> Personal Info</h2>
-      <p><strong>Birth Date:</strong> ${data.birthday || "–"}</p>
-      <p><strong>Country:</strong> ${data.country || "–"}</p>
-      <p><strong>Height:</strong> ${data.height || "–"} cm</p>
-      <p><strong>Weight:</strong> ${data.weight || "–"} kg</p>
-      <p><strong>Connection:</strong> ${data.connectionType || "–"}</p>
-      <p><strong>Relationship Type:</strong> ${data.loveLanguage || "–"}</p>
-    </section>
-    <section class="section-box">
-      <h2><i class="bi bi-hearts"></i> Hobbies & Values</h2>
-      <p><strong>Hobbies:</strong> ${renderList(data.hobbies)}</p>
-      <p><strong>Values:</strong> ${renderList(data.values)}</p>
-    </section>
-    <section class="section-box">
-      <h2><i class="bi bi-flower2"></i> Essence</h2>
-      <p><strong>Unacceptable:</strong> ${data.unacceptable || "–"}</p>
-      <p><strong>Soul Message:</strong> ${data.bio || "–"}</p>
-    </section>
-    <section class="section-box">
-      <h2><i class="bi bi-envelope-heart"></i> Love Language</h2>
-      <p>${data.loveLanguage || "–"}</p>
-    </section>
-    <section class="section-box">
-      <h2><i class="bi bi-stars"></i> Western Zodiac</h2>
-      <p>${data.westernZodiac || "–"}</p>
-    </section>
-    <section class="section-box">
-      <h2><i class="bi bi-gem"></i> Chinese Zodiac</h2>
-      <p>${data.chineseZodiac || "–"}</p>
-    </section>
-    <section class="section-box">
-      <h2><i class="bi bi-123"></i> Life Path Number</h2>
-      <p>${data.lifePathNumber || "–"}</p>
-    </section>
-    <div class="center-btn">
-      <a href="edit-profile.html" class="btn-glow">Edit Profile</a>
+  const summaryBox = `
+    <div class="summary-box">
+      🌟 <em>${data.name} is a soulful person who seeks ${data.connectionType?.toLowerCase() || "connections"}.
+      With a heart tuned to ${data.loveLanguage || "love"}, and guided by ${data.values?.join(", ") || "deep values"},
+      they’re looking for meaningful relationships. ${data.bio || ""}</em>
     </div>
   `;
+
+  const content = `
+    <p><strong>Birthday:</strong> ${data.birthday || "–"}</p>
+    <p><strong>Country:</strong> ${data.country || "–"}</p>
+    <p><strong>Height:</strong> ${data.height || "–"} cm</p>
+    <p><strong>Weight:</strong> ${data.weight || "–"} kg</p>
+    <p><strong>Connection Type:</strong> ${data.connectionType || "–"}</p>
+    <p><strong>Love Language:</strong> ${data.loveLanguage || "–"}</p>
+    <p><strong>Hobbies:</strong> ${Array.isArray(data.hobbies) ? data.hobbies.join(", ") : "–"}</p>
+    <p><strong>Values:</strong> ${Array.isArray(data.values) ? data.values.join(", ") : "–"}</p>
+    <p><strong>Unacceptable Behaviour:</strong> ${data.unacceptable || "–"}</p>
+    <p><strong>About Me:</strong> ${data.bio || "–"}</p>
+    <hr />
+    <p><strong>Western Zodiac:</strong> ${data.westernZodiac || "–"}</p>
+    <p><strong>Chinese Zodiac:</strong> ${data.chineseZodiac || "–"}</p>
+    <p><strong>Life Path Number:</strong> ${data.lifePathNumber || "–"}</p>
+  `;
+
+  soulCard.innerHTML = summaryBox + soulCard.innerHTML;
+  document.getElementById("soulContent").innerHTML = content;
 });
