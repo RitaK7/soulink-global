@@ -6,58 +6,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Soul</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </head>
 <body class="soulink-theme">
   <header>
-    <nav>
-      <a href="home.html">Home</a>
-      <a href="quiz.html">Quiz</a>
-      <a href="my-soul.html" aria-current="page">My Soul</a>
-      <a href="edit-profile.html">Edit Profile</a>
+    <nav class="navbar">
+      <div class="logo">Soulink</div>
+      <ul class="nav-links">
+        <li><a href="home.html">Home</a></li>
+        <li><a href="quiz.html">Quiz</a></li>
+        <li><a href="my-soul.html" aria-current="page">My Soul</a></li>
+        <li><a href="edit-profile.html">Edit Profile</a></li>
+      </ul>
     </nav>
   </header>
 
   <main class="container">
-    <h1>My Soul Profile</h1>
-    <div id="soul-profile" class="profile-card"></div>
+    <h1 class="page-title"><i class="bi bi-stars"></i> Welcome, <span id="userName">Soul</span>!</h1>
+    <div class="card soul-card" id="soulCard"></div>
   </main>
 
   <footer>
     <p>Soulink © 2025</p>
   </footer>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const data = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
-      const container = document.getElementById("soul-profile");
-
-      if (!data.name) {
-        container.innerHTML = "<p>No data found. Please complete the quiz.</p>";
-        return;
-      }
-
-      function renderList(arr) {
-        return arr && arr.length ? "<ul>" + arr.map(i => "<li>" + i + "</li>").join("") + "</ul>" : "<em>–</em>";
-      }
-
-      container.innerHTML = `
-        <h2>${data.name}</h2>
-        <p><strong>Birthday:</strong> ${data.birthday || "–"}</p>
-        <p><strong>Country:</strong> ${data.country || "–"}</p>
-        <p><strong>Height:</strong> ${data.height || "–"} cm</p>
-        <p><strong>Weight:</strong> ${data.weight || "–"} kg</p>
-        <p><strong>Connection Type:</strong> ${data.connectionType || "–"}</p>
-        <p><strong>Love Language:</strong> ${data.loveLanguage || "–"}</p>
-        <p><strong>Hobbies:</strong> ${renderList(data.hobbies)}</p>
-        <p><strong>Values:</strong> ${renderList(data.values)}</p>
-        <p><strong>Unacceptable Behaviour:</strong> ${data.unacceptable || "–"}</p>
-        <p><strong>About Me:</strong> ${data.bio || "–"}</p>
-        <hr />
-        <p><strong>Western Zodiac:</strong> ${data.westernZodiac || "–"}</p>
-        <p><strong>Chinese Zodiac:</strong> ${data.chineseZodiac || "–"}</p>
-        <p><strong>Life Path Number:</strong> ${data.lifePathNumber || "–"}</p>
-      `;
-    });
-  </script>
+  <script src="my-soul.js"></script>
 </body>
 </html>

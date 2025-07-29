@@ -1,45 +1,57 @@
-// my-soul.js (corrected to match quiz.js keys)
-document.addEventListener("DOMContentLoaded", () => {
-  const data = JSON.parse(localStorage.getItem("soulQuiz")) || {};
 
-  function display(id, val) {
-    document.getElementById(id).textContent = 
-      (val !== undefined && val !== null && val !== "") ? val : "–";
+document.addEventListener("DOMContentLoaded", () => {
+  const data = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
+  const container = document.getElementById("soulCard");
+  const userNameEl = document.getElementById("userName");
+  if (data.name) userNameEl.textContent = data.name;
+
+  if (!data.name) {
+    container.innerHTML = "<p>No data found. Please complete the quiz.</p>";
+    return;
   }
 
-  // Basic fields
-  display("name",           data.name);
-  display("birthdate",      data.birthdate);
-  display("country",        data.country);
-  display("height",         data.height);
-  display("weight",         data.weight);
+  function renderList(arr) {
+    return arr && arr.length ? arr.map(i => `<span class='pill'>${i}</span>`).join(" ") : "<em>–</em>";
+  }
 
-  // Connection & relationship
-  display("connection",     data.connectionType);
-  // You were using "Relationship Type" as a secondary slot — here we repurpose it
-  // to show the love language again (or you can drop this line if you prefer)
-  display("relationshipType", data.loveLanguage);
-
-  // Lists
-  display("hobbies",        (data.hobbies || []).join(", "));
-  display("values",         (data.values  || []).join(", "));
-
-  // Free‑form
-  display("unacceptable",   data.unacceptable);
-  display("soulMessage",    data.about);
-
-  // Single‑choice
-  display("loveLanguage",   data.loveLanguage);
-
-  // Zodiacs (quiz.js stores these as simple strings)
-  display("westernSign",    data.westernZodiac);
-  // no description saved by quiz.js, so you can leave this blank or add one if you like
-  display("westernDescription", "");
-
-  display("chineseSign",    data.chineseZodiac);
-  display("chineseDescription", "");
-
-  // Life Path Number isn’t computed in quiz.js yet, so this will remain blank
-  display("lifePathNumber",     "");
-  display("lifePathDescription","");
+  container.innerHTML = `
+    <section class="section-box">
+      <h2><i class="bi bi-person-vcard"></i> Personal Info</h2>
+      <p><strong>Birth Date:</strong> ${data.birthday || "–"}</p>
+      <p><strong>Country:</strong> ${data.country || "–"}</p>
+      <p><strong>Height:</strong> ${data.height || "–"} cm</p>
+      <p><strong>Weight:</strong> ${data.weight || "–"} kg</p>
+      <p><strong>Connection:</strong> ${data.connectionType || "–"}</p>
+      <p><strong>Relationship Type:</strong> ${data.loveLanguage || "–"}</p>
+    </section>
+    <section class="section-box">
+      <h2><i class="bi bi-hearts"></i> Hobbies & Values</h2>
+      <p><strong>Hobbies:</strong> ${renderList(data.hobbies)}</p>
+      <p><strong>Values:</strong> ${renderList(data.values)}</p>
+    </section>
+    <section class="section-box">
+      <h2><i class="bi bi-flower2"></i> Essence</h2>
+      <p><strong>Unacceptable:</strong> ${data.unacceptable || "–"}</p>
+      <p><strong>Soul Message:</strong> ${data.bio || "–"}</p>
+    </section>
+    <section class="section-box">
+      <h2><i class="bi bi-envelope-heart"></i> Love Language</h2>
+      <p>${data.loveLanguage || "–"}</p>
+    </section>
+    <section class="section-box">
+      <h2><i class="bi bi-stars"></i> Western Zodiac</h2>
+      <p>${data.westernZodiac || "–"}</p>
+    </section>
+    <section class="section-box">
+      <h2><i class="bi bi-gem"></i> Chinese Zodiac</h2>
+      <p>${data.chineseZodiac || "–"}</p>
+    </section>
+    <section class="section-box">
+      <h2><i class="bi bi-123"></i> Life Path Number</h2>
+      <p>${data.lifePathNumber || "–"}</p>
+    </section>
+    <div class="center-btn">
+      <a href="edit-profile.html" class="btn-glow">Edit Profile</a>
+    </div>
+  `;
 });
