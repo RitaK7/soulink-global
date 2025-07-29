@@ -1,4 +1,3 @@
-// edit-profile.js (pataisyta versija)
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("profile-form");
   const photoInputs = [
@@ -8,31 +7,27 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   const saved = JSON.parse(localStorage.getItem("soulQuiz")) || {};
+  if (saved.name) form.name.value = saved.name;
+  if (saved.birthday) form.birthday.value = saved.birthday;
+  if (saved.bio) form.bio.value = saved.bio;
+  if (saved.relationshipType) form.relationshipType.value = saved.relationshipType;
+  if (saved.loveLanguage) form.loveLanguage.value = saved.loveLanguage;
+  if (saved.unacceptableBehavior) form.unacceptableBehavior.value = saved.unacceptableBehavior;
 
-  // Text/textarea fields
-  const textFields = [
-    "name", "birthday", "country", "relationshipType", "loveLanguage",
-    "unacceptable", "about", "bio"
-  ];
-  textFields.forEach(id => {
-    if (saved[id]) {
-      const field = form.querySelector(`[name="${id}"]`);
-      if (field) field.value = saved[id];
-    }
-  });
+  // Checkbox fields (hobbies and values)
+  if (saved.hobbies) {
+    document.querySelectorAll("input[name='hobbies']").forEach(el => {
+      if (saved.hobbies.includes(el.value)) el.checked = true;
+    });
+  }
 
-  // Checkbox groups
-  const checkboxGroups = ["hobbies", "values"];
-  checkboxGroups.forEach(group => {
-    if (Array.isArray(saved[group])) {
-      saved[group].forEach(val => {
-        const checkbox = form.querySelector(`[name="${group}"][value="${val}"]`);
-        if (checkbox) checkbox.checked = true;
-      });
-    }
-  });
+  if (saved.values) {
+    document.querySelectorAll("input[name='values']").forEach(el => {
+      if (saved.values.includes(el.value)) el.checked = true;
+    });
+  }
 
-  // Photo preview helper
+  // Preview helper
   const showPreview = (input, previewId, src) => {
     const img = document.getElementById(previewId);
     if (src) img.src = src;
@@ -45,27 +40,27 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
-  // Initialize previews
   showPreview(photoInputs[0], "preview1", saved.photo1);
   showPreview(photoInputs[1], "preview2", saved.photo2);
   showPreview(photoInputs[2], "preview3", saved.photo3);
 
-  // Submit handler
   form.addEventListener("submit", async e => {
     e.preventDefault();
-    const data = {};
 
-    textFields.forEach(id => {
-      const field = form.querySelector(`[name="${id}"]`);
-      if (field) data[id] = field.value || "";
-    });
+    const getCheckedValues = (name) =>
+      Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el => el.value);
 
-    checkboxGroups.forEach(group => {
-      const checkboxes = form.querySelectorAll(`input[name="${group}"]:checked`);
-      data[group] = [...checkboxes].map(cb => cb.value);
-    });
+    const data = {
+      name: form.name.value,
+      birthday: form.birthday.value,
+      bio: form.bio.value,
+      relationshipType: form.relationshipType?.value || '',
+      loveLanguage: form.loveLanguage?.value || '',
+      unacceptableBehavior: form.unacceptableBehavior?.value || '',
+      hobbies: getCheckedValues("hobbies"),
+      values: getCheckedValues("values"),
+    };
 
-    // Read photos or keep existing
     const readImage = file => new Promise(resolve => {
       if (!file) return resolve(null);
       const r = new FileReader();
