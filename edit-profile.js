@@ -1,4 +1,3 @@
-// edit-profile.js
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("profile-form");
   const photoInputs = [
@@ -7,21 +6,18 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("photo3")
   ];
 
-  // 1. Tvirtiamos vietos, kad JSON.parse visada gautų validų tekstą
   let saved;
   try {
-    saved = JSON.parse(localStorage.getItem("profile") || "{}");
+    saved = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
   } catch (e) {
-    console.error("Negalima perskaityti profile iš localStorage:", e);
+    console.error("Failed to parse soulQuiz:", e);
     saved = {};
   }
 
-  // 2. Užpildome laukus (net jei tušti – rodys placeholder’į)
-  form.name.value     = saved.name     || "";
+  form.name.value = saved.name || "";
   form.birthday.value = saved.birthday || "";
-  form.bio.value      = saved.bio      || "";
+  form.bio.value = saved.bio || "";
 
-  // 3. Preview helper – jei nėra src, paslepia <img>
   const showPreview = (input, previewId, src) => {
     const img = document.getElementById(previewId);
     if (src) {
@@ -33,7 +29,6 @@ document.addEventListener("DOMContentLoaded", () => {
     input.addEventListener("change", () => {
       const file = input.files[0];
       if (!file) {
-        // jei failas išimtas – rodome seną arba slepiam
         img.style.display = saved[previewId] ? "block" : "none";
         return;
       }
@@ -46,18 +41,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
-  // 4. Inicializuojame visus tris preview
   showPreview(photoInputs[0], "preview1", saved.photo1);
   showPreview(photoInputs[1], "preview2", saved.photo2);
   showPreview(photoInputs[2], "preview3", saved.photo3);
 
-  // 5. Pagrindinis įvykis formos submit – skaitom tekstus, nuotraukas, ir rašom į localStorage
   form.addEventListener("submit", async e => {
     e.preventDefault();
     const data = {
-      name:     form.name.value,
+      name: form.name.value,
       birthday: form.birthday.value,
-      bio:      form.bio.value
+      bio: form.bio.value
     };
 
     const readImage = file => new Promise(resolve => {
@@ -71,8 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
     data.photo2 = await readImage(photoInputs[1].files[0]) || saved.photo2 || null;
     data.photo3 = await readImage(photoInputs[2].files[0]) || saved.photo3 || null;
 
-    localStorage.setItem("profile", JSON.stringify(data));
-    // po išsaugojimo – į My Soul
+    localStorage.setItem("soulQuiz", JSON.stringify(data));
     window.location.href = "my-soul.html";
   });
 });
