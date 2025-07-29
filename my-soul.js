@@ -1,41 +1,45 @@
 document.addEventListener("DOMContentLoaded", () => {
   const data = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
 
-  const summaryBox = `
-    <div class="soul-summary-box card glow-box">
-      <p><i class="bi bi-stars"></i> <strong>${data.name || "This soul"}</strong> is a radiant being seeking ${data.connectionType?.toLowerCase() || "genuine"} connections. 
-      Their heart resonates with <strong>${data.loveLanguage || "deep love"}</strong>, guided by values like 
-      <strong>${(data.values || []).join(", ") || "authenticity"}</strong>. 
-      <br/><em>${data.about || ""}</em></p>
-    </div>
-  `;
-  document.getElementById("soul-summary").innerHTML = summaryBox;
+  // Soul Summary
+  const summaryBox = document.getElementById("soul-summary-box");
+  if (data.name && data.loveLanguage && data.connectionType && data.bio) {
+    summaryBox.innerHTML = `
+      <div class="glow-box">
+        <p><strong>${data.name}</strong> seeks a <strong>${data.connectionType}</strong> connection, communicates love through <strong>${data.loveLanguage}</strong>, and describes themselves as: <em>${data.bio}</em>.</p>
+      </div>`;
+  }
 
-  const createCard = (icon, title, content) => {
-    if (!content || (Array.isArray(content) && content.length === 0)) return "";
-    const formatted = Array.isArray(content) ? content.join(", ") : content;
-    return `
-      <div class="card glow-box">
-        <h3><i class="bi ${icon}"></i> ${title}</h3>
-        <p>${formatted}</p>
-      </div>
-    `;
+  const setText = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val || "–";
   };
 
-  const soulCard = document.getElementById("soulCard");
-  soulCard.innerHTML = `
-    ${createCard("bi-calendar-heart", "Birthdate", data.birthday)}
-    ${createCard("bi-geo-alt", "Country", data.country)}
-    ${createCard("bi-rulers", "Height", data.height ? `${data.height} cm` : "")}
-    ${createCard("bi-weight", "Weight", data.weight ? `${data.weight} kg` : "")}
-    ${createCard("bi-people", "Connection Type", data.connectionType)}
-    ${createCard("bi-heart-pulse", "Love Language", data.loveLanguage)}
-    ${createCard("bi-stars", "Hobbies", data.hobbies)}
-    ${createCard("bi-gem", "Values", data.values)}
-    ${createCard("bi-exclamation-triangle", "Unacceptable Behaviour", data.unacceptable)}
-    ${createCard("bi-chat-quote", "About Me", data.about)}
-    ${createCard("bi-moon-stars", "Western Zodiac", data.westernZodiac)}
-    ${createCard("bi-kanban", "Chinese Zodiac", data.chineseZodiac)}
-    ${createCard("bi-123", "Life Path Number", data.lifePath)}
-  `;
+  setText("userName", data.name);
+  setText("birthday", data.birthday);
+  setText("country", data.country);
+  setText("height", data.height);
+  setText("weight", data.weight);
+  setText("connectionType", data.connectionType);
+  setText("loveLanguage", data.loveLanguage);
+  setText("unacceptable", data.unacceptable);
+  setText("bio", data.bio);
+  setText("westernZodiac", data.westernZodiac);
+  setText("chineseZodiac", data.chineseZodiac);
+  setText("lifePathNumber", data.lifePathNumber);
+
+  const renderList = (id, arr) => {
+    const ul = document.getElementById(id);
+    if (ul) {
+      ul.innerHTML = "";
+      (arr || []).forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        ul.appendChild(li);
+      });
+    }
+  };
+
+  renderList("hobbiesList", data.hobbies);
+  renderList("valuesList", data.values);
 });

@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Soul</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
 </head>
 <body class="soulink-theme">
-  <header>
-    <nav>
+  <header class="navbar">
+    <div class="logo"><a href="home.html">Soulink</a></div>
+    <nav class="nav-links">
       <a href="home.html">Home</a>
       <a href="quiz.html">Quiz</a>
       <a href="my-soul.html" aria-current="page">My Soul</a>
@@ -18,13 +19,71 @@
   </header>
 
   <main class="container">
-    <h1>My Soul Profile</h1>
-    <div id="soul-summary"></div>
-    <div id="soulCard" class="cards"></div>
+    <h1 class="centered">🌟 My Soul Summary</h1>
+    <div id="soul-summary-box" class="soul-summary-box"></div>
+
+    <div id="soulCard" class="card-section">
+      <div class="soul-card">
+        <h3><i class="bi bi-person"></i> Name</h3>
+        <p id="userName">–</p>
+      </div>
+      <div class="soul-card">
+        <h3><i class="bi bi-calendar-heart"></i> Birthday</h3>
+        <p id="birthday">–</p>
+      </div>
+      <div class="soul-card">
+        <h3><i class="bi bi-geo-alt"></i> Country</h3>
+        <p id="country">–</p>
+      </div>
+      <div class="soul-card">
+        <h3><i class="bi bi-person-arms-up"></i> Height</h3>
+        <p id="height">–</p>
+      </div>
+      <div class="soul-card">
+        <h3><i class="bi bi-weight"></i> Weight</h3>
+        <p id="weight">–</p>
+      </div>
+      <div class="soul-card">
+        <h3><i class="bi bi-heart-half"></i> Connection Type</h3>
+        <p id="connectionType">–</p>
+      </div>
+      <div class="soul-card">
+        <h3><i class="bi bi-chat-heart"></i> Love Language</h3>
+        <p id="loveLanguage">–</p>
+      </div>
+      <div class="soul-card">
+        <h3><i class="bi bi-stars"></i> Hobbies</h3>
+        <ul id="hobbiesList"></ul>
+      </div>
+      <div class="soul-card">
+        <h3><i class="bi bi-gem"></i> Values</h3>
+        <ul id="valuesList"></ul>
+      </div>
+      <div class="soul-card">
+        <h3><i class="bi bi-x-octagon"></i> Unacceptable Behavior</h3>
+        <p id="unacceptable">–</p>
+      </div>
+      <div class="soul-card">
+        <h3><i class="bi bi-pencil"></i> About Me</h3>
+        <p id="bio">–</p>
+      </div>
+      <div class="soul-card">
+        <h3><i class="bi bi-star-fill"></i> Western Zodiac</h3>
+        <p id="westernZodiac">–</p>
+      </div>
+      <div class="soul-card">
+        <h3><i class="bi bi-gem"></i> Chinese Zodiac</h3>
+        <p id="chineseZodiac">–</p>
+      </div>
+      <div class="soul-card">
+        <h3><i class="bi bi-123"></i> Life Path Number</h3>
+        <p id="lifePathNumber">–</p>
+      </div>
+    </div>
   </main>
 
-  <footer>
-    <p>Soulink © 2025</p>
+  <footer class="footer">
+    <p>&copy; 2025 Soulink. Made with ❤️ + 🐰</p>
   </footer>
 
   <script src="my-soul.js"></script>
