@@ -422,3 +422,14 @@ button:hover,
   }
 }
 
+.soul-summary-box {
+  background-color: #004d4d;
+  color: #fff;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 0 12px #00fdd8;
+  font-size: 1.1rem;
+  font-style: italic;
+}
+
