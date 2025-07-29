@@ -1,88 +1,55 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("quizForm");
 
-  // Auto-fill from localStorage
-  const saved = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
+function getWesternZodiac(dateStr) {
+  const date = new Date(dateStr);
+  const day = date.getDate();
+  const month = date.getMonth() + 1;
+  const signs = [
+    ["Capricorn", 20], ["Aquarius", 19], ["Pisces", 20], ["Aries", 20],
+    ["Taurus", 21], ["Gemini", 21], ["Cancer", 22], ["Leo", 23],
+    ["Virgo", 23], ["Libra", 23], ["Scorpio", 23], ["Sagittarius", 22], ["Capricorn", 31]
+  ];
+  return day <= signs[month - 1][1] ? signs[month - 1][0] : signs[month][0];
+}
 
-  for (const [key, value] of Object.entries(saved)) {
-    const field = form.elements[key];
+function getChineseZodiac(dateStr) {
+  const year = new Date(dateStr).getFullYear();
+  const animals = ["Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", 
+                   "Goat", "Monkey", "Rooster", "Dog", "Pig"];
+  return animals[year % 12];
+}
 
-    if (!field) {
-      const radios = form.querySelectorAll(`[name="${key}"]`);
-      if (radios.length && typeof value === "string") {
-        const radio = form.querySelector(`[name="${key}"][value="${value}"]`);
-        if (radio) radio.checked = true;
-      }
-      const checkboxes = form.querySelectorAll(`[name="${key}[]"]`);
-      if (checkboxes.length && Array.isArray(value)) {
-        value.forEach(val => {
-          const checkbox = form.querySelector(`[name="${key}[]"][value="${val}"]`);
-          if (checkbox) checkbox.checked = true;
-        });
-      }
-      continue;
-    }
-
-    if (Array.isArray(value)) {
-      value.forEach(val => {
-        const checkbox = form.querySelector(`[name="${key}"][value="${val}"]`);
-        if (checkbox) checkbox.checked = true;
-      });
-    } else if (field.type === "radio") {
-      const radio = form.querySelector(`[name="${key}"][value="${value}"]`);
-      if (radio) radio.checked = true;
-    } else {
-      field.value = value;
-    }
+function getLifePathNumber(dateStr) {
+  const nums = dateStr.replace(/[^0-9]/g, "").split("").map(Number);
+  let sum = nums.reduce((a, b) => a + b, 0);
+  while (sum > 9 && ![11, 22, 33].includes(sum)) {
+    sum = sum.toString().split("").map(Number).reduce((a, b) => a + b, 0);
   }
+  return sum;
+}
 
-  form.addEventListener("submit", (e) => {
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("profile-form");
+  form.addEventListener("submit", function(e) {
     e.preventDefault();
+    const data = {
+      name: form.name.value,
+      birthday: form.birthday.value,
+      country: form.country.value,
+      height: form.height.value,
+      weight: form.weight.value,
+      bio: form.bio.value,
+      unacceptable: form.unacceptable.value,
+      connectionType: form.querySelector("input[name='connectionType']:checked")?.value || "",
+      loveLanguage: form.querySelector("input[name='loveLanguage']:checked")?.value || "",
+      hobbies: Array.from(form.querySelectorAll("input[name='hobbies']:checked")).map(cb => cb.value),
+      values: Array.from(form.querySelectorAll("input[name='values']:checked")).map(cb => cb.value)
+    };
 
-    const data = {};
-    const formData = new FormData(form);
+    data.westernZodiac = getWesternZodiac(data.birthday);
+    data.chineseZodiac = getChineseZodiac(data.birthday);
+    data.lifePathNumber = getLifePathNumber(data.birthday);
 
-    // Text fields
-    ["name", "birthdate", "country", "height", "weight", "unacceptable", "about"].forEach(key => {
-      data[key] = formData.get(key) || "";
-    });
-
-    // Radio buttons
-    data.connectionType = formData.get("connectionType") || "";
-    data.loveLanguage = formData.get("loveLanguage") || "";
-
-    // Checkboxes
-    data.hobbies = formData.getAll("hobbies");
-    data.values = formData.getAll("values");
-
-    // Zodiac auto-calc
-    if (data.birthdate) {
-      const birth = new Date(data.birthdate);
-      const month = birth.getMonth() + 1;
-      const day = birth.getDate();
-      const year = birth.getFullYear();
-
-      // Western Zodiac
-      const zodiacs = [
-        ["Capricorn", 1, 19], ["Aquarius", 2, 18], ["Pisces", 3, 20],
-        ["Aries", 4, 19], ["Taurus", 5, 20], ["Gemini", 6, 20],
-        ["Cancer", 7, 22], ["Leo", 8, 22], ["Virgo", 9, 22],
-        ["Libra", 10, 22], ["Scorpio", 11, 21], ["Sagittarius", 12, 21],
-        ["Capricorn", 12, 31]
-      ];
-      data.westernZodiac = zodiacs.find(([sign, m, d]) => (month === m && day <= d))?.[0] || "Capricorn";
-
-      // Chinese Zodiac
-      const signs = [
-        "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake",
-        "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"
-      ];
-      data.chineseZodiac = signs[year % 12];
-    }
-
-    // Save and notify
     localStorage.setItem("soulQuiz", JSON.stringify(data));
-    alert("✅ Duomenys išsaugoti!");
-    window.location.href = "edit-profile.html";
+    window.location.href = "my-soul.html";
   });
 });

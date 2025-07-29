@@ -7,75 +7,57 @@
   <title>My Soul</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body style="background-color: #003c43; color: white; font-family: 'Segoe UI', sans-serif;">
+<body class="soulink-theme">
   <header>
-    <nav class="navbar">
-      <a href="index.html">Home</a>
+    <nav>
+      <a href="home.html">Home</a>
       <a href="quiz.html">Quiz</a>
-      <a href="edit-profile.html">Edit Profile</a>
       <a href="my-soul.html" aria-current="page">My Soul</a>
-      <a href="soul-chart.html">Soul Chart</a>
-      <a href="soul-coach.html">Soul Coach</a>
-      <a href="soulink-match.html">Match</a>
-      <a href="friends.html">Friends</a>
-      <a href="result.html">Results</a>
+      <a href="edit-profile.html">Edit Profile</a>
     </nav>
   </header>
 
-  <main class="container" style="max-width: 800px; margin: auto; padding: 2rem;">
-    <h1>👤 Welcome, <span id="name"></span>!</h1>
-    <p>Your Soul at a Glance</p>
-
-    <section class="card">
-      <h3>💖 Personal Info</h3>
-      <p><strong>Birth Date:</strong> <span id="birthdate">–</span></p>
-      <p><strong>Country:</strong> <span id="country">–</span></p>
-      <p><strong>Height:</strong> <span id="height">–</span></p>
-      <p><strong>Weight:</strong> <span id="weight">–</span></p>
-      <p><strong>Connection:</strong> <span id="connection">–</span></p>
-      <p><strong>Relationship Type:</strong> <span id="relationshipType">–</span></p>
-    </section>
-
-    <section class="card">
-      <h3>🌿 Hobbies & Values</h3>
-      <p><strong>Hobbies:</strong> <span id="hobbies">–</span></p>
-      <p><strong>Values:</strong> <span id="values">–</span></p>
-    </section>
-
-    <section class="card">
-      <h3>🌸 Essence</h3>
-      <p><strong>Unacceptable:</strong> <span id="unacceptable">–</span></p>
-      <p><strong>Soul Message:</strong> <span id="soulMessage">–</span></p>
-    </section>
-
-    <section class="card">
-      <h3>💌 Love Language</h3>
-      <p><span id="loveLanguage">–</span></p>
-    </section>
-
-    <section class="card">
-      <h3>🔮 Western Zodiac</h3>
-      <p><span id="westernSign">–</span></p>
-      <p><span id="westernDescription">–</span></p>
-    </section>
-
-    <section class="card">
-      <h3>🐉 Chinese Zodiac</h3>
-      <p><span id="chineseSign">–</span></p>
-      <p><span id="chineseDescription">–</span></p>
-    </section>
-
-    <section class="card">
-      <h3>🧬 Life Path Number</h3>
-      <p><span id="lifePathNumber">–</span></p>
-      <p><span id="lifePathDescription">–</span></p>
-    </section>
-
-    <div style="text-align: center; margin-top: 2rem;">
-      <a href="edit-profile.html" class="btn">Edit Profile</a>
-    </div>
+  <main class="container">
+    <h1>My Soul Profile</h1>
+    <div id="soul-profile" class="profile-card"></div>
   </main>
 
-  <script src="my-soul.js"></script>
+  <footer>
+    <p>Soulink © 2025</p>
+  </footer>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const data = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
+      const container = document.getElementById("soul-profile");
+
+      if (!data.name) {
+        container.innerHTML = "<p>No data found. Please complete the quiz.</p>";
+        return;
+      }
+
+      function renderList(arr) {
+        return arr && arr.length ? "<ul>" + arr.map(i => "<li>" + i + "</li>").join("") + "</ul>" : "<em>–</em>";
+      }
+
+      container.innerHTML = `
+        <h2>${data.name}</h2>
+        <p><strong>Birthday:</strong> ${data.birthday || "–"}</p>
+        <p><strong>Country:</strong> ${data.country || "–"}</p>
+        <p><strong>Height:</strong> ${data.height || "–"} cm</p>
+        <p><strong>Weight:</strong> ${data.weight || "–"} kg</p>
+        <p><strong>Connection Type:</strong> ${data.connectionType || "–"}</p>
+        <p><strong>Love Language:</strong> ${data.loveLanguage || "–"}</p>
+        <p><strong>Hobbies:</strong> ${renderList(data.hobbies)}</p>
+        <p><strong>Values:</strong> ${renderList(data.values)}</p>
+        <p><strong>Unacceptable Behaviour:</strong> ${data.unacceptable || "–"}</p>
+        <p><strong>About Me:</strong> ${data.bio || "–"}</p>
+        <hr />
+        <p><strong>Western Zodiac:</strong> ${data.westernZodiac || "–"}</p>
+        <p><strong>Chinese Zodiac:</strong> ${data.chineseZodiac || "–"}</p>
+        <p><strong>Life Path Number:</strong> ${data.lifePathNumber || "–"}</p>
+      `;
+    });
+  </script>
 </body>
 </html>
