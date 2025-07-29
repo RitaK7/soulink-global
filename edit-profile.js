@@ -9,12 +9,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const saved = JSON.parse(localStorage.getItem("soulQuiz")) || {};
   if (saved.name) form.name.value = saved.name;
   if (saved.birthday) form.birthday.value = saved.birthday;
-  if (saved.bio) form.bio.value = saved.bio;
-  if (saved.relationshipType) form.relationshipType.value = saved.relationshipType;
+  if (saved.about) form.about.value = saved.about;
+  if (saved.connectionType) form.connectionType.value = saved.connectionType;
   if (saved.loveLanguage) form.loveLanguage.value = saved.loveLanguage;
   if (saved.unacceptableBehavior) form.unacceptableBehavior.value = saved.unacceptableBehavior;
 
-  // Checkbox fields (hobbies and values)
   if (saved.hobbies) {
     document.querySelectorAll("input[name='hobbies']").forEach(el => {
       if (saved.hobbies.includes(el.value)) el.checked = true;
@@ -27,7 +26,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Preview helper
   const showPreview = (input, previewId, src) => {
     const img = document.getElementById(previewId);
     if (src) img.src = src;
@@ -53,10 +51,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const data = {
       name: form.name.value,
       birthday: form.birthday.value,
-      bio: form.bio.value,
-      relationshipType: form.relationshipType?.value || '',
-      loveLanguage: form.loveLanguage?.value || '',
-      unacceptableBehavior: form.unacceptableBehavior?.value || '',
+      about: form.about.value,
+      connectionType: form.connectionType.value,
+      loveLanguage: form.loveLanguage.value,
+      unacceptableBehavior: form.unacceptableBehavior.value,
       hobbies: getCheckedValues("hobbies"),
       values: getCheckedValues("values"),
     };
@@ -73,6 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
     data.photo3 = await readImage(photoInputs[2].files[0]) || saved.photo3 || null;
 
     localStorage.setItem("soulQuiz", JSON.stringify(data));
+    alert("✅ Duomenys išsaugoti!");
     window.location.href = "my-soul.html";
   });
 });
