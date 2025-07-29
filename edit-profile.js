@@ -1,4 +1,4 @@
-// edit-profile.js
+// edit-profile.js (pataisyta versija)
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("profile-form");
   const photoInputs = [
@@ -7,13 +7,32 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("photo3")
   ];
 
-  // Load saved profile
   const saved = JSON.parse(localStorage.getItem("soulQuiz")) || {};
-  if (saved.name)        form.name.value        = saved.name;
-  if (saved.birthday)    form.birthday.value    = saved.birthday;
-  if (saved.bio)         form.bio.value         = saved.bio;
 
-  // Preview helper
+  // Text/textarea fields
+  const textFields = [
+    "name", "birthday", "country", "relationshipType", "loveLanguage",
+    "unacceptable", "about", "bio"
+  ];
+  textFields.forEach(id => {
+    if (saved[id]) {
+      const field = form.querySelector(`[name="${id}"]`);
+      if (field) field.value = saved[id];
+    }
+  });
+
+  // Checkbox groups
+  const checkboxGroups = ["hobbies", "values"];
+  checkboxGroups.forEach(group => {
+    if (Array.isArray(saved[group])) {
+      saved[group].forEach(val => {
+        const checkbox = form.querySelector(`[name="${group}"][value="${val}"]`);
+        if (checkbox) checkbox.checked = true;
+      });
+    }
+  });
+
+  // Photo preview helper
   const showPreview = (input, previewId, src) => {
     const img = document.getElementById(previewId);
     if (src) img.src = src;
@@ -34,12 +53,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // Submit handler
   form.addEventListener("submit", async e => {
     e.preventDefault();
-    const data = {
-      name: form.name.value,
-      birthday: form.birthday.value,
-      bio: form.bio.value
-    };
+    const data = {};
 
+    textFields.forEach(id => {
+      const field = form.querySelector(`[name="${id}"]`);
+      if (field) data[id] = field.value || "";
+    });
+
+    checkboxGroups.forEach(group => {
+      const checkboxes = form.querySelectorAll(`input[name="${group}"]:checked`);
+      data[group] = [...checkboxes].map(cb => cb.value);
+    });
+
+    // Read photos or keep existing
     const readImage = file => new Promise(resolve => {
       if (!file) return resolve(null);
       const r = new FileReader();
@@ -47,7 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
       r.readAsDataURL(file);
     });
 
-    // Read photos or keep existing
     data.photo1 = await readImage(photoInputs[0].files[0]) || saved.photo1 || null;
     data.photo2 = await readImage(photoInputs[1].files[0]) || saved.photo2 || null;
     data.photo3 = await readImage(photoInputs[2].files[0]) || saved.photo3 || null;
