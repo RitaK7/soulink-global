@@ -208,15 +208,15 @@
 
         <label for="photo1">Profile Photo 1:</label>
         <input type="file" id="photo1" accept="image/*"/>
-        <img id="preview1" class="preview" alt="Preview 1"/>
+        <img id="preview1" class="preview" alt="Preview 1" style="display:none;"/>
 
         <label for="photo2">Profile Photo 2:</label>
         <input type="file" id="photo2" accept="image/*"/>
-        <img id="preview2" class="preview" alt="Preview 2"/>
+        <img id="preview2" class="preview" alt="Preview 2" style="display:none;"/>
 
         <label for="photo3">Profile Photo 3:</label>
         <input type="file" id="photo3" accept="image/*"/>
-        <img id="preview3" class="preview" alt="Preview 3"/>
+        <img id="preview3" class="preview" alt="Preview 3" style="display:none;"/>
 
         <button type="submit">Save 💾</button>
       </form>
@@ -224,13 +224,10 @@
   </main>
 
   <!-- BOTTOM NAV -->
-  <nav class="bottom-nav">
-    <a href="quiz.html"><i class="bi bi-arrow-left"></i> Back to Quiz</a>
-    <a href="my-soul.html">Go to My Soul <i class="bi bi-arrow-right"></i></a>
-  </nav>
+  <nav class="bottom-nav">…</nav>
 
   <script>
-    // Mobile nav toggle
+    // Mobile nav toggle & logout (nekinta)
     document.getElementById('navToggle').addEventListener('click', () => {
       document.querySelector('.nav-links').classList.toggle('open');
       document.querySelector('.auth-buttons').classList.toggle('open');
