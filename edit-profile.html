@@ -6,6 +6,66 @@
   <title>Soulink – Edit Your Soul Profile</title>
   <link rel="stylesheet" href="style.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"/>
+
+<style>
+  .profile-grid {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .left-column, .right-column {
+    flex: 1;
+    min-width: 300px;
+  }
+  .form-actions {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+  }
+  .btn-main {
+    background: linear-gradient(135deg,#00ffd0,#00bfa5);
+    color: #003c43;
+    padding: .8rem 1.6rem;
+    border: none;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(0,255,208,0.7);
+  }
+  .btn-main:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(0,255,208,0.9);
+  }
+  .btn-secondary {
+    background: #004d4d;
+    color: #00fdd8;
+    border: 1px solid #00fdd8;
+    border-radius: 30px;
+    padding: .8rem 1.6rem;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .btn-secondary:hover {
+    background: #00fdd8;
+    color: #003c43;
+  }
+  .remove-btn {
+    margin-top: .4rem;
+    background: #004d4d;
+    color: #ff8888;
+    border: 1px solid #ff8888;
+    border-radius: 8px;
+    padding: .4rem .8rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .remove-btn:hover {
+    background: #ff8888;
+    color: #003c43;
+  }
+</style>
+
 </head>
 <body>
   <!-- NAVBAR -->
@@ -34,7 +94,10 @@
   <main class="container">
     <div class="form-card">
       <h2>Edit Your Soul Profile</h2>
-      <form id="profile-form">
+      
+  <form id="profile-form" class="profile-grid">
+    <div class="left-column">
+  
         <label for="name">Name:</label>
         <input id="name" type="text" name="name" required/>
 
@@ -82,7 +145,11 @@
     <label for="bio">Tell me something about yourself:</label>
         <textarea id="bio" name="bio" rows="3" placeholder="I am looking for real friends"></textarea>
 
-        <label for="photo1">Profile Photo 1:</label>
+        
+    </div>
+    <div class="right-column">
+    <label for="photo1">Profile Photo 1:</label>
+  
         <input type="file" id="photo1" accept="image/*"/>
         <img id="preview1" class="preview" alt="Preview 1" style="display:none;"/>
 <button type="button" class="remove-btn" data-target="preview1" style="margin-left:.5rem;background:#004d4d;color:#ff8888;border:1px solid #ff8888;border-radius:6px;padding:.2rem .6rem;">Remove</button>
@@ -100,7 +167,14 @@
 <button type="button" class="remove-btn" data-target="preview3" style="margin-left:.5rem;background:#004d4d;color:#ff8888;border:1px solid #ff8888;border-radius:6px;padding:.2rem .6rem;">Remove</button>
 
 
-        <button type="submit">Save My Soul 💾</button>
+        
+    </div>
+  </form>
+  <div class="form-actions">
+    <button type="submit" class="btn-main">Save My Soul 💾</button>
+    <button type="button" id="resetForm" class="btn-secondary">Reset Form</button>
+  </div>
+  
 <button type="button" id="resetForm" style="margin-left:1rem;background:#004d4d;color:#00fdd8;border:1px solid #00fdd8;border-radius:8px;padding:.5rem 1rem;">Reset Form</button>
 
       </form>
