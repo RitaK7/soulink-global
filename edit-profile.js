@@ -20,7 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
   form.bio.value = saved.bio || "";
   form.unacceptable.value = saved.unacceptable || "";
 
-  // Set radio buttons
   if (saved.connectionType) {
     const ct = form.querySelector(`input[name="connectionType"][value="${saved.connectionType}"]`);
     if (ct) ct.checked = true;
@@ -30,17 +29,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ll) ll.checked = true;
   }
 
-  // Set checkboxes
   (saved.hobbies || []).forEach(h => {
     const cb = form.querySelector(`input[name="hobbies"][value="${h}"]`);
     if (cb) cb.checked = true;
   });
+
   (saved.values || []).forEach(v => {
     const cb = form.querySelector(`input[name="values"][value="${v}"]`);
     if (cb) cb.checked = true;
   });
 
-  // Image preview helper
   const showPreview = (input, previewId, src) => {
     const img = document.getElementById(previewId);
     if (!img || !input) return;
@@ -97,7 +95,6 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = "my-soul.html";
   });
 
-  // Reset form button
   const resetBtn = document.getElementById("resetForm");
   if (resetBtn) {
     resetBtn.addEventListener("click", () => {
@@ -107,7 +104,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Remove image buttons
+  document.querySelector(".btn-main")?.addEventListener("click", () => {
+    form.requestSubmit(); // ✅ TAI PAGRINDINIS PATAISYMAS
+  });
+
   document.querySelectorAll(".remove-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const target = btn.getAttribute("data-target");
