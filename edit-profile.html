@@ -4,11 +4,142 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Edit Profile – Soulink</title>
-  <link rel="stylesheet" href="style.css" />
+
+  <!-- Segoe UI font and core styles -->
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #003c43;
+      color: #ffffff;
+    }
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #004d4d;
+      padding: 0.5rem 1rem;
+    }
+    .navbar .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    .nav-links {
+      display: flex;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .nav-links li a {
+      color: #ffffff;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+    }
+    .nav-toggle {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #ffffff;
+      cursor: pointer;
+    }
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 60px;
+        right: 0;
+        background-color: #004d4d;
+        width: 200px;
+      }
+      .nav-links.active {
+        display: flex;
+      }
+      .nav-toggle {
+        display: block;
+      }
+    }
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+    .card {
+      background-color: #004d4d;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    .card label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+    .card input[type="text"],
+    .card input[type="date"],
+    .card textarea,
+    .card select {
+      width: 100%;
+      padding: 0.5rem;
+      border: none;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+      background-color: #003c43;
+      color: #ffffff;
+    }
+    .checkbox-group label {
+      display: inline-block;
+      margin-right: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 1rem;
+    }
+    .photo-grid input[type="file"] {
+      display: block;
+      background-color: #003c43;
+      color: #ffffff;
+      border: none;
+      padding: 0.5rem;
+      border-radius: 4px;
+      box-shadow: 0 0 8px #00fdd8;
+      cursor: pointer;
+      margin-bottom: 0.5rem;
+    }
+    .photo-grid img {
+      width: 100%;
+      height: auto;
+      border-radius: 4px;
+      background-color: #002b2c;
+    }
+    .btn-submit {
+      background-color: #00fdd8;
+      color: #003c43;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      box-shadow: 0 0 8px #00fdd8;
+    }
+    .site-footer {
+      text-align: center;
+      padding: 1rem;
+      background-color: #004d4d;
+      color: #ffffff;
+      margin-top: 2rem;
+    }
+  </style>
 </head>
 <body>
   <header class="navbar">
     <div class="logo">Soulink</div>
+    <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
     <nav>
       <ul class="nav-links">
         <li><a href="index.html">Home</a></li>
@@ -28,8 +159,8 @@
       </div>
 
       <div class="card">
-        <label for="birthday">Birth Date</label>
-        <input type="text" id="birthday" name="birthday" placeholder="YYYY-MM-DD" />
+        <label for="birthdate">Birth Date</label>
+        <input type="date" id="birthdate" name="birthdate" required />
       </div>
 
       <div class="card">
