@@ -6,136 +6,31 @@
   <title>Soulink – Edit Your Soul Profile</title>
   <link rel="stylesheet" href="style.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"/>
-
-  <style>
-    :root {
-      --bg: #003c43;
-      --nav-bg: #002c2f;
-      --card-bg: #004d4d;
-      --accent: #00fdd8;
-      --text-light: #eefefe;
-      --glow: rgba(0,253,216,0.5);
-      --radius: 16px;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--text-light);
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    header, .bottom-nav {
-      background: var(--nav-bg);
-      color: var(--text-light);
-    }
-
-    .nav-wrap {
-      max-width: 900px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-    }
-
-    .nav-logo { font-size: 1.8rem; font-weight: bold; color: var(--accent); }
-    .nav-links { display: flex; gap: 1rem; list-style: none; padding: 0; margin: 0; }
-    .nav-links a {
-      color: var(--text-light);
-      text-decoration: none;
-      padding: .4rem .8rem;
-      border-radius: 8px;
-    }
-    .nav-links a[aria-current="page"],
-    .nav-links a:hover {
-      background-color: rgba(0, 253, 216, 0.1);
-      box-shadow: 0 0 8px var(--glow);
-    }
-
-    .container {
-      flex: 1;
-      max-width: 900px;
-      margin: 2rem auto;
-      padding: 1rem;
-    }
-
-    .form-card {
-      background: var(--card-bg);
-      border-radius: var(--radius);
-      padding: 2rem;
-      box-shadow: 0 0 12px var(--glow);
-    }
-
-    .form-card label {
-      display: block;
-      margin-top: 1rem;
-    }
-
-    .form-card input[type="text"],
-    .form-card textarea {
-      width: 100%;
-      padding: .6rem;
-      margin-top: .4rem;
-      background: #005f56;
-      border: none;
-      border-radius: 6px;
-      color: var(--text-light);
-    }
-
-    .form-card input[type="file"] {
-      margin-top: .6rem;
-      background: var(--card-bg);
-      color: var(--text-light);
-      border: 1px solid var(--accent);
-      padding: .5rem;
-      border-radius: 6px;
-    }
-
-    .form-card img.preview {
-      margin-top: .6rem;
-      width: 120px;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 6px;
-      box-shadow: 0 0 8px var(--glow);
-      display: none;
-    }
-
-    .form-card button {
-      margin-top: 2rem;
-      background: linear-gradient(135deg,#00ffd0,#00bfa5);
-      color: var(--bg);
-      padding: .8rem 1.6rem;
-      border: none;
-      border-radius: 30px;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 0 20px rgba(0,255,208,0.7);
-    }
-
-    .bottom-nav {
-      text-align: center;
-      padding: 1rem;
-    }
-  </style>
 </head>
 <body>
+  <!-- NAVBAR -->
   <header>
     <div class="nav-wrap">
+      <button class="nav-toggle" id="navToggle">☰</button>
       <div class="nav-logo">Soulink</div>
       <ul class="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="quiz.html">Quiz</a></li>
-        <li><a href="edit-profile.html" aria-current="page">Edit Profile</a></li>
-        <li><a href="my-soul.html">My Soul</a></li>
+        <li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
+        <li><a href="quiz.html"><i class="bi bi-question-circle"></i>Quiz</a></li>
+        <li><a href="edit-profile.html" aria-current="page"><i class="bi bi-pencil-square"></i>Edit Profile</a></li>
+        <li><a href="my-soul.html"><i class="bi bi-person"></i>My Soul</a></li>
+        <li><a href="soul-chart.html"><i class="bi bi-graph-up"></i>Soul Chart</a></li>
+        <li><a href="soul-coach.html"><i class="bi bi-chat-dots"></i>Soul Coach</a></li>
+        <li><a href="soulink-match.html"><i class="bi bi-heart"></i>Match</a></li>
+        <li><a href="friends.html"><i class="bi bi-people"></i>Friends</a></li>
+        <li><a href="result.html"><i class="bi bi-bar-chart-line"></i>Results</a></li>
       </ul>
+      <div class="auth-buttons">
+        <button class="btn-logout" onclick="logout()">Log Out</button>
+      </div>
     </div>
   </header>
 
+  <!-- EDIT PROFILE FORM -->
   <main class="container">
     <div class="form-card">
       <h2>Edit Your Soul Profile</h2>
@@ -144,33 +39,91 @@
         <input id="name" type="text" name="name" required/>
 
         <label for="birthday">Birthday (YYYY-MM-DD):</label>
-        <input id="birthday" type="text" name="birthday" required/>
+        <input id="birthday" type="text" name="birthday" placeholder="1972-11-22" required/>
 
-        <label for="bio">Tell us about yourself:</label>
-        <textarea id="bio" name="bio" rows="3"></textarea>
+        
+    <label for="connectionType">Type of Connection:</label>
+    <div>
+      <label><input type="radio" name="connectionType" value="Romantic"/> Romantic</label>
+      <label><input type="radio" name="connectionType" value="Friendship"/> Friendship</label>
+      <label><input type="radio" name="connectionType" value="Both"/> Both</label>
+    </div>
+
+    <label for="loveLanguage">Primary Love Language:</label>
+    <div>
+      <label><input type="radio" name="loveLanguage" value="Words of Affirmation" title="Verbal compliments, encouragement, kind words"/> Words of Affirmation</label>
+      <label><input type="radio" name="loveLanguage" value="Acts of Service" title="Helping with tasks, doing things for you"/> Acts of Service</label>
+      <label><input type="radio" name="loveLanguage" value="Receiving Gifts" title="Giving and receiving thoughtful presents"/> Receiving Gifts</label>
+      <label><input type="radio" name="loveLanguage" value="Quality Time" title="Spending meaningful time together"/> Quality Time</label>
+      <label><input type="radio" name="loveLanguage" value="Physical Touch" title="Hugs, hand-holding, physical closeness"/> Physical Touch</label>
+    </div>
+
+    <label for="hobbies">Your Hobbies:</label>
+    <div>
+      <label><input type="checkbox" name="hobbies" value="Music"/> Music</label>
+      <label><input type="checkbox" name="hobbies" value="Art"/> Art</label>
+      <label><input type="checkbox" name="hobbies" value="Travel"/> Travel</label>
+      <label><input type="checkbox" name="hobbies" value="Cooking"/> Cooking</label>
+      <label><input type="checkbox" name="hobbies" value="Nature"/> Nature</label>
+    </div>
+
+    <label for="values">Core Values:</label>
+    <div>
+      <label><input type="checkbox" name="values" value="Honesty"/> Honesty</label>
+      <label><input type="checkbox" name="values" value="Kindness"/> Kindness</label>
+      <label><input type="checkbox" name="values" value="Growth"/> Growth</label>
+      <label><input type="checkbox" name="values" value="Adventure"/> Adventure</label>
+      <label><input type="checkbox" name="values" value="Spirituality"/> Spirituality</label>
+    </div>
+
+    <label for="unacceptable">Unacceptable Behavior:</label>
+    <textarea id="unacceptable" name="unacceptable" rows="2"></textarea>
+
+    <label for="bio">Tell me something about yourself:</label>
+        <textarea id="bio" name="bio" rows="3" placeholder="I am looking for real friends"></textarea>
 
         <label for="photo1">Profile Photo 1:</label>
         <input type="file" id="photo1" accept="image/*"/>
-        <img id="preview1" class="preview"/>
+        <img id="preview1" class="preview" alt="Preview 1" style="display:none;"/>
+<button type="button" class="remove-btn" data-target="preview1" style="margin-left:.5rem;background:#004d4d;color:#ff8888;border:1px solid #ff8888;border-radius:6px;padding:.2rem .6rem;">Remove</button>
+
 
         <label for="photo2">Profile Photo 2:</label>
         <input type="file" id="photo2" accept="image/*"/>
-        <img id="preview2" class="preview"/>
+        <img id="preview2" class="preview" alt="Preview 2" style="display:none;"/>
+<button type="button" class="remove-btn" data-target="preview2" style="margin-left:.5rem;background:#004d4d;color:#ff8888;border:1px solid #ff8888;border-radius:6px;padding:.2rem .6rem;">Remove</button>
+
 
         <label for="photo3">Profile Photo 3:</label>
         <input type="file" id="photo3" accept="image/*"/>
-        <img id="preview3" class="preview"/>
+        <img id="preview3" class="preview" alt="Preview 3" style="display:none;"/>
+<button type="button" class="remove-btn" data-target="preview3" style="margin-left:.5rem;background:#004d4d;color:#ff8888;border:1px solid #ff8888;border-radius:6px;padding:.2rem .6rem;">Remove</button>
+
 
         <button type="submit">Save My Soul 💾</button>
+<button type="button" id="resetForm" style="margin-left:1rem;background:#004d4d;color:#00fdd8;border:1px solid #00fdd8;border-radius:8px;padding:.5rem 1rem;">Reset Form</button>
+
       </form>
     </div>
   </main>
 
+  <!-- FOOTER -->
   <nav class="bottom-nav">
     <a href="privacy.html">Privacy</a> |
     <a href="terms.html">Terms</a>
   </nav>
 
-  <script src="edit-profile.js"></script>
+  <!-- JS -->
+  <script>
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.querySelector('.nav-links').classList.toggle('open');
+      document.querySelector('.auth-buttons').classList.toggle('open');
+    });
+    function logout() {
+      sessionStorage.removeItem('soulinkBetaAccess');
+      window.location.href = 'index.html';
+    }
+  </script>
+  <script src="edit-profile.js" defer></script>
 </body>
 </html>
