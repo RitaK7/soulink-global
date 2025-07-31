@@ -1,68 +1,43 @@
 document.addEventListener("DOMContentLoaded", () => {
   const data = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
+  const card = document.getElementById("soulCard");
+  const summary = document.getElementById("soulSummary");
 
-  const userNameEl = document.getElementById("userName");
-  if (data.name) userNameEl.textContent = data.name;
-
-  const avatarContainer = document.getElementById("avatarContainer");
-  if (data.photo1) {
-    const img = document.createElement("img");
-    img.src = data.photo1;
-    img.alt = "My Soul Photo";
-    img.className = "profile-avatar";
-    avatarContainer.appendChild(img);
+  if (!data.name) {
+    card.innerHTML = "<p>No data found. Please complete the quiz.</p>";
+    return;
   }
 
-  const cardContainer = document.getElementById("soulCard");
-  const fields = [
-    ["Birthday", data.birthday],
-    ["Country", data.country],
-    ["Height", data.height ? data.height + " cm" : ""],
-    ["Weight", data.weight ? data.weight + " kg" : ""],
-    ["Connection Type", data.connectionType],
-    ["Love Language", data.loveLanguage],
-    ["Hobbies", renderList(data.hobbies)],
-    ["Values", renderList(data.values)],
-    ["Unacceptable Behaviour", data.unacceptable],
-    ["About Me", data.bio],
-    ["Western Zodiac", data.westernZodiac],
-    ["Chinese Zodiac", data.chineseZodiac],
-    ["Life Path Number", data.lifePathNumber]
-  ];
+  // Avatar
+  const avatarHTML = data.photo1 ? `<img class="profile-avatar" src="${data.photo1}" alt="Avatar"/>` : "";
 
-  fields.forEach(([label, value]) => {
-    cardContainer.innerHTML += createCard(label, value);
-  });
+  // Summary Insight
+  const summaryHTML = `
+    <div class="glow-card">
+      <h2>Hello, ${data.name} 👋</h2>
+      <p>You’re seeking <strong>${data.connectionType || "–"}</strong> and your love language is <strong>${data.loveLanguage || "–"}</strong>.</p>
+      <p>You value <strong>${(data.values || []).slice(0, 3).join(", ") || "–"}</strong> most in life.</p>
+      <p>Your essence: <em>"${data.bio || "–"}"</em></p>
+    </div>
+  `;
+  summary.innerHTML = summaryHTML;
+
+  const renderList = arr => arr?.length ? `<ul>${arr.map(i => `<li>${i}</li>`).join("")}</ul>` : "–";
+
+  card.innerHTML = `
+    ${avatarHTML}
+    <div class="glow-card"><strong>Birthday:</strong> ${data.birthday || "–"}</div>
+    <div class="glow-card"><strong>Country:</strong> ${data.country || "–"}</div>
+    <div class="glow-card"><strong>Height:</strong> ${data.height || "–"} cm</div>
+    <div class="glow-card"><strong>Weight:</strong> ${data.weight || "–"} kg</div>
+    <div class="glow-card"><strong>Connection Type:</strong> ${data.connectionType || "–"}</div>
+    <div class="glow-card"><strong>Love Language:</strong> ${data.loveLanguage || "–"}</div>
+    <div class="glow-card"><strong>Hobbies:</strong> ${renderList(data.hobbies)}</div>
+    <div class="glow-card"><strong>Values:</strong> ${renderList(data.values)}</div>
+    <div class="glow-card"><strong>Unacceptable Behaviour:</strong> ${data.unacceptable || "–"}</div>
+    <div class="glow-card"><strong>About Me:</strong> ${data.bio || "–"}</div>
+    <div class="glow-card"><strong>Western Zodiac:</strong> ${data.westernZodiac || "–"}</div>
+    <div class="glow-card"><strong>Chinese Zodiac:</strong> ${data.chineseZodiac || "–"}</div>
+    <div class="glow-card"><strong>Life Path Number:</strong> ${data.lifePathNumber || "–"}</div>
+  `;
 });
-
-function renderList(arr) {
-  return Array.isArray(arr) && arr.length
-    ? "<ul>" + arr.map(i => `<li>${i}</li>`).join("") + "</ul>"
-    : "–";
-}
-
-function createCard(label, value) {
-  const icons = {
-    "Name": "bi-person-circle",
-    "Birthday": "bi-cake",
-    "Country": "bi-geo-alt",
-    "Height": "bi-rulers",
-    "Weight": "bi-scales",
-    "Connection Type": "bi-people",
-    "Love Language": "bi-heart",
-    "Hobbies": "bi-puzzle",
-    "Values": "bi-gem",
-    "Unacceptable Behaviour": "bi-x-octagon",
-    "About Me": "bi-chat-left-text",
-    "Western Zodiac": "bi-stars",
-    "Chinese Zodiac": "bi-kanban",
-    "Life Path Number": "bi-compass"
-  };
-  const icon = icons[label] || "bi-info-circle";
-  return `
-    <div class="card glowing-card">
-      <i class="bi ${icon} icon-glow"></i>
-      <strong>${label}</strong><br />
-      <span>${value || "–"}</span>
-    </div>`;
-}
