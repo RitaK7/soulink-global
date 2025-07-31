@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,34 +7,32 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="soulink-theme">
-  <header class="main-nav">
-    <a href="index.html" class="logo">Soulink</a>
-    <button class="nav-toggle" onclick="toggleMenu()">☰</button>
-    <div class="nav-links" id="navMenu">
+  <header>
+    <nav class="main-nav">
       <a href="home.html">Home</a>
       <a href="quiz.html">Quiz</a>
       <a href="my-soul.html" aria-current="page">My Soul</a>
       <a href="edit-profile.html">Edit Profile</a>
-      <a href="logout.html">Logout</a>
-    </div>
+    </nav>
   </header>
 
   <main class="container">
-    <h1 class="wow-title">🌟 My Soul Profile</h1>
-    <div id="soulCard" class="profile-card-container"></div>
+    <h1 class="centered glow-text">🌟 Your Soul Profile 🌟</h1>
+
+    <div id="soul-summary" class="summary-box glow-card"></div>
+
+    <div id="soulCard" class="soul-grid"></div>
+
+    <div class="nav-buttons">
+      <a href="quiz.html" class="nav-button">← Back to Quiz</a>
+      <a href="edit-profile.html" class="nav-button">Edit Profile →</a>
+    </div>
   </main>
 
-  <footer class="bottom-nav">
-    <a href="privacy.html">Privacy Policy</a>
-    <a href="terms.html">Terms of Use</a>
-    <a href="contact.html">Contact</a>
+  <footer>
+    <p>Soulink © 2025 – <span class="glow-text">Sukurta su meile ir ChatGPT pagalba 💖</span></p>
   </footer>
 
   <script src="my-soul.js"></script>
-  <script>
-    function toggleMenu() {
-      document.getElementById("navMenu").classList.toggle("open");
-    }
-  </script>
 </body>
 </html>
