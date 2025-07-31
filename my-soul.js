@@ -1,44 +1,47 @@
 document.addEventListener("DOMContentLoaded", () => {
   const data = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
-  const summaryBox = document.getElementById("soul-summary-box");
 
-  if (data.name && data.loveLanguage && data.connectionType && data.bio) {
-    summaryBox.innerHTML = `
-      <div class="glow-card">
-        <p><strong>${data.name}</strong> seeks a <strong>${data.connectionType}</strong> connection, loves through <strong>${data.loveLanguage}</strong>, and describes themselves as: <em>${data.bio}</em>.</p>
-      </div>`;
+  // Soul Summary
+  const summaryBox = `
+    <p><strong>${data.name || "User"}</strong> seeks a <strong>${data.connectionType || "–"}</strong> connection, 
+    loves through <strong>${data.loveLanguage || "–"}</strong>, 
+    and describes themselves as: <em>${data.about || "–"}</em>.</p>`;
+  document.getElementById("soulSummaryBox").innerHTML = summaryBox;
+
+  // Avatar
+  const avatarImg = document.getElementById("profileAvatar");
+  if (data.profilePhoto1) {
+    avatarImg.src = data.profilePhoto1;
+  } else {
+    avatarImg.style.display = "none";
   }
 
-  const setText = (id, val) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = val || "–";
-  };
+  // Data Fields
+  const createCard = (label, value) => `
+    <div class="card"><strong>${label}</strong>: ${value || "–"}</div>`;
 
-  setText("userName", data.name);
-  setText("birthday", data.birthday);
-  setText("country", data.country);
-  setText("height", data.height);
-  setText("weight", data.weight);
-  setText("connectionType", data.connectionType);
-  setText("loveLanguage", data.loveLanguage);
-  setText("unacceptable", data.unacceptable);
-  setText("bio", data.bio);
-  setText("westernZodiac", data.westernZodiac);
-  setText("chineseZodiac", data.chineseZodiac);
-  setText("lifePathNumber", data.lifePathNumber);
+  const createListCard = (label, items) => `
+    <div class="card">
+      <strong>${label}</strong>:
+      <ul>${(items || []).map(item => `<li>${item}</li>`).join("")}</ul>
+    </div>`;
 
-  const renderList = (id, arr) => {
-    const ul = document.getElementById(id);
-    if (ul) {
-      ul.innerHTML = "";
-      (arr || []).forEach(item => {
-        const li = document.createElement("li");
-        li.textContent = item;
-        ul.appendChild(li);
-      });
-    }
-  };
-
-  renderList("hobbiesList", data.hobbies);
-  renderList("valuesList", data.values);
+  const soulCard = document.getElementById("soulCard");
+  soulCard.innerHTML = `
+    <div class="grid-2">
+      ${createCard("Name", data.name)}
+      ${createCard("Birthday", data.birthday)}
+      ${createCard("Country", data.country)}
+      ${createCard("Height", data.height ? data.height + " cm" : "–")}
+      ${createCard("Weight", data.weight ? data.weight + " kg" : "–")}
+      ${createCard("Connection Type", data.connectionType)}
+      ${createCard("Love Language", data.loveLanguage)}
+      ${createCard("Hobbies", (data.hobbies || []).join(", "))}
+      ${createCard("Values", (data.values || []).join(", "))}
+      ${createCard("Unacceptable Behaviour", data.behaviour)}
+      ${createCard("About Me", data.about)}
+      ${createCard("Western Zodiac", data.westernZodiac)}
+      ${createCard("Chinese Zodiac", data.chineseZodiac)}
+      ${createCard("Life Path Number", data.lifePathNumber)}
+    </div>`;
 });
