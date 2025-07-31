@@ -466,3 +466,22 @@ button:hover,
 .avatar-container {
   text-align: center;
 }
+.glowing-card {
+  background-color: #004d4d;
+  color: white;
+  padding: 1.2rem;
+  margin: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 0 10px #00fdd8;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+.glowing-card:hover {
+  transform: scale(1.03);
+}
+.icon-glow {
+  font-size: 1.5rem;
+  color: #00fdd8;
+  margin-bottom: 0.5rem;
+  display: block;
+}
