@@ -1,12 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
   const data = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
-
-  // Soul Summary
   const summaryBox = document.getElementById("soul-summary-box");
+
   if (data.name && data.loveLanguage && data.connectionType && data.bio) {
     summaryBox.innerHTML = `
-      <div class="glow-box">
-        <p><strong>${data.name}</strong> seeks a <strong>${data.connectionType}</strong> connection, communicates love through <strong>${data.loveLanguage}</strong>, and describes themselves as: <em>${data.bio}</em>.</p>
+      <div class="glow-card">
+        <p><strong>${data.name}</strong> seeks a <strong>${data.connectionType}</strong> connection, loves through <strong>${data.loveLanguage}</strong>, and describes themselves as: <em>${data.bio}</em>.</p>
       </div>`;
   }
 

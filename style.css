@@ -433,3 +433,25 @@ button:hover,
   font-style: italic;
 }
 
+.glow-box, .glow-card {
+  background: #004d4d;
+  padding: 1.2rem;
+  margin: 1rem 0;
+  border-radius: 1rem;
+  box-shadow: 0 0 15px #00fdd8;
+  color: #fff;
+}
+.profile-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.card {
+  background: #004040;
+  padding: 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 0 10px #00fdd8;
+  flex: 1 1 300px;
+  color: white;
+}
+
