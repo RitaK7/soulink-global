@@ -1,39 +1,41 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Soul Summary</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Soul</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
 </head>
-<body>
-  <header class="navbar">
-    <div class="logo">Soulink</div>
-    <nav class="nav-links">
-      <a href="index.html">Home</a>
+<body class="soulink-theme">
+  <header class="main-nav">
+    <a href="index.html" class="logo">Soulink</a>
+    <button class="nav-toggle" onclick="toggleMenu()">☰</button>
+    <div class="nav-links" id="navMenu">
+      <a href="home.html">Home</a>
       <a href="quiz.html">Quiz</a>
-      <a href="my-soul.html" aria-current="page" class="active">My Soul</a>
+      <a href="my-soul.html" aria-current="page">My Soul</a>
       <a href="edit-profile.html">Edit Profile</a>
-    </nav>
+      <a href="logout.html">Logout</a>
+    </div>
   </header>
 
   <main class="container">
-    <h1><i class="bi bi-stars"></i> My Soul Summary</h1>
-
-    <div class="card highlight-card" id="soulSummaryBox"></div>
-
-    <div class="avatar-container">
-      <img id="profileAvatar" class="profile-avatar" alt="Your Soul Avatar" />
-    </div>
-
-    <div class="grid" id="soulCard"></div>
+    <h1 class="wow-title">🌟 My Soul Profile</h1>
+    <div id="soulCard" class="profile-card-container"></div>
   </main>
 
-  <footer class="footer">
-    <p>Made with <span class="heart">❤️</span> by Soulink.global × ChatGPT</p>
+  <footer class="bottom-nav">
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="terms.html">Terms of Use</a>
+    <a href="contact.html">Contact</a>
   </footer>
 
   <script src="my-soul.js"></script>
+  <script>
+    function toggleMenu() {
+      document.getElementById("navMenu").classList.toggle("open");
+    }
+  </script>
 </body>
 </html>
