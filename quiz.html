@@ -1,119 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Soulink Soul Quiz</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Soulink – Soul Compatibility Quiz</title>
+  <link href="favicon.ico" rel="icon" type="image/x-icon"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link href="style.css" rel="stylesheet"/>
 </head>
 <body>
-  <header class="navbar">
+  <!-- NAVBAR -->
+  <header class="main-nav">
     <div class="logo">Soulink</div>
+    <button class="nav-toggle" id="navToggle"><i class="bi bi-list"></i></button>
     <nav>
-      <a href="index.html">Home</a>
-      <a href="quiz.html" aria-current="page">Quiz</a>
-      <a href="edit-profile.html">Edit Profile</a>
-      <a href="my-soul.html">My Soul</a>
-      <a href="soul-chart.html">Soul Chart</a>
-      <a href="soul-coach.html">Soul Coach</a>
-      <a href="match.html">Match</a>
-      <a href="friends.html">Friends</a>
-      <a href="result.html">Results</a>
+      <ul class="nav-links">
+        <li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
+        <li><a aria-current="page" href="quiz.html"><i class="bi bi-question-circle"></i>Quiz</a></li>
+        <li><a href="edit-profile.html"><i class="bi bi-pencil-square"></i>Edit Profile</a></li>
+        <li><a href="my-soul.html"><i class="bi bi-person"></i>My Soul</a></li>
+        <li><a href="soul-chart.html"><i class="bi bi-graph-up"></i>Soul Chart</a></li>
+        <li><a href="soul-coach.html"><i class="bi bi-chat-dots"></i>Soul Coach</a></li>
+        <li><a href="soulink-match.html"><i class="bi bi-heart"></i>Match</a></li>
+        <li><a href="friends.html"><i class="bi bi-people"></i>Friends</a></li>
+        <li><a href="result.html"><i class="bi bi-bar-chart-line"></i>Results</a></li>
+      </ul>
+      <div class="auth-buttons">
+        <a class="btn-outline" href="login.html">Log In</a>
+        <a class="btn-outline" href="signup.html">Sign Up</a>
+      </div>
     </nav>
   </header>
 
-  <main class="form-container">
-    <h1>🌈 Soul Compatibility Quiz</h1>
+  <!-- QUIZ FORM -->
+  <main class="container">
+  <form id="quizForm"><h1>🌈 Soul Compatibility Quiz</h1>
     <form id="quizForm">
-      <label>Name</label>
-      <input type="text" id="name" required />
 
-      <label>Birth Date (YYYY-MM-DD)</label>
-      <input type="text" id="birthday" placeholder="e.g., 1990-07-15" required />
+      <!-- Basic Info -->
+      <div class="card-group">
+        <div class="card">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" required/>
+        </div>
+        <div class="card">
+          <label for="birthday">Birth Date <small>(YYYY‑MM‑DD)</small></label>
+          <input type="text" id="birthday" name="birthday"
+         pattern="\\d{4}-\\d{2}-\\d{2}" placeholder="1978-11-22" required/>
+        </div>
 
-      <label>Country</label>
-      <select id="country">
-        <option value="">— Select your country —</option>
-        <option>United States</option>
-        <option>United Kingdom</option>
-        <option>Norway</option>
-        <option>Lithuania</option>
-        <option>Germany</option>
-        <option>France</option>
-        <option>India</option>
-        <option>Japan</option>
-        <option>Other</option>
-      </select>
+      <!-- Country -->
+      <div class="card">
+        <label for="country">Country</label>
+        <select id="country" name="country" required>
+          <option value="">— Select your country —</option>
+          <option value="Lithuania">Lithuania</option>
+          <option value="Norway">Norway</option>
+          <option value="United Kingdom">United Kingdom</option>
+          <option value="United States">United States</option>
+          <!-- … galima įdėti visą sąrašą vėliau … -->
+        </select>
+      </div>
 
-      <label>Height (cm)</label>
-      <input type="number" id="height" />
+      <!-- Height & Weight -->
+      <div class="card-group">
+        <div class="card">
+          <label for="height">Height (cm)</label>
+          <input type="number" id="height" name="height" min="0" required/>
+        </div>
+        <div class="card">
+          <label for="weight">Weight (kg)</label>
+          <input type="number" id="weight" name="weight" min="0" required/>
+        </div>
+      </div>
 
-      <label>Weight (kg)</label>
-      <input type="number" id="weight" />
+      <!-- Connection -->
+      <div class="card">
+        <label>Type of Connection</label>
+      <div>
+         <input type="radio" id="romantic" name="connectionType" value="Romantic" />
+         <label for="romantic">Romantic</label>
 
-      <fieldset>
-        <legend>Type of Connection</legend>
-        <label><input type="radio" name="connectionType" value="Romantic" /> Romantic</label>
-        <label><input type="radio" name="connectionType" value="Friendship" /> Friendship</label>
-        <label><input type="radio" name="connectionType" value="Both" /> Both</label>
-      </fieldset>
+         <input type="radio" id="friendship" name="connectionType" value="Friendship" />
+         <label for="friendship">Friendship</label>
 
-      <fieldset>
-        <legend>Primary Love Language</legend>
-        <label><input type="radio" name="loveLanguage" value="Words of Affirmation"/> Words of Affirmation – Kind words that express love</label>
-        <label><input type="radio" name="loveLanguage" value="Acts of Service"/> Acts of Service – Showing love through helpful actions</label>
-        <label><input type="radio" name="loveLanguage" value="Receiving Gifts"/> Receiving Gifts – Meaningful or symbolic gifts</label>
-        <label><input type="radio" name="loveLanguage" value="Quality Time"/> Quality Time – Focused attention and presence</label>
-        <label><input type="radio" name="loveLanguage" value="Physical Touch"/> Physical Touch – Cuddles, holding hands, gentle touch</label>
-      </fieldset>
+         <input type="radio" id="both" name="connectionType" value="Both" />
+         <label for="both">Both</label>
+     </div>
 
-      <fieldset>
-        <legend>Select Your Hobbies</legend>
-        <label><input type="checkbox" value="Music" class="hobby" /> Music</label>
-        <label><input type="checkbox" value="Art" class="hobby" /> Art</label>
-        <label><input type="checkbox" value="Traveling" class="hobby" /> Traveling</label>
-        <label><input type="checkbox" value="Reading" class="hobby" /> Reading</label>
-        <label><input type="checkbox" value="Nature Walks" class="hobby" /> Nature Walks</label>
-        <label><input type="checkbox" value="Gaming" class="hobby" /> Gaming</label>
-      </fieldset>
+      <!-- Love Language -->
+     <div class="card">
+  <label>Primary Love Language</label>
+  <div class="radio-group">
+    <label>
+      <input type="radio" name="loveLanguage" value="Words of Affirmation" required/>
+      Words of Affirmation
+      <span class="desc">– Kind, encouraging, and supportive words to express love.</span>
+    </label>
+    <label>
+      <input type="radio" name="loveLanguage" value="Acts of Service"/>
+      Acts of Service
+      <span class="desc">– Actions that help or ease your burden, showing love through effort.</span>
+    </label>
+    <label>
+      <input type="radio" name="loveLanguage" value="Receiving Gifts"/>
+      Receiving Gifts
+      <span class="desc">– Thoughtful gifts or gestures that show you were remembered.</span>
+    </label>
+    <label>
+      <input type="radio" name="loveLanguage" value="Quality Time"/>
+      Quality Time
+      <span class="desc">– Focused, undivided attention, deep conversations or shared moments.</span>
+    </label>
+    <label>
+      <input type="radio" name="loveLanguage" value="Physical Touch"/>
+      Physical Touch
+      <span class="desc">– Hugs, hand-holding, cuddles or gentle touches that express love.</span>
+    </label>
+  </div>
+      </div>
 
-      <fieldset>
-        <legend>Values Most Important to You</legend>
-        <label><input type="checkbox" value="Honesty" class="value" /> Honesty</label>
-        <label><input type="checkbox" value="Freedom" class="value" /> Freedom</label>
-        <label><input type="checkbox" value="Loyalty" class="value" /> Loyalty</label>
-        <label><input type="checkbox" value="Kindness" class="value" /> Kindness</label>
-        <label><input type="checkbox" value="Growth" class="value" /> Growth</label>
-      </fieldset>
+      <!-- Hobbies -->
+      <div class="card">
+  <label>Select Your Hobbies</label>
+  <div class="inline-group">
+    <label><input type="checkbox" name="hobbies" value="Music"/> Music</label>
+    <label><input type="checkbox" name="hobbies" value="Traveling"/> Traveling</label>
+    <label><input type="checkbox" name="hobbies" value="Cooking"/> Cooking</label>
+    <label><input type="checkbox" name="hobbies" value="Art"/> Art</label>
+    <label><input type="checkbox" name="hobbies" value="Sports"/> Sports</label>
+    <label><input type="checkbox" name="hobbies" value="Reading"/> Reading</label>
+    <label><input type="checkbox" name="hobbies" value="Dancing"/> Dancing</label>
+    <label><input type="checkbox" name="hobbies" value="Meditation"/> Meditation</label>
+    <label><input type="checkbox" name="hobbies" value="Nature Walks"/> Nature Walks</label>
+    <label><input type="checkbox" name="hobbies" value="Gaming"/> Gaming</label>
+  </div>
+</div>
 
-      <label>Unacceptable Behavior</label>
-      <textarea id="unacceptable"></textarea>
+      <!-- Values -->
+      <div class="card">
+  <label>Values Most Important to You</label>
+  <div class="inline-group">
+    <label><input type="checkbox" name="values" value="Honesty"/> Honesty</label>
+    <label><input type="checkbox" name="values" value="Growth"/> Growth</label>
+    <label><input type="checkbox" name="values" value="Freedom"/> Freedom</label>
+    <label><input type="checkbox" name="values" value="Loyalty"/> Loyalty</label>
+    <label><input type="checkbox" name="values" value="Kindness"/> Kindness</label>
+    <label><input type="checkbox" name="values" value="Creativity"/> Creativity</label>
+    <label><input type="checkbox" name="values" value="Spirituality"/> Spirituality</label>
+    <label><input type="checkbox" name="values" value="Adventure"/> Adventure</label>
+    <label><input type="checkbox" name="values" value="Empathy"/> Empathy</label>
+    <label><input type="checkbox" name="values" value="Balance"/> Balance</label>
+  </div>
+</div>
 
-      <label>About Me</label>
-      <textarea id="about"></textarea>
+      <!-- Unacceptable & About Me -->
+      <div class="card">
+        <label for="unacceptable">Unacceptable Behavior</label>
+        <textarea id="unacceptable" name="unacceptable" rows="2" required></textarea>
+      </div>
+      <div class="card">
+        <label for="about">About Me</label>
+        <textarea id="about" name="about" rows="4" required></textarea>
+      </div>
 
-      <label>Spiritual Belief</label>
-      <input type="text" id="spiritualBelief" />
+      <!-- Submit -->
+      <button type="submit" class="btn-submit">
+        Edit Profile <i class="bi bi-arrow-right-circle"></i>
+      </button>
+    </form></form>
+</main>
 
-      <label>Mantra</label>
-      <input type="text" id="mantra" />
+  <footer class="site-footer">© 2025 soulink.global</footer>
 
-      <label>Gender</label>
-      <input type="text" id="gender" />
-
-      <label>Match Preference</label>
-      <input type="text" id="matchPreference" />
-
-      <input type="hidden" id="zodiacSign" />
-
-      <button type="submit">Edit Profile →</button>
-    </form>
-  </main>
-
-  <footer>
-    <p>© 2025 soulink.global | Made with love & ChatGPT assistance 🧠✨</p>
-  </footer>
-
-  <script src="quiz.js"></script>
+  <script src="quiz.js" defer></script>
+  <script>
+    document.getElementById('navToggle').onclick = () => {
+      document.querySelector('.nav-links')?.classList.toggle('open');
+      document.querySelector('.auth-buttons')?.classList.toggle('open');
+    };
+  </script>
 </body>
 </html>
