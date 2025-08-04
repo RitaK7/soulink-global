@@ -1,75 +1,42 @@
-// src/soul-coach.js
+// soul-coach.js – AI patarimai pagal soulQuiz
 
-function getUserData() {
-  const quizData =
-    JSON.parse(localStorage.getItem('soulQuiz')) || {};
+document.addEventListener('DOMContentLoaded', () => {
+  const data = JSON.parse(localStorage.getItem('soulQuiz')) || {};
 
-  return {
-    name: quizData.name || 'Soul Seeker',
-    birthDate: quizData.birthdate || '',
-    loveLanguage: quizData.loveLanguage || 'Unknown',
-    zodiacSign: quizData.zodiacSign || 'Unknown',
-    chineseSign: quizData.chineseSign || 'Unknown'
-  };
-}
-
-function getLifePathNumber(dateStr) {
-  let sum = dateStr.replace(/-/g, '').split('').map(Number).reduce((a, b) => a + b, 0);
-  while (sum > 9 && ![11, 22].includes(sum)) {
-    sum = sum.toString().split('').map(Number).reduce((a, b) => a + b, 0);
-  }
-  return sum;
-}
-
-function generateInsight(data) {
-  const insights = {
-    loveLanguage: {
-      'Words of Affirmation': 'You thrive on kind words and meaningful praise. Your heart blossoms through verbal connection.',
-      'Acts of Service': 'You believe that love is action. You show you care through thoughtful help and kind deeds.',
-      'Receiving Gifts': 'You see the soul behind the gesture. Every gift carries a deep meaning for you.',
-      'Quality Time': 'Presence is your love language. You feel most loved when truly together.',
-      'Physical Touch': 'A gentle touch or warm hug speaks volumes to your heart.',
-      'Unknown': 'Your love language is waiting to be revealed through meaningful connection.'
-    },
-    zodiacSign: {
-      'Sagittarius': 'You are a seeker of truth, always aiming your arrow toward higher meaning.',
-      'Pisces': 'You swim in deep emotional waters, guided by empathy and intuition.',
-      'Aries': 'Bold and driven, your soul forges paths where others hesitate.',
-      'Leo': 'You shine like the sun – warm, confident, and creative.',
-      'Unknown': 'Your zodiac voice is still forming in the stars.'
-    },
-    chineseSign: {
-      'Rat': 'Clever and resourceful, you always find your way forward.',
-      'Dragon': 'Majestic and powerful – you were born to inspire.',
-      'Rabbit': 'Gentle and harmonious, your energy soothes those around you.',
-      'Unknown': 'Your Chinese zodiac energy is awakening.'
-    }
-  };
-
-  const lifePath = getLifePathNumber(data.birthDate);
-  const numerologyDescription = `Your Life Path Number is ${lifePath}. This number reveals your soul’s mission – a sacred blueprint that shapes your spiritual journey.`;
-
-  return {
-    love: insights.loveLanguage[data.loveLanguage] || insights.loveLanguage['Unknown'],
-    zodiac: insights.zodiacSign[data.zodiacSign] || insights.zodiacSign['Unknown'],
-    chinese: insights.chineseSign[data.chineseSign] || insights.chineseSign['Unknown'],
-    numerology: numerologyDescription
-  };
-}
-
-function displayInsights() {
-  const data = getUserData();
-  if (!data.birthDate || !data.name) {
-    document.getElementById('loveLanguageInsight').textContent = "Please complete the quiz to receive your soul insights.";
-    return;
+  function setText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
   }
 
-  const insight = generateInsight(data);
+  // Meilės kalbos patarimas
+  const loveAdvice = {
+    'Words of Affirmation': 'Use kind words daily to uplift both yourself and others.',
+    'Acts of Service': 'Find joy in helping others – it strengthens your connections.',
+    'Receiving Gifts': 'Share little symbolic gifts to express care and presence.',
+    'Quality Time': 'Prioritize uninterrupted time with those you love.',
+    'Physical Touch': 'A hug or a warm touch speaks volumes for your soul.'
+  };
 
-  document.getElementById('loveLanguageInsight').textContent = `💖 ${insight.love}`;
-  document.getElementById('horoscopeInsight').textContent = `🔮 ${insight.zodiac}`;
-  document.getElementById('numerologyInsight').textContent = `🔢 ${insight.numerology}`;
-  document.getElementById('chineseZodiacInsight').textContent = `🐉 ${insight.chinese}`;
-}
+  setText('coachLove', loveAdvice[data.loveLanguage] || 'Embrace your unique way of expressing love.');
 
-window.addEventListener('DOMContentLoaded', displayInsights);
+  // Gyvenimo kelio patarimas (numerologija)
+  const lifePathTips = {
+    '1': 'You are a leader – take initiative and trust your vision.',
+    '2': 'You’re a peacemaker – focus on harmony and collaboration.',
+    '3': 'Your creativity uplifts others – express it boldly.',
+    '4': 'You thrive with structure – build something lasting.',
+    '5': 'Embrace change – your soul craves freedom.',
+    '6': 'You are a nurturer – your care brings healing.',
+    '7': 'Seek depth – your intuition is a powerful guide.',
+    '8': 'Step into your power – success awaits through discipline.',
+    '9': 'You are a giver – your compassion transforms lives.'
+  };
+
+  setText('coachLifePath', lifePathTips[data.lifePathNumber] || 'Trust your inner path – you are evolving.');
+
+  // Zodiako patarimas (jei norima integruoti vėliau)
+  setText('coachZodiac', `As a ${data.zodiacSign || 'soulful being'}, trust your cosmic rhythm.`);
+
+  // Kinų horoskopo patarimas (jei yra)
+  setText('coachChinese', `Your Chinese sign ${data.chineseZodiac || '...'} reminds you to embrace your true nature.`);
+});

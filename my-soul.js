@@ -1,41 +1,35 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const data = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
-  const soulCard = document.getElementById("soulCard");
-  const soulSummary = document.getElementById("soul-summary");
+// my-soul.js – Dinaminis Soul profilio įkėlimas
 
-  if (!data.name) {
-    soulCard.innerHTML = `<p class="centered glow-text">Please complete the quiz first 🌀</p>`;
-    return;
+document.addEventListener('DOMContentLoaded', () => {
+  const data = JSON.parse(localStorage.getItem('soulQuiz')) || {};
+
+  const fields = [
+    'name', 'birthday', 'about', 'connectionType', 'loveLanguage',
+    'lifePathNumber', 'zodiacSign', 'chineseZodiac',
+    'hobbies', 'values', 'unacceptable'
+  ];
+
+  fields.forEach(field => {
+    const el = document.getElementById(field);
+    if (el) {
+      const value = data[field];
+      el.textContent = Array.isArray(value) ? value.join(', ') : value || '—';
+    }
+  });
+
+  // Avataro įkėlimas (nuotrauka 1)
+  if (data.profilePhoto1) {
+    const avatar = document.getElementById('avatar');
+    if (avatar) {
+      avatar.src = data.profilePhoto1;
+      avatar.alt = data.name || 'Soul Photo';
+    }
   }
 
-  // ✨ Summary box (top)
-  const summaryText = `You are a soul seeking a ${data.connectionType || "meaningful"} connection. 
-  Your love language is ${data.loveLanguage || "unknown"} and you value ${data.values?.slice(0, 2).join(" & ") || "..."}. 
-  Let's find someone who matches your energy.`;
-  soulSummary.innerHTML = `<p>${summaryText}</p>`;
-
-  // ✨ Full profile grid
-  soulCard.innerHTML = `
-    ${data.profilePhoto1 ? `<img src="${data.profilePhoto1}" class="profile-avatar" alt="Profile Photo">` : ""}
-    <div class="glow-card"><strong>Name:</strong> ${data.name}</div>
-    <div class="glow-card"><strong>Birthday:</strong> ${data.birthday || "–"}</div>
-    <div class="glow-card"><strong>Country:</strong> ${data.country || "–"}</div>
-    <div class="glow-card"><strong>Height:</strong> ${data.height || "–"} cm</div>
-    <div class="glow-card"><strong>Weight:</strong> ${data.weight || "–"} kg</div>
-    <div class="glow-card"><strong>Connection Type:</strong> ${data.connectionType || "–"}</div>
-    <div class="glow-card"><strong>Love Language:</strong> ${data.loveLanguage || "–"}</div>
-    <div class="glow-card"><strong>Hobbies:</strong> ${renderList(data.hobbies)}</div>
-    <div class="glow-card"><strong>Core Values:</strong> ${renderList(data.values)}</div>
-    <div class="glow-card"><strong>Unacceptable Behavior:</strong> ${data.unacceptable || "–"}</div>
-    <div class="glow-card"><strong>About Me:</strong> ${data.bio || "–"}</div>
-    <div class="glow-card"><strong>Western Zodiac:</strong> ${data.westernZodiac || "–"}</div>
-    <div class="glow-card"><strong>Chinese Zodiac:</strong> ${data.chineseZodiac || "–"}</div>
-    <div class="glow-card"><strong>Life Path Number:</strong> ${data.lifePathNumber || "–"}</div>
-  `;
-
-  function renderList(arr) {
-    return Array.isArray(arr) && arr.length
-      ? "<ul>" + arr.map(i => `<li>${i}</li>`).join("") + "</ul>"
-      : "–";
+  // Soul Summary viršuje
+  const summary = document.getElementById('soulSummary');
+  if (summary) {
+    const summaryText = `You are a soul on a journey of ${data.connectionType?.toLowerCase()} connection, guided by ${data.loveLanguage?.toLowerCase()} and values like ${(data.values || []).join(', ')}.`;
+    summary.textContent = summaryText;
   }
 });

@@ -1,125 +1,79 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("profile-form");
-  if (!form) return;
+// edit-profile.js – Patikrinta ir atnaujinta
 
-  const photoInputs = [
-    document.getElementById("photo1"),
-    document.getElementById("photo2"),
-    document.getElementById("photo3")
-  ];
-
-  let saved = {};
+document.addEventListener('DOMContentLoaded', () => {
+  const key = 'soulQuiz';
+  let data = {};
   try {
-    saved = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
-  } catch (e) {
-    console.error("Failed to parse soulQuiz:", e);
+    data = JSON.parse(localStorage.getItem(key)) || {};
+  } catch {
+    localStorage.removeItem(key);
+    data = {};
   }
 
-  form.name.value = saved.name || "";
-  form.birthday.value = saved.birthday || "";
-  form.bio.value = saved.about || saved.bio || "";
-  form.unacceptable.value = saved.unacceptable || "";
-
-  if (saved.connectionType) {
-    const ct = form.querySelector(`input[name="connectionType"][value="${saved.connectionType}"]`);
-    if (ct) ct.checked = true;
-  }
-  if (saved.loveLanguage) {
-    const ll = form.querySelector(`input[name="loveLanguage"][value="${saved.loveLanguage}"]`);
-    if (ll) ll.checked = true;
-  }
-
-  (saved.hobbies || []).forEach(h => {
-    const cb = form.querySelector(`input[name="hobbies"][value="${h}"]`);
-    if (cb) cb.checked = true;
-  });
-
-  (saved.values || []).forEach(v => {
-    const cb = form.querySelector(`input[name="values"][value="${v}"]`);
-    if (cb) cb.checked = true;
-  });
-
-  const showPreview = (input, previewId, src) => {
-    const img = document.getElementById(previewId);
-    if (!img || !input) return;
-    if (src) {
-      img.src = src;
-      img.style.display = "block";
-    } else {
-      img.style.display = "none";
+  // Inline redagavimo funkcija
+  function setupEditableField(fieldId) {
+    const el = document.getElementById(fieldId);
+    const editBtn = el?.nextElementSibling;
+    if (el && editBtn) {
+      editBtn.addEventListener('click', () => {
+        el.removeAttribute('readonly');
+        el.focus();
+      });
     }
-    input.addEventListener("change", () => {
-      const file = input.files?.[0];
-      if (!file) {
-        img.style.display = saved[previewId] ? "block" : "none";
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        img.src = reader.result;
-        img.style.display = "block";
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  showPreview(photoInputs[0], "preview1", saved.photo1);
-  showPreview(photoInputs[1], "preview2", saved.photo2);
-  showPreview(photoInputs[2], "preview3", saved.photo3);
-
-  form.addEventListener("submit", async e => {
-    e.preventDefault();
-    const data = {
-      name: form.name.value,
-      birthday: form.birthday.value,
-      bio: form.bio.value,
-      unacceptable: form.unacceptable.value,
-      connectionType: form.querySelector("input[name='connectionType']:checked")?.value || "",
-      loveLanguage: form.querySelector("input[name='loveLanguage']:checked")?.value || "",
-      hobbies: Array.from(form.querySelectorAll("input[name='hobbies']:checked")).map(cb => cb.value),
-      values: Array.from(form.querySelectorAll("input[name='values']:checked")).map(cb => cb.value)
-    };
-
-    const readImage = file => new Promise(resolve => {
-      if (!file) return resolve(null);
-      const r = new FileReader();
-      r.onload = () => resolve(r.result);
-      r.readAsDataURL(file);
-    });
-
-    data.photo1 = await readImage(photoInputs[0]?.files?.[0]) || saved.photo1 || null;
-    data.photo2 = await readImage(photoInputs[1]?.files?.[0]) || saved.photo2 || null;
-    data.photo3 = await readImage(photoInputs[2]?.files?.[0]) || saved.photo3 || null;
-
-    localStorage.setItem("soulQuiz", JSON.stringify(data));
-    window.location.href = "my-soul.html";
-  });
-
-  const resetBtn = document.getElementById("resetForm");
-  if (resetBtn) {
-    resetBtn.addEventListener("click", () => {
-      localStorage.removeItem("soulQuiz");
-      form.reset();
-      document.querySelectorAll("img.preview").forEach(img => img.style.display = "none");
-    });
   }
 
-  document.querySelector(".btn-main")?.addEventListener("click", () => {
-    form.requestSubmit(); // ✅ TAI PAGRINDINIS PATAISYMAS
+  // Užpildo laukus
+  const fieldIds = ['name', 'birthday', 'about', 'connectionType', 'loveLanguage', 'unacceptable', 'hobbies', 'values'];
+  fieldIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (Array.isArray(data[id])) {
+      data[id].forEach(val => {
+        const checkbox = document.querySelector(`[name="${id}"][value="${val}"]`);
+        if (checkbox) checkbox.checked = true;
+      });
+    } else {
+      el.value = data[id] || '';
+    }
+    setupEditableField(id);
   });
 
-  document.querySelectorAll(".remove-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const target = btn.getAttribute("data-target");
-      const img = document.getElementById(target);
-      if (img) {
-        img.src = "";
-        img.style.display = "none";
-      }
-      const idx = parseInt(target.replace("preview", ""));
-      if (photoInputs[idx - 1]) {
-        photoInputs[idx - 1].value = "";
+  // Nuotraukos atkūrimas
+  for (let i = 1; i <= 3; i++) {
+    const preview = document.getElementById(`photoPreview${i}`);
+    const input = document.getElementById(`photo${i}`);
+    if (data[`profilePhoto${i}`] && preview) {
+      preview.src = data[`profilePhoto${i}`];
+    }
+    if (input) {
+      input.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            preview.src = reader.result;
+            data[`profilePhoto${i}`] = reader.result;
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+  }
+
+  // Išsaugoti paspaudus mygtuką
+  document.getElementById('saveBtn')?.addEventListener('click', () => {
+    fieldIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (el.type === 'checkbox' || el.type === 'radio') {
+        const selected = [...document.querySelectorAll(`[name="${id}"]:checked`)].map(x => x.value);
+        data[id] = selected;
+      } else {
+        data[id] = el.value;
       }
     });
+
+    localStorage.setItem(key, JSON.stringify(data));
+    alert('✅ Your soul profile has been saved.');
   });
 });

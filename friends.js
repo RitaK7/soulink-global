@@ -1,25 +1,59 @@
-// src/friends.js
+// friends.js – Friend Match View
 
 document.addEventListener('DOMContentLoaded', () => {
-  const friendsContainer = document.getElementById('friendsContainer');
+  const currentUser = JSON.parse(localStorage.getItem('soulQuiz')) || {};
+  const friendContainer = document.getElementById('friendResults');
 
-  const defaultFriends = [
-    { name: "Elena", sharedValues: "Kindness, Nature, Humor", compatibility: 91 },
-    { name: "Mira", sharedValues: "Spirituality, Honesty, Creativity", compatibility: 88 },
-    { name: "Jonas", sharedValues: "Adventure, Learning, Loyalty", compatibility: 85 }
+  const testFriends = [
+    {
+      name: 'Ella',
+      loveLanguage: 'Words of Affirmation',
+      values: ['Kindness', 'Loyalty'],
+      connectionType: 'Friendship'
+    },
+    {
+      name: 'Noah',
+      loveLanguage: 'Quality Time',
+      values: ['Curiosity', 'Respect'],
+      connectionType: 'Friendship'
+    },
+    {
+      name: 'Luna',
+      loveLanguage: 'Receiving Gifts',
+      values: ['Humor', 'Trust'],
+      connectionType: 'Both'
+    }
   ];
 
-  const friendData = JSON.parse(localStorage.getItem('friendResults')) || defaultFriends;
+  function calculateFriendMatch(user1, user2) {
+    let score = 0;
+    if (user1.loveLanguage === user2.loveLanguage) score += 30;
 
-  friendsContainer.innerHTML = '';
-  friendData.forEach(friend => {
-    const div = document.createElement('div');
-    div.className = 'card';
-    div.innerHTML = `
-      <h3>🤝 ${friend.name}</h3>
-      <p>🌟 Shared Values: ${friend.sharedValues}</p>
-      <p>🎯 Compatibility: ${friend.compatibility}%</p>
+    const sharedValues = (user1.values || []).filter(v => (user2.values || []).includes(v));
+    score += sharedValues.length * 20;
+
+    if (user2.connectionType === 'Friendship' || user2.connectionType === 'Both') score += 30;
+
+    return Math.min(score, 100);
+  }
+
+  function createFriendCard(user, score) {
+    const card = document.createElement('div');
+    card.className = 'friend-card';
+    card.innerHTML = `
+      <h3><i class="bi bi-people"></i> ${user.name}</h3>
+      <p>Love Language: ${user.loveLanguage}</p>
+      <p>Values: ${user.values.join(', ')}</p>
+      <p>Connection: ${user.connectionType}</p>
+      <strong>Friendship Match: ${score}%</strong>
     `;
-    friendsContainer.appendChild(div);
-  });
+    return card;
+  }
+
+  if (friendContainer) {
+    testFriends.forEach(friend => {
+      const score = calculateFriendMatch(currentUser, friend);
+      friendContainer.appendChild(createFriendCard(friend, score));
+    });
+  }
 });
