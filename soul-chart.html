@@ -1,68 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Soulink – Soul Chart</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Soul Chart</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background-color: #003c43;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      text-align: center;
+      background: #002f36;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0, 253, 216, 0.3);
+    }
+
+    header h1 {
+      color: #00fdd8;
+      font-size: 2em;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+
+    .chart-card {
+      background-color: #004d4d;
+      border-radius: 20px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 20px rgba(0, 253, 216, 0.3);
+    }
+
+    .chart-card h2 {
+      color: #00fdd8;
+      margin-top: 0;
+      font-size: 1.5em;
+    }
+
+    .chart-data {
+      font-size: 1.1em;
+      line-height: 1.5;
+      margin-top: 10px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      margin-top: 60px;
+      color: #bbb;
+      font-size: 0.9em;
+    }
+  </style>
 </head>
 <body>
-  <!-- NAVBAR -->
-  <header class="main-nav">
-    <div class="logo">Soulink</div>
-    <button class="nav-toggle" id="navToggle"><i class="bi bi-list"></i></button>
-    <nav>
-      <ul class="nav-links">
-        <li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
-        <li><a href="quiz.html"><i class="bi bi-question-circle"></i>Quiz</a></li>
-        <li><a href="edit-profile.html"><i class="bi bi-pencil-square"></i>Edit</a></li>
-        <li><a href="my-soul.html"><i class="bi bi-person"></i>My Soul</a></li>
-        <li><a aria-current="page" href="soul-chart.html"><i class="bi bi-graph-up"></i>Chart</a></li>
-        <li><a href="soul-coach.html"><i class="bi bi-chat-dots"></i>Coach</a></li>
-        <li><a href="soulink-match.html"><i class="bi bi-heart"></i>Match</a></li>
-        <li><a href="friends.html"><i class="bi bi-people"></i>Friends</a></li>
-        <li><a href="result.html"><i class="bi bi-bar-chart-line"></i>Results</a></li>
-      </ul>
-    </nav>
+  <header>
+    <h1>Your Soul Chart</h1>
   </header>
 
-  <!-- MAIN CONTENT -->
-  <main class="container">
-    <section class="form-card">
-      <h2 class="glow-text">Soul Chart 🌀</h2>
-      <p>Your soul map reveals the energy connections behind your personality.</p>
-      <div id="soulChartContent">
-        <p><strong>Love Language:</strong> <span id="chartLoveLanguage">–</span></p>
-        <p><strong>Numerology (Life Path):</strong> <span id="chartLifePath">–</span></p>
-        <p><strong>Zodiac Sign:</strong> <span id="chartZodiac">–</span></p>
-        <p><strong>Chinese Sign:</strong> <span id="chartChinese">–</span></p>
-        <p><strong>Energy Type:</strong> <span id="chartEnergy">–</span></p>
-      </div>
-      <div class="navigation-buttons">
-        <a class="btn-outline" href="my-soul.html">← Back to My Soul</a>
-        <a class="btn-main" href="soul-coach.html">Go to Soul Coach →</a>
-      </div>
-    </section>
-  </main>
+  <div class="container">
+    <div class="chart-card">
+      <h2>Life Path & Zodiac</h2>
+      <div class="chart-data"><strong>Life Path:</strong> <span id="lifePath"></span></div>
+      <div class="chart-data"><strong>Zodiac Sign:</strong> <span id="zodiacSign"></span></div>
+    </div>
 
-  <!-- FOOTER -->
-  <footer class="bottom-nav">
-    <div>© 2025 Soulink.global | All rights reserved</div>
-    <div>Made with love and ChatGPT's help ❤️</div>
+    <div class="chart-card">
+      <h2>Chinese Zodiac</h2>
+      <div class="chart-data"><strong>Animal:</strong> <span id="chineseZodiac"></span></div>
+    </div>
+
+    <div class="chart-card">
+      <h2>Numerology Insights</h2>
+      <div class="chart-data" id="numerologyDetails">Loading...</div>
+    </div>
+  </div>
+
+  <footer>
+    © 2025 Soulink.global | Made with love & ChatGPT assistance 🐰✨
   </footer>
 
-  <script>
-    const soul = JSON.parse(localStorage.getItem('soulQuiz')) || {};
-    document.getElementById('chartLoveLanguage').textContent = soul.loveLanguage || '–';
-    document.getElementById('chartLifePath').textContent = soul.lifePath || '–';
-    document.getElementById('chartZodiac').textContent = soul.zodiacSign || '–';
-    document.getElementById('chartChinese').textContent = soul.chineseSign || '–';
-    document.getElementById('chartEnergy').textContent = soul.energyType || '–';
-
-    document.getElementById('navToggle')?.addEventListener('click', () => {
-      document.querySelector('.nav-links')?.classList.toggle('open');
-    });
-  </script>
+  <script src="soul-chart.js"></script>
 </body>
 </html>

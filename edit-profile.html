@@ -3,120 +3,152 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Soulink – Edit Profile</title>
-  <link rel="stylesheet" href="style.css"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"/>
+  <title>Edit Soul Profile</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background-color: #003c43;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      text-align: center;
+      background: #002f36;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0, 253, 216, 0.3);
+    }
+
+    header h1 {
+      color: #00fdd8;
+      font-size: 2em;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 30px;
+      background-color: #004d4d;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(0, 253, 216, 0.3);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      margin-top: 5px;
+      font-size: 1em;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    .btn-save {
+      background-color: #00fdd8;
+      color: #003c43;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 50px;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .btn-save:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #00fdd8;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      margin-top: 60px;
+      color: #bbb;
+      font-size: 0.9em;
+    }
+  </style>
 </head>
 <body>
-  <!-- NAVBAR -->
-  <header class="main-nav">
-    <div class="logo">Soulink</div>
-    <button class="nav-toggle" id="navToggle"><i class="bi bi-list"></i></button>
-    <nav>
-      <ul class="nav-links">
-        <li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
-        <li><a href="quiz.html"><i class="bi bi-question-circle"></i>Quiz</a></li>
-        <li><a aria-current="page" href="edit-profile.html"><i class="bi bi-pencil-square"></i>Edit Profile</a></li>
-        <li><a href="my-soul.html"><i class="bi bi-person"></i>My Soul</a></li>
-        <li><a href="soul-chart.html"><i class="bi bi-graph-up"></i>Soul Chart</a></li>
-        <li><a href="soul-coach.html"><i class="bi bi-chat-dots"></i>Soul Coach</a></li>
-        <li><a href="soulink-match.html"><i class="bi bi-heart"></i>Match</a></li>
-        <li><a href="friends.html"><i class="bi bi-people"></i>Friends</a></li>
-        <li><a href="result.html"><i class="bi bi-bar-chart-line"></i>Results</a></li>
-      </ul>
-      <div class="auth-buttons">
-        <a class="btn-outline" href="login.html">Log In</a>
-        <a class="btn-outline" href="signup.html">Sign Up</a>
-      </div>
-    </nav>
+  <header>
+    <h1>Edit Your Soul Profile</h1>
   </header>
 
-  <!-- MAIN PROFILE EDIT FORM -->
-  <main class="container">
-    <div class="form-card">
-      <h2 class="glow-text">Edit Your Soul Profile ✏️</h2>
-      <form id="profile-form" class="profile-grid">
-        <div class="left-column">
-          <label for="name">Name:</label>
-          <input id="name" type="text" name="name" required />
-
-          <label for="birthday">Birthday (YYYY-MM-DD):</label>
-          <input id="birthday" type="text" name="birthday" required />
-
-          <label>Type of Connection:</label>
-          <label><input type="radio" name="connectionType" value="Romantic"/> Romantic</label>
-          <label><input type="radio" name="connectionType" value="Friendship"/> Friendship</label>
-          <label><input type="radio" name="connectionType" value="Both"/> Both</label>
-
-          <label>Primary Love Language:</label>
-          <label><input type="radio" name="loveLanguage" value="Words of Affirmation"/> Words of Affirmation</label>
-          <label><input type="radio" name="loveLanguage" value="Acts of Service"/> Acts of Service</label>
-          <label><input type="radio" name="loveLanguage" value="Receiving Gifts"/> Receiving Gifts</label>
-          <label><input type="radio" name="loveLanguage" value="Quality Time"/> Quality Time</label>
-          <label><input type="radio" name="loveLanguage" value="Physical Touch"/> Physical Touch</label>
-
-          <label>Your Hobbies:</label>
-          <label><input type="checkbox" name="hobbies" value="Music"/> Music</label>
-          <label><input type="checkbox" name="hobbies" value="Art"/> Art</label>
-          <label><input type="checkbox" name="hobbies" value="Traveling"/> Traveling</label>
-          <label><input type="checkbox" name="hobbies" value="Cooking"/> Cooking</label>
-          <label><input type="checkbox" name="hobbies" value="Nature"/> Nature</label>
-
-          <label>Core Values:</label>
-          <label><input type="checkbox" name="values" value="Honesty"/> Honesty</label>
-          <label><input type="checkbox" name="values" value="Kindness"/> Kindness</label>
-          <label><input type="checkbox" name="values" value="Growth"/> Growth</label>
-          <label><input type="checkbox" name="values" value="Adventure"/> Adventure</label>
-          <label><input type="checkbox" name="values" value="Spirituality"/> Spirituality</label>
-
-          <label for="unacceptable">Unacceptable Behavior:</label>
-          <textarea id="unacceptable" name="unacceptable" rows="2"></textarea>
-
-          <label for="bio">Tell me something about yourself:</label>
-          <textarea id="bio" name="bio" rows="3"></textarea>
-        </div>
-
-        <div class="right-column">
-          <div class="photo-block">
-            <label for="photo1">Profile Photo 1:</label>
-            <input type="file" id="photo1" accept="image/*" />
-            <img id="preview1" class="preview"/>
-            <button type="button" class="remove-btn" data-target="preview1">Remove</button>
-          </div>
-          <div class="photo-block">
-            <label for="photo2">Profile Photo 2:</label>
-            <input type="file" id="photo2" accept="image/*" />
-            <img id="preview2" class="preview"/>
-            <button type="button" class="remove-btn" data-target="preview2">Remove</button>
-          </div>
-          <div class="photo-block">
-            <label for="photo3">Profile Photo 3:</label>
-            <input type="file" id="photo3" accept="image/*" />
-            <img id="preview3" class="preview"/>
-            <button type="button" class="remove-btn" data-target="preview3">Remove</button>
-          </div>
-        </div>
-      </form>
-
-      <div class="form-actions">
-        <button type="submit" class="btn-main">Save My Soul 💾</button>
-        <button type="button" id="resetForm" class="btn-secondary">Reset</button>
+  <div class="container">
+    <form id="editForm">
+      <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" id="name" required />
       </div>
-    </div>
-  </main>
 
-  <!-- FOOTER -->
-  <footer class="bottom-nav">
-    <div>© 2025 Soulink.global | All rights reserved</div>
-    <div>Made with love and ChatGPT's help ❤️</div>
+      <div class="form-group">
+        <label for="birthday">Birthday (YYYY-MM-DD)</label>
+        <input type="text" id="birthday" required />
+      </div>
+
+      <div class="form-group">
+        <label for="about">About Me</label>
+        <textarea id="about" rows="3"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="connectionType">Connection Type</label>
+        <select id="connectionType" required>
+          <option value="">Choose</option>
+          <option value="Romantic">Romantic</option>
+          <option value="Friendship">Friendship</option>
+          <option value="Both">Both</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="loveLanguage">Love Language</label>
+        <select id="loveLanguage" required>
+          <option value="">Choose</option>
+          <option value="Words of Affirmation">Words of Affirmation</option>
+          <option value="Quality Time">Quality Time</option>
+          <option value="Receiving Gifts">Receiving Gifts</option>
+          <option value="Acts of Service">Acts of Service</option>
+          <option value="Physical Touch">Physical Touch</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="values">Core Values</label>
+        <input type="text" id="values" />
+      </div>
+
+      <div class="form-group">
+        <label for="hobbies">Hobbies</label>
+        <input type="text" id="hobbies" />
+      </div>
+
+      <div class="form-group">
+        <label for="unacceptable">Unacceptable Behaviors</label>
+        <textarea id="unacceptable" rows="2"></textarea>
+      </div>
+
+      <button type="submit" class="btn-save">Save My Soul</button>
+    </form>
+  </div>
+
+  <footer>
+    © 2025 Soulink.global | Made with love & ChatGPT assistance 🐰✨
   </footer>
 
-  <script src="edit-profile.js" defer></script>
-  <script>
-    document.getElementById('navToggle')?.addEventListener('click', () => {
-      document.querySelector('.nav-links')?.classList.toggle('open');
-      document.querySelector('.auth-buttons')?.classList.toggle('open');
-    });
-  </script>
+  <script src="edit-profile.js"></script>
 </body>
 </html>

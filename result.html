@@ -3,170 +3,77 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Soulink – Your Soulprint Results</title>
-
-  <!-- Bootstrap Icons -->
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-  />
-
-  <!-- Main stylesheet -->
+  <title>Soulink Result</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-
   <style>
-    /* NAVBAR OVERRIDES */
     body {
       background-color: #003c43;
-      color: #eefefe;
-    }
-    header {
-      background-color: #002c2f;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-    .nav-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 1rem 2rem;
-    }
-    .nav-logo {
-      font-size: 1.8rem; font-weight: bold;
-      color: #2ae49d;
-    }
-    .nav-links {
-      display: flex; gap:1.5rem; list-style:none;
-      margin:0; padding:0;
-    }
-    .nav-links a {
-      display:flex; align-items:center;
-      color:#eefefe; font-weight:500;
-      padding:.4rem; border-radius:8px;
-      transition: background .3s, box-shadow .3s;
-    }
-    .nav-links a i { margin-right:.4rem; }
-    .nav-links a:hover,
-    .nav-links a[aria-current="page"] {
-      background: rgba(42,228,157,0.2);
-      box-shadow: 0 0 8px rgba(42,228,157,0.6);
-    }
-    .auth-buttons {
-      margin-left: 2rem;
-    }
-    .btn-logout {
-      padding:.4rem .8rem; border:1px solid #00ffd0;
-      border-radius:8px; background:transparent;
-      color:#00ffd0; font-weight:500; cursor:pointer;
-      transition: background .3s, color .3s;
-    }
-    .btn-logout:hover {
-      background:#00ffd0; color:#002c2f;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+      margin: 0;
+      padding: 0;
     }
 
-    /* PDF BUTTON FIX */
-    #download-pdf {
-      display:inline-block;
-      background:linear-gradient(135deg,#00ffd0,#00bfa5);
-      color:#002c2f; padding:.8rem 1.6rem;
-      border-radius:30px; font-weight:bold;
-      cursor:pointer; box-shadow:0 0 20px rgba(0,255,208,0.7);
-      transition: box-shadow .3s, transform .2s;
-      border:none; margin:2rem auto; text-align:center;
+    header {
+      text-align: center;
+      background: #002f36;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0, 253, 216, 0.3);
     }
-    #download-pdf:hover {
-      transform:translateY(-2px);
-      box-shadow:0 0 30px rgba(0,255,208,0.9);
+
+    header h1 {
+      color: #00fdd8;
+      font-size: 2em;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+
+    .result-section {
+      background-color: #004d4d;
+      border-radius: 20px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 20px rgba(0, 253, 216, 0.3);
+    }
+
+    .result-section h2 {
+      color: #00fdd8;
+      font-size: 1.5em;
+      margin-bottom: 10px;
+    }
+
+    .result-info {
+      font-size: 1.1em;
+      line-height: 1.6;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      margin-top: 60px;
+      color: #bbb;
+      font-size: 0.9em;
     }
   </style>
 </head>
-
 <body>
-  <!-- NAVBAR -->
   <header>
-    <div class="nav-wrap">
-      <div class="nav-logo">Soulink</div>
-      <ul class="nav-links">
-        <li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
-        <li><a href="quiz.html"><i class="bi bi-question-circle"></i>Quiz</a></li>
-        <li><a href="edit-profile.html"><i class="bi bi-pencil-square"></i>Edit Profile</a></li>
-        <li><a href="my-soul.html"><i class="bi bi-person"></i>My Soul</a></li>
-        <li><a href="soul-chart.html"><i class="bi bi-graph-up"></i>Soul Chart</a></li>
-        <li><a href="soul-coach.html"><i class="bi bi-chat-dots"></i>Soul Coach</a></li>
-        <li><a href="soulink-match.html"><i class="bi bi-heart"></i>Match</a></li>
-        <li><a href="friends.html"><i class="bi bi-people"></i>Friends</a></li>
-      </ul>
-      <div class="auth-buttons">
-        <button class="btn-logout" onclick="logout()">Log Out</button>
-      </div>
-    </div>
+    <h1>Your Soulprint Compatibility</h1>
   </header>
 
-  <!-- MAIN CONTENT -->
-  <main class="container">
-    <div class="page-header">
-      <h1>🌟 Your Soul Results</h1>
-      <p>Here's what the universe reveals about you</p>
-    </div>
+  <div class="container" id="resultContainer">
+    <!-- Result analysis will be injected here -->
+  </div>
 
-    <div id="results-output">
-      <div class="card" id="greeting-card"></div>
-      <div class="card" id="love-card"></div>
-      <div class="card" id="western-card"></div>
-      <div class="card" id="chinese-card"></div>
-      <div class="card" id="numerology-card"></div>
-      <div class="card" id="ai-insight-card">
-        <h3>🧠 AI Soul Insight</h3>
-        <div id="ai-insight-content"></div>
-      </div>
-    </div>
+  <footer>
+    © 2025 Soulink.global | Made with love & ChatGPT assistance 🐰✨
+  </footer>
 
-    <div style="text-align:center;">
-      <button id="download-pdf">⬇️ Download Your Soul PDF</button>
-    </div>
-
-    <!-- FEEDBACK FORM -->
-   <section id="feedback">
-  <h3>Your Feedback</h3>
-  <form id="feedback-form">
-    <label for="user_email">Your Email:</label>
-    <input id="user_email" type="email" name="user_email" required />
-
-    <label for="page">Page You Are On:</label>
-    <input id="page" type="text" name="page" value="result.html" readonly />
-
-    <label for="rating">How would you rate it? (1–5)</label>
-    <select id="rating" name="rating">
-      <option value="1">★☆☆☆☆ Poor</option>
-      <option value="2">★★☆☆☆ Fair</option>
-      <option value="3">★★★☆☆ Good</option>
-      <option value="4">★★★★☆ Very Good</option>
-      <option value="5" selected>★★★★★ Excellent</option>
-    </select>
-
-    <label for="feedback">Your Feedback:</label>
-    <textarea id="feedback" name="feedback" rows="4" placeholder="Write your thoughts…" required></textarea>
-
-    <button type="submit">Send Feedback</button>
-  </form>
-  <p id="feedback-message"></p>
-</section>
-  </main>
-
-  <!-- LOGOUT SCRIPT -->
-  <script>
-    function logout() {
-      sessionStorage.removeItem('soulinkBetaAccess');
-      window.location.href = 'index.html';
-    }
-  </script>
-
-  <!-- PDF & EmailJS & Results JS -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-  <script src="results.js" defer></script>
+  <script src="results.js"></script>
 </body>
 </html>
