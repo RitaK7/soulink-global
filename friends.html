@@ -1,174 +1,58 @@
-<!-- public/friends.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Your Like-Minded Friends</title>
-  <script>
-  if (!sessionStorage.getItem('soulinkBetaAccess') && location.pathname !== '/beta-login.html') {
-    window.location.href = 'beta-login.html';
-  }
-</script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
-  <style>
-    body {
-      background-color: #003c43;
-      color: white;
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-
-    .main-nav {
-      background-color: #002c33;
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .main-nav .logo {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #00fdd8;
-    }
-
-    .main-nav ul {
-      list-style: none;
-      display: flex;
-      gap: 1rem;
-      padding: 0;
-      margin: 0;
-      flex-wrap: wrap;
-    }
-
-    .main-nav a {
-      color: #00fdd8;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .auth-buttons a {
-      margin-left: 0.5rem;
-      color: white;
-      text-decoration: none;
-      border: 1px solid #00fdd8;
-      padding: 0.3rem 0.6rem;
-      border-radius: 0.5rem;
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: 2rem auto;
-      padding: 1rem;
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    #friendsContainer {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 2rem;
-    }
-
-    .card {
-      background-color: #014247;
-      border-radius: 1rem;
-      padding: 1.5rem;
-      width: 280px;
-      box-shadow: 0 0 10px #00fdd8;
-    }
-
-    .card h3 {
-      color: #00fdd8;
-      margin-bottom: 0.5rem;
-    }
-
-    .card p {
-      margin: 0.5rem 0;
-    }
-
-    footer {
-      background-color: #002c33;
-      color: #00fdd8;
-      text-align: center;
-      padding: 1rem;
-      font-size: 0.9rem;
-    }
-
-    .footer-nav {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .footer-nav a {
-      color: #00fdd8;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .footer-nav a:hover {
-      color: white;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soulink – Soul Friends</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </head>
 <body>
-<script>
-  if (!sessionStorage.getItem('soulinkBetaAccess')) {
-    window.location.href = 'beta-login.html';
-  }
-</script>
-  <script>
-  if (!sessionStorage.getItem('soulinkBetaAccess')) {
-    window.location.href = 'beta-login.html';
-  }
-</script>
-
+  <!-- NAVBAR -->
   <header class="main-nav">
     <div class="logo">Soulink</div>
-    <ul>
-      <li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
+    <button class="nav-toggle" id="navToggle"><i class="bi bi-list"></i></button>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
         <li><a href="quiz.html"><i class="bi bi-question-circle"></i>Quiz</a></li>
-        <li><a href="edit-profile.html"><i class="bi bi-pencil-square"></i>Edit Profile</a></li>
+        <li><a href="edit-profile.html"><i class="bi bi-pencil-square"></i>Edit</a></li>
         <li><a href="my-soul.html"><i class="bi bi-person"></i>My Soul</a></li>
-        <li><a href="soul-chart.html"><i class="bi bi-graph-up"></i>Soul Chart</a></li>
-        <li><a href="soul-coach.html"><i class="bi bi-chat-dots"></i>Soul Coach</a></li>
+        <li><a href="soul-chart.html"><i class="bi bi-graph-up"></i>Chart</a></li>
+        <li><a href="soul-coach.html"><i class="bi bi-chat-dots"></i>Coach</a></li>
         <li><a href="soulink-match.html"><i class="bi bi-heart"></i>Match</a></li>
-        <li><a href="friends.html"><i class="bi bi-people"></i>Friends</a></li>
+        <li><a aria-current="page" href="friends.html"><i class="bi bi-people"></i>Friends</a></li>
         <li><a href="result.html"><i class="bi bi-bar-chart-line"></i>Results</a></li>
       </ul>
-    </ul>
-    <div class="auth-buttons">
-      <a href="login.html">Log In</a>
-      <a href="signup.html">Sign Up</a>
-    </div>
+    </nav>
   </header>
 
+  <!-- MAIN CONTENT -->
   <main class="container">
-    <h2>Your Like-Minded Friends</h2>
-    <div id="friendsContainer">
-      <p>No like-minded friends found yet 🥂</p>
-    </div>
+    <section class="form-card">
+      <h2 class="glow-text">Soul Friends 🧡</h2>
+      <p>Find your like-minded kindred spirits for friendship and connection.</p>
+      <div id="friendsList">
+        <!-- Friends list will be shown here -->
+      </div>
+      <div class="navigation-buttons">
+        <a class="btn-outline" href="soulink-match.html">← Back to Soul Match</a>
+        <a class="btn-main" href="result.html">Go to Results →</a>
+      </div>
+    </section>
   </main>
 
-  <footer>
-    <div class="footer-nav">
-      <a href="soulink-match.html">← Back to Romantic Matches</a>
-      <span>|</span>
-      <a href="result.html">→ Go to Results</a>
-    </div>
-    <p>© 2025 soulink.global</p>
+  <!-- FOOTER -->
+  <footer class="bottom-nav">
+    <div>© 2025 Soulink.global | All rights reserved</div>
+    <div>Made with love and ChatGPT's help ❤️</div>
   </footer>
 
   <script src="friends.js"></script>
+  <script>
+    document.getElementById('navToggle')?.addEventListener('click', () => {
+      document.querySelector('.nav-links')?.classList.toggle('open');
+    });
+  </script>
 </body>
 </html>

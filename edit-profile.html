@@ -4,171 +4,37 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Soulink – Edit Profile</title>
+  <link rel="stylesheet" href="style.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"/>
-  <style>
-    :root {
-      --bg: #003c43;
-      --nav-bg: #002c2f;
-      --card-bg: #004d4d;
-      --accent: #00fdd8;
-      --text-light: #eefefe;
-      --glow: rgba(0,253,216,0.5);
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--text-light);
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-    }
-
-    header {
-      background: var(--nav-bg);
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 1rem;
-    }
-
-    .nav-links a {
-      color: var(--text-light);
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .nav-links a[aria-current="page"] {
-      color: var(--accent);
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: 2rem auto;
-      padding: 1rem;
-    }
-
-    .form-card {
-      background: var(--card-bg);
-      border-radius: 16px;
-      padding: 2rem;
-      box-shadow: 0 0 12px var(--glow);
-    }
-
-    .profile-grid {
-      display: flex;
-      gap: 2rem;
-      flex-wrap: wrap;
-    }
-
-    .left-column, .right-column {
-      flex: 1;
-      min-width: 300px;
-    }
-
-    .right-column {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    label {
-      display: block;
-      margin-top: 1rem;
-    }
-
-    input[type="text"], textarea {
-      width: 100%;
-      padding: 0.6rem;
-      margin-top: 0.4rem;
-      background: #005f56;
-      border: none;
-      border-radius: 6px;
-      color: var(--text-light);
-    }
-
-    input[type="file"] {
-      margin-top: 0.6rem;
-      background: var(--card-bg);
-      color: var(--text-light);
-      border: 1px solid var(--accent);
-      padding: 0.5rem;
-      border-radius: 6px;
-    }
-
-    .preview {
-      display: none;
-      margin-top: 0.5rem;
-      width: 120px;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 6px;
-      box-shadow: 0 0 8px var(--glow);
-    }
-
-    .form-actions {
-      margin-top: 2rem;
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-    }
-
-    .btn-main {
-      background: linear-gradient(135deg,#00ffd0,#00bfa5);
-      color: var(--bg);
-      padding: 0.8rem 1.6rem;
-      border: none;
-      border-radius: 30px;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 0 20px rgba(0,255,208,0.7);
-    }
-
-    .btn-secondary {
-      background: #004d4d;
-      color: #00fdd8;
-      border: 1px solid #00fdd8;
-      border-radius: 30px;
-      padding: 0.8rem 1.6rem;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .remove-btn {
-      margin-top: .4rem;
-      background: #004d4d;
-      color: #ff8888;
-      border: 1px solid #ff8888;
-      border-radius: 8px;
-      padding: .4rem .8rem;
-      font-size: 0.9rem;
-      cursor: pointer;
-      width: fit-content;
-    }
-  </style>
 </head>
 <body>
-  <header>
-    <div class="nav-logo">Soulink</div>
-    <nav class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="quiz.html">Quiz</a>
-      <a href="edit-profile.html" aria-current="page">Edit Profile</a>
-      <a href="my-soul.html">My Soul</a>
-      <a href="soul-chart.html">Soul Chart</a>
-      <a href="soul-coach.html">Soul Coach</a>
-      <a href="soulink-match.html">Match</a>
-      <a href="friends.html">Friends</a>
-      <a href="result.html">Results</a>
+  <!-- NAVBAR -->
+  <header class="main-nav">
+    <div class="logo">Soulink</div>
+    <button class="nav-toggle" id="navToggle"><i class="bi bi-list"></i></button>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
+        <li><a href="quiz.html"><i class="bi bi-question-circle"></i>Quiz</a></li>
+        <li><a aria-current="page" href="edit-profile.html"><i class="bi bi-pencil-square"></i>Edit Profile</a></li>
+        <li><a href="my-soul.html"><i class="bi bi-person"></i>My Soul</a></li>
+        <li><a href="soul-chart.html"><i class="bi bi-graph-up"></i>Soul Chart</a></li>
+        <li><a href="soul-coach.html"><i class="bi bi-chat-dots"></i>Soul Coach</a></li>
+        <li><a href="soulink-match.html"><i class="bi bi-heart"></i>Match</a></li>
+        <li><a href="friends.html"><i class="bi bi-people"></i>Friends</a></li>
+        <li><a href="result.html"><i class="bi bi-bar-chart-line"></i>Results</a></li>
+      </ul>
+      <div class="auth-buttons">
+        <a class="btn-outline" href="login.html">Log In</a>
+        <a class="btn-outline" href="signup.html">Sign Up</a>
+      </div>
     </nav>
   </header>
 
+  <!-- MAIN PROFILE EDIT FORM -->
   <main class="container">
     <div class="form-card">
-      <h2>Edit Your Soul Profile</h2>
+      <h2 class="glow-text">Edit Your Soul Profile ✏️</h2>
       <form id="profile-form" class="profile-grid">
         <div class="left-column">
           <label for="name">Name:</label>
@@ -183,16 +49,16 @@
           <label><input type="radio" name="connectionType" value="Both"/> Both</label>
 
           <label>Primary Love Language:</label>
-          <label><input type="radio" name="loveLanguage" value="Words of Affirmation" title="Verbal compliments, encouragement, kind words"/> Words of Affirmation</label>
-          <label><input type="radio" name="loveLanguage" value="Acts of Service" title="Helping with tasks, doing things for you"/> Acts of Service</label>
-          <label><input type="radio" name="loveLanguage" value="Receiving Gifts" title="Giving and receiving thoughtful presents"/> Receiving Gifts</label>
-          <label><input type="radio" name="loveLanguage" value="Quality Time" title="Spending meaningful time together"/> Quality Time</label>
-          <label><input type="radio" name="loveLanguage" value="Physical Touch" title="Hugs, hand-holding, physical closeness"/> Physical Touch</label>
+          <label><input type="radio" name="loveLanguage" value="Words of Affirmation"/> Words of Affirmation</label>
+          <label><input type="radio" name="loveLanguage" value="Acts of Service"/> Acts of Service</label>
+          <label><input type="radio" name="loveLanguage" value="Receiving Gifts"/> Receiving Gifts</label>
+          <label><input type="radio" name="loveLanguage" value="Quality Time"/> Quality Time</label>
+          <label><input type="radio" name="loveLanguage" value="Physical Touch"/> Physical Touch</label>
 
           <label>Your Hobbies:</label>
           <label><input type="checkbox" name="hobbies" value="Music"/> Music</label>
           <label><input type="checkbox" name="hobbies" value="Art"/> Art</label>
-          <label><input type="checkbox" name="hobbies" value="Travel"/> Travel</label>
+          <label><input type="checkbox" name="hobbies" value="Traveling"/> Traveling</label>
           <label><input type="checkbox" name="hobbies" value="Cooking"/> Cooking</label>
           <label><input type="checkbox" name="hobbies" value="Nature"/> Nature</label>
 
@@ -234,11 +100,23 @@
 
       <div class="form-actions">
         <button type="submit" class="btn-main">Save My Soul 💾</button>
-        <button type="button" id="resetForm" class="btn-secondary">Reset Form</button>
+        <button type="button" id="resetForm" class="btn-secondary">Reset</button>
       </div>
     </div>
   </main>
 
-  <script src="edit-profile.js"></script>
+  <!-- FOOTER -->
+  <footer class="bottom-nav">
+    <div>© 2025 Soulink.global | All rights reserved</div>
+    <div>Made with love and ChatGPT's help ❤️</div>
+  </footer>
+
+  <script src="edit-profile.js" defer></script>
+  <script>
+    document.getElementById('navToggle')?.addEventListener('click', () => {
+      document.querySelector('.nav-links')?.classList.toggle('open');
+      document.querySelector('.auth-buttons')?.classList.toggle('open');
+    });
+  </script>
 </body>
 </html>
