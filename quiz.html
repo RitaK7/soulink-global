@@ -44,10 +44,10 @@
           <input type="text" id="name" name="name" required/>
         </div>
         <div class="card">
-          <label for="birthday">Birth Date <small>(YYYY‑MM‑DD)</small></label>
-          <input type="text" id="birthday" name="birthday"
-         pattern="\\d{4}-\\d{2}-\\d{2}" placeholder="1978-11-22" required/>
-        </div>
+  <label for="birthday">Birth Date <small>(YYYY‑MM‑DD)</small></label>
+  <input type="text" id="birthday" name="birthday"
+         pattern="\d{4}-\d{2}-\d{2}" placeholder="1978-11-22" required />
+</div>
 
       <!-- Country -->
       <div class="card">
@@ -173,7 +173,7 @@
 
   <footer class="site-footer">© 2025 soulink.global</footer>
 
-  <script src="quiz.js" defer></script>
+  <script src="quiz.js"></script>
   <script>
     document.getElementById('navToggle').onclick = () => {
       document.querySelector('.nav-links')?.classList.toggle('open');

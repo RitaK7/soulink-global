@@ -1,4 +1,3 @@
-
 function getWesternZodiac(dateStr) {
   const date = new Date(dateStr);
   const day = date.getDate();
@@ -28,12 +27,20 @@ function getLifePathNumber(dateStr) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("profile-form");
+  const form = document.getElementById("quizForm");
   form.addEventListener("submit", function(e) {
     e.preventDefault();
+
+    const birthday = form.birthday.value.trim();
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(birthday)) {
+      alert("Please enter the birth date in the correct format: YYYY-MM-DD");
+      return;
+    }
+
     const data = {
       name: form.name.value,
-      birthday: form.birthday.value,
+      birthday: birthday,
       country: form.country.value,
       height: form.height.value,
       weight: form.weight.value,
@@ -42,12 +49,16 @@ document.addEventListener("DOMContentLoaded", () => {
       connectionType: form.querySelector("input[name='connectionType']:checked")?.value || "",
       loveLanguage: form.querySelector("input[name='loveLanguage']:checked")?.value || "",
       hobbies: Array.from(form.querySelectorAll("input[name='hobbies']:checked")).map(cb => cb.value),
-      values: Array.from(form.querySelectorAll("input[name='values']:checked")).map(cb => cb.value)
+      values: Array.from(form.querySelectorAll("input[name='values']:checked")).map(cb => cb.value),
+      gender: form.gender?.value || "",
+      mantra: form.mantra?.value || "",
+      spiritualBelief: form.spiritual?.value || "",
+      matchPreference: form.matchPreference?.value || ""
     };
 
-    data.westernZodiac = getWesternZodiac(data.birthday);
-    data.chineseZodiac = getChineseZodiac(data.birthday);
-    data.lifePathNumber = getLifePathNumber(data.birthday);
+    data.westernZodiac = getWesternZodiac(birthday);
+    data.chineseZodiac = getChineseZodiac(birthday);
+    data.lifePathNumber = getLifePathNumber(birthday);
 
     localStorage.setItem("soulQuiz", JSON.stringify(data));
     window.location.href = "my-soul.html";
