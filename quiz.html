@@ -34,19 +34,20 @@
 
   <!-- QUIZ FORM -->
   <main class="container">
-  <form id="quizForm"><h1>🌈 Soul Compatibility Quiz</h1>
+    <form id="quizForm">
+      <h1>🌈 Soul Compatibility Quiz</h1>
 
       <!-- Basic Info -->
       <div class="card-group">
         <div class="card">
           <label for="name">Name</label>
-          <input type="text" id="name" name="name" required/>
+          <input type="text" id="name" name="name" required />
         </div>
         <div class="card">
-  <label for="birthday">Birth Date <small>(YYYY‑MM‑DD)</small></label>
-  <input type="text" id="birthday" name="birthday"
-         pattern="\d{4}-\d{2}-\d{2}" placeholder="1978-11-22" required />
-</div>
+          <label for="birthday">Birth Date <small>(YYYY‑MM‑DD)</small></label>
+          <input type="text" id="birthday" name="birthday" pattern="\d{4}-\d{2}-\d{2}" placeholder="1978-11-22" required />
+        </div>
+      </div>
 
       <!-- Country -->
       <div class="card">
@@ -57,7 +58,6 @@
           <option value="Norway">Norway</option>
           <option value="United Kingdom">United Kingdom</option>
           <option value="United States">United States</option>
-          <!-- … galima įdėti visą sąrašą vėliau … -->
         </select>
       </div>
 
@@ -65,93 +65,72 @@
       <div class="card-group">
         <div class="card">
           <label for="height">Height (cm)</label>
-          <input type="number" id="height" name="height" min="0" required/>
+          <input type="number" id="height" name="height" min="0" required />
         </div>
         <div class="card">
           <label for="weight">Weight (kg)</label>
-          <input type="number" id="weight" name="weight" min="0" required/>
+          <input type="number" id="weight" name="weight" min="0" required />
         </div>
       </div>
 
       <!-- Connection -->
       <div class="card">
         <label>Type of Connection</label>
-      <div>
-         <input type="radio" id="romantic" name="connectionType" value="Romantic" />
-         <label for="romantic">Romantic</label>
-
-         <input type="radio" id="friendship" name="connectionType" value="Friendship" />
-         <label for="friendship">Friendship</label>
-
-         <input type="radio" id="both" name="connectionType" value="Both" />
-         <label for="both">Both</label>
-     </div>
+        <div>
+          <input type="radio" id="romantic" name="connectionType" value="Romantic" />
+          <label for="romantic">Romantic</label>
+          <input type="radio" id="friendship" name="connectionType" value="Friendship" />
+          <label for="friendship">Friendship</label>
+          <input type="radio" id="both" name="connectionType" value="Both" />
+          <label for="both">Both</label>
+        </div>
+      </div>
 
       <!-- Love Language -->
-     <div class="card">
-  <label>Primary Love Language</label>
-  <div class="radio-group">
-    <label>
-      <input type="radio" name="loveLanguage" value="Words of Affirmation" required/>
-      Words of Affirmation
-      <span class="desc">– Kind, encouraging, and supportive words to express love.</span>
-    </label>
-    <label>
-      <input type="radio" name="loveLanguage" value="Acts of Service"/>
-      Acts of Service
-      <span class="desc">– Actions that help or ease your burden, showing love through effort.</span>
-    </label>
-    <label>
-      <input type="radio" name="loveLanguage" value="Receiving Gifts"/>
-      Receiving Gifts
-      <span class="desc">– Thoughtful gifts or gestures that show you were remembered.</span>
-    </label>
-    <label>
-      <input type="radio" name="loveLanguage" value="Quality Time"/>
-      Quality Time
-      <span class="desc">– Focused, undivided attention, deep conversations or shared moments.</span>
-    </label>
-    <label>
-      <input type="radio" name="loveLanguage" value="Physical Touch"/>
-      Physical Touch
-      <span class="desc">– Hugs, hand-holding, cuddles or gentle touches that express love.</span>
-    </label>
-  </div>
+      <div class="card">
+        <label>Primary Love Language</label>
+        <div class="radio-group">
+          <label><input type="radio" name="loveLanguage" value="Words of Affirmation" required />Words of Affirmation <span class="desc">– Kind, encouraging, and supportive words to express love.</span></label>
+          <label><input type="radio" name="loveLanguage" value="Acts of Service" />Acts of Service <span class="desc">– Actions that help or ease your burden, showing love through effort.</span></label>
+          <label><input type="radio" name="loveLanguage" value="Receiving Gifts" />Receiving Gifts <span class="desc">– Thoughtful gifts or gestures that show you were remembered.</span></label>
+          <label><input type="radio" name="loveLanguage" value="Quality Time" />Quality Time <span class="desc">– Focused, undivided attention, deep conversations or shared moments.</span></label>
+          <label><input type="radio" name="loveLanguage" value="Physical Touch" />Physical Touch <span class="desc">– Hugs, hand-holding, cuddles or gentle touches that express love.</span></label>
+        </div>
       </div>
 
       <!-- Hobbies -->
       <div class="card">
-  <label>Select Your Hobbies</label>
-  <div class="inline-group">
-    <label><input type="checkbox" name="hobbies" value="Music"/> Music</label>
-    <label><input type="checkbox" name="hobbies" value="Traveling"/> Traveling</label>
-    <label><input type="checkbox" name="hobbies" value="Cooking"/> Cooking</label>
-    <label><input type="checkbox" name="hobbies" value="Art"/> Art</label>
-    <label><input type="checkbox" name="hobbies" value="Sports"/> Sports</label>
-    <label><input type="checkbox" name="hobbies" value="Reading"/> Reading</label>
-    <label><input type="checkbox" name="hobbies" value="Dancing"/> Dancing</label>
-    <label><input type="checkbox" name="hobbies" value="Meditation"/> Meditation</label>
-    <label><input type="checkbox" name="hobbies" value="Nature Walks"/> Nature Walks</label>
-    <label><input type="checkbox" name="hobbies" value="Gaming"/> Gaming</label>
-  </div>
-</div>
+        <label>Select Your Hobbies</label>
+        <div class="inline-group">
+          <label><input type="checkbox" name="hobbies" value="Music" /> Music</label>
+          <label><input type="checkbox" name="hobbies" value="Traveling" /> Traveling</label>
+          <label><input type="checkbox" name="hobbies" value="Cooking" /> Cooking</label>
+          <label><input type="checkbox" name="hobbies" value="Art" /> Art</label>
+          <label><input type="checkbox" name="hobbies" value="Sports" /> Sports</label>
+          <label><input type="checkbox" name="hobbies" value="Reading" /> Reading</label>
+          <label><input type="checkbox" name="hobbies" value="Dancing" /> Dancing</label>
+          <label><input type="checkbox" name="hobbies" value="Meditation" /> Meditation</label>
+          <label><input type="checkbox" name="hobbies" value="Nature Walks" /> Nature Walks</label>
+          <label><input type="checkbox" name="hobbies" value="Gaming" /> Gaming</label>
+        </div>
+      </div>
 
       <!-- Values -->
       <div class="card">
-  <label>Values Most Important to You</label>
-  <div class="inline-group">
-    <label><input type="checkbox" name="values" value="Honesty"/> Honesty</label>
-    <label><input type="checkbox" name="values" value="Growth"/> Growth</label>
-    <label><input type="checkbox" name="values" value="Freedom"/> Freedom</label>
-    <label><input type="checkbox" name="values" value="Loyalty"/> Loyalty</label>
-    <label><input type="checkbox" name="values" value="Kindness"/> Kindness</label>
-    <label><input type="checkbox" name="values" value="Creativity"/> Creativity</label>
-    <label><input type="checkbox" name="values" value="Spirituality"/> Spirituality</label>
-    <label><input type="checkbox" name="values" value="Adventure"/> Adventure</label>
-    <label><input type="checkbox" name="values" value="Empathy"/> Empathy</label>
-    <label><input type="checkbox" name="values" value="Balance"/> Balance</label>
-  </div>
-</div>
+        <label>Values Most Important to You</label>
+        <div class="inline-group">
+          <label><input type="checkbox" name="values" value="Honesty" /> Honesty</label>
+          <label><input type="checkbox" name="values" value="Growth" /> Growth</label>
+          <label><input type="checkbox" name="values" value="Freedom" /> Freedom</label>
+          <label><input type="checkbox" name="values" value="Loyalty" /> Loyalty</label>
+          <label><input type="checkbox" name="values" value="Kindness" /> Kindness</label>
+          <label><input type="checkbox" name="values" value="Creativity" /> Creativity</label>
+          <label><input type="checkbox" name="values" value="Spirituality" /> Spirituality</label>
+          <label><input type="checkbox" name="values" value="Adventure" /> Adventure</label>
+          <label><input type="checkbox" name="values" value="Empathy" /> Empathy</label>
+          <label><input type="checkbox" name="values" value="Balance" /> Balance</label>
+        </div>
+      </div>
 
       <!-- Unacceptable & About Me -->
       <div class="card">
@@ -165,10 +144,10 @@
 
       <!-- Submit -->
       <button type="submit" class="btn-submit">
-        Edit Profile <i class="bi bi-arrow-right-circle"></i>
+        Save My Soul <i class="bi bi-arrow-right-circle"></i>
       </button>
-    </form></form>
-</main>
+    </form>
+  </main>
 
   <footer class="site-footer">© 2025 soulink.global</footer>
 
