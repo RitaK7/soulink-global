@@ -27,38 +27,33 @@ function getLifePathNumber(dateStr) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("quizForm");
+  const form = document.getElementById("profile-form");
+
+  if (!form) {
+    console.error("Form not found!");
+    return;
+  }
+
   form.addEventListener("submit", function(e) {
     e.preventDefault();
 
-    const birthday = form.birthday.value.trim();
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(birthday)) {
-      alert("Please enter the birth date in the correct format: YYYY-MM-DD");
-      return;
-    }
-
     const data = {
-      name: form.name.value,
-      birthday: birthday,
-      country: form.country.value,
-      height: form.height.value,
-      weight: form.weight.value,
-      bio: form.bio.value,
-      unacceptable: form.unacceptable.value,
+      name: form.querySelector("#name")?.value || "",
+      birthday: form.querySelector("#birthday")?.value || "",
+      country: form.querySelector("#country")?.value || "",
+      height: form.querySelector("#height")?.value || "",
+      weight: form.querySelector("#weight")?.value || "",
+      bio: form.querySelector("#bio")?.value || "",
+      unacceptable: form.querySelector("#unacceptable")?.value || "",
       connectionType: form.querySelector("input[name='connectionType']:checked")?.value || "",
       loveLanguage: form.querySelector("input[name='loveLanguage']:checked")?.value || "",
       hobbies: Array.from(form.querySelectorAll("input[name='hobbies']:checked")).map(cb => cb.value),
-      values: Array.from(form.querySelectorAll("input[name='values']:checked")).map(cb => cb.value),
-      gender: form.gender?.value || "",
-      mantra: form.mantra?.value || "",
-      spiritualBelief: form.spiritual?.value || "",
-      matchPreference: form.matchPreference?.value || ""
+      values: Array.from(form.querySelectorAll("input[name='values']:checked")).map(cb => cb.value)
     };
 
-    data.westernZodiac = getWesternZodiac(birthday);
-    data.chineseZodiac = getChineseZodiac(birthday);
-    data.lifePathNumber = getLifePathNumber(birthday);
+    data.westernZodiac = getWesternZodiac(data.birthday);
+    data.chineseZodiac = getChineseZodiac(data.birthday);
+    data.lifePathNumber = getLifePathNumber(data.birthday);
 
     localStorage.setItem("soulQuiz", JSON.stringify(data));
     window.location.href = "my-soul.html";
