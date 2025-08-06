@@ -1,3 +1,5 @@
+// quiz.js – corrected and aligned with latest quiz.html
+
 function getWesternZodiac(dateStr) {
   const date = new Date(dateStr);
   const day = date.getDate();
@@ -12,7 +14,7 @@ function getWesternZodiac(dateStr) {
 
 function getChineseZodiac(dateStr) {
   const year = new Date(dateStr).getFullYear();
-  const animals = ["Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", 
+  const animals = ["Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse",
                    "Goat", "Monkey", "Rooster", "Dog", "Pig"];
   return animals[year % 12];
 }
@@ -27,8 +29,7 @@ function getLifePathNumber(dateStr) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("profile-form");
-
+  const form = document.getElementById("quizForm");
   if (!form) {
     console.error("Form not found!");
     return;
@@ -38,13 +39,13 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
 
     const data = {
-      name: form.querySelector("#name")?.value || "",
-      birthday: form.querySelector("#birthday")?.value || "",
-      country: form.querySelector("#country")?.value || "",
-      height: form.querySelector("#height")?.value || "",
-      weight: form.querySelector("#weight")?.value || "",
-      bio: form.querySelector("#bio")?.value || "",
-      unacceptable: form.querySelector("#unacceptable")?.value || "",
+      name: form.name.value,
+      birthday: form.birthday.value,
+      country: form.country.value,
+      height: form.height.value,
+      weight: form.weight.value,
+      bio: form.about.value,
+      unacceptable: form.unacceptable.value,
       connectionType: form.querySelector("input[name='connectionType']:checked")?.value || "",
       loveLanguage: form.querySelector("input[name='loveLanguage']:checked")?.value || "",
       hobbies: Array.from(form.querySelectorAll("input[name='hobbies']:checked")).map(cb => cb.value),
