@@ -14,25 +14,21 @@
       margin: 0;
       padding: 0;
     }
-
     header {
       text-align: center;
       background: #002f36;
       padding: 20px;
       box-shadow: 0 2px 10px rgba(0, 253, 216, 0.3);
     }
-
     header h1 {
       color: #00fdd8;
       font-size: 2em;
     }
-
     .container {
       max-width: 900px;
       margin: 30px auto;
       padding: 20px;
     }
-
     .card {
       background-color: #004d4d;
       border-radius: 20px;
@@ -40,18 +36,15 @@
       margin-bottom: 20px;
       box-shadow: 0 0 15px rgba(0, 253, 216, 0.2);
     }
-
     .card h2 {
       margin-top: 0;
       color: #00fdd8;
       font-size: 1.5em;
     }
-
     .value {
       margin-top: 10px;
       font-size: 1.1em;
     }
-
     img.profile-photo {
       width: 100%;
       max-width: 180px;
@@ -59,13 +52,11 @@
       margin-bottom: 10px;
       box-shadow: 0 0 10px #00fdd8;
     }
-
     .photos {
       display: flex;
       flex-wrap: wrap;
       gap: 20px;
     }
-
     footer {
       text-align: center;
       padding: 20px;
@@ -77,36 +68,43 @@
 </head>
 <body>
   <header>
-    <h1>My Soul Profile</h1>
+    <h1>🌟 My Soul Profile</h1>
   </header>
 
   <div class="container">
     <div class="card">
-      <h2>Basic Info</h2>
+      <h2>🌈 Basic Info</h2>
       <div class="value"><strong>Name:</strong> <span id="name"></span></div>
       <div class="value"><strong>Birthday:</strong> <span id="birthday"></span></div>
+      <div class="value"><strong>Life Path Number:</strong> <span id="lifePath"></span></div>
       <div class="value"><strong>Connection Type:</strong> <span id="connectionType"></span></div>
       <div class="value"><strong>Love Language:</strong> <span id="loveLanguage"></span></div>
     </div>
 
     <div class="card">
-      <h2>Values & Hobbies</h2>
+      <h2>🧙‍♀️ Astrological Insights</h2>
+      <div class="value"><strong>Zodiac Sign:</strong> <span id="zodiacSign">♐ Sagittarius</span></div>
+      <div class="value"><strong>Chinese Zodiac:</strong> <span id="chineseZodiac"></span></div>
+    </div>
+
+    <div class="card">
+      <h2>🎯 Values & Hobbies</h2>
       <div class="value"><strong>Core Values:</strong> <span id="values"></span></div>
       <div class="value"><strong>Hobbies:</strong> <span id="hobbies"></span></div>
     </div>
 
     <div class="card">
-      <h2>About</h2>
+      <h2>🧘 About Me</h2>
       <div class="value" id="about"></div>
     </div>
 
     <div class="card">
-      <h2>Unacceptable Behavior</h2>
+      <h2>🚫 Unacceptable Behavior</h2>
       <div class="value" id="unacceptable"></div>
     </div>
 
     <div class="card">
-      <h2>Photos</h2>
+      <h2>📸 Photos</h2>
       <div class="photos">
         <img id="photo1" class="profile-photo" alt="Photo 1" />
         <img id="photo2" class="profile-photo" alt="Photo 2" />
@@ -116,7 +114,7 @@
   </div>
 
   <footer>
-    © 2025 Soulink.global | Made with love & ChatGPT assistance 🐰✨
+    © 2025 Soulink.global | Created with 💚 and ChatGPT 🐰✨
   </footer>
 
   <script src="my-soul.js"></script>
