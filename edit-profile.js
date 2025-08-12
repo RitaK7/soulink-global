@@ -1,82 +1,91 @@
+// edit-profile.js — Soulink (golden)
+// Full load/save to localStorage 'soulQuiz' + 3 photo previews + Remove buttons.
 
-// Unified Edit Profile Controller – uses localStorage key 'soulQuiz'
-document.addEventListener('DOMContentLoaded', () => {
-  const KEY = 'soulQuiz';
-  const form = document.getElementById('profile-form') || document.querySelector('form');
+document.addEventListener("DOMContentLoaded", () => {
+  const KEY = "soulQuiz";
+  const form = document.getElementById("profile-form");
 
-  // Fields we care about (ids should exist in edit-profile.html)
-  const textFields = ['name','birthday','country','about','unacceptable','height','weight','mantra'];
-  const radios = ['connectionType','loveLanguage','gender','matchPreference'];
-  const checkboxGroups = ['hobbies','values','spiritualBeliefs'];
-  const photoIds = ['profilePhoto1','profilePhoto2','profilePhoto3'];
+  // --- helpers
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const getEl = (id) => document.getElementById(id);
 
-  function safeParse(v){ try { return JSON.parse(v) || {}; } catch { return {}; } }
-  function loadData(){ return safeParse(localStorage.getItem(KEY)); }
-  function saveData(obj){ localStorage.setItem(KEY, JSON.stringify(obj)); }
+  function safeParse(v) {
+    try { return JSON.parse(v) || {}; } catch { return {}; }
+  }
+  function loadData() { return safeParse(localStorage.getItem(KEY)); }
+  function saveData(obj) { localStorage.setItem(KEY, JSON.stringify(obj)); }
 
-  function setValue(id, value){
-    const el = document.getElementById(id);
-    if(!el) return;
-    if(el.tagName === 'SELECT' || el.tagName === 'TEXTAREA' || el.type === 'text' || el.type === 'number'){
-      el.value = value ?? '';
+  function setValue(id, value) {
+    const el = getEl(id);
+    if (!el) return;
+    if (el.tagName === "SELECT" || el.tagName === "TEXTAREA" || el.type === "text" || el.type === "number") {
+      el.value = value ?? "";
+    }
+  }
+  function getValue(id) {
+    const el = getEl(id);
+    if (!el) return "";
+    return el.type === "number" ? (el.value ? Number(el.value) : "") : (el.value || "");
+  }
+
+  function setRadios(name, value) {
+    const nodes = $$(`input[type="radio"][name="${name}"], input[type="radio"][name="${name}[]"]`);
+    nodes.forEach(n => n.checked = (String(n.value) === String(value)));
+  }
+  function getRadios(name) {
+    return ($(`input[type="radio"][name="${name}"]:checked`) || $(`input[type="radio"][name="${name}[]"]:checked`))?.value || "";
+  }
+
+  function setChecks(name, values) {
+    const set = new Set(Array.isArray(values) ? values.map(String) : []);
+    const nodes = $$(`input[type="checkbox"][name="${name}"], input[type="checkbox"][name="${name}[]"]`);
+    nodes.forEach(n => n.checked = set.has(String(n.value)));
+  }
+  function getChecks(name) {
+    return $$(`input[type="checkbox"][name="${name}"]:checked, input[type="checkbox"][name="${name}[]"]:checked`)
+      .map(n => n.value);
+  }
+
+  function setPhotoPreview(id, dataUrl) {
+    const img = getEl(id + "-preview");
+    if (!img) return;
+    if (dataUrl) {
+      img.src = dataUrl;
+      img.style.display = "block";
+    } else {
+      img.removeAttribute("src");
+      img.style.display = "none";
     }
   }
 
-  function setRadios(name, value){
-    const nodes = document.querySelectorAll(`input[name="${name}"]`);
-    nodes.forEach(n => { n.checked = (n.value === String(value)); });
-  }
-
-  function setChecks(name, values){
-    const nodes = document.querySelectorAll(`input[name="${name}"]`);
-    const set = new Set(Array.isArray(values) ? values.map(String) : []);
-    nodes.forEach(n => { n.checked = set.has(n.value); });
-  }
-
-  function getValue(id){
-    const el = document.getElementById(id);
-    if(!el) return undefined;
-    return (el.type === 'number') ? (el.value ? Number(el.value) : '') : el.value;
-  }
-
-  function getRadios(name){
-    const checked = document.querySelector(`input[name="${name}"]:checked`);
-    return checked ? checked.value : '';
-  }
-
-  function getChecks(name){
-    return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(n=>n.value);
-  }
-
-  // Image handling – store base64 in localStorage
-  function setPhotoPreview(id, dataUrl){
-    const img = document.getElementById(id + '-preview');
-    if(img && dataUrl){ img.src = dataUrl; img.style.display = 'block'; }
-  }
-
-  // Load existing data
+  // --- load existing data
   const data = loadData();
 
-  // Text/selects
-  textFields.forEach(id => setValue(id, data[id]));
-  // Radios
-  radios.forEach(name => setRadios(name, data[name]));
-  // Checkboxes
-  checkboxGroups.forEach(name => setChecks(name, data[name]));
+  // text inputs
+  ["name", "birthday", "unacceptable", "about"].forEach(id => setValue(id, data[id]));
 
-  // Photos
-  photoIds.forEach(pid => { if(data[pid]) setPhotoPreview(pid, data[pid]); });
+  // radios / checkboxes
+  setRadios("connectionType", data.connectionType);
+  setRadios("loveLanguage", data.loveLanguage);
+  setChecks("hobbies", data.hobbies);
+  setChecks("values", data.values);
 
-  // Bind photo inputs
-  photoIds.forEach(pid => {
-    const input = document.getElementById(pid);
-    if(!input) return;
-    input.addEventListener('change', (e)=>{
+  // photos
+  ["profilePhoto1", "profilePhoto2", "profilePhoto3"].forEach(pid => {
+    if (data[pid]) setPhotoPreview(pid, data[pid]);
+  });
+
+  // bind photo inputs
+  ["profilePhoto1", "profilePhoto2", "profilePhoto3"].forEach(pid => {
+    const input = getEl(pid);
+    if (!input) return;
+    input.addEventListener("change", (e) => {
       const file = e.target.files && e.target.files[0];
-      if(!file) return;
+      if (!file) return;
       const reader = new FileReader();
-      reader.onload = (ev)=>{
-        data[pid] = ev.target.result;
+      reader.onload = (ev) => {
+        data[pid] = ev.target.result; // base64
         setPhotoPreview(pid, data[pid]);
         saveData(data);
       };
@@ -84,18 +93,60 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Save button
-  const saveBtn = document.getElementById('saveProfile') || document.querySelector('[data-action="save-profile"]');
-  if(saveBtn){
-    saveBtn.addEventListener('click', (e)=>{
-      e.preventDefault();
-      // collect
-      textFields.forEach(id => data[id] = getValue(id));
-      radios.forEach(name => data[name] = getRadios(name));
-      checkboxGroups.forEach(name => data[name] = getChecks(name));
+  // remove buttons
+  $$('[data-remove]').forEach(btn => {
+    btn.addEventListener("click", () => {
+      const pid = btn.getAttribute("data-remove");
+      if (!pid) return;
+      data[pid] = "";
+      const input = getEl(pid);
+      if (input) input.value = "";
+      setPhotoPreview(pid, "");
       saveData(data);
-      const msg = document.getElementById('saveMessage');
-      if(msg){ msg.textContent = 'Saved ✓'; msg.style.opacity = '1'; setTimeout(()=> msg.style.opacity='0', 1600); }
+    });
+  });
+
+  // save button
+  const saveBtn = getEl("saveProfile");
+  const msg = getEl("saveMessage");
+  if (saveBtn) {
+    saveBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      // collect all fields
+      const payload = {
+        name: getValue("name"),
+        birthday: getValue("birthday"),
+        unacceptable: getValue("unacceptable"),
+        about: getValue("about"),
+        connectionType: getRadios("connectionType"),
+        loveLanguage: getRadios("loveLanguage"),
+        hobbies: getChecks("hobbies"),
+        values: getChecks("values")
+      };
+      // merge + save
+      const merged = { ...loadData(), ...payload,
+        profilePhoto1: data.profilePhoto1 || "",
+        profilePhoto2: data.profilePhoto2 || "",
+        profilePhoto3: data.profilePhoto3 || ""
+      };
+      saveData(merged);
+      if (msg) { msg.textContent = "Saved ✓"; msg.style.opacity = "1"; setTimeout(()=> msg.style.opacity="0", 1600); }
+    });
+  }
+
+  // reset button
+  const resetBtn = getEl("resetProfile");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      form.reset();
+      ["profilePhoto1","profilePhoto2","profilePhoto3"].forEach(pid=>{
+        const input = getEl(pid); if (input) input.value="";
+        setPhotoPreview(pid, "");
+        data[pid] = "";
+      });
+      saveData({}); // clear all
+      if (msg) { msg.textContent = "Reset ✓"; msg.style.opacity = "1"; setTimeout(()=> msg.style.opacity="0", 1600); }
     });
   }
 });
