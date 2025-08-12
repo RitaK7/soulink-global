@@ -130,7 +130,9 @@ document.addEventListener("DOMContentLoaded", () => {
         profilePhoto3: data.profilePhoto3 || ""
       };
       saveData(merged);
-      if (msg) { msg.textContent = "Saved ✓"; msg.style.opacity = "1"; setTimeout(()=> msg.style.opacity="0", 1600); }
+     if (msg) { msg.textContent = "Saved ✓"; msg.style.opacity = "1"; setTimeout(()=> msg.style.opacity="0", 1600); }
+     // redirect after save:
+    window.location.href = "my-soul.html";
     });
   }
 
