@@ -65,9 +65,24 @@ nav.navbar a:hover { box-shadow:0 0 10px rgba(0,253,216,0.45), inset 0 0 12px rg
 <label for="name">Name</label>
 <input id="name" name="name" required="" type="text"/>
 </div>
-<div class="card">
-<label for="birthday">Birth Date <small>(YYYY‑MM‑DD)</small></label>
-<input id="birthday" name="birthday" pattern="\\d{4}-\\d{2}-\\d{2}" placeholder="1978-11-22" required="" type="text"/>
+<!-- Birth Date -->
+<div class="field-group">
+  <label for="birthday">Birth Date (YYYY-MM-DD)</label>
+  <input
+    id="birthday"
+    name="birthday"
+    type="text"
+    placeholder="YYYY-MM-DD"
+    inputmode="numeric"
+    autocomplete="bday"
+    minlength="10"
+    maxlength="10"
+    pattern="\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])"
+    aria-describedby="birthday-hint"
+    oninput="this.setCustomValidity('')"
+    oninvalid="this.setCustomValidity('Please use YYYY-MM-DD (e.g., 1972-11-22)')"
+  />
+  <small id="birthday-hint">Example: 1972-11-22</small>
 </div>
 <!-- Country -->
 <div class="card">

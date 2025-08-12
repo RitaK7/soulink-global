@@ -1,88 +1,226 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("quizForm");
+// quiz.js — Soulink (golden)
+// Loads/saves the quiz form to localStorage key "soulQuiz"
+// Birthdate is a free-text YYYY-MM-DD field with regex validation.
 
-  // Auto-fill from localStorage
-  const saved = JSON.parse(localStorage.getItem("soulQuiz") || "{}");
+(function () {
+  const KEY = "soulQuiz";
+  const DATE_RE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 
-  for (const [key, value] of Object.entries(saved)) {
-    const field = form.elements[key];
+  // Form + fields
+  const form =
+    document.getElementById("quizForm") ||
+    document.getElementById("quiz-form") ||
+    document.querySelector("form");
 
-    if (!field) {
-      const radios = form.querySelectorAll(`[name="${key}"]`);
-      if (radios.length && typeof value === "string") {
-        const radio = form.querySelector(`[name="${key}"][value="${value}"]`);
-        if (radio) radio.checked = true;
-      }
-      const checkboxes = form.querySelectorAll(`[name="${key}[]"]`);
-      if (checkboxes.length && Array.isArray(value)) {
-        value.forEach(val => {
-          const checkbox = form.querySelector(`[name="${key}[]"][value="${val}"]`);
-          if (checkbox) checkbox.checked = true;
-        });
-      }
-      continue;
-    }
+  if (!form) {
+    console.warn("quiz.js: form not found.");
+    return;
+  }
 
-    if (Array.isArray(value)) {
-      value.forEach(val => {
-        const checkbox = form.querySelector(`[name="${key}"][value="${val}"]`);
-        if (checkbox) checkbox.checked = true;
-      });
-    } else if (field.type === "radio") {
-      const radio = form.querySelector(`[name="${key}"][value="${value}"]`);
-      if (radio) radio.checked = true;
-    } else {
-      field.value = value;
+  // Helpers
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+  const getEl = (id) => document.getElementById(id);
+
+  function safeParse(v) {
+    try {
+      return JSON.parse(v) || {};
+    } catch {
+      return {};
     }
   }
 
+  function loadData() {
+    return safeParse(localStorage.getItem(KEY));
+  }
+
+  function saveData(obj) {
+    localStorage.setItem(KEY, JSON.stringify(obj));
+  }
+
+  function setInputValue(id, val) {
+    const el = getEl(id);
+    if (!el) return;
+    if (
+      el.tagName === "SELECT" ||
+      el.tagName === "TEXTAREA" ||
+      el.type === "text" ||
+      el.type === "number"
+    ) {
+      el.value = val ?? "";
+    }
+  }
+
+  function setRadio(name, value) {
+    // Support both name="hobbies" and name="hobbies[]"
+    const nodes = $$(`input[type="radio"][name="${name}"], input[type="radio"][name="${name}[]"]`);
+    nodes.forEach((n) => (n.checked = String(n.value) === String(value)));
+  }
+
+  function setChecks(name, values) {
+    const set = new Set(Array.isArray(values) ? values.map(String) : []);
+    const nodes = $$(
+      `input[type="checkbox"][name="${name}"], input[type="checkbox"][name="${name}[]"]`
+    );
+    nodes.forEach((n) => (n.checked = set.has(String(n.value))));
+  }
+
+  function getInputValue(id) {
+    const el = getEl(id);
+    if (!el) return "";
+    if (el.type === "number") return el.value ? Number(el.value) : "";
+    return (el.value || "").trim();
+  }
+
+  function getRadio(name) {
+    const node =
+      $(`input[type="radio"][name="${name}"]:checked`) ||
+      $(`input[type="radio"][name="${name}[]"]:checked`);
+    return node ? node.value : "";
+  }
+
+  function getChecks(name) {
+    return $$(
+      `input[type="checkbox"][name="${name}"]:checked, input[type="checkbox"][name="${name}[]"]:checked`
+    ).map((n) => n.value);
+  }
+
+  function optionExists(select, value) {
+    return Array.from(select.options).some((o) => String(o.value) === String(value));
+  }
+
+  // ----- Load existing data into the form
+  const data = loadData();
+
+  // Basic text/number fields present on the quiz
+  const textFields = ["name", "birthday", "country", "height", "weight", "unacceptable", "about"];
+  textFields.forEach((id) => {
+    // Special handling for <select id="country">
+    if (id === "country") {
+      const sel = getEl("country");
+      if (sel && optionExists(sel, data.country)) sel.value = data.country;
+      return;
+    }
+    setInputValue(id, data[id]);
+  });
+
+  // Radios
+  setRadio("connectionType", data.connectionType);
+  setRadio("loveLanguage", data.loveLanguage);
+
+  // Checkbox groups (names may be "hobbies" / "hobbies[]", "values" / "values[]")
+  setChecks("hobbies", data.hobbies);
+  setChecks("values", data.values);
+
+  // Optional: clear native validation bubble on typing
+  const birthdayEl = getEl("birthday");
+  if (birthdayEl) {
+    birthdayEl.addEventListener("input", () => birthdayEl.setCustomValidity(""));
+  }
+
+  // ----- Submit/save handler
   form.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const data = {};
-    const formData = new FormData(form);
+    // Collect values
+    const payload = {
+      name: getInputValue("name"),
+      birthday: getInputValue("birthday"),
+      country: getInputValue("country"),
+      height: getInputValue("height"),
+      weight: getInputValue("weight"),
+      connectionType: getRadio("connectionType"),
+      loveLanguage: getRadio("loveLanguage"),
+      hobbies: getChecks("hobbies"),
+      values: getChecks("values"),
+      unacceptable: getInputValue("unacceptable"),
+      about: getInputValue("about"),
+    };
 
-    // Text fields
-    ["name", "birthdate", "country", "height", "weight", "unacceptable", "about"].forEach(key => {
-      data[key] = formData.get(key) || "";
-    });
-
-    // Radio buttons
-    data.connectionType = formData.get("connectionType") || "";
-    data.loveLanguage = formData.get("loveLanguage") || "";
-
-    // Checkboxes
-    data.hobbies = formData.getAll("hobbies");
-    data.values = formData.getAll("values");
-
-    // Zodiac auto-calc
-    if (data.birthdate) {
-      const birth = new Date(data.birthdate);
-      const month = birth.getMonth() + 1;
-      const day = birth.getDate();
-      const year = birth.getFullYear();
-
-      // Western Zodiac
-      const zodiacs = [
-        ["Capricorn", 1, 19], ["Aquarius", 2, 18], ["Pisces", 3, 20],
-        ["Aries", 4, 19], ["Taurus", 5, 20], ["Gemini", 6, 20],
-        ["Cancer", 7, 22], ["Leo", 8, 22], ["Virgo", 9, 22],
-        ["Libra", 10, 22], ["Scorpio", 11, 21], ["Sagittarius", 12, 21],
-        ["Capricorn", 12, 31]
-      ];
-      data.westernZodiac = zodiacs.find(([sign, m, d]) => (month === m && day <= d))?.[0] || "Capricorn";
-
-      // Chinese Zodiac
-      const signs = [
-        "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake",
-        "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"
-      ];
-      data.chineseZodiac = signs[year % 12];
+    // Basic validations
+    if (!payload.name) {
+      alert("Please enter your name.");
+      getEl("name")?.focus();
+      return;
     }
 
-    // Save and notify
-    localStorage.setItem("soulQuiz", JSON.stringify(data));
-    alert("✅ Duomenys išsaugoti!");
+    if (birthdayEl) {
+      const b = (payload.birthday || "").trim();
+      if (!DATE_RE.test(b)) {
+        birthdayEl.setCustomValidity("Please use YYYY-MM-DD (e.g., 1972-11-22)");
+        birthdayEl.reportValidity();
+        return;
+      }
+    }
+
+    if (!payload.connectionType) {
+      alert("Please select your connection type.");
+      return;
+    }
+
+    if (!payload.loveLanguage) {
+      alert("Please select your primary love language.");
+      return;
+    }
+
+    // Merge with existing (so we don't lose things saved elsewhere, e.g., photos)
+    const current = loadData();
+    const merged = { ...current, ...payload };
+
+    saveData(merged);
+
+    // Optional: visual confirmation
+    // alert("Saved ✓");
+
+    // Navigate to next page (matches your button label)
     window.location.href = "edit-profile.html";
   });
-});
+
+  // Optional autosave on change (comment out if you don't want it)
+  const autosave = (evt) => {
+    try {
+      // Reuse submit logic lightly without navigation
+      const temp = new Event("submit");
+      temp.preventDefault = () => {};
+      // Collect & merge
+      const current = loadData();
+      const p = {
+        name: getInputValue("name"),
+        birthday: getInputValue("birthday"),
+        country: getInputValue("country"),
+        height: getInputValue("height"),
+        weight: getInputValue("weight"),
+        connectionType: getRadio("connectionType"),
+        loveLanguage: getRadio("loveLanguage"),
+        hobbies: getChecks("hobbies"),
+        values: getChecks("values"),
+        unacceptable: getInputValue("unacceptable"),
+        about: getInputValue("about"),
+      };
+      localStorage.setItem(KEY, JSON.stringify({ ...current, ...p }));
+    } catch (e) {
+      console.warn("Autosave failed:", e);
+    }
+  };
+
+  // Attach autosave to key fields
+  [
+    "name",
+    "birthday",
+    "country",
+    "height",
+    "weight",
+    "unacceptable",
+    "about",
+  ].forEach((id) => getEl(id)?.addEventListener("change", autosave));
+  $$('input[name="connectionType"], input[name="connectionType[]"]').forEach((n) =>
+    n.addEventListener("change", autosave)
+  );
+  $$('input[name="loveLanguage"], input[name="loveLanguage[]"]').forEach((n) =>
+    n.addEventListener("change", autosave)
+  );
+  $$('input[name="hobbies"], input[name="hobbies[]"], input[name="values"], input[name="values[]"]').forEach(
+    (n) => n.addEventListener("change", autosave)
+  );
+})();
