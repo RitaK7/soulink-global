@@ -90,6 +90,7 @@
     "ms-weight": (data.weight || data.weight === 0) ? `${data.weight}` : "–",
     "ms-connection": data.connectionType || "–",
     "ms-loveLanguage": data.loveLanguage || "–",
+    "ms-loveLanguagePreview": data.loveLanguage || "–",
     "ms-hobbies": (Array.isArray(data.hobbies) && data.hobbies.length) ? data.hobbies.join(", ") : "–",
     "ms-values": (Array.isArray(data.values) && data.values.length) ? data.values.join(", ") : "–",
     "ms-unacceptable": data.unacceptable || "–",
