@@ -1,210 +1,205 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1.0" name="viewport"/>
-<title>Soulink – Soul Compatibility Quiz</title>
-<link href="favicon.ico" rel="icon" type="image/x-icon"/>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
-<link href="style.css" rel="stylesheet"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Soulink – Soul Compatibility Quiz</title>
+
+  <!-- Your global styles -->
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    /* Small, safe tweaks that won’t fight your theme */
+    .container { max-width: 980px; margin: 0 auto; padding: 2rem 1rem; }
+    .card { background: rgba(0, 90, 90, 0.35); border-radius: 14px; padding: 1.2rem; }
+    .field-group { margin: 1rem 0; }
+    .field-group label { display: block; margin-bottom: .35rem; }
+    .hint { display:inline-block; margin-left:.6rem; opacity:.8; font-size:.85rem; }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    @media (max-width: 720px){ .grid-2 { grid-template-columns:1fr; } }
+    .actions { display:flex; justify-content:flex-start; gap:.8rem; margin-top:1.2rem; }
+    .btn-primary { cursor:pointer; border:none; border-radius:999px; padding:.8rem 1.2rem; font-weight:600; }
+  </style>
 </head>
-<body><nav class="navbar" style="background:#002e30; box-shadow:0 0 12px rgba(0,253,216,0.25);">
-<div class="container" style="display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.8rem 1rem;">
-<a class="brand" href="index.html" style="font-weight:700; text-decoration:none; color:#00fdd8;">Soulink</a>
-<button aria-label="Toggle navigation" id="navToggle" style="background:transparent; border:1px solid #00fdd8; border-radius:10px; padding:.4rem .6rem; color:#00fdd8; display:none;">☰</button>
-<ul id="navMenu" style="list-style:none; display:flex; flex-wrap:wrap; gap:.6rem; margin:0; padding:0;">
-<li><a href="index.html">Home</a></li>
-<li><a href="quiz.html">Quiz</a></li>
-<li><a href="edit-profile.html">Edit Profile</a></li>
-<li><a href="my-soul.html">My Soul</a></li>
-<li><a href="soul-chart.html">Soul Chart</a></li>
-<li><a href="soul-coach.html">Soul Coach</a></li>
-<li><a href="result.html">Results</a></li>
-<li><a href="friends.html">Friends</a></li>
-<li><a href="beta-login.html">Log In</a></li>
-<li><a href="signup.html">Sign Up</a></li>
-</ul>
-</div>
-</nav>
-<script>
-// Minimal responsive toggle
-(function(){
-  const btn = document.getElementById('navToggle');
-  const menu = document.getElementById('navMenu');
-  function onResize(){
-    if(window.innerWidth<800){ btn.style.display='block'; menu.style.display='none'; }
-    else { btn.style.display='none'; menu.style.display='flex'; }
-  }
-  if(btn && menu){
-    btn.addEventListener('click', ()=>{
-      menu.style.display = (menu.style.display==='none' || !menu.style.display) ? 'flex' : 'none';
-    });
-    window.addEventListener('resize', onResize);
-    onResize();
-  }
-})();
-</script>
-<style>
-nav.navbar a { color:#dff; text-decoration:none; padding:.35rem .55rem; border-radius:10px; }
-nav.navbar a:hover { box-shadow:0 0 10px rgba(0,253,216,0.45), inset 0 0 12px rgba(0,253,216,0.15); }
-</style>
-<!-- NAVBAR -->
-<header class="main-nav">
-<div class="logo">Soulink</div>
-<button class="nav-toggle" id="navToggle"><i class="bi bi-list"></i></button>
+<body>
 
-</header>
-<!-- QUIZ FORM -->
-<main class="container">
-<form id="quizForm"><h1>🌈 Soul Compatibility Quiz</h1>
-<form id="quizForm">
-<!-- Basic Info -->
-<div class="card-group">
-<div class="card">
-<label for="name">Name</label>
-<input id="name" name="name" required="" type="text"/>
-</div>
-<!-- Birth Date -->
-<div class="field-group">
-  <label for="birthday">Birth Date (YYYY-MM-DD)</label>
-  <input
-    id="birthday"
-    name="birthday"
-    type="text"
-    placeholder="YYYY-MM-DD"
-    inputmode="numeric"
-    autocomplete="bday"
-    minlength="10"
-    maxlength="10"
-    pattern="\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])"
-    aria-describedby="birthday-hint"
-    oninput="this.setCustomValidity('')"
-    oninvalid="this.setCustomValidity('Please use YYYY-MM-DD (e.g., 1972-11-22)')"
-  />
-  <small id="birthday-hint">Example: 1972-11-22</small>
-</div>
-<!-- Country -->
-<div class="card">
-<label for="country">Country</label>
-<select id="country" name="country" required="">
-<option value="">— Select your country —</option>
-<option value="Lithuania">Lithuania</option>
-<option value="Norway">Norway</option>
-<option value="United Kingdom">United Kingdom</option>
-<option value="United States">United States</option>
-<!-- … galima įdėti visą sąrašą vėliau … -->
-</select>
-</div>
-<!-- Height & Weight -->
-<div class="card-group">
-<div class="card">
-<label for="height">Height (cm)</label>
-<input id="height" min="0" name="height" required="" type="number"/>
-</div>
-<div class="card">
-<label for="weight">Weight (kg)</label>
-<input id="weight" min="0" name="weight" required="" type="number"/>
-</div>
-</div>
-<!-- Connection -->
-<div class="card">
-<label>Type of Connection</label>
-<div>
-<input id="romantic" name="connectionType" type="radio" value="Romantic"/>
-<label for="romantic">Romantic</label>
-<input id="friendship" name="connectionType" type="radio" value="Friendship"/>
-<label for="friendship">Friendship</label>
-<input id="both" name="connectionType" type="radio" value="Both"/>
-<label for="both">Both</label>
-</div>
-<!-- Love Language -->
-<div class="card">
-<label>Primary Love Language</label>
-<div class="radio-group">
-<label>
-<input name="loveLanguage" required="" type="radio" value="Words of Affirmation"/>
-      Words of Affirmation
-      <span class="desc">– Kind, encouraging, and supportive words to express love.</span>
-</label>
-<label>
-<input name="loveLanguage" type="radio" value="Acts of Service"/>
-      Acts of Service
-      <span class="desc">– Actions that help or ease your burden, showing love through effort.</span>
-</label>
-<label>
-<input name="loveLanguage" type="radio" value="Receiving Gifts"/>
-      Receiving Gifts
-      <span class="desc">– Thoughtful gifts or gestures that show you were remembered.</span>
-</label>
-<label>
-<input name="loveLanguage" type="radio" value="Quality Time"/>
-      Quality Time
-      <span class="desc">– Focused, undivided attention, deep conversations or shared moments.</span>
-</label>
-<label>
-<input name="loveLanguage" type="radio" value="Physical Touch"/>
-      Physical Touch
-      <span class="desc">– Hugs, hand-holding, cuddles or gentle touches that express love.</span>
-</label>
-</div>
-</div>
-<!-- Hobbies -->
-<div class="card">
-<label>Select Your Hobbies</label>
-<div class="inline-group">
-<label><input name="hobbies" type="checkbox" value="Music"/> Music</label>
-<label><input name="hobbies" type="checkbox" value="Traveling"/> Traveling</label>
-<label><input name="hobbies" type="checkbox" value="Cooking"/> Cooking</label>
-<label><input name="hobbies" type="checkbox" value="Art"/> Art</label>
-<label><input name="hobbies" type="checkbox" value="Sports"/> Sports</label>
-<label><input name="hobbies" type="checkbox" value="Reading"/> Reading</label>
-<label><input name="hobbies" type="checkbox" value="Dancing"/> Dancing</label>
-<label><input name="hobbies" type="checkbox" value="Meditation"/> Meditation</label>
-<label><input name="hobbies" type="checkbox" value="Nature Walks"/> Nature Walks</label>
-<label><input name="hobbies" type="checkbox" value="Gaming"/> Gaming</label>
-</div>
-</div>
-<!-- Values -->
-<div class="card">
-<label>Values Most Important to You</label>
-<div class="inline-group">
-<label><input name="values" type="checkbox" value="Honesty"/> Honesty</label>
-<label><input name="values" type="checkbox" value="Growth"/> Growth</label>
-<label><input name="values" type="checkbox" value="Freedom"/> Freedom</label>
-<label><input name="values" type="checkbox" value="Loyalty"/> Loyalty</label>
-<label><input name="values" type="checkbox" value="Kindness"/> Kindness</label>
-<label><input name="values" type="checkbox" value="Creativity"/> Creativity</label>
-<label><input name="values" type="checkbox" value="Spirituality"/> Spirituality</label>
-<label><input name="values" type="checkbox" value="Adventure"/> Adventure</label>
-<label><input name="values" type="checkbox" value="Empathy"/> Empathy</label>
-<label><input name="values" type="checkbox" value="Balance"/> Balance</label>
-</div>
-</div>
-<!-- Unacceptable & About Me -->
-<div class="card">
-<label for="unacceptable">Unacceptable Behavior</label>
-<textarea id="unacceptable" name="unacceptable" required="" rows="2"></textarea>
-</div>
-<div class="card">
-<label for="about">About Me</label>
-<textarea id="about" name="about" required="" rows="4"></textarea>
-</div>
-<!-- Submit -->
-<button class="btn-submit" type="submit">
-        Edit Profile <i class="bi bi-arrow-right-circle"></i>
-</button>
-</div></div></form></form>
-</main>
-
-<script defer="" src="quiz.js"></script>
-<script>
-    document.getElementById('navToggle').onclick = () => {
-      document.querySelector('.nav-links')?.classList.toggle('open');
-      document.querySelector('.auth-buttons')?.classList.toggle('open');
-    };
+  <!-- Unified navbar (matches merged version) -->
+  <nav class="navbar" style="background:#002e30; box-shadow:0 0 12px rgba(0,253,216,0.25);">
+    <div class="container" style="display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.8rem 1rem;">
+      <a href="index.html" class="brand" style="font-weight:700; text-decoration:none; color:#00fdd8;">Soulink</a>
+      <button id="navToggle" aria-label="Toggle navigation" style="background:transparent; border:1px solid #00fdd8; border-radius:10px; padding:.4rem .6rem; color:#00fdd8; display:none;">☰</button>
+      <ul id="navMenu" style="list-style:none; display:flex; flex-wrap:wrap; gap:.6rem; margin:0; padding:0;">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="quiz.html">Quiz</a></li>
+        <li><a href="edit-profile.html">Edit Profile</a></li>
+        <li><a href="my-soul.html">My Soul</a></li>
+        <li><a href="soul-chart.html">Soul Chart</a></li>
+        <li><a href="soul-coach.html">Soul Coach</a></li>
+        <li><a href="result.html">Results</a></li>
+        <li><a href="friends.html">Friends</a></li>
+        <li><a href="beta-login.html">Log In</a></li>
+        <li><a href="signup.html">Sign Up</a></li>
+      </ul>
+    </div>
+  </nav>
+  <script>
+    (function(){
+      const btn = document.getElementById('navToggle');
+      const menu = document.getElementById('navMenu');
+      function onResize(){
+        if(window.innerWidth<800){ btn.style.display='block'; menu.style.display='none'; }
+        else { btn.style.display='none'; menu.style.display='flex'; }
+      }
+      if(btn && menu){
+        btn.addEventListener('click', ()=>{ menu.style.display = (menu.style.display==='none'||!menu.style.display)?'flex':'none'; });
+        window.addEventListener('resize', onResize); onResize();
+      }
+    })();
   </script>
-<footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
-  © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
-</footer></body>
+
+  <main class="container">
+    <h1 style="color:#dff; margin: 0 0 1rem;">🌈 Soul Compatibility Quiz</h1>
+
+    <form id="quizForm" class="card" novalidate>
+      <!-- Name -->
+      <div class="field-group">
+        <label for="name">Name</label>
+        <input id="name" name="name" type="text" placeholder="Your name" required />
+      </div>
+
+      <!-- Birth Date -->
+      <div class="field-group">
+        <label for="birthday">Birth Date (YYYY-MM-DD)
+          <span class="hint">Example: 1972-11-22</span>
+        </label>
+        <input
+          id="birthday"
+          name="birthday"
+          type="text"
+          placeholder="YYYY-MM-DD"
+          inputmode="numeric"
+          autocomplete="bday"
+          minlength="10"
+          maxlength="10"
+          pattern="\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])"
+          oninput="this.setCustomValidity('')"
+          oninvalid="this.setCustomValidity('Please use YYYY-MM-DD (e.g., 1972-11-22)')"
+        />
+      </div>
+
+      <!-- Country -->
+      <div class="field-group">
+        <label for="country">Country</label>
+        <select id="country" name="country">
+          <option value="">Select your country</option>
+          <option value="Lithuania">Lithuania</option>
+          <option value="Norway">Norway</option>
+          <option value="Latvia">Latvia</option>
+          <option value="Poland">Poland</option>
+          <option value="Germany">Germany</option>
+          <!-- You can add your full country list here -->
+        </select>
+      </div>
+
+      <!-- Height / Weight -->
+      <div class="grid-2">
+        <div class="field-group">
+          <label for="height">Height (cm)</label>
+          <input id="height" name="height" type="number" inputmode="numeric" min="0" placeholder="e.g., 168" />
+        </div>
+        <div class="field-group">
+          <label for="weight">Weight (kg)</label>
+          <input id="weight" name="weight" type="number" inputmode="numeric" min="0" placeholder="e.g., 65" />
+        </div>
+      </div>
+
+      <!-- Connection Type -->
+      <div class="field-group">
+        <label>Type of Connection</label>
+        <div>
+          <label><input type="radio" name="connectionType" value="Romantic" /> Romantic</label>
+          <label style="margin-left:1rem;"><input type="radio" name="connectionType" value="Friendship" /> Friendship</label>
+          <label style="margin-left:1rem;"><input type="radio" name="connectionType" value="Both" /> Both</label>
+        </div>
+      </div>
+
+      <!-- Love Language -->
+      <div class="field-group">
+        <label>Primary Love Language</label>
+        <div class="card">
+          <label><input type="radio" name="loveLanguage" value="Words of Affirmation" /> <strong>Words of Affirmation</strong><br><span class="hint">Kind, encouraging, and supportive words to express love.</span></label><br>
+          <label><input type="radio" name="loveLanguage" value="Acts of Service" /> <strong>Acts of Service</strong><br><span class="hint">Actions that help or ease your burden, showing love through effort.</span></label><br>
+          <label><input type="radio" name="loveLanguage" value="Receiving Gifts" /> <strong>Receiving Gifts</strong><br><span class="hint">Thoughtful gifts or gestures that show you were remembered.</span></label><br>
+          <label><input type="radio" name="loveLanguage" value="Quality Time" /> <strong>Quality Time</strong><br><span class="hint">Focused, undivided attention, deep conversations or shared moments.</span></label><br>
+          <label><input type="radio" name="loveLanguage" value="Physical Touch" /> <strong>Physical Touch</strong><br><span class="hint">Hugs, hand-holding, cuddles or gentle touches that express love.</span></label>
+        </div>
+      </div>
+
+      <!-- Hobbies -->
+      <div class="field-group">
+        <label>Select Your Hobbies</label>
+        <div class="grid-2 card">
+          <div>
+            <label><input type="checkbox" name="hobbies[]" value="Music" /> Music</label><br>
+            <label><input type="checkbox" name="hobbies[]" value="Cooking" /> Cooking</label><br>
+            <label><input type="checkbox" name="hobbies[]" value="Sports" /> Sports</label><br>
+            <label><input type="checkbox" name="hobbies[]" value="Dancing" /> Dancing</label><br>
+            <label><input type="checkbox" name="hobbies[]" value="Nature Walks" /> Nature Walks</label>
+          </div>
+          <div>
+            <label><input type="checkbox" name="hobbies[]" value="Traveling" /> Traveling</label><br>
+            <label><input type="checkbox" name="hobbies[]" value="Art" /> Art</label><br>
+            <label><input type="checkbox" name="hobbies[]" value="Reading" /> Reading</label><br>
+            <label><input type="checkbox" name="hobbies[]" value="Meditation" /> Meditation</label><br>
+            <label><input type="checkbox" name="hobbies[]" value="Gaming" /> Gaming</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Values -->
+      <div class="field-group">
+        <label>Values Most Important to You</label>
+        <div class="grid-2 card">
+          <div>
+            <label><input type="checkbox" name="values[]" value="Honesty" /> Honesty</label><br>
+            <label><input type="checkbox" name="values[]" value="Freedom" /> Freedom</label><br>
+            <label><input type="checkbox" name="values[]" value="Kindness" /> Kindness</label><br>
+            <label><input type="checkbox" name="values[]" value="Spirituality" /> Spirituality</label><br>
+            <label><input type="checkbox" name="values[]" value="Empathy" /> Empathy</label>
+          </div>
+          <div>
+            <label><input type="checkbox" name="values[]" value="Growth" /> Growth</label><br>
+            <label><input type="checkbox" name="values[]" value="Loyalty" /> Loyalty</label><br>
+            <label><input type="checkbox" name="values[]" value="Creativity" /> Creativity</label><br>
+            <label><input type="checkbox" name="values[]" value="Adventure" /> Adventure</label><br>
+            <label><input type="checkbox" name="values[]" value="Balance" /> Balance</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Unacceptable Behavior -->
+      <div class="field-group">
+        <label for="unacceptable">Unacceptable Behavior</label>
+        <textarea id="unacceptable" name="unacceptable" rows="3" placeholder="What behaviors are not acceptable for you?"></textarea>
+      </div>
+
+      <!-- About Me -->
+      <div class="field-group">
+        <label for="about">About Me</label>
+        <textarea id="about" name="about" rows="4" placeholder="Write a short intro about yourself..."></textarea>
+      </div>
+
+      <div class="actions">
+        <button class="btn-primary" type="submit">Edit Profile →</button>
+      </div>
+    </form>
+  </main>
+
+  <footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
+    © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
+  </footer>
+
+  <!-- Page script -->
+  <script src="quiz.js"></script>
+</body>
 </html>
