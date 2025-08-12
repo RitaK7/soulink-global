@@ -1,7 +1,0 @@
-{
-  "name": "soulink-ui-clean",
-  "version": "1.0.0",
-  "scripts": {
-    "vercel-build": "echo \"Skipping build – serving static files\""
-  }
-}
