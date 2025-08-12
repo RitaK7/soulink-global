@@ -122,39 +122,47 @@ function renderResults() {
 
 // ─── FEEDBACK VIA EmailJS v3 ──────────────────────────────────────
 function initFeedback() {
-  const PUBLIC_KEY  = "SV7ptjuNI88paiVbz";
-  const SERVICE_ID  = "default_service";
-  const TEMPLATE_ID = "template_99hg4ni";
+  // init is better in result.html, but if you keep it here, ensure the key exists:
+  // emailjs.init(PUBLIC_KEY);
 
-  emailjs.init(PUBLIC_KEY);
+  const form = document.getElementById("feedback-form");
+  const statusEl = document.getElementById("feedback-message"); // unify to one element
+  const btn = form.querySelector('[type="submit"]');            // single btn
 
-  const form   = document.getElementById("feedback-form");
-  const status = document.getElementById("feedback-message");
-  const btn    = form.querySelector("button");
-
-  form.addEventListener("submit", e => {
+  form.addEventListener("submit", (e) => {
     e.preventDefault();
-    btn.disabled = true;
-    btn.textContent = "Sending…";
-    status.textContent = "";
 
-    const vars = {
-      user_email: form.user_email.value,
-      page:       form.page.value,
-      rating:     form.rating.value,
-      feedback:   form.feedback.value
+    // Build payload
+    const templateParams = {
+      user_email: form.user_email?.value || "",
+      page: form.page?.value || "result.html",
+      rating: form.rating?.value || "",
+      feedback: form.feedback?.value || ""
     };
 
-    console.log("EmailJS ▶", SERVICE_ID, TEMPLATE_ID, vars);
+    // UI
+    btn.disabled = true;
+    btn.textContent = "Sending…";
+    if (statusEl) statusEl.textContent = "";
 
-    emailjs.send(SERVICE_ID, TEMPLATE_ID, vars, PUBLIC_KEY)
+    emailjs
+      .send("service_3j9h9ei", "template_99hg4ni", templateParams)
       .then(() => {
-        status.textContent = "✅ Feedback sent!";
-        btn.textContent   = "Sent ✓";
+        alert("Thank you! Your feedback has been sent.");
+        if (statusEl) statusEl.textContent = "✓ Sent";
+        form.reset();
       })
-      .catch(err => {
-        console.error("EmailJS Error (send):", err);
-        status.textContent = `❌ Send failed (${err.status}): ${err.text}`;
+      .catch((err) => {
+        console.error("EmailJS send error:", err);
+        alert("Sending failed. Please check your connection and try again.");
+        if (statusEl) {
+          statusEl.textContent =
+            `✘ Send failed` +
+            (err?.status ? ` (${err.status})` : "") +
+            (err?.text ? `: ${err.text}` : "");
+        }
+      })
+      .finally(() => {
         btn.disabled = false;
         btn.textContent = "Send Feedback";
       });
