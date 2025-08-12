@@ -1,103 +1,119 @@
-
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>My Soul</title>
-<link href="style.css" rel="stylesheet"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Soulink – My Soul</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .container { max-width: 980px; margin: 0 auto; padding: 2rem 1rem; }
+    .card { background: rgba(0, 90, 90, 0.35); border-radius: 14px; padding: 1rem 1.2rem; margin-bottom: .9rem; }
+    .grid { display:grid; grid-template-columns: 2fr 1fr; gap: 1.2rem; }
+    @media (max-width: 960px){ .grid { grid-template-columns: 1fr; } }
+    .section-title { color:#dff; margin:.2rem 0 .6rem; }
+    .kv p { margin:.2rem 0; }
+    .photos img { width: 100%; border-radius: 10px; display:none; margin-bottom: .9rem; object-fit: cover; max-height: 220px; }
+    .btn { cursor:pointer; border:none; padding:.6rem .9rem; border-radius:999px; font-weight:600; }
+  </style>
 </head>
-<body style="background-color: #003c43; color: white; font-family: 'Segoe UI', sans-serif;"><nav class="navbar" style="background:#002e30; box-shadow:0 0 12px rgba(0,253,216,0.25);">
-<div class="container" style="display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.8rem 1rem;">
-<a class="brand" href="index.html" style="font-weight:700; text-decoration:none; color:#00fdd8;">Soulink</a>
-<button aria-label="Toggle navigation" id="navToggle" style="background:transparent; border:1px solid #00fdd8; border-radius:10px; padding:.4rem .6rem; color:#00fdd8; display:none;">☰</button>
-<ul id="navMenu" style="list-style:none; display:flex; flex-wrap:wrap; gap:.6rem; margin:0; padding:0;">
-<li><a href="index.html">Home</a></li>
-<li><a href="quiz.html">Quiz</a></li>
-<li><a href="edit-profile.html">Edit Profile</a></li>
-<li><a href="my-soul.html">My Soul</a></li>
-<li><a href="soul-chart.html">Soul Chart</a></li>
-<li><a href="soul-coach.html">Soul Coach</a></li>
-<li><a href="result.html">Results</a></li>
-<li><a href="friends.html">Friends</a></li>
-<li><a href="beta-login.html">Log In</a></li>
-<li><a href="signup.html">Sign Up</a></li>
-</ul>
-</div>
-</nav>
-<script>
-// Minimal responsive toggle
-(function(){
-  const btn = document.getElementById('navToggle');
-  const menu = document.getElementById('navMenu');
-  function onResize(){
-    if(window.innerWidth<800){ btn.style.display='block'; menu.style.display='none'; }
-    else { btn.style.display='none'; menu.style.display='flex'; }
-  }
-  if(btn && menu){
-    btn.addEventListener('click', ()=>{
-      menu.style.display = (menu.style.display==='none' || !menu.style.display) ? 'flex' : 'none';
-    });
-    window.addEventListener('resize', onResize);
-    onResize();
-  }
-})();
-</script>
-<style>
-nav.navbar a { color:#dff; text-decoration:none; padding:.35rem .55rem; border-radius:10px; }
-nav.navbar a:hover { box-shadow:0 0 10px rgba(0,253,216,0.45), inset 0 0 12px rgba(0,253,216,0.15); }
-</style>
-<header>
+<body>
 
-</header>
-<main class="container" style="max-width: 800px; margin: auto; padding: 2rem;">
-<h1>👤 Welcome, <span id="name"></span>!</h1>
-<p>Your Soul at a Glance</p>
-<section class="card">
-<h3>💖 Personal Info</h3>
-<p><strong>Birth Date:</strong> <span id="birthdate">–</span></p>
-<p><strong>Country:</strong> <span id="country">–</span></p>
-<p><strong>Height:</strong> <span id="height">–</span></p>
-<p><strong>Weight:</strong> <span id="weight">–</span></p>
-<p><strong>Connection:</strong> <span id="connection">–</span></p>
-<p><strong>Relationship Type:</strong> <span id="relationshipType">–</span></p>
-</section>
-<section class="card">
-<h3>🌿 Hobbies &amp; Values</h3>
-<p><strong>Hobbies:</strong> <span id="hobbies">–</span></p>
-<p><strong>Values:</strong> <span id="values">–</span></p>
-</section>
-<section class="card">
-<h3>🌸 Essence</h3>
-<p><strong>Unacceptable:</strong> <span id="unacceptable">–</span></p>
-<p><strong>Soul Message:</strong> <span id="soulMessage">–</span></p>
-</section>
-<section class="card">
-<h3>💌 Love Language</h3>
-<p><span id="loveLanguage">–</span></p>
-</section>
-<section class="card">
-<h3>🔮 Western Zodiac</h3>
-<p><span id="westernSign">–</span></p>
-<p><span id="westernDescription">–</span></p>
-</section>
-<section class="card">
-<h3>🐉 Chinese Zodiac</h3>
-<p><span id="chineseSign">–</span></p>
-<p><span id="chineseDescription">–</span></p>
-</section>
-<section class="card">
-<h3>🧬 Life Path Number</h3>
-<p><span id="lifePathNumber">–</span></p>
-<p><span id="lifePathDescription">–</span></p>
-</section>
-<div style="text-align: center; margin-top: 2rem;">
-<a class="btn" href="edit-profile.html">Edit Profile</a>
-</div>
-</main>
-<script src="my-soul.js"></script>
-<footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
-  © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
-</footer></body>
+  <!-- Navbar -->
+  <nav class="navbar" style="background:#002e30; box-shadow:0 0 12px rgba(0,253,216,0.25);">
+    <div class="container" style="display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.8rem 1rem;">
+      <a href="index.html" class="brand" style="font-weight:700; text-decoration:none; color:#00fdd8;">Soulink</a>
+      <button id="navToggle" aria-label="Toggle navigation" style="background:transparent; border:1px solid #00fdd8; border-radius:10px; padding:.4rem .6rem; color:#00fdd8; display:none;">☰</button>
+      <ul id="navMenu" style="list-style:none; display:flex; flex-wrap:wrap; gap:.6rem; margin:0; padding:0;">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="quiz.html">Quiz</a></li>
+        <li><a href="edit-profile.html">Edit Profile</a></li>
+        <li><a href="my-soul.html">My Soul</a></li>
+        <li><a href="soul-chart.html">Soul Chart</a></li>
+        <li><a href="soul-coach.html">Soul Coach</a></li>
+        <li><a href="result.html">Results</a></li>
+        <li><a href="friends.html">Friends</a></li>
+        <li><a href="beta-login.html">Log In</a></li>
+        <li><a href="signup.html">Sign Up</a></li>
+      </ul>
+    </div>
+  </nav>
+  <script>
+    (function(){
+      const btn = document.getElementById('navToggle');
+      const menu = document.getElementById('navMenu');
+      function onResize(){ if(innerWidth<800){ btn.style.display='block'; menu.style.display='none'; } else { btn.style.display='none'; menu.style.display='flex'; } }
+      if(btn && menu){ btn.onclick=()=>{ menu.style.display = (menu.style.display==='none'||!menu.style.display)?'flex':'none'; }; addEventListener('resize', onResize); onResize(); }
+    })();
+  </script>
+
+  <main class="container">
+    <h1 style="color:#dff; margin:0 0 1rem;">👤 Welcome, <span id="ms-name">Friend</span>!</h1>
+
+    <div class="grid">
+      <!-- LEFT: info cards -->
+      <div>
+        <div class="card">
+          <h3 class="section-title">💗 Personal Info</h3>
+          <div class="kv">
+            <p><strong>Birth Date:</strong> <span id="ms-birthDate">–</span></p>
+            <p><strong>Country:</strong> <span id="ms-country">–</span></p>
+            <p><strong>Height:</strong> <span id="ms-height">–</span></p>
+            <p><strong>Weight:</strong> <span id="ms-weight">–</span></p>
+            <p><strong>Connection:</strong> <span id="ms-connection">–</span></p>
+            <p><strong>Relationship Type:</strong> <span id="ms-loveLanguage">–</span></p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="section-title">🌿 Hobbies & Values</h3>
+          <p><strong>Hobbies:</strong> <span id="ms-hobbies">–</span></p>
+          <p><strong>Values:</strong> <span id="ms-values">–</span></p>
+        </div>
+
+        <div class="card">
+          <h3 class="section-title">🌸 Essence</h3>
+          <p><strong>Unacceptable:</strong> <span id="ms-unacceptable">–</span></p>
+          <p><strong>Soul Message:</strong> <span id="ms-about">–</span></p>
+        </div>
+
+        <div class="card">
+          <h3 class="section-title">💌 Love Language</h3>
+          <p><span id="ms-loveLanguage">–</span></p>
+        </div>
+
+        <div class="card">
+          <h3 class="section-title">♏ Western Zodiac</h3>
+          <p><span id="ms-zodiac-west">–</span></p>
+        </div>
+
+        <div class="card">
+          <h3 class="section-title">🐉 Chinese Zodiac</h3>
+          <p><span id="ms-zodiac-cn">–</span></p>
+        </div>
+
+        <div class="card">
+          <h3 class="section-title">✨ Life Path Number</h3>
+          <p><span id="ms-lifePath">–</span></p>
+        </div>
+
+        <div style="text-align:center; margin-top:1rem;">
+          <button id="ms-edit" class="btn">Edit Profile</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: photos (optional) -->
+      <div class="photos">
+        <div class="card"><img id="ms-photo1" alt="Profile photo 1" /></div>
+        <div class="card"><img id="ms-photo2" alt="Profile photo 2" /></div>
+        <div class="card"><img id="ms-photo3" alt="Profile photo 3" /></div>
+      </div>
+    </div>
+  </main>
+
+  <footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
+    © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
+  </footer>
+
+  <script src="my-soul.js"></script>
+</body>
 </html>
