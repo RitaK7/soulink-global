@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Soul</title>
+<link href="style.css" rel="stylesheet"/>
+</head>
+<body style="background-color: #003c43; color: white; font-family: 'Segoe UI', sans-serif;"><nav class="navbar" style="background:#002e30; box-shadow:0 0 12px rgba(0,253,216,0.25);">
+<div class="container" style="display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.8rem 1rem;">
+<a class="brand" href="index.html" style="font-weight:700; text-decoration:none; color:#00fdd8;">Soulink</a>
+<button aria-label="Toggle navigation" id="navToggle" style="background:transparent; border:1px solid #00fdd8; border-radius:10px; padding:.4rem .6rem; color:#00fdd8; display:none;">☰</button>
+<ul id="navMenu" style="list-style:none; display:flex; flex-wrap:wrap; gap:.6rem; margin:0; padding:0;">
+<li><a href="index.html">Home</a></li>
+<li><a href="quiz.html">Quiz</a></li>
+<li><a href="edit-profile.html">Edit Profile</a></li>
+<li><a href="my-soul.html">My Soul</a></li>
+<li><a href="soul-chart.html">Soul Chart</a></li>
+<li><a href="soul-coach.html">Soul Coach</a></li>
+<li><a href="result.html">Results</a></li>
+<li><a href="friends.html">Friends</a></li>
+<li><a href="beta-login.html">Log In</a></li>
+<li><a href="signup.html">Sign Up</a></li>
+</ul>
+</div>
+</nav>
+<script>
+// Minimal responsive toggle
+(function(){
+  const btn = document.getElementById('navToggle');
+  const menu = document.getElementById('navMenu');
+  function onResize(){
+    if(window.innerWidth<800){ btn.style.display='block'; menu.style.display='none'; }
+    else { btn.style.display='none'; menu.style.display='flex'; }
+  }
+  if(btn && menu){
+    btn.addEventListener('click', ()=>{
+      menu.style.display = (menu.style.display==='none' || !menu.style.display) ? 'flex' : 'none';
+    });
+    window.addEventListener('resize', onResize);
+    onResize();
+  }
+})();
+</script>
+<style>
+nav.navbar a { color:#dff; text-decoration:none; padding:.35rem .55rem; border-radius:10px; }
+nav.navbar a:hover { box-shadow:0 0 10px rgba(0,253,216,0.45), inset 0 0 12px rgba(0,253,216,0.15); }
+</style>
+<header>
+
+</header>
+<main class="container" style="max-width: 800px; margin: auto; padding: 2rem;">
+<h1>👤 Welcome, <span id="name"></span>!</h1>
+<p>Your Soul at a Glance</p>
+<section class="card">
+<h3>💖 Personal Info</h3>
+<p><strong>Birth Date:</strong> <span id="birthdate">–</span></p>
+<p><strong>Country:</strong> <span id="country">–</span></p>
+<p><strong>Height:</strong> <span id="height">–</span></p>
+<p><strong>Weight:</strong> <span id="weight">–</span></p>
+<p><strong>Connection:</strong> <span id="connection">–</span></p>
+<p><strong>Relationship Type:</strong> <span id="relationshipType">–</span></p>
+</section>
+<section class="card">
+<h3>🌿 Hobbies &amp; Values</h3>
+<p><strong>Hobbies:</strong> <span id="hobbies">–</span></p>
+<p><strong>Values:</strong> <span id="values">–</span></p>
+</section>
+<section class="card">
+<h3>🌸 Essence</h3>
+<p><strong>Unacceptable:</strong> <span id="unacceptable">–</span></p>
+<p><strong>Soul Message:</strong> <span id="soulMessage">–</span></p>
+</section>
+<section class="card">
+<h3>💌 Love Language</h3>
+<p><span id="loveLanguage">–</span></p>
+</section>
+<section class="card">
+<h3>🔮 Western Zodiac</h3>
+<p><span id="westernSign">–</span></p>
+<p><span id="westernDescription">–</span></p>
+</section>
+<section class="card">
+<h3>🐉 Chinese Zodiac</h3>
+<p><span id="chineseSign">–</span></p>
+<p><span id="chineseDescription">–</span></p>
+</section>
+<section class="card">
+<h3>🧬 Life Path Number</h3>
+<p><span id="lifePathNumber">–</span></p>
+<p><span id="lifePathDescription">–</span></p>
+</section>
+<div style="text-align: center; margin-top: 2rem;">
+<a class="btn" href="edit-profile.html">Edit Profile</a>
+</div>
+</main>
+<script src="my-soul.js"></script>
+<footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
+  © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
+</footer></body>
+</html>

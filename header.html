@@ -1,0 +1,144 @@
+<!-- header.html -->
+<header>
+
+</header>
+<style>
+  header {
+    background-color: #014c4f;
+  }
+
+  .main-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 1rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .nav-links li a {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    transition: background-color 0.3s;
+  }
+
+  .nav-links li a:hover {
+    background-color: #02686c;
+  }
+
+  .auth-buttons {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .cta-button-outline {
+    background: transparent;
+    border: 2px solid #aefeff;
+    color: #aefeff;
+    border-radius: 30px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .cta-button-outline:hover {
+    background-color: #014c4f;
+  }
+
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+  }
+
+  .hamburger span {
+    height: 3px;
+    width: 25px;
+    background: #aefeff;
+    margin: 4px 0;
+    border-radius: 3px;
+  }
+
+  @media (max-width: 768px) {
+    .nav-links,
+    .auth-buttons {
+      display: none;
+      flex-direction: column;
+      width: 100%;
+      background-color: #014c4f;
+      padding: 1rem 0;
+    }
+
+    .nav-links.show,
+    .auth-buttons.show {
+      display: flex;
+    }
+
+    .hamburger {
+      display: flex;
+    }
+  }
+</style>
+<script>
+  function toggleMenu() {
+    document.getElementById('navLinks').classList.toggle('show');
+    document.getElementById('authButtons').classList.toggle('show');
+  }
+
+  function closeMenu() {
+    if (window.innerWidth <= 768) {
+      document.getElementById('navLinks').classList.remove('show');
+      document.getElementById('authButtons').classList.remove('show');
+    }
+  }
+</script>
+<body><nav class="navbar" style="background:#002e30; box-shadow:0 0 12px rgba(0,253,216,0.25);">
+<div class="container" style="display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.8rem 1rem;">
+<a class="brand" href="index.html" style="font-weight:700; text-decoration:none; color:#00fdd8;">Soulink</a>
+<button aria-label="Toggle navigation" id="navToggle" style="background:transparent; border:1px solid #00fdd8; border-radius:10px; padding:.4rem .6rem; color:#00fdd8; display:none;">☰</button>
+<ul id="navMenu" style="list-style:none; display:flex; flex-wrap:wrap; gap:.6rem; margin:0; padding:0;">
+<li><a href="index.html">Home</a></li>
+<li><a href="quiz.html">Quiz</a></li>
+<li><a href="edit-profile.html">Edit Profile</a></li>
+<li><a href="my-soul.html">My Soul</a></li>
+<li><a href="soul-chart.html">Soul Chart</a></li>
+<li><a href="soul-coach.html">Soul Coach</a></li>
+<li><a href="result.html">Results</a></li>
+<li><a href="friends.html">Friends</a></li>
+<li><a href="beta-login.html">Log In</a></li>
+<li><a href="signup.html">Sign Up</a></li>
+</ul>
+</div>
+</nav>
+<script>
+// Minimal responsive toggle
+(function(){
+  const btn = document.getElementById('navToggle');
+  const menu = document.getElementById('navMenu');
+  function onResize(){
+    if(window.innerWidth<800){ btn.style.display='block'; menu.style.display='none'; }
+    else { btn.style.display='none'; menu.style.display='flex'; }
+  }
+  if(btn && menu){
+    btn.addEventListener('click', ()=>{
+      menu.style.display = (menu.style.display==='none' || !menu.style.display) ? 'flex' : 'none';
+    });
+    window.addEventListener('resize', onResize);
+    onResize();
+  }
+})();
+</script>
+<style>
+nav.navbar a { color:#dff; text-decoration:none; padding:.35rem .55rem; border-radius:10px; }
+nav.navbar a:hover { box-shadow:0 0 10px rgba(0,253,216,0.45), inset 0 0 12px rgba(0,253,216,0.15); }
+</style><footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
+  © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
+</footer></body>
