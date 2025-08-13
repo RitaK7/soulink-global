@@ -6,14 +6,23 @@
   <title>Soulink – My Soul</title>
   <link rel="stylesheet" href="style.css" />
   <style>
+    /* Page-scoped layout (safe with your theme) */
     .container { max-width: 980px; margin: 0 auto; padding: 2rem 1rem; }
-    .card { background: rgba(0, 90, 90, 0.35); border-radius: 14px; padding: 1rem 1.2rem; margin-bottom: .9rem; }
-    .grid { display:grid; grid-template-columns: 2fr 1fr; gap: 1.2rem; }
+    .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.2rem; }
     @media (max-width: 960px){ .grid { grid-template-columns: 1fr; } }
-    .section-title { color:#dff; margin:.2rem 0 .6rem; }
-    .kv p { margin:.2rem 0; }
-    .photos img { width: 100%; border-radius: 10px; display:none; margin-bottom: .9rem; object-fit: cover; max-height: 220px; }
-    .btn { cursor:pointer; border:none; padding:.6rem .9rem; border-radius:999px; font-weight:600; }
+    .card { background: rgba(0, 90, 90, 0.35); border-radius: 14px; padding: 1rem 1.2rem; margin-bottom: .9rem; }
+    .section-title { color: #dff; margin: .2rem 0 .6rem; font-weight: 700; }
+    .kv p { margin: .2rem 0; }
+    .photos img {
+      width: 100%; height: auto; max-height: 260px;
+      object-fit: cover; border-radius: 12px; display: none;
+    }
+    .cta-row {
+      text-align:center; margin-top:1rem;
+      display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap;
+    }
+    .btn { cursor:pointer; border:1px solid rgba(0,253,216,.45); border-radius:999px; padding:.7rem 1.1rem; font-weight:600; }
+    .btn:hover { box-shadow: 0 0 12px rgba(0,253,216,.35); }
   </style>
 </head>
 <body>
@@ -39,10 +48,9 @@
   </nav>
   <script>
     (function(){
-      const btn = document.getElementById('navToggle');
-      const menu = document.getElementById('navMenu');
+      const btn=document.getElementById('navToggle'), menu=document.getElementById('navMenu');
       function onResize(){ if(innerWidth<800){ btn.style.display='block'; menu.style.display='none'; } else { btn.style.display='none'; menu.style.display='flex'; } }
-      if(btn && menu){ btn.onclick=()=>{ menu.style.display = (menu.style.display==='none'||!menu.style.display)?'flex':'none'; }; addEventListener('resize', onResize); onResize(); }
+      if(btn&&menu){ btn.onclick=()=>{ menu.style.display=(menu.style.display==='none'||!menu.style.display)?'flex':'none'; }; addEventListener('resize', onResize); onResize(); }
     })();
   </script>
 
@@ -52,7 +60,7 @@
     <div class="grid">
       <!-- LEFT: info cards -->
       <div>
-        <div class="card">
+        <div class="card" id="card-personal">
           <h3 class="section-title">💗 Personal Info</h3>
           <div class="kv">
             <p><strong>Birth Date:</strong> <span id="ms-birthDate">–</span></p>
@@ -60,37 +68,38 @@
             <p><strong>Height:</strong> <span id="ms-height">–</span></p>
             <p><strong>Weight:</strong> <span id="ms-weight">–</span></p>
             <p><strong>Connection:</strong> <span id="ms-connection">–</span></p>
-           <p><strong>Love Language:</strong> <span id="ms-loveLanguagePreview">–</span></p>
-         </div>\
+            <p><strong>Love Language:</strong> <span id="ms-loveLanguagePreview">–</span></p>
+          </div>
+        </div>
 
-        <div class="card" id="card-hobbies"></div>
+        <div class="card" id="card-hobbies">
           <h3 class="section-title">🌿 Hobbies & Values</h3>
           <p><strong>Hobbies:</strong> <span id="ms-hobbies">–</span></p>
           <p><strong>Values:</strong> <span id="ms-values">–</span></p>
         </div>
 
-        <div class="card" id="card-essence"></div>
+        <div class="card" id="card-essence">
           <h3 class="section-title">🌸 Essence</h3>
           <p><strong>Unacceptable:</strong> <span id="ms-unacceptable">–</span></p>
           <p><strong>Soul Message:</strong> <span id="ms-about">–</span></p>
         </div>
 
         <div class="card" id="card-love">
-         <h3 class="section-title">💌 Love Language</h3>
-         <p><span id="ms-loveLanguage">–</span></p>
+          <h3 class="section-title">💌 Love Language</h3>
+          <p><span id="ms-loveLanguage">–</span></p>
         </div>
 
-        <div class="card" id="card-west"></div>
+        <div class="card" id="card-west">
           <h3 class="section-title">♏ Western Zodiac</h3>
           <p><span id="ms-zodiac-west">–</span></p>
         </div>
 
-        <div class="card" id="card-cn"></div>
+        <div class="card" id="card-cn">
           <h3 class="section-title">🐉 Chinese Zodiac</h3>
           <p><span id="ms-zodiac-cn">–</span></p>
         </div>
 
-        <div class="card" id="card-life"></div>
+        <div class="card" id="card-life">
           <h3 class="section-title">✨ Life Path Number</h3>
           <p><span id="ms-lifePath">–</span></p>
         </div>
@@ -100,24 +109,21 @@
         </div>
       </div>
 
-      <!-- RIGHT: photos (optional) -->
+      <!-- RIGHT: photos -->
       <div class="photos">
         <div class="card"><img id="ms-photo1" alt="Profile photo 1" /></div>
         <div class="card"><img id="ms-photo2" alt="Profile photo 2" /></div>
         <div class="card"><img id="ms-photo3" alt="Profile photo 3" /></div>
       </div>
     </div>
+
+    <!-- Single CTA row (no duplicates) -->
+    <div class="cta-row">
+      <a class="btn" href="result.html">View Results →</a>
+      <a class="btn" href="soul-chart.html">Soul Chart</a>
+      <a class="btn" href="soul-coach.html">Soul Coach</a>
+    </div>
   </main>
-      <div style="text-align:center; margin-top:1rem; display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap;">
-       <a class="btn" href="result.html">View Results →</a>
-       <a class="btn btn-ghost" href="soul-chart.html">Soul Chart</a>
-       <a class="btn btn-ghost" href="soul-coach.html">Soul Coach</a>
-     </div>
-      <div style="text-align:center; margin-top:1rem; display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap;">
-       <a class="btn" href="result.html">View Results →</a>
-       <a class="btn btn-ghost" href="soul-chart.html">Soul Chart</a>
-       <a class="btn btn-ghost" href="soul-coach.html">Soul Coach</a>
-     </div>
 
   <footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
     © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
