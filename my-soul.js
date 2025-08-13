@@ -70,6 +70,30 @@
     const total = sumDigits(compact);
     return String(reduceNumber(total));
   }
+  function hideIfEmpty(cardId, ids) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const allEmpty = ids.every(id => {
+    const el = document.getElementById(id);
+    return !el || el.textContent.trim() === "–";
+  });
+  if (allEmpty) card.style.display = "none";
+}
+
+// Hide cards that have no data
+hideIfEmpty("card-love", ["ms-loveLanguage", "ms-loveLanguagePreview"]);
+hideIfEmpty("card-hobbies", ["ms-hobbies", "ms-values"]);
+hideIfEmpty("card-essence", ["ms-unacceptable", "ms-about"]);
+hideIfEmpty("card-west", ["ms-zodiac-west"]);
+hideIfEmpty("card-cn", ["ms-zodiac-cn"]);
+hideIfEmpty("card-life", ["ms-lifePath"]);
+
+// Click-to-zoom photos
+["ms-photo1","ms-photo2","ms-photo3"].forEach(id => {
+  const img = document.getElementById(id);
+  if (img) img.addEventListener("click", () => { if (img.src) window.open(img.src, "_blank"); });
+});
+
 
   // ---- render
   const data = load();
