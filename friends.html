@@ -1,205 +1,135 @@
-<!-- public/friends.html -->
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Your Like-Minded Friends</title>
-<script>
-  if (!sessionStorage.getItem('soulinkBetaAccess') && location.pathname !== '/beta-login.html') {
-    window.location.href = 'beta-login.html';
-  }
-</script>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
-<style>
-    body {
-      background-color: #003c43;
-      color: white;
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-
-    .main-nav {
-      background-color: #002c33;
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .main-nav .logo {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #00fdd8;
-    }
-
-    .main-nav ul {
-      list-style: none;
-      display: flex;
-      gap: 1rem;
-      padding: 0;
-      margin: 0;
-      flex-wrap: wrap;
-    }
-
-    .main-nav a {
-      color: #00fdd8;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .auth-buttons a {
-      margin-left: 0.5rem;
-      color: white;
-      text-decoration: none;
-      border: 1px solid #00fdd8;
-      padding: 0.3rem 0.6rem;
-      border-radius: 0.5rem;
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: 2rem auto;
-      padding: 1rem;
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    #friendsContainer {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 2rem;
-    }
-
-    .card {
-      background-color: #014247;
-      border-radius: 1rem;
-      padding: 1.5rem;
-      width: 280px;
-      box-shadow: 0 0 10px #00fdd8;
-    }
-
-    .card h3 {
-      color: #00fdd8;
-      margin-bottom: 0.5rem;
-    }
-
-    .card p {
-      margin: 0.5rem 0;
-    }
-
-    footer {
-      background-color: #002c33;
-      color: #00fdd8;
-      text-align: center;
-      padding: 1rem;
-      font-size: 0.9rem;
-    }
-
-    .footer-nav {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .footer-nav a {
-      color: #00fdd8;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .footer-nav a:hover {
-      color: white;
-    }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Soulink – Friends & Matches</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .container { max-width: 980px; margin: 0 auto; padding: 2rem 1rem; }
+    .grid { display:grid; grid-template-columns: 1.2fr 1.8fr; gap: 1.2rem; }
+    @media (max-width: 960px){ .grid { grid-template-columns: 1fr; } }
+    .card { background: rgba(0, 90, 90, 0.35); border-radius: 14px; padding: 1.2rem; }
+    .section-title { color:#dff; margin:.2rem 0 .6rem; font-weight:700; }
+    .row { display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
+    .list { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:.8rem; }
+    @media (max-width: 720px){ .list { grid-template-columns: 1fr; } }
+    .friend { background: rgba(0,0,0,0.15); border-radius:12px; padding:.8rem; }
+    .score { display:inline-block; min-width: 2.5rem; text-align:center; padding:.15rem .45rem; border-radius:999px; border:1px solid rgba(0,253,216,.45); }
+    .hint { opacity:.8; font-size:.9rem; }
+    .btn { cursor:pointer; border:1px solid rgba(0,253,216,.45); border-radius:999px; padding:.6rem .95rem; font-weight:600; }
+    .btn:hover { box-shadow: 0 0 12px rgba(0,253,216,.35); }
+    input, textarea, select { width:100%; }
   </style>
 </head>
-<body><nav class="navbar" style="background:#002e30; box-shadow:0 0 12px rgba(0,253,216,0.25);">
-<div class="container" style="display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.8rem 1rem;">
-<a class="brand" href="index.html" style="font-weight:700; text-decoration:none; color:#00fdd8;">Soulink</a>
-<button aria-label="Toggle navigation" id="navToggle" style="background:transparent; border:1px solid #00fdd8; border-radius:10px; padding:.4rem .6rem; color:#00fdd8; display:none;">☰</button>
-<ul id="navMenu" style="list-style:none; display:flex; flex-wrap:wrap; gap:.6rem; margin:0; padding:0;">
-<li><a href="index.html">Home</a></li>
-<li><a href="quiz.html">Quiz</a></li>
-<li><a href="edit-profile.html">Edit Profile</a></li>
-<li><a href="my-soul.html">My Soul</a></li>
-<li><a href="soul-chart.html">Soul Chart</a></li>
-<li><a href="soul-coach.html">Soul Coach</a></li>
-<li><a href="result.html">Results</a></li>
-<li><a href="friends.html">Friends</a></li>
-<li><a href="beta-login.html">Log In</a></li>
-<li><a href="signup.html">Sign Up</a></li>
-</ul>
-</div>
-</nav>
-<script>
-// Minimal responsive toggle
-(function(){
-  const btn = document.getElementById('navToggle');
-  const menu = document.getElementById('navMenu');
-  function onResize(){
-    if(window.innerWidth<800){ btn.style.display='block'; menu.style.display='none'; }
-    else { btn.style.display='none'; menu.style.display='flex'; }
-  }
-  if(btn && menu){
-    btn.addEventListener('click', ()=>{
-      menu.style.display = (menu.style.display==='none' || !menu.style.display) ? 'flex' : 'none';
-    });
-    window.addEventListener('resize', onResize);
-    onResize();
-  }
-})();
-</script>
-<style>
-nav.navbar a { color:#dff; text-decoration:none; padding:.35rem .55rem; border-radius:10px; }
-nav.navbar a:hover { box-shadow:0 0 10px rgba(0,253,216,0.45), inset 0 0 12px rgba(0,253,216,0.15); }
-</style>
-<script>
-  if (!sessionStorage.getItem('soulinkBetaAccess')) {
-    window.location.href = 'beta-login.html';
-  }
-</script>
-<script>
-  if (!sessionStorage.getItem('soulinkBetaAccess')) {
-    window.location.href = 'beta-login.html';
-  }
-</script>
-<header class="main-nav">
-<div class="logo">Soulink</div>
-<ul>
-<li><a href="index.html"><i class="bi bi-house"></i>Home</a></li>
-<li><a href="quiz.html"><i class="bi bi-question-circle"></i>Quiz</a></li>
-<li><a href="edit-profile.html"><i class="bi bi-pencil-square"></i>Edit Profile</a></li>
-<li><a href="my-soul.html"><i class="bi bi-person"></i>My Soul</a></li>
-<li><a href="soul-chart.html"><i class="bi bi-graph-up"></i>Soul Chart</a></li>
-<li><a href="soul-coach.html"><i class="bi bi-chat-dots"></i>Soul Coach</a></li>
-<li><a href="soulink-match.html"><i class="bi bi-heart"></i>Match</a></li>
-<li><a href="friends.html"><i class="bi bi-people"></i>Friends</a></li>
-<li><a href="result.html"><i class="bi bi-bar-chart-line"></i>Results</a></li>
-</ul>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar" style="background:#002e30; box-shadow:0 0 12px rgba(0,253,216,0.25);">
+    <div class="container" style="display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.8rem 1rem;">
+      <a href="index.html" class="brand" style="font-weight:700; text-decoration:none; color:#00fdd8;">Soulink</a>
+      <button id="navToggle" aria-label="Toggle navigation" style="background:transparent; border:1px solid #00fdd8; border-radius:10px; padding:.4rem .6rem; color:#00fdd8; display:none;">☰</button>
+      <ul id="navMenu" style="list-style:none; display:flex; flex-wrap:wrap; gap:.6rem; margin:0; padding:0;">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="quiz.html">Quiz</a></li>
+        <li><a href="edit-profile.html">Edit Profile</a></li>
+        <li><a href="my-soul.html">My Soul</a></li>
+        <li><a href="soul-chart.html">Soul Chart</a></li>
+        <li><a href="soul-coach.html">Soul Coach</a></li>
+        <li><a href="result.html">Results</a></li>
+        <li><a href="friends.html">Friends</a></li>
+        <li><a href="beta-login.html">Log In</a></li>
+        <li><a href="signup.html">Sign Up</a></li>
+      </ul>
+    </div>
+  </nav>
+  <script>
+    (function(){const b=document.getElementById('navToggle'),m=document.getElementById('navMenu');function r(){if(innerWidth<800){b.style.display='block';m.style.display='none';}else{b.style.display='none';m.style.display='flex';}}if(b&&m){b.onclick=()=>{m.style.display=(m.style.display==='none'||!m.style.display)?'flex':'none';};addEventListener('resize',r);r();}})();
+  </script>
 
-<div class="auth-buttons">
-<a href="login.html">Log In</a>
-<a href="signup.html">Sign Up</a>
-</div>
-</header>
-<main class="container">
-<h2>Your Like-Minded Friends</h2>
-<div id="friendsContainer">
-<p>No like-minded friends found yet 🥂</p>
-</div>
-</main>
+  <main class="container">
+    <h1 style="color:#dff; margin:0 0 1rem;">🤝 Friends & Matches</h1>
 
-<script src="friends.js"></script>
-<footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
-  © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
-</footer></body>
+    <div class="grid">
+      <!-- LEFT: your snapshot + actions -->
+      <div class="card">
+        <h3 class="section-title">Your Snapshot</h3>
+        <p><strong>Name:</strong> <span id="me-name">–</span></p>
+        <p><strong>Connection:</strong> <span id="me-ct">–</span></p>
+        <p><strong>Love Language:</strong> <span id="me-ll">–</span></p>
+        <p><strong>Hobbies:</strong> <span id="me-hobbies">–</span></p>
+        <p><strong>Values:</strong> <span id="me-values">–</span></p>
+        <div class="row" style="margin-top:.8rem;">
+          <a class="btn" href="edit-profile.html">Edit Profile</a>
+          <button id="exportFriends" class="btn" type="button">Export Friends JSON</button>
+          <label class="btn" for="importFriends" style="cursor:pointer;">Import JSON</label>
+          <input id="importFriends" type="file" accept="application/json" style="display:none;" />
+        </div>
+        <p class="hint" style="margin-top:.5rem;">Tip: Scores are based on Connection/Love Language match plus shared hobbies & values.</p>
+      </div>
+
+      <!-- RIGHT: add friend + list -->
+      <div>
+        <form id="add-form" class="card" novalidate>
+          <h3 class="section-title">Add Friend / Candidate</h3>
+          <div class="row" style="gap:.8rem;">
+            <div style="flex:1;">
+              <label for="f-name">Name</label>
+              <input id="f-name" type="text" placeholder="Name" required />
+            </div>
+            <div style="flex:1;">
+              <label for="f-ct">Connection</label>
+              <select id="f-ct">
+                <option value="">Any</option>
+                <option>Romantic</option>
+                <option>Friendship</option>
+                <option>Both</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row" style="gap:.8rem; margin-top:.6rem;">
+            <div style="flex:1;">
+              <label for="f-ll">Love Language</label>
+              <select id="f-ll">
+                <option value="">Unknown</option>
+                <option>Words of Affirmation</option>
+                <option>Acts of Service</option>
+                <option>Receiving Gifts</option>
+                <option>Quality Time</option>
+                <option>Physical Touch</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:.6rem;">
+            <label for="f-hobbies">Hobbies (comma separated)</label>
+            <input id="f-hobbies" type="text" placeholder="e.g., Traveling, Reading, Meditation" />
+          </div>
+
+          <div style="margin-top:.6rem;">
+            <label for="f-values">Values (comma separated)</label>
+            <input id="f-values" type="text" placeholder="e.g., Honesty, Kindness, Creativity" />
+          </div>
+
+          <div class="row" style="margin-top:.8rem;">
+            <button class="btn" type="submit">Add</button>
+            <button id="clearAll" class="btn" type="button">Clear All</button>
+          </div>
+        </form>
+
+        <div class="card">
+          <h3 class="section-title">Your Inner Circle</h3>
+          <div id="friends-list" class="list"></div>
+          <p id="empty-note" class="hint" style="display:none;">No friends yet. Add someone above ✨</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
+    © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
+  </footer>
+
+  <script src="friends.js"></script>
+</body>
 </html>

@@ -1,75 +1,156 @@
-// src/soul-coach.js
+// soul-coach.js — Soulink (polished)
+// Generates tips from your profile (soulQuiz) + a simple task list saved locally.
 
-function getUserData() {
-  const quizData =
-    JSON.parse(localStorage.getItem('soulQuiz')) || {};
+(() => {
+  const KEY = "soulQuiz";
+  const KEY_TASKS = "soulinkCoach";
+  const $ = (s, r = document) => r.querySelector(s);
 
-  return {
-    name: quizData.name || 'Soul Seeker',
-    birthDate: quizData.birthdate || '',
-    loveLanguage: quizData.loveLanguage || 'Unknown',
-    zodiacSign: quizData.zodiacSign || 'Unknown',
-    chineseSign: quizData.chineseSign || 'Unknown'
-  };
-}
+  const data = (() => { try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch { return {}; } })();
 
-function getLifePathNumber(dateStr) {
-  let sum = dateStr.replace(/-/g, '').split('').map(Number).reduce((a, b) => a + b, 0);
-  while (sum > 9 && ![11, 22].includes(sum)) {
-    sum = sum.toString().split('').map(Number).reduce((a, b) => a + b, 0);
+  // Essentials
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || "–"; };
+  set("c-name", data.name);
+  set("c-ct", data.connectionType);
+  set("c-ll", data.loveLanguage);
+  set("c-bd", data.birthday);
+
+  // light calculators
+  const DATE_RE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+  const sumDigits = (s) => String(s).split("").reduce((a,c)=>a + (/\d/.test(c)?+c:0),0);
+  function reduce(n){ while (![11,22,33].includes(n) && n>9) n=sumDigits(n); return n; }
+  function lifePath(iso){ if(!iso || !DATE_RE.test(iso)) return "–"; return String(reduce(sumDigits(iso.replace(/-/g,"")))); }
+  function zodiac(month, day){
+    const z=[{n:"Capricorn",f:[12,22],t:[1,19]},{n:"Aquarius",f:[1,20],t:[2,18]},{n:"Pisces",f:[2,19],t:[3,20]},{n:"Aries",f:[3,21],t:[4,19]},{n:"Taurus",f:[4,20],t:[5,20]},{n:"Gemini",f:[5,21],t:[6,20]},{n:"Cancer",f:[6,21],t:[7,22]},{n:"Leo",f:[7,23],t:[8,22]},{n:"Virgo",f:[8,23],t:[9,22]},{n:"Libra",f:[9,23],t:[10,22]},{n:"Scorpio",f:[10,23],t:[11,21]},{n:"Sagittarius",f:[11,22],t:[12,21]}];
+    const oa=(m,d,mm,dd)=>(m>mm)||(m===mm&&d>=dd), ob=(m,d,mm,dd)=>(m<mm)||(m===mm&&d<=dd);
+    const valid = DATE_RE.test(data.birthday||"");
+    if (!valid) return "–";
+    const [y,m,d] = data.birthday.split("-").map(Number);
+    for(const s of z){const [fm,fd]=s.f,[tm,td]=s.t; if(fm<=tm){if(oa(m,d,fm,fd)&&ob(m,d,tm,td)) return s.n;} else {if(oa(m,d,fm,fd)||ob(m,d,tm,td)) return s.n;}}
+    return "–";
   }
-  return sum;
-}
+  set("c-west", zodiac());
+  set("c-life", lifePath(data.birthday));
 
-function generateInsight(data) {
-  const insights = {
-    loveLanguage: {
-      'Words of Affirmation': 'You thrive on kind words and meaningful praise. Your heart blossoms through verbal connection.',
-      'Acts of Service': 'You believe that love is action. You show you care through thoughtful help and kind deeds.',
-      'Receiving Gifts': 'You see the soul behind the gesture. Every gift carries a deep meaning for you.',
-      'Quality Time': 'Presence is your love language. You feel most loved when truly together.',
-      'Physical Touch': 'A gentle touch or warm hug speaks volumes to your heart.',
-      'Unknown': 'Your love language is waiting to be revealed through meaningful connection.'
-    },
-    zodiacSign: {
-      'Sagittarius': 'You are a seeker of truth, always aiming your arrow toward higher meaning.',
-      'Pisces': 'You swim in deep emotional waters, guided by empathy and intuition.',
-      'Aries': 'Bold and driven, your soul forges paths where others hesitate.',
-      'Leo': 'You shine like the sun – warm, confident, and creative.',
-      'Unknown': 'Your zodiac voice is still forming in the stars.'
-    },
-    chineseSign: {
-      'Rat': 'Clever and resourceful, you always find your way forward.',
-      'Dragon': 'Majestic and powerful – you were born to inspire.',
-      'Rabbit': 'Gentle and harmonious, your energy soothes those around you.',
-      'Unknown': 'Your Chinese zodiac energy is awakening.'
-    }
-  };
-
-  const lifePath = getLifePathNumber(data.birthDate);
-  const numerologyDescription = `Your Life Path Number is ${lifePath}. This number reveals your soul’s mission – a sacred blueprint that shapes your spiritual journey.`;
-
-  return {
-    love: insights.loveLanguage[data.loveLanguage] || insights.loveLanguage['Unknown'],
-    zodiac: insights.zodiacSign[data.zodiacSign] || insights.zodiacSign['Unknown'],
-    chinese: insights.chineseSign[data.chineseSign] || insights.chineseSign['Unknown'],
-    numerology: numerologyDescription
-  };
-}
-
-function displayInsights() {
-  const data = getUserData();
-  if (!data.birthDate || !data.name) {
-    document.getElementById('loveLanguageInsight').textContent = "Please complete the quiz to receive your soul insights.";
-    return;
+  // Insights (static mappings + profile aware)
+  const insights = [];
+  if (data.loveLanguage) {
+    const ll = data.loveLanguage;
+    const map = {
+      "Words of Affirmation": "Keep a gratitude note. Write one genuine compliment for someone you care about.",
+      "Acts of Service": "Pick a 10-minute helpful action for someone (or your future self) and do it now.",
+      "Receiving Gifts": "Choose a small, meaningful token (even digital) to appreciate someone.",
+      "Quality Time": "Block 20 minutes of uninterrupted, phone-free time with a friend or yourself.",
+      "Physical Touch": "Offer a warm hug or mindful touch with consent; connect through presence."
+    };
+    insights.push(map[ll] || "Lean into your primary love language with one mindful act today.");
+  }
+  if (Array.isArray(data.values) && data.values.length) {
+    insights.push(`Live your values: pick one (${data.values.slice(0,5).join(", ")}) and act on it today.`);
+  }
+  if (Array.isArray(data.hobbies) && data.hobbies.length) {
+    insights.push(`Refuel with a hobby: ${data.hobbies[0]} for 15 minutes.`);
+  }
+  const ul = document.getElementById("coach-insights");
+  if (ul) {
+    ul.innerHTML = "";
+    insights.forEach(t => {
+      const li = document.createElement("li");
+      li.textContent = t;
+      ul.appendChild(li);
+    });
   }
 
-  const insight = generateInsight(data);
+  // Today's Action generator (a tiny pool influenced by profile)
+  function makeAction() {
+    const base = [
+      "Message someone and ask one sincere question.",
+      "Take a 10-minute walk without your phone.",
+      "Write three lines about how you want to love & be loved.",
+      "Declutter one tiny area (service to future-you).",
+      "Invite someone to share a quiet 10-minute check-in."
+    ];
+    const byLL = {
+      "Words of Affirmation": "Send a heartfelt text with one specific appreciation.",
+      "Acts of Service": "Do one task they dislike without being asked.",
+      "Receiving Gifts": "Prepare a tiny surprise (note, song link, photo).",
+      "Quality Time": "Schedule a 20-minute, no-distraction catch-up.",
+      "Physical Touch": "Offer a warm hug or mindful touch (with consent)."
+    };
+    const pick = (arr) => arr[Math.floor(Math.random()*arr.length)];
+    return byLL[data.loveLanguage] || pick(base);
+  }
+  function setAction() { const el = document.getElementById("coach-action"); if (el) el.textContent = makeAction(); }
+  setAction();
+  document.getElementById("newAction")?.addEventListener("click", setAction);
 
-  document.getElementById('loveLanguageInsight').textContent = `💖 ${insight.love}`;
-  document.getElementById('horoscopeInsight').textContent = `🔮 ${insight.zodiac}`;
-  document.getElementById('numerologyInsight').textContent = `🔢 ${insight.numerology}`;
-  document.getElementById('chineseZodiacInsight').textContent = `🐉 ${insight.chinese}`;
-}
+  // Tasks
+  function loadTasks() {
+    try { return JSON.parse(localStorage.getItem(KEY_TASKS) || "{}"); } catch { return {}; }
+  }
+  function saveTasks(obj) { localStorage.setItem(KEY_TASKS, JSON.stringify(obj)); }
 
-window.addEventListener('DOMContentLoaded', displayInsights);
+  const state = loadTasks();
+  if (!Array.isArray(state.tasks)) {
+    // default tasks influenced by profile
+    const seed = [];
+    if (data.loveLanguage) seed.push(`Practice your love language: ${data.loveLanguage}`);
+    if (data.connectionType) seed.push(`Nurture a ${data.connectionType.toLowerCase()} connection`);
+    seed.push("Reflect for 5 minutes: what felt good today?");
+    state.tasks = seed.map((t,i)=>({ id: String(i+1), text: t, done: false }));
+    saveTasks(state);
+  }
+
+  const tasksWrap = document.getElementById("tasks");
+  function renderTasks() {
+    tasksWrap.innerHTML = "";
+    state.tasks.forEach((t) => {
+      const row = document.createElement("div");
+      row.className = "task";
+      row.innerHTML = `
+        <input type="checkbox" ${t.done ? "checked" : ""} data-id="${t.id}" />
+        <span>${t.text}</span>
+        <button class="btn" style="margin-left:auto;" data-del="${t.id}">Remove</button>
+      `;
+      tasksWrap.appendChild(row);
+    });
+
+    // bind toggles
+    tasksWrap.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener("change", () => {
+        const id = cb.getAttribute("data-id");
+        const item = state.tasks.find(x => x.id === id);
+        if (item) { item.done = cb.checked; saveTasks(state); }
+      });
+    });
+    // bind deletes
+    tasksWrap.querySelectorAll('[data-del]').forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-del");
+        const idx = state.tasks.findIndex(x => x.id === id);
+        if (idx >= 0) { state.tasks.splice(idx,1); saveTasks(state); renderTasks(); }
+      });
+    });
+  }
+  renderTasks();
+
+  // add task
+  document.getElementById("add-task")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = document.getElementById("task-input");
+    const text = (input?.value || "").trim();
+    if (!text) return;
+    const id = String(Date.now());
+    state.tasks.push({ id, text, done:false });
+    saveTasks(state);
+    input.value = "";
+    renderTasks();
+  });
+
+  // reset
+  document.getElementById("resetTasks")?.addEventListener("click", () => {
+    if (!confirm("Reset tasks?")) return;
+    localStorage.removeItem(KEY_TASKS);
+    location.reload();
+  });
+})();
