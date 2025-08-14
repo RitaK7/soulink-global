@@ -1,53 +1,50 @@
 (function () {
-  if (window.__soulinkNavInitV2) return;
-  window.__soulinkNavInitV2 = true;
+  if (window.__soulinkNavInitV3) return;
+  window.__soulinkNavInitV3 = true;
 
   const btn  = document.getElementById('navToggle');
   const menu = document.getElementById('navMenu');
+  const mq   = () => window.innerWidth < 800;
 
   function setOpen(open) {
     if (!btn || !menu) return;
-    menu.style.display = open ? 'flex' : 'none';
+    document.body.classList.toggle('nav-open', open);
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
 
   function onResize() {
     if (!btn || !menu) return;
-    if (window.innerWidth < 800) {
+    if (mq()) {
       btn.style.display = 'block';
-      // always start closed on small screens
-      setOpen(false);
-      menu.style.flexDirection = 'column';
+      setOpen(false); // start closed on small
     } else {
       btn.style.display = 'none';
-      menu.style.display = 'flex';
-      menu.style.flexDirection = 'row';
+      document.body.classList.remove('nav-open');
+      menu.style.display = 'flex'; // desktop inline
     }
   }
 
   if (btn && menu) {
     btn.addEventListener('click', () => {
-      const open = !(menu.style.display === 'flex');
-      setOpen(open);
+      const isOpen = document.body.classList.contains('nav-open');
+      setOpen(!isOpen);
     });
 
-    // close after click on any link (mobile)
+    // Close after tapping a link
     menu.querySelectorAll('a').forEach(a => {
-      a.addEventListener('click', () => {
-        if (window.innerWidth < 800) setOpen(false);
-      });
+      a.addEventListener('click', () => { if (mq()) setOpen(false); });
     });
 
-    // close on ESC
+    // ESC to close
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && window.innerWidth < 800) setOpen(false);
+      if (e.key === 'Escape' && mq()) setOpen(false);
     });
 
     window.addEventListener('resize', onResize);
     onResize();
   }
 
-  // highlight current page
+  // Active link highlight
   const current = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
   menu?.querySelectorAll('a').forEach(a => {
     const href = (a.getAttribute('href') || '').toLowerCase();

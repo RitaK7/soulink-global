@@ -509,5 +509,33 @@ button:hover,
   }
   #navMenu a { display:block; padding:.6rem .5rem; }
 }
+/* Strong mobile dropdown for nav */
+@media (max-width: 800px) {
+  .navbar { position: sticky; top: 0; z-index: 2000; }
+  #navMenu {
+    position: fixed;
+    top: 56px;               /* adjust to your navbar height if needed */
+    left: 0; right: 0;
+    background: #00383a;
+    border-bottom: 1px solid rgba(0,253,216,.25);
+    padding: .75rem 1rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    z-index: 2100;
+    display: none;           /* default hidden on mobile */
+    flex-direction: column;
+    gap: 10px;
+  }
+  #navMenu a { display:block; padding:.6rem .5rem; }
+  /* Force-open when body has nav-open */
+  body.nav-open #navMenu { display: flex !important; }
+}
+
+/* Remove any legacy side menus that could overlay the button */
+.menu-toggle, .side-menu, .side-drawer, .drawer, .mobile-menu { display: none !important; }
+
+/* (already had) navbar link styles */
+#navMenu a { color:#dff; text-decoration:none; padding:.25rem .45rem; border-radius:8px; }
+#navMenu a:hover { box-shadow: 0 0 12px rgba(0,253,216,.25); }
+#navMenu a.active { color:#00fdd8; text-decoration:underline; text-underline-offset:3px; }
 
 
