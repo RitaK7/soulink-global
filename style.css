@@ -491,4 +491,23 @@ button:hover,
   input, select, textarea { font-size: 16px; } /* iOS zoom fix */
 }
 
+/* Mobile nav drawer styles */
+@media (max-width: 800px) {
+  .navbar { position: sticky; top: 0; z-index: 1000; }
+  #navMenu {
+    position: fixed;
+    top: 56px;            /* apytikslis navbar aukštis */
+    left: 0; right: 0;
+    background: #00383a;
+    border-bottom: 1px solid rgba(0,253,216,.25);
+    padding: .75rem 1rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    z-index: 1001;
+    display: none;        /* per nav.js valdoma */
+    flex-direction: column;
+    gap: 10px;
+  }
+  #navMenu a { display:block; padding:.6rem .5rem; }
+}
+
 
