@@ -142,6 +142,48 @@
         </div>
       </div>
 
+      <!-- Gender identity -->
+<div class="field-group">
+  <label>Gender</label>
+  <div class="card">
+    <label><input type="radio" name="gender" value="Woman"> Woman</label><br>
+    <label><input type="radio" name="gender" value="Man"> Man</label><br>
+    <label><input type="radio" name="gender" value="Non-binary"> Non-binary</label><br>
+    <label><input type="radio" name="gender" value="Prefer not to say"> Prefer not to say</label><br>
+    <label>
+      <input type="radio" name="gender" value="Self-describe"> Self-describe
+      <input id="genderSelf" type="text" placeholder="Type here…" style="margin-left:.6rem; max-width:320px;">
+    </label>
+  </div>
+</div>
+
+<!-- Who I'm open to connecting with (multiple) -->
+<div class="field-group">
+  <label>I'm open to connecting with</label>
+  <div class="card">
+    <label><input type="checkbox" name="seekingGender[]" value="Women"> Women</label><br>
+    <label><input type="checkbox" name="seekingGender[]" value="Men"> Men</label><br>
+    <label><input type="checkbox" name="seekingGender[]" value="Non-binary"> Non-binary</label><br>
+    <label><input type="checkbox" name="seekingGender[]" value="All genders"> All genders</label>
+  </div>
+</div>
+
+<!-- (Optional) Orientation label for visibility only -->
+<div class="field-group">
+  <label for="orientation">Orientation (optional)</label>
+  <select id="orientation" name="orientation">
+    <option value="">Prefer not to say</option>
+    <option>Straight</option>
+    <option>Gay</option>
+    <option>Lesbian</option>
+    <option>Bisexual</option>
+    <option>Pansexual</option>
+    <option>Asexual</option>
+    <option>Queer</option>
+    <option>Questioning</option>
+  </select>
+</div>
+
       <!-- Hobbies -->
       <div class="field-group">
         <label>Select Your Hobbies</label>

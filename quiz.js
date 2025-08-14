@@ -1,129 +1,85 @@
-// quiz.js — Soulink (golden)
+// quiz.js — Soulink (golden + gender)
 // Loads/saves the quiz form to localStorage key "soulQuiz"
-// Birthdate is a free-text YYYY-MM-DD field with regex validation.
 
 (function () {
   const KEY = "soulQuiz";
   const DATE_RE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 
-  // Form + fields
   const form =
     document.getElementById("quizForm") ||
     document.getElementById("quiz-form") ||
     document.querySelector("form");
+  if (!form) return;
 
-  if (!form) {
-    console.warn("quiz.js: form not found.");
-    return;
-  }
-
-  // Helpers
-  const $ = (sel, root = document) => root.querySelector(sel);
-  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
-
+  const $  = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   const getEl = (id) => document.getElementById(id);
 
-  function safeParse(v) {
-    try {
-      return JSON.parse(v) || {};
-    } catch {
-      return {};
-    }
-  }
+  const parse = (v)=>{ try { return JSON.parse(v)||{}; } catch { return {}; } };
+  const load = () => parse(localStorage.getItem(KEY));
+  const save = (obj) => localStorage.setItem(KEY, JSON.stringify(obj));
 
-  function loadData() {
-    return safeParse(localStorage.getItem(KEY));
+  function setInputValue(id, val){
+    const el = getEl(id); if(!el) return;
+    if (el.tagName==="SELECT" || el.tagName==="TEXTAREA" || el.type==="text" || el.type==="number") el.value = val ?? "";
   }
-
-  function saveData(obj) {
-    localStorage.setItem(KEY, JSON.stringify(obj));
+  function getInputValue(id){
+    const el = getEl(id); if(!el) return "";
+    if (el.type==="number") return el.value ? Number(el.value) : "";
+    return (el.value||"").trim();
   }
-
-  function setInputValue(id, val) {
-    const el = getEl(id);
-    if (!el) return;
-    if (
-      el.tagName === "SELECT" ||
-      el.tagName === "TEXTAREA" ||
-      el.type === "text" ||
-      el.type === "number"
-    ) {
-      el.value = val ?? "";
-    }
+  function setRadio(name, value){
+    $$(`input[type="radio"][name="${name}"], input[type="radio"][name="${name}[]"]`)
+      .forEach(n => n.checked = String(n.value) === String(value));
   }
-
-  function setRadio(name, value) {
-    // Support both name="hobbies" and name="hobbies[]"
-    const nodes = $$(`input[type="radio"][name="${name}"], input[type="radio"][name="${name}[]"]`);
-    nodes.forEach((n) => (n.checked = String(n.value) === String(value)));
+  function getRadio(name){
+    const n = $(`input[type="radio"][name="${name}"]:checked`) || $(`input[type="radio"][name="${name}[]"]:checked`);
+    return n ? n.value : "";
   }
-
-  function setChecks(name, values) {
+  function setChecks(name, values){
     const set = new Set(Array.isArray(values) ? values.map(String) : []);
-    const nodes = $$(
-      `input[type="checkbox"][name="${name}"], input[type="checkbox"][name="${name}[]"]`
-    );
-    nodes.forEach((n) => (n.checked = set.has(String(n.value))));
+    $$(`input[type="checkbox"][name="${name}"], input[type="checkbox"][name="${name}[]"]`)
+      .forEach(n => n.checked = set.has(String(n.value)));
+  }
+  function getChecks(name){
+    return $$(`input[type="checkbox"][name="${name}"]:checked, input[type="checkbox"][name="${name}[]"]:checked`).map(n => n.value);
+  }
+  function optionExists(select, value){
+    return Array.from(select?.options||[]).some(o => String(o.value) === String(value));
   }
 
-  function getInputValue(id) {
-    const el = getEl(id);
-    if (!el) return "";
-    if (el.type === "number") return el.value ? Number(el.value) : "";
-    return (el.value || "").trim();
-  }
+  // load existing
+  const data = load();
 
-  function getRadio(name) {
-    const node =
-      $(`input[type="radio"][name="${name}"]:checked`) ||
-      $(`input[type="radio"][name="${name}[]"]:checked`);
-    return node ? node.value : "";
-  }
-
-  function getChecks(name) {
-    return $$(
-      `input[type="checkbox"][name="${name}"]:checked, input[type="checkbox"][name="${name}[]"]:checked`
-    ).map((n) => n.value);
-  }
-
-  function optionExists(select, value) {
-    return Array.from(select.options).some((o) => String(o.value) === String(value));
-  }
-
-  // ----- Load existing data into the form
-  const data = loadData();
-
-  // Basic text/number fields present on the quiz
-  const textFields = ["name", "birthday", "country", "height", "weight", "unacceptable", "about"];
-  textFields.forEach((id) => {
-    // Special handling for <select id="country">
-    if (id === "country") {
-      const sel = getEl("country");
-      if (sel && optionExists(sel, data.country)) sel.value = data.country;
-      return;
-    }
-    setInputValue(id, data[id]);
+  // core fields
+  const textFields = ["name","birthday","country","height","weight","unacceptable","about","orientation"];
+  textFields.forEach(id=>{
+    if(id==="country"){
+      const sel = getEl("country"); if(sel && optionExists(sel, data.country)) sel.value = data.country;
+    } else setInputValue(id, data[id]);
   });
 
-  // Radios
+  // radios
   setRadio("connectionType", data.connectionType);
   setRadio("loveLanguage", data.loveLanguage);
+  setRadio("gender", data.gender);
 
-  // Checkbox groups (names may be "hobbies" / "hobbies[]", "values" / "values[]")
+  // checks
   setChecks("hobbies", data.hobbies);
   setChecks("values", data.values);
+  setChecks("seekingGender", data.seekingGender);
 
-  // Optional: clear native validation bubble on typing
+  // self-describe gender text (only if chosen)
+  if (data.gender === "Self-describe") setInputValue("genderSelf", data.genderSelf||"");
+
+  // birthday validity bubble
   const birthdayEl = getEl("birthday");
-  if (birthdayEl) {
-    birthdayEl.addEventListener("input", () => birthdayEl.setCustomValidity(""));
-  }
+  birthdayEl?.addEventListener("input", ()=> birthdayEl.setCustomValidity(""));
 
-  // ----- Submit/save handler
-  form.addEventListener("submit", (e) => {
+  // submit
+  form.addEventListener("submit", (e)=>{
     e.preventDefault();
 
-    // Collect values
     const payload = {
       name: getInputValue("name"),
       birthday: getInputValue("birthday"),
@@ -132,18 +88,17 @@
       weight: getInputValue("weight"),
       connectionType: getRadio("connectionType"),
       loveLanguage: getRadio("loveLanguage"),
+      gender: getRadio("gender"),
+      genderSelf: getInputValue("genderSelf"),
+      seekingGender: getChecks("seekingGender"),
+      orientation: getInputValue("orientation"),
       hobbies: getChecks("hobbies"),
       values: getChecks("values"),
       unacceptable: getInputValue("unacceptable"),
       about: getInputValue("about"),
     };
 
-    // Basic validations
-    if (!payload.name) {
-      alert("Please enter your name.");
-      getEl("name")?.focus();
-      return;
-    }
+    if (!payload.name) { alert("Please enter your name."); getEl("name")?.focus(); return; }
 
     if (birthdayEl) {
       const b = (payload.birthday || "").trim();
@@ -154,73 +109,44 @@
       }
     }
 
-    if (!payload.connectionType) {
-      alert("Please select your connection type.");
-      return;
+    // if self-describe chosen, replace gender value with the text if provided
+    if (payload.gender === "Self-describe" && payload.genderSelf) {
+      payload.gender = payload.genderSelf;
     }
 
-    if (!payload.loveLanguage) {
-      alert("Please select your primary love language.");
-      return;
-    }
+    // merge + save
+    const merged = { ...load(), ...payload };
+    save(merged);
 
-    // Merge with existing (so we don't lose things saved elsewhere, e.g., photos)
-    const current = loadData();
-    const merged = { ...current, ...payload };
-
-    saveData(merged);
-
-    // Optional: visual confirmation
-    // alert("Saved ✓");
-
-    // Navigate to next page (matches your button label)
+    // continue
     window.location.href = "edit-profile.html";
   });
 
-  // Optional autosave on change (comment out if you don't want it)
-  const autosave = (evt) => {
-    try {
-      // Reuse submit logic lightly without navigation
-      const temp = new Event("submit");
-      temp.preventDefault = () => {};
-      // Collect & merge
-      const current = loadData();
-      const p = {
-        name: getInputValue("name"),
-        birthday: getInputValue("birthday"),
-        country: getInputValue("country"),
-        height: getInputValue("height"),
-        weight: getInputValue("weight"),
-        connectionType: getRadio("connectionType"),
-        loveLanguage: getRadio("loveLanguage"),
-        hobbies: getChecks("hobbies"),
-        values: getChecks("values"),
-        unacceptable: getInputValue("unacceptable"),
-        about: getInputValue("about"),
-      };
-      localStorage.setItem(KEY, JSON.stringify({ ...current, ...p }));
-    } catch (e) {
-      console.warn("Autosave failed:", e);
-    }
+  // autosave on change (optional, lightweight)
+  const autosave = () => {
+    const current = load();
+    const fragment = {
+      name: getInputValue("name"),
+      birthday: getInputValue("birthday"),
+      country: getInputValue("country"),
+      height: getInputValue("height"),
+      weight: getInputValue("weight"),
+      connectionType: getRadio("connectionType"),
+      loveLanguage: getRadio("loveLanguage"),
+      gender: getRadio("gender"),
+      genderSelf: getInputValue("genderSelf"),
+      seekingGender: getChecks("seekingGender"),
+      orientation: getInputValue("orientation"),
+      hobbies: getChecks("hobbies"),
+      values: getChecks("values"),
+      unacceptable: getInputValue("unacceptable"),
+      about: getInputValue("about"),
+    };
+    localStorage.setItem(KEY, JSON.stringify({ ...current, ...fragment }));
   };
 
-  // Attach autosave to key fields
-  [
-    "name",
-    "birthday",
-    "country",
-    "height",
-    "weight",
-    "unacceptable",
-    "about",
-  ].forEach((id) => getEl(id)?.addEventListener("change", autosave));
-  $$('input[name="connectionType"], input[name="connectionType[]"]').forEach((n) =>
-    n.addEventListener("change", autosave)
-  );
-  $$('input[name="loveLanguage"], input[name="loveLanguage[]"]').forEach((n) =>
-    n.addEventListener("change", autosave)
-  );
-  $$('input[name="hobbies"], input[name="hobbies[]"], input[name="values"], input[name="values[]"]').forEach(
-    (n) => n.addEventListener("change", autosave)
-  );
+  ["name","birthday","country","height","weight","orientation","unacceptable","about","genderSelf"]
+    .forEach(id => getEl(id)?.addEventListener("change", autosave));
+  $$('input[name="connectionType"], input[name="loveLanguage"], input[name="gender"]').forEach(n => n.addEventListener("change", autosave));
+  $$('input[name="hobbies[]"], input[name="values[]"], input[name="seekingGender[]"]').forEach(n => n.addEventListener("change", autosave));
 })();

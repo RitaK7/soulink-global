@@ -97,6 +97,37 @@
           </div>
 
           <div class="field-group">
+            <label>Gender</label>
+          <div class="row" style="gap:1.2rem;">
+            <label><input type="radio" name="gender" value="Woman"> Woman</label>
+            <label><input type="radio" name="gender" value="Man"> Man</label>
+            <label><input type="radio" name="gender" value="Non-binary"> Non-binary</label>
+            <label><input type="radio" name="gender" value="Prefer not to say"> Prefer not to say</label>
+            <label>Self-describe <input id="genderSelf" type="text" placeholder="Type here…" style="max-width:220px;"></label>
+          </div>
+        </div>
+ 
+        <div class="field-group">
+          <label>I'm open to connecting with</label>
+        <div class="row" style="gap:1.2rem;">
+          <label><input type="checkbox" name="seekingGender[]" value="Women"> Women</label>
+          <label><input type="checkbox" name="seekingGender[]" value="Men"> Men</label>
+          <label><input type="checkbox" name="seekingGender[]" value="Non-binary"> Non-binary</label>
+          <label><input type="checkbox" name="seekingGender[]" value="All genders"> All genders</label>
+      </div>
+    </div>
+ 
+    <div class="field-group">
+      <label for="orientation">Orientation (optional)</label>
+      <select id="orientation" name="orientation" style="max-width:280px;">
+      <option value="">Prefer not to say</option>
+      <option>Straight</option><option>Gay</option><option>Lesbian</option>
+      <option>Bisexual</option><option>Pansexual</option>
+      <option>Asexual</option><option>Queer</option><option>Questioning</option>
+    </select>
+   </div>
+
+          <div class="field-group">
             <label>Your Hobbies:</label>
             <div class="row" style="gap:1.2rem;">
               <label><input type="checkbox" name="hobbies[]" value="Music" /> Music</label>
@@ -182,7 +213,6 @@
   <a class="btn btn-ghost" href="quiz.html">← Back: Quiz</a>
   <a class="btn" href="my-soul.html">Next: My Soul →</a>
 </nav>
-
 
   <footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
     © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba

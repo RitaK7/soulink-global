@@ -483,3 +483,12 @@ button:hover,
 .pager { display:flex; justify-content:space-between; align-items:center; gap:.8rem; margin-top:1.2rem; flex-wrap:wrap; }
 .pager .btn { min-width:140px; text-align:center; }
 
+/* Mobile spacing & tap targets */
+@media (max-width: 720px) {
+  .btn { padding:.85rem 1.1rem; }
+  .card { padding: 1rem; }
+  .field-group label { font-size: 1rem; }
+  input, select, textarea { font-size: 16px; } /* iOS zoom fix */
+}
+
+

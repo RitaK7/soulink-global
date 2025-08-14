@@ -68,6 +68,9 @@
     "ms-height": (data.height || data.height === 0) ? String(data.height) : "–",
     "ms-weight": (data.weight || data.weight === 0) ? String(data.weight) : "–",
     "ms-connection": data.connectionType || "–",
+    "ms-gender": data.gender || "–",
+    "ms-seeking": (Array.isArray(data.seekingGender) && data.seekingGender.length) ? data.seekingGender.join(", ") : "–",
+    "ms-orientation": data.orientation || "–",
 
     // Love Language shown in two places
     "ms-loveLanguage": data.loveLanguage || "–",
