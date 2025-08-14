@@ -479,3 +479,7 @@ button:hover,
 #navMenu a:hover { box-shadow: 0 0 12px rgba(0,253,216,.25); }
 #navMenu a.active { color:#00fdd8; text-decoration:underline; text-underline-offset:3px; }
 
+/* Pager strip */
+.pager { display:flex; justify-content:space-between; align-items:center; gap:.8rem; margin-top:1.2rem; flex-wrap:wrap; }
+.pager .btn { min-width:140px; text-align:center; }
+
