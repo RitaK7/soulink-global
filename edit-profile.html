@@ -48,14 +48,6 @@
     </ul>
   </div>
 </nav>
-  <script>
-    (function(){
-      const btn = document.getElementById('navToggle');
-      const menu = document.getElementById('navMenu');
-      function onResize(){ if(innerWidth<800){ btn.style.display='block'; menu.style.display='none'; } else { btn.style.display='none'; menu.style.display='flex'; } }
-      if(btn && menu){ btn.onclick=()=>{ menu.style.display = (menu.style.display==='none'||!menu.style.display)?'flex':'none'; }; addEventListener('resize', onResize); onResize(); }
-    })();
-  </script>
 
   <main class="container">
     <h1 style="color:#dff; margin:0 0 1rem;">Edit Your Soul Profile</h1>
@@ -169,7 +161,7 @@
           </div>
 
           <div class="actions">
-            <button id="saveProfile" class="btn" type="button">Save My Soul 💚</button>
+            <button id="saveBtn" class="btn" type="button">Save My Soul 💚</button>
             <button id="resetProfile" class="btn btn-ghost" type="button">Reset Form</button>
             <span id="saveMessage"></span>
           </div>
@@ -207,7 +199,8 @@
     <img id="preview3" class="photo-preview" alt="Preview 3" style="display:none;">
   </div>
 </div>
-
+<!-- end .grid -->
+</div>
     </form>
   </main>
   <nav class="pager">

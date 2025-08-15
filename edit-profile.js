@@ -40,21 +40,27 @@ document.addEventListener("DOMContentLoaded", () => {
       .forEach(n => n.checked = set.has(String(n.value)));
   }
   function getChecks(name) {
-    return $$(`input[type="checkbox"][name="${name}"]:checked, input[type="checkbox"][name="${name}[]"]:checked`)
-      .map(n => n.value);
+  return $$(
+    `input[type="checkbox"][name="${name}"]:checked, input[type="checkbox"][name="${name}[]"]:checked"`
+  ).map(n => n.value);
+} // <-- šita uždaromoji "}" turi būti!
 
-  function toggleGenderSelf(){
+function toggleGenderSelf() {
   const g = document.querySelector('input[name="gender"]:checked')?.value;
   const t = document.getElementById('genderSelf');
   if (!t) return;
   const on = g === "Self-describe";
   t.disabled = !on;
-  if (!on) t.value = "";  // išvalo, kad nesaugotų per klaidą
+  if (!on) t.value = "";
 }
-document.querySelectorAll('input[name="gender"]').forEach(r => r.addEventListener('change', toggleGenderSelf));
-toggleGenderSelf(); // inicialiai
 
-  }
+// užregistruojam perjungimą visiems gender radijams
+document
+  .querySelectorAll('input[name="gender"]')
+  .forEach(r => r.addEventListener('change', toggleGenderSelf));
+
+// inicijuojam būseną įkrovus
+toggleGenderSelf();
 
   // --- load existing data into the form
   const data = loadData();

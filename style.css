@@ -633,4 +633,28 @@ button:hover,
   .photo-preview { max-height: 55vh; }        /* kad nešoktų per visą ekraną */
 }
 
+/* ---- Edit Profile photos (final override) ---- */
+.grid > .ep-photos { grid-template-columns: 1fr !important; }
+
+.photo-row {
+  overflow: hidden;                 /* niekas neišlenda už kampų */
+  display: flex; flex-direction: column; gap: .6rem;
+  padding: .9rem; border-radius: 14px;
+  background: rgba(0,90,90,.25);
+  box-shadow: inset 0 0 0 1px rgba(0,253,216,.15);
+}
+
+.photo-row .controls { display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; }
+
+.photo-preview {
+  display:block; width:100%; max-width:100%;
+  aspect-ratio: 4 / 3; object-fit: cover; object-position:center;
+  border-radius:12px;
+}
+
+@media (max-width: 860px){
+  .grid > .ep-photos { grid-template-columns: 1fr !important; }
+  .photo-preview { max-height: 55vh; }
+}
+
 
