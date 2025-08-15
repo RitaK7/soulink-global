@@ -543,4 +543,11 @@ button:hover,
 @media (max-width: 720px){ .ep-photos { grid-template-columns: 1fr 1fr; } }
 .ep-photos img { width:100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 12px; }
 
+/* Edit Profile photo grid */
+.ep-photos { display:grid; grid-template-columns: 1fr; gap: .9rem; }
+.photo-row { background: rgba(0,90,90,.25); border-radius: 12px; padding: .8rem; }
+.photo-row label { display:block; margin-bottom:.4rem; color:#dff; }
+.photo-preview { width:100%; max-width: 560px; aspect-ratio: 4/3; object-fit: cover; border-radius: 10px; margin-top:.5rem; box-shadow: 0 0 12px rgba(0,253,216,.25); }
+@media (min-width: 860px) { .ep-photos { grid-template-columns: 1fr 1fr 1fr; } }
+
 

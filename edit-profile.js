@@ -72,42 +72,73 @@ toggleGenderSelf(); // inicialiai
   setChecks("values",         data.values);
   setChecks("seekingGender",  data.seekingGender);
 
-  // --- photos (optional IDs in HTML: photo1/2/3, preview1/2/3, remove1/2/3)
-  function bindPhoto(slot) {
-    const input  = getEl(`photo${slot}`);
-    const img    = getEl(`preview${slot}`);
-    const remove = getEl(`remove${slot}`);
-    const key    = `profilePhoto${slot}`;
+ // === Photos (robust bind)
+function bindPhoto(slot) {
+  const input  = document.getElementById(`photo${slot}`);
+  let   img    = document.getElementById(`preview${slot}`);
+  const remove = document.getElementById(`remove${slot}`);
+  const key    = `profilePhoto${slot}`;
 
-    // show existing
-    if (img && data[key]) { img.src = data[key]; img.style.display = "block"; }
-
-    if (input) {
-      input.addEventListener("change", () => {
-        const file = input.files && input.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-          const cur = loadData();
-          cur[key] = reader.result;
-          saveData(cur);
-          if (img) { img.src = reader.result; img.style.display = "block"; }
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-    if (remove) {
-      remove.addEventListener("click", (e) => {
-        e.preventDefault();
-        const cur = loadData();
-        cur[key] = "";
-        saveData(cur);
-        if (img) { img.removeAttribute("src"); img.style.display = "none"; }
-        if (input) input.value = "";
-      });
-    }
+  // Create preview <img> if missing
+  if (!img && input) {
+    img = document.createElement('img');
+    img.id = `preview${slot}`;
+    img.className = 'photo-preview';
+    img.style.display = 'none';
+    input.insertAdjacentElement('afterend', img);
   }
-  [1, 2, 3].forEach(bindPhoto);
+
+  // Show existing
+  const existing = (loadData() || {})[key];
+  if (img && existing) { img.src = existing; img.style.display = 'block'; }
+
+  // Resize utility (keeps under ~1280px, JPEG ~0.8)
+  function downscale(dataUrl, maxSide = 1280, quality = 0.8) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        const scale = Math.min(1, maxSide / Math.max(width, height));
+        if (scale < 1) { width = Math.round(width * scale); height = Math.round(height * scale); }
+        const c = document.createElement('canvas'); c.width = width; c.height = height;
+        const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+        resolve(c.toDataURL('image/jpeg', quality));
+      };
+      img.src = dataUrl;
+    });
+  }
+
+  // On choose file
+  input?.addEventListener('change', async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        // downscale & save
+        const small = await downscale(reader.result, 1280, 0.8);
+        const cur = loadData();
+        cur[key] = small;
+        saveData(cur);
+        if (img) { img.src = small; img.style.display = 'block'; }
+      } catch (e) {
+        alert('Could not process image. Try a smaller one.');
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Remove
+  remove?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const cur = loadData();
+    cur[key] = "";
+    saveData(cur);
+    if (img) { img.removeAttribute('src'); img.style.display = 'none'; }
+    if (input) input.value = "";
+  });
+}
+[1,2,3].forEach(bindPhoto);
 
   // --- save handler
   const saveBtn = getEl("saveBtn") || $('button[type="submit"]');

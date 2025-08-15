@@ -176,38 +176,33 @@
           </div>
         </div>
 
-        <!-- RIGHT: photos -->
-       <div class="ep-photos"></div>
-        <div class="photos">
-          <div class="slot">
-            <div class="row">
-              <strong>Profile Photo 1:</strong>
-              <input id="profilePhoto1" type="file" accept="image/*" />
-              <button class="btn btn-ghost" type="button" data-remove="profilePhoto1">Remove</button>
-            </div>
-            <img id="profilePhoto1-preview" alt="Profile photo 1 preview" />
-          </div>
+       <!-- Photos -->
+<div class="ep-photos">
+  <!-- Photo 1 -->
+  <div class="photo-row">
+    <label>Profile Photo 1:</label>
+    <input id="photo1" type="file" accept="image/*">
+    <button id="remove1" type="button" class="btn btn-ghost">Remove</button>
+    <img id="preview1" class="photo-preview" alt="Preview 1" style="display:none;">
+  </div>
 
-          <div class="slot">
-            <div class="row">
-              <strong>Profile Photo 2:</strong>
-              <input id="profilePhoto2" type="file" accept="image/*" />
-              <button class="btn btn-ghost" type="button" data-remove="profilePhoto2">Remove</button>
-            </div>
-            <img id="profilePhoto2-preview" alt="Profile photo 2 preview" />
-          </div>
+  <!-- Photo 2 -->
+  <div class="photo-row">
+    <label>Profile Photo 2:</label>
+    <input id="photo2" type="file" accept="image/*">
+    <button id="remove2" type="button" class="btn btn-ghost">Remove</button>
+    <img id="preview2" class="photo-preview" alt="Preview 2" style="display:none;">
+  </div>
 
-          <div class="slot">
-            <div class="row">
-              <strong>Profile Photo 3:</strong>
-              <input id="profilePhoto3" type="file" accept="image/*" />
-              <button class="btn btn-ghost" type="button" data-remove="profilePhoto3">Remove</button>
-            </div>
-            <img id="profilePhoto3-preview" alt="Profile photo 3 preview" />
-          </div>
-        </div>
-      </div>
-      </div>
+  <!-- Photo 3 -->
+  <div class="photo-row">
+    <label>Profile Photo 3:</label>
+    <input id="photo3" type="file" accept="image/*">
+    <button id="remove3" type="button" class="btn btn-ghost">Remove</button>
+    <img id="preview3" class="photo-preview" alt="Preview 3" style="display:none;">
+  </div>
+</div>
+
     </form>
   </main>
   <nav class="pager">
