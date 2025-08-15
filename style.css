@@ -583,5 +583,54 @@ button:hover,
 @media (max-width: 860px){
   .ep-photos { grid-template-columns: 1fr; }  /* telefonu – vienas po kitu */
 }
+/* --- Edit Profile : Photo section polish --- */
+
+/* grotelių kolonos */
+.ep-photos {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;   /* desktop: 3 per eilę */
+  gap: 1rem;
+  align-items: start;                   /* kad vaikai nestybtų į tėvo aukštį */
+}
+
+/* kiekviena foto kortelė */
+.photo-row {
+  background: rgba(0,90,90,.25);
+  border-radius: 14px;
+  padding: .9rem;
+  box-shadow: inset 0 0 0 1px rgba(0,253,216,.15);
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+
+  /* svarbiausia: neleisti niekam „išlįsti“ už kampų */
+  overflow: hidden;
+}
+
+/* input + remove į vieną eilę, kad negadintų pločio */
+.photo-row .controls {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+}
+
+/* pati peržiūra */
+.photo-preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;      /* saugus crop */
+  object-fit: cover;
+  object-position: center;
+  border-radius: 12px;      /* su overflow:hidden atkartos kortelės kampus */
+  max-width: 100%;
+}
+
+/* telefonams – neužgožti ekrano labai aukšta foto */
+@media (max-width: 860px) {
+  .ep-photos { grid-template-columns: 1fr; }  /* po vieną stulpelį */
+  .photo-preview { max-height: 55vh; }        /* kad nešoktų per visą ekraną */
+}
 
 
