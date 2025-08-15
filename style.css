@@ -657,4 +657,10 @@ button:hover,
   .photo-preview { max-height: 55vh; }
 }
 
+/* Force-hide mobile menu on load, even if inline style says flex */
+@media (max-width: 800px) {
+  #navMenu { display: none !important; }
+  body.nav-open #navMenu { display: flex !important; }
+}
+
 
