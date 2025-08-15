@@ -662,5 +662,16 @@ button:hover,
   #navMenu { display: none !important; }
   body.nav-open #navMenu { display: flex !important; }
 }
+/* My Soul photos */
+.my-photos img{
+  width:100%;
+  aspect-ratio:4/3;
+  object-fit:cover;
+  border-radius:12px;
+  display:block;
+}
+@media (max-width: 860px){
+  .my-photos{ gap:.8rem; }
+}
 
 

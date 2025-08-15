@@ -55,7 +55,13 @@
   }
 
   // --- render
-  const data = load();
+  const data = JSON.parse(localStorage.getItem('soulQuiz')||'{}');
+document.querySelectorAll('[data-if]').forEach(el=>{
+  const key = el.getAttribute('data-if');
+  const v = data[key];
+  if (v==null || (Array.isArray(v)&&v.length===0) || (typeof v==='string' && !v.trim())) el.remove();
+});
+
 
   $("#ms-name") && ($("#ms-name").textContent = (data.name?.trim() || "Friend"));
 
@@ -84,7 +90,19 @@
     "ms-zodiac-west": (m&&d) ? westernZodiac(m,d) : "–",
     "ms-zodiac-cn": (y) ? chineseZodiac(y) : "–",
     "ms-lifePath": (y&&m&&d) ? lifePath(data.birthday) : "–",
+    
   };
+  const badges = {
+  "Words of Affirmation":"💬",
+  "Acts of Service":"🤝",
+  "Receiving Gifts":"🎁",
+  "Quality Time":"⏳",
+  "Physical Touch":"🤗"
+ };
+  const ll = data.loveLanguage;
+  const el = document.getElementById('loveLangBadge');
+  if (el && badges[ll]) el.textContent = `${badges[ll]} ${ll}`;
+
 
   Object.entries(fields).forEach(([id,val]) => {
     const el = document.getElementById(id);
