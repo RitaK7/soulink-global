@@ -105,7 +105,7 @@ function bindPhoto(slot){
 [1,2,3].forEach(bindPhoto);
 
   // --- save handler
-  const saveBtn = getEl("saveBtn") || $('button[type="submit"]');
+  const saveBtn = getEl("saveBtn") || getEl("saveProfile") || $('button[type="submit"]');
   const msg     = getEl("status")  || getEl("msg");
 
   if (saveBtn) {
