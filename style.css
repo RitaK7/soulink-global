@@ -538,4 +538,9 @@ button:hover,
 #navMenu a:hover { box-shadow: 0 0 12px rgba(0,253,216,.25); }
 #navMenu a.active { color:#00fdd8; text-decoration:underline; text-underline-offset:3px; }
 
+/* Edit Profile photos */
+.ep-photos { display:grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; }
+@media (max-width: 720px){ .ep-photos { grid-template-columns: 1fr 1fr; } }
+.ep-photos img { width:100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 12px; }
+
 

@@ -42,6 +42,18 @@ document.addEventListener("DOMContentLoaded", () => {
   function getChecks(name) {
     return $$(`input[type="checkbox"][name="${name}"]:checked, input[type="checkbox"][name="${name}[]"]:checked`)
       .map(n => n.value);
+
+  function toggleGenderSelf(){
+  const g = document.querySelector('input[name="gender"]:checked')?.value;
+  const t = document.getElementById('genderSelf');
+  if (!t) return;
+  const on = g === "Self-describe";
+  t.disabled = !on;
+  if (!on) t.value = "";  // išvalo, kad nesaugotų per klaidą
+}
+document.querySelectorAll('input[name="gender"]').forEach(r => r.addEventListener('change', toggleGenderSelf));
+toggleGenderSelf(); // inicialiai
+
   }
 
   // --- load existing data into the form
