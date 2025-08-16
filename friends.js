@@ -133,31 +133,42 @@
     }
   });
 
-  // Export / Import
-  $("#exportFriends")?.addEventListener("click", () => {
-    const blob = new Blob([JSON.stringify(friends, null, 2)], { type: "application/json" });
+ // -------- Friends: Export / Import JSON (buttons only) --------
+(() => {
+  const btnExport = document.getElementById('exportFriends');
+  const btnImport = document.getElementById('importFriends');
+  })();
+
+  // Export as JSON file
+  btnExport?.addEventListener('click', () => {
+    const data = localStorage.getItem('friends') || '[]';
+    const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
-    a.download = "soulink-friends.json";
+    a.download = 'soulink-friends.json';
     a.click();
     URL.revokeObjectURL(url);
   });
 
-  $("#importFriends")?.addEventListener("change", (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
+  // Import from JSON file (opens file picker)
+  btnImport?.addEventListener('click', () => {
+    const picker = document.createElement('input');
+    picker.type = 'file';
+    picker.accept = 'application/json,application/*+json';
+    picker.onchange = async () => {
+      const file = picker.files?.[0];
+      if (!file) return;
       try {
-        const arr = JSON.parse(ev.target.result);
-        if (!Array.isArray(arr)) throw new Error("Not an array");
-        saveFriends(arr);
+        const text = await file.text();
+        const arr = JSON.parse(text);
+        if (!Array.isArray(arr)) throw new Error('JSON is not an array');
+        localStorage.setItem('friends', JSON.stringify(arr));
         location.reload();
       } catch (err) {
-        alert("Invalid JSON file.");
+        alert('Import failed: ' + err.message);
       }
     };
-    reader.readAsText(file);
+    picker.click();
   });
 })();
