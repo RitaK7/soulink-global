@@ -154,3 +154,187 @@
     location.reload();
   });
 })();
+
+// === Coach Enhancements – safe append ===
+(() => {
+  if (window.__coachEnh) return; 
+  window.__coachEnh = true;
+
+  // -> ČIA dėk mano pateiktas funkcijas (streak, localDailySuggestion, onNewSuggestion, notify, ir t.t.)
+  //    Jei tavo failas jau turi addTask/toggleTask/removeTask/renderTasks ir jos veikia,
+  //    jų NEKARTOK – palik savas.
+
+  // Galiausiai – pririšk mygtukus:
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('btnDoneToday')?.addEventListener('click', markDoneToday);
+    document.getElementById('btnNewSuggestion')?.addEventListener('click', onNewSuggestion);
+    document.getElementById('btnAddTask')?.addEventListener('click', () => {
+      const v = document.getElementById('taskInput')?.value || '';
+      if (typeof addTask === 'function') addTask(v); // naudoja TAVO esamą addTask, jei yra
+      document.getElementById('taskInput') && (document.getElementById('taskInput').value = '');
+    });
+  });
+})();
+
+// ---- storage helpers ----
+const COACH_KEY = 'soulCoach';
+const coachLoad = () => JSON.parse(localStorage.getItem(COACH_KEY) || '{}');
+const coachSave = (obj) => localStorage.setItem(COACH_KEY, JSON.stringify(obj));
+
+// ---- streak + history ----
+function markDoneToday(){
+  const today = new Date().toISOString().slice(0,10);
+  const s = coachLoad();
+  if (s.lastDone === today) return; // jau pažymėta
+  const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  s.streak = (s.lastDone === yesterday ? (s.streak||0)+1 : 1);
+  s.lastDone = today;
+  coachSave(s);
+  notify('Nice! Streak +1 ✨');
+  renderStreak();
+}
+
+function renderStreak(){
+  const s = coachLoad();
+  const el = document.getElementById('streak');
+  if (el) el.textContent = `🔥 Streak: ${s.streak||0} day${(s.streak||0)===1?'':'s'}`;
+}
+
+// ---- local fallback coach (be AI) ----
+function localDailySuggestion(profile){
+  const ll = (profile.loveLanguage||'').toLowerCase();
+  const conn = (profile.connectionType||'').toLowerCase();
+  const pick = (arr)=>arr[Math.floor(Math.random()*arr.length)];
+
+  const base = {
+    service: [
+      "Do one tiny helpful act without being asked.",
+      "Prepare something practical for someone (tea, a reminder, a lift)."
+    ],
+    words: [
+      "Send a 3-sentence appreciation message.",
+      "Leave a kind sticky note for someone (or yourself)."
+    ],
+    gifts: [
+      "Bring a small treat or share something you love.",
+      "Donate one item or gift a book recommendation."
+    ],
+    quality: [
+      "Offer 15 minutes of undivided attention.",
+      "Plan a mini walk & talk with someone."
+    ],
+    touch: [
+      "Give a warm hug (if welcome) or mindful self-soothing practice.",
+      "5-minute stretch or self-massage."
+    ]
+  };
+
+  let bucket = base.quality;
+  if (ll.includes('service')) bucket = base.service;
+  else if (ll.includes('words')) bucket = base.words;
+  else if (ll.includes('gift')) bucket = base.gifts;
+  else if (ll.includes('touch')) bucket = base.touch;
+
+  const social = conn.includes('friend') || conn.includes('both');
+  const solo = !social;
+
+  // truputį individualizuojam
+  let action = pick(bucket);
+  if (solo) action = action.replace('someone','yourself');
+
+  return action;
+}
+
+// ---- wire "New Suggestion" button ----
+async function onNewSuggestion(){
+  const profile = JSON.parse(localStorage.getItem('soulQuiz')||'{}');
+  let idea;
+
+  try {
+    // jei ateityje turėsi API, nuimk komentarus:
+    // const res = await fetch('/api/coach', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({profile, history:coachLoad()})});
+    // if (!res.ok) throw new Error('api');
+    // const data = await res.json();
+    // idea = data.daily_action || localDailySuggestion(profile);
+
+    idea = localDailySuggestion(profile); // dabar – local fallback
+  } catch(e){
+    idea = localDailySuggestion(profile);
+  }
+
+  const el = document.getElementById('todaysAction');
+  if (el) el.textContent = idea;
+  notify('New suggestion ready 💡');
+}
+
+// ---- tasks (paprastas CRUD su auto-archiving) ----
+function addTask(text){
+  text = (text||'').trim();
+  if (!text) return;
+  const s = coachLoad();
+  s.tasks = s.tasks||[];
+  s.tasks.push({text, done:false, addedAt:Date.now()});
+  coachSave(s);
+  renderTasks();
+}
+
+function toggleTask(idx){
+  const s = coachLoad(); if (!s.tasks) return;
+  s.tasks[idx].done = !s.tasks[idx].done;
+  coachSave(s);
+  renderTasks();
+}
+
+function removeTask(idx){
+  const s = coachLoad(); if (!s.tasks) return;
+  s.tasks.splice(idx,1);
+  coachSave(s);
+  renderTasks();
+}
+
+function renderTasks(){
+  const s = coachLoad();
+  const list = document.getElementById('taskList');
+  if (!list) return;
+  list.innerHTML = '';
+  (s.tasks||[]).forEach((t,i)=>{
+    const li = document.createElement('div');
+    li.className = 'task-row';
+    li.innerHTML = `
+      <label class="task">
+        <input type="checkbox" ${t.done?'checked':''} onclick="toggleTask(${i})">
+        <span>${t.text}</span>
+      </label>
+      <button class="btn btn-ghost" onclick="removeTask(${i})">Remove</button>
+    `;
+    list.appendChild(li);
+  });
+}
+
+// ---- tiny toast ----
+function notify(msg){
+  let n = document.getElementById('toast');
+  if (!n){
+    n = document.createElement('div');
+    n.id = 'toast';
+    n.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);padding:10px 14px;border-radius:10px;background:#0a3;box-shadow:0 8px 30px rgba(0,0,0,.25);color:#fff;z-index:9999;opacity:0;transition:.2s';
+    document.body.appendChild(n);
+  }
+  n.textContent = msg;
+  n.style.opacity = '1';
+  setTimeout(()=> n.style.opacity='0', 1400);
+}
+
+// ---- init on load ----
+document.addEventListener('DOMContentLoaded', ()=>{
+  renderStreak();
+  renderTasks();
+  // pririšk mygtukus (jei turi tokius ID):
+  document.getElementById('btnDoneToday')?.addEventListener('click', markDoneToday);
+  document.getElementById('btnNewSuggestion')?.addEventListener('click', onNewSuggestion);
+  document.getElementById('btnAddTask')?.addEventListener('click', ()=>{
+    const v = document.getElementById('taskInput')?.value || '';
+    addTask(v);
+    if (document.getElementById('taskInput')) document.getElementById('taskInput').value='';
+  });
+});
