@@ -91,12 +91,15 @@
         <h3 class="section-title">Growth Tasks</h3>
         <div id="tasks"></div>
 
-        <form id="add-task" class="row" style="margin-top:.8rem;">
-          <input id="task-input" type="text" placeholder="Add a task…" />
-          <button class="btn" type="submit">Add</button>
-          <button id="resetTasks" class="btn" type="button">Reset</button>
-          <button id="exportCoach" class="btn btn-ghost">Export Coach Plan</button>
-        </form>
+       <form id="add-task" class="row" style="margin-top:.8rem;">
+       <!-- Jei nori, gali palikti 'task-input' — žemiau duodu JS, kuris palaiko abu variantus -->
+        <input id="task-input" type="text" placeholder="Add a task…" />
+
+        <button class="btn" type="submit">Add</button>
+        <button id="resetTasks" class="btn" type="button">Reset</button>
+        <button id="exportCoach" class="btn btn-ghost" type="button">Export Coach Plan</button>
+      </form>
+
         <p class="hint" style="margin-top:.4rem;">Your tasks are saved to your device.</p>
       </div>
     </div>

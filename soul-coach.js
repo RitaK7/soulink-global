@@ -310,3 +310,149 @@
     });
   });
 })();
+
+// === Coach: Streak + Export PNG (self-contained) ===
+(() => {
+  if (window.__coachStreakExport) return;
+  window.__coachStreakExport = true;
+
+  // --- tiny storage just for coach ---
+  const storeKey = 'soulCoach';
+  const load  = () => { try { return JSON.parse(localStorage.getItem(storeKey) || '{}'); } catch { return {}; } };
+  const save  = (o) => localStorage.setItem(storeKey, JSON.stringify(o));
+  const iso   = (t) => new Date(t).toISOString().slice(0,10);
+
+  // --- streak ---
+  function renderStreak(){
+    const s = load();
+    const el = document.getElementById('streak');
+    if (el) el.textContent = `🔥 Streak: ${s.streak||0} day${(s.streak||0)==1?'':'s'}`;
+  }
+  function markDoneToday(){
+    const s = load();
+    const t = iso(Date.now());
+    const y = iso(Date.now()-86400000);
+    if (s.lastDone === t) { notify('Already checked ✓'); return; }
+    s.streak = (s.lastDone === y ? (s.streak||0)+1 : 1);
+    s.lastDone = t;
+    save(s);
+    renderStreak();
+    notify('Nice! Streak +1 ✨');
+  }
+  // padarom globalų, jei prireiktų testuoti iš konsolės
+  window.markDoneToday = markDoneToday;
+
+  // --- PNG export (Coach plan) ---
+  function wrap(ctx, text, x, y, maxWidth, lh){
+    const words = (text||'').split(' ');
+    let line = '', yy = y;
+    for (let i=0;i<words.length;i++){
+      const test = line + words[i] + ' ';
+      if (ctx.measureText(test).width > maxWidth && i>0){
+        ctx.fillText(line, x, yy); line = words[i] + ' '; yy += lh;
+      } else line = test;
+    }
+    ctx.fillText(line, x, yy);
+    return yy + lh;
+  }
+  function exportCoach(){
+    const prof = JSON.parse(localStorage.getItem('soulQuiz')||'{}');
+    const s = load();
+    const action = (document.getElementById('coach-action')?.textContent||'').trim();
+    const tasks = (s.tasks||[]).filter(t=>!t.done).map(t=>t.text).slice(0,6);
+
+    const W=1500, H=1000, pad=48;
+    const scale = Math.max(2, Math.floor(window.devicePixelRatio||2));
+    const cvs = document.createElement('canvas'); cvs.width = W*scale; cvs.height = H*scale;
+    const ctx = cvs.getContext('2d'); ctx.scale(scale,scale);
+
+    // background + title
+    ctx.fillStyle = '#083b3c'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#00fdd8'; ctx.font = '700 40px system-ui';
+    ctx.fillText('Soulink · Coach Plan', pad, pad+10);
+
+    // essentials
+    ctx.font='700 22px system-ui'; ctx.fillText('Essentials', pad, 120);
+    ctx.font='16px system-ui'; ctx.fillStyle='#dff';
+    const lines = [
+      `Name: ${prof.name||'-'}`,
+      `Connection: ${prof.connectionType||'-'}`,
+      `Love Language: ${prof.loveLanguage||'-'}`,
+      `Birth Date: ${prof.birthday||'-'}`,
+      `Western Zodiac: ${prof.zodiac||prof.westernZodiac||'-'}`,
+      `Chinese Zodiac: ${prof.chineseZodiac||'-'}`,
+      `Life Path: ${prof.lifePath||'-'}`
+    ];
+    let y = 150; lines.forEach(l=>{ ctx.fillText(l, pad, y); y += 28; });
+
+    // today's action
+    ctx.fillStyle='#00fdd8'; ctx.font='700 22px system-ui';
+    ctx.fillText("Today's Action", 600, 120);
+    ctx.fillStyle='#dff'; ctx.font='18px system-ui';
+    y = wrap(ctx, action||'—', 600, 150, 840, 26);
+
+    // tasks
+    ctx.fillStyle='#00fdd8'; ctx.font='700 22px system-ui';
+    ctx.fillText('Top Tasks', 600, y+30);
+    ctx.fillStyle='#dff'; ctx.font='18px system-ui';
+    let yy = y+60; tasks.forEach(t => { yy = wrap(ctx, `• ${t}`, 600, yy, 840, 26); });
+
+    // footer
+    ctx.fillStyle='#bff'; ctx.font='16px system-ui';
+    ctx.fillText(`Streak: ${(s.streak||0)} day(s)  ·  ${new Date().toLocaleDateString()}`, pad, H-30);
+
+    const a = document.createElement('a');
+    a.href = cvs.toDataURL('image/png', 1.0);
+    a.download = 'soulink-coach-plan.png';
+    a.click();
+  }
+
+  // --- tiny toast (jei dar neturi) ---
+  function notify(msg){
+    let n = document.getElementById('toast');
+    if (!n){
+      n = document.createElement('div'); n.id='toast';
+      n.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);padding:10px 14px;border-radius:10px;background:#0a3;box-shadow:0 8px 30px rgba(0,0,0,.25);color:#fff;z-index:9999;opacity:0;transition:.2s';
+      document.body.appendChild(n);
+    }
+    n.textContent = msg; n.style.opacity = '1';
+    setTimeout(()=> n.style.opacity='0', 1200);
+  }
+  window.notify ??= notify;
+
+  // --- wire up ---
+  document.addEventListener('DOMContentLoaded', () => {
+    renderStreak();
+    document.getElementById('btnDoneToday')?.addEventListener('click', markDoneToday);
+    document.getElementById('exportCoach')?.addEventListener('click', exportCoach);
+  });
+})();
+
+document.addEventListener('DOMContentLoaded', () => {
+  // 1) Add task per form submit (palaikau abu id variantus)
+  const $form = document.getElementById('add-task');
+  if ($form) {
+    $form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const inp = document.getElementById('task-input') || document.getElementById('taskInput');
+      const v = (inp?.value || '').trim();
+      if (v && typeof addTask === 'function') {
+        addTask(v);
+        inp.value = '';
+      }
+    });
+  }
+
+  // 2) Reset (jei turi savo reset logiką – palik ją; čia tik neleidžiam submit)
+  document.getElementById('resetTasks')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    // jei turi resetTasks() funkciją – iškviesk čia
+    // resetTasks();
+  });
+
+  // 3) EXPORT – kritiška: neleisti formos submit ir kviesti exportCoach()
+  document.getElementById('exportCoach')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (typeof exportCoach === 'function') exportCoach();
+  });
+});
