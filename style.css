@@ -699,5 +699,14 @@ button:hover,
 }
 @media (max-width:860px){ .streak-badge{ margin-top:.5rem; } }
 
+.modal{ position:fixed; inset:0; display:grid; place-items:center;
+        background:rgba(0,0,0,.45); z-index:1000; }
+.modal[hidden]{ display:none; }
+.modal-dialog{ width:min(720px,92vw); background:#0f3e3e;
+               border-radius:16px; padding:18px 20px 22px;
+               box-shadow:0 30px 80px rgba(0,0,0,.35); color:#dff; }
+.modal-close{ position:absolute; right:14px; top:10px; border:0;
+              background:transparent; color:#bff; font-size:24px; cursor:pointer; }
+
 
 

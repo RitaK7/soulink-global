@@ -355,12 +355,57 @@
     ctx.fillText(line, x, yy);
     return yy + lh;
   }
+
+  function czApproxFromDate(dateStr){
+  // paprastas ir stabilus aproksimavimas pagal kalendorinius metus.
+  // TEISINGA daugumai gimtadienių; netikslu tik tiems, kas gimė tarp Jan ~ early Feb (iki CNY).
+  // Mūsų atveju 1972-11-22 -> Rat.
+  const d = new Date(dateStr);
+  if (!isFinite(d)) return null;
+  const animals = ['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig'];
+  const y = d.getUTCFullYear();
+  return animals[(y - 4) % 12]; // 1900≈Rat bazė
+}
+
+function lifePathFromDate(dateStr){
+  // paprastas numerologijos skaičiavimas (be master 11/22/33 logikos – jei norėsi, pridėsim)
+  const s = String(dateStr||'').replace(/\D/g,'');
+  if (!s) return '';
+  const sum = (n)=>n.split('').reduce((a,b)=>a+(+b),0);
+  let v = sum(s);
+  while (v > 9) v = sum(String(v));
+  return String(v);
+}
+
+function westernZodiacFromDate(dateStr){
+  const d = new Date(dateStr);
+  if (!isFinite(d)) return '';
+  const m = d.getUTCMonth()+1, day = d.getUTCDate();
+  // ribos pagal vakarietiškus ženklus
+  if      ((m==3 && day>=21) || (m==4 && day<=19)) return 'Aries';
+  else if ((m==4 && day>=20) || (m==5 && day<=20)) return 'Taurus';
+  else if ((m==5 && day>=21) || (m==6 && day<=20)) return 'Gemini';
+  else if ((m==6 && day>=21) || (m==7 && day<=22)) return 'Cancer';
+  else if ((m==7 && day>=23) || (m==8 && day<=22)) return 'Leo';
+  else if ((m==8 && day>=23) || (m==9 && day<=22)) return 'Virgo';
+  else if ((m==9 && day>=23) || (m==10 && day<=22)) return 'Libra';
+  else if ((m==10 && day>=23)|| (m==11 && day<=21)) return 'Scorpio';
+  else if ((m==11 && day>=22)|| (m==12 && day<=21)) return 'Sagittarius';
+  else if ((m==12 && day>=22)|| (m==1 && day<=19)) return 'Capricorn';
+  else if ((m==1 && day>=20) || (m==2 && day<=18)) return 'Aquarius';
+  else return 'Pisces';
+}
+
   function exportCoach(){
     const prof = JSON.parse(localStorage.getItem('soulQuiz')||'{}');
+    const cz = prof.chineseZodiac || czApproxFromDate(prof.birthday);
+    const wz = prof.zodiac || prof.westernZodiac || westernZodiacFromDate(prof.birthday);
+    const lp = prof.lifePath || lifePathFromDate(prof.birthday);
+
     const s = load();
     const action = (document.getElementById('coach-action')?.textContent||'').trim();
     const tasks = (s.tasks||[]).filter(t=>!t.done).map(t=>t.text).slice(0,6);
-
+    
     const W=1500, H=1000, pad=48;
     const scale = Math.max(2, Math.floor(window.devicePixelRatio||2));
     const cvs = document.createElement('canvas'); cvs.width = W*scale; cvs.height = H*scale;
@@ -374,15 +419,16 @@
     // essentials
     ctx.font='700 22px system-ui'; ctx.fillText('Essentials', pad, 120);
     ctx.font='16px system-ui'; ctx.fillStyle='#dff';
+    // ... vėliau piešiant tekstus:
     const lines = [
-      `Name: ${prof.name||'-'}`,
-      `Connection: ${prof.connectionType||'-'}`,
-      `Love Language: ${prof.loveLanguage||'-'}`,
-      `Birth Date: ${prof.birthday||'-'}`,
-      `Western Zodiac: ${prof.zodiac||prof.westernZodiac||'-'}`,
-      `Chinese Zodiac: ${prof.chineseZodiac||'-'}`,
-      `Life Path: ${prof.lifePath||'-'}`
-    ];
+   `Name: ${prof.name||'-'}`,
+   `Connection: ${prof.connectionType||'-'}`,
+   `Love Language: ${prof.loveLanguage||'-'}`,
+   `Birth Date: ${prof.birthday||'-'}`,
+   `Western Zodiac: ${wz||'-'}`,
+   `Chinese Zodiac: ${cz||'-'}`,
+   `Life Path: ${lp||'-'}`
+  ];
     let y = 150; lines.forEach(l=>{ ctx.fillText(l, pad, y); y += 28; });
 
     // today's action
@@ -456,3 +502,49 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof exportCoach === 'function') exportCoach();
   });
 });
+
+// === Coach: Learn More Modal (drop-in) ===
+(() => {
+  if (window.__coachMetaWired) return;
+  window.__coachMetaWired = true;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const modal  = document.getElementById('metaModal');
+    const bodyEl = document.getElementById('metaBody');
+    const btnOpen = document.getElementById('learnMore');
+    const btnX    = document.getElementById('metaClose');
+
+    const M = window.SoulMeta || {}; // iš astro-meta.js; jei jo nėra – rodom "—"
+
+    function openMeta(){
+      const p = JSON.parse(localStorage.getItem('soulQuiz')||'{}');
+      const w = (p.zodiac || p.westernZodiac || '').trim();
+      const c = (p.chineseZodiac || '').trim();
+      const l = (p.lifePath || '').trim();
+
+      bodyEl.innerHTML = `
+        <h3 style="margin:0 0 10px 0;">About your signs</h3>
+        <section style="margin:.8rem 0;">
+          <h4>Western — ${w||'—'}</h4>
+          <p>${M.western?.[w]?.blurb || '—'}</p>
+        </section>
+        <section style="margin:.8rem 0;">
+          <h4>Chinese — ${c||'—'}</h4>
+          <p>${M.chinese?.[c]?.blurb || '—'}</p>
+        </section>
+        <section style="margin:.8rem 0;">
+          <h4>Life Path — ${l||'—'}</h4>
+          <p>${M.lifepath?.[l]?.blurb || '—'}</p>
+        </section>`;
+      modal.hidden = false;
+    }
+
+    function closeMeta(){ modal.hidden = true; }
+
+    btnOpen?.addEventListener('click', openMeta);
+    btnX?.addEventListener('click', closeMeta);
+    modal?.addEventListener('click', (e)=>{ if (e.target === modal) closeMeta(); });
+    window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape' && !modal.hidden) closeMeta(); });
+  });
+})();
+
