@@ -1,3 +1,9 @@
+// globalūs Chart numatytieji
+if (window.Chart) {
+  Chart.defaults.responsive = true;
+  Chart.defaults.maintainAspectRatio = false;
+}
+
 (function(){
   if (window.__soulchartClassic) return;
   window.__soulchartClassic = true;
@@ -11,11 +17,15 @@
 
     // Stabilus aukštis px + fluid plotis
     function setH(el, px){
-      if(!el) return;
-      el.style.width = '100%';
-      el.style.maxWidth = '100%';
-      el.style.height = px + 'px';
-    }
+  if (!el) return;
+  // nuimam bet kokius atributus, kuriuos Chart ar kitas kodas galėjo uždėti
+  el.removeAttribute('height');
+  el.removeAttribute('width');
+  // paliekam tik stiliaus lygyje
+  el.style.width  = '100%';
+  el.style.maxWidth = '100%';
+  el.style.height = px + 'px';
+}
 
     const commonRadarOpts = {
       responsive:true, maintainAspectRatio:false,

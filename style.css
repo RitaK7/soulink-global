@@ -677,4 +677,18 @@ button:hover,
 /* small caption under Love Language */
 [data-love-caption]{ opacity:.85; font-size:.95rem; margin:.25rem 0 0 .25rem; }
 
+/* --- Soul Chart canvas locks --- */
+#loveLangChart,
+#hobbiesChart,
+#valuesChart {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+}
+
+#loveLangChart { height: 360px !important; }
+#hobbiesChart  { height: 360px !important; }
+#valuesChart   { height: 520px !important; }
+
+
 
