@@ -674,15 +674,6 @@ button:hover,
   .my-photos{ gap:.8rem; }
 }
 
-.chart-card{ height: 420px; }          /* viršutinėms dviem */
-.chart-card--tall{ height: 640px; }    /* apatinei */
-canvas{ width:100% !important; height:100% !important; }
-
-/* chart cards sizing */
-.chart-card{ height: 420px; }
-.chart-card--tall{ height: 640px; }
-canvas{ width:100% !important; height:100% !important; }
-
 /* small caption under Love Language */
 [data-love-caption]{ opacity:.85; font-size:.95rem; margin:.25rem 0 0 .25rem; }
 
