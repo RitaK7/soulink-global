@@ -123,3 +123,46 @@ if (window.Chart) {
       ?.addEventListener('click', () => location.reload());
   });
 })();
+// --- Export PNG (composite of all three charts) ---
+document.getElementById('exportPng')?.addEventListener('click', () => {
+  const ids = ['loveLangChart', 'hobbiesChart', 'valuesChart'];
+  const canvases = ids.map(id => document.getElementById(id)).filter(Boolean);
+  if (!canvases.length) return;
+
+  // iš CSS/JS žinomi aukščiai
+  const hLove = 360, hHobby = 360, hValues = 520;
+  const gap = 32;                 // tarpai tarp plytelių
+  const colW = 700;               // viršutinės plytelės plotis
+  const rightW = 680;             // dešinės plytelės plotis
+  const fullW = 1420;             // apatinės (values) plotis
+  const padX = 40, padY = 100;    // kraštinės
+  const titleH = 60;
+
+  const W = padX*2 + fullW;
+  const H = padY + titleH + gap + Math.max(hLove, hHobby) + gap + hValues + padY/2;
+
+  const scale = Math.max(2, Math.floor((window.devicePixelRatio || 2))); // ryškiau
+  const off = document.createElement('canvas');
+  off.width = W * scale; off.height = H * scale;
+  const ctx = off.getContext('2d');
+  ctx.scale(scale, scale);
+
+  // fonas + antraštė
+  ctx.fillStyle = '#083b3c';
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#00fdd8';
+  ctx.font = '700 36px system-ui';
+  ctx.fillText('Soul Chart', padX, padY);
+
+  // nubraižom plyteles
+  const [cLove, cHobby, cValues] = canvases;
+  ctx.drawImage(cLove,   padX,                padY + titleH + gap, colW,  hLove);
+  ctx.drawImage(cHobby,  padX + colW + gap,   padY + titleH + gap, rightW, hHobby);
+  ctx.drawImage(cValues, padX,                padY + titleH + gap + hLove + gap, fullW, hValues);
+
+  const a = document.createElement('a');
+  a.href = off.toDataURL('image/png', 1.0);
+  a.download = 'soulink-soul-chart.png';
+  a.click();
+});
+
