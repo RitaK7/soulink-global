@@ -110,6 +110,8 @@
     }
 
     // Refresh – paprasčiausiai perkrauna puslapį
-    document.getElementById('refreshBtn')?.addEventListener('click', ()=> location.reload());
+    document.getElementById('refreshBtn')?.addEventListener('click', ()=>
+      
+      location.reload());
   });
 })();
