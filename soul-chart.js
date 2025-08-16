@@ -9,7 +9,7 @@
     const profile = JSON.parse(localStorage.getItem('soulQuiz') || '{}');
     const $ = id => document.getElementById(id);
 
-    // stabilus aukštis (px) + plotis 100%
+    // Fiksuojam saugų aukštį (px) ir leidžiam plotį 100%
     function setH(el, px){
       if(!el) return;
       el.style.width = '100%';
@@ -48,7 +48,7 @@
       if (cap && primary) cap.textContent = `Primary: ${primary}`;
     }
 
-    // ---- Hobbies (donut) ----
+    // ---- Hobbies (doughnut) ----
     const hobby = $('hobbyChart');
     if (hobby){
       setH(hobby, 360);
@@ -110,8 +110,6 @@
     }
 
     // Refresh – paprasčiausiai perkrauna puslapį
-    document.getElementById('refreshBtn')?.addEventListener('click', ()=>
-      
-      location.reload());
+    document.getElementById('refreshBtn')?.addEventListener('click', ()=> location.reload());
   });
 })();
