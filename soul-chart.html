@@ -45,9 +45,6 @@
     </ul>
   </div>
 </nav>
-  <script>
-    (function(){const b=document.getElementById('navToggle'),m=document.getElementById('navMenu');function r(){if(innerWidth<800){b.style.display='block';m.style.display='none';}else{b.style.display='none';m.style.display='flex';}}if(b&&m){b.onclick=()=>{m.style.display=(m.style.display==='none'||!m.style.display)?'flex':'none';};addEventListener('resize',r);r();}})();
-  </script>
 
   <main class="container">
     <h1 style="color:#dff; margin:0 0 1rem;">📊 Soul Chart</h1>
@@ -97,12 +94,11 @@
   <footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
     © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
   </footer>
+ 
+  <!-- Chart.js (vienas kartas, su defer) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
-  <!-- Page logic -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-  <script src="soul-chart.js?v=2" defer></script>
+<!-- Tavo puslapio logika -->
+<script src="soul-chart.js" defer></script>
 </body>
 </html>

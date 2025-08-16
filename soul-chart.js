@@ -4,12 +4,12 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     const ChartLib = window.Chart;
-    if (!ChartLib) return; // Chart.js turi būti įtrauktas
+    if (!ChartLib) return; // Chart.js must be loaded
 
     const profile = JSON.parse(localStorage.getItem('soulQuiz') || '{}');
     const $ = id => document.getElementById(id);
 
-    // Fiksuojam saugų aukštį (px) ir leidžiam plotį 100%
+    // Stable canvas height (px) + fluid width
     function setH(el, px){
       if(!el) return;
       el.style.width = '100%';
@@ -17,8 +17,8 @@
       el.style.height = px + 'px';
     }
 
-    // ---- Love Language (radar) ----
-    const love = $('loveChart');
+    // ---------- Love Language (radar) ----------
+    const love = $('loveLangChart');           // ← matches HTML
     if (love){
       setH(love, 360);
       const labels = [
@@ -44,12 +44,12 @@
         }
       });
 
-      const cap = love.closest('.card')?.querySelector('[data-love-caption]');
+      const cap = love.closest('.card')?.querySelector('#ll-hint');
       if (cap && primary) cap.textContent = `Primary: ${primary}`;
     }
 
-    // ---- Hobbies (doughnut) ----
-    const hobby = $('hobbyChart');
+    // ---------- Hobbies (doughnut) ----------
+    const hobby = $('hobbiesChart');           // ← matches HTML
     if (hobby){
       setH(hobby, 360);
       const picked = Array.isArray(profile.hobbies) ? profile.hobbies : [];
@@ -61,7 +61,7 @@
       };
       const buckets = Object.keys(map);
       let counts = buckets.map(k => picked.filter(h => map[k].includes(h)).length);
-      if (counts.every(v => v === 0)) counts = [1,1,1,1]; // kad donut nerodytų 0
+      if (counts.every(v => v === 0)) counts = [1,1,1,1]; // avoid 0-donut
 
       new ChartLib(hobby, {
         type:'doughnut',
@@ -78,7 +78,7 @@
       });
     }
 
-    // ---- Core Values (radar) ----
+    // ---------- Core Values (radar) ----------
     const values = $('valuesChart');
     if (values){
       setH(values, 520);
@@ -109,7 +109,36 @@
       });
     }
 
-    // Refresh – paprasčiausiai perkrauna puslapį
-    document.getElementById('refreshBtn')?.addEventListener('click', ()=> location.reload());
+    // ---------- Buttons ----------
+    // Refresh (reads fresh localStorage)
+    document.getElementById('refreshCharts')
+      ?.addEventListener('click', () => location.reload());
+
+    // Export PNG (simple composite)
+    document.getElementById('exportPng')
+      ?.addEventListener('click', () => {
+        const canvases = ['loveLangChart','hobbiesChart','valuesChart']
+          .map(id => $(id)).filter(Boolean);
+        if (!canvases.length) return;
+
+        const W = 1500, H = 1000;
+        const off = document.createElement('canvas');
+        off.width = W; off.height = H;
+        const ctx = off.getContext('2d');
+
+        ctx.fillStyle = '#083b3c'; ctx.fillRect(0,0,W,H);
+        ctx.fillStyle = '#00fdd8'; ctx.font = '700 36px system-ui';
+        ctx.fillText('Soul Chart', 48, 60);
+
+        const [c1,c2,c3] = canvases;
+        ctx.drawImage(c1, 40, 100, 700, 400);
+        ctx.drawImage(c2, 780, 100, 680, 400);
+        ctx.drawImage(c3, 40, 520, 1420, 440);
+
+        const a = document.createElement('a');
+        a.href = off.toDataURL('image/png', 1.0);
+        a.download = 'soulink-soul-chart.png';
+        a.click();
+      });
   });
 })();
