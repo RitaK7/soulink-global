@@ -232,3 +232,81 @@
     });
   });
 })();
+
+// === Coach enhancements (fixed IDs) ===
+(() => {
+  // paprastas „fallback“ generatorius pagal profilį
+  function localDailySuggestion(profile){
+    const ll = (profile.loveLanguage||'').toLowerCase();
+    const conn = (profile.connectionType||'').toLowerCase();
+    const pick = (arr)=>arr[Math.floor(Math.random()*arr.length)];
+    const base = {
+      service: [
+        "Do one tiny helpful act without being asked.",
+        "Prepare something practical for someone (tea, a reminder, a lift).",
+        "Declutter one small area (service to future-you)."
+      ],
+      words: [
+        "Send a 3-sentence appreciation message.",
+        "Write one specific compliment and share it.",
+        "Leave a kind sticky note for someone (or yourself)."
+      ],
+      gifts: [
+        "Share a small treat or a favorite link.",
+        "Donate one item or gift a book recommendation.",
+        "Bring a tiny surprise to someone’s day."
+      ],
+      quality: [
+        "Offer 15 minutes of undivided attention.",
+        "Plan a mini walk & talk with someone.",
+        "Schedule a 20-minute no-phone catch-up."
+      ],
+      touch: [
+        "Give a warm hug (if welcome) or mindful self-soothing practice.",
+        "5-minute stretch or self-massage.",
+        "Ground yourself with a mindful breathing touch."
+      ]
+    };
+    let bucket = base.quality;
+    if (ll.includes('service')) bucket = base.service;
+    else if (ll.includes('words')) bucket = base.words;
+    else if (ll.includes('gift')) bucket = base.gifts;
+    else if (ll.includes('touch')) bucket = base.touch;
+
+    const solo = !(conn.includes('friend') || conn.includes('both'));
+    let action = pick(bucket);
+    if (solo) action = action.replace('someone','yourself');
+    return action;
+  }
+
+  // mažas toast’as
+  function notify(msg){
+    let n = document.getElementById('toast');
+    if (!n){
+      n = document.createElement('div');
+      n.id = 'toast';
+      n.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);padding:10px 14px;border-radius:10px;background:#0a3;box-shadow:0 8px 30px rgba(0,0,0,.25);color:#fff;z-index:9999;opacity:0;transition:.2s';
+      document.body.appendChild(n);
+    }
+    n.textContent = msg;
+    n.style.opacity = '1';
+    setTimeout(()=> n.style.opacity='0', 1200);
+  }
+
+  function setActionRandom(){
+    const profile = JSON.parse(localStorage.getItem('soulQuiz')||'{}');
+    const el = document.getElementById('coach-action');   // <-- teisingas ID
+    if (el) el.textContent = localDailySuggestion(profile);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // pradinė reikšmė
+    setActionRandom();
+
+    // „New Suggestion“ mygtukas (HTML: id="newAction")
+    document.getElementById('newAction')?.addEventListener('click', () => {
+      setActionRandom();
+      notify('New suggestion ready 💡');
+    });
+  });
+})();

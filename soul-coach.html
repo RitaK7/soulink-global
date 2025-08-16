@@ -71,10 +71,12 @@
 
         <div class="card">
           <h3 class="section-title">Today’s Action</h3>
+          <span id="streak" class="streak-badge">🔥 Streak: 0</span>
           <p id="coach-action">–</p>
           <p class="hint">Tiny, doable step aligned with your profile.</p>
           <div class="row" style="margin-top:.6rem;">
-            <button id="newAction" class="btn" type="button">New Suggestion</button>
+            <button id="newAction" class="btn">New Suggestion</button>
+            <button id="btnDoneToday" class="btn btn-ghost">Done today</button>
           </div>
         </div>
 
@@ -93,6 +95,7 @@
           <input id="task-input" type="text" placeholder="Add a task…" />
           <button class="btn" type="submit">Add</button>
           <button id="resetTasks" class="btn" type="button">Reset</button>
+          <button id="exportCoach" class="btn btn-ghost">Export Coach Plan</button>
         </form>
         <p class="hint" style="margin-top:.4rem;">Your tasks are saved to your device.</p>
       </div>
