@@ -15,7 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const meLl = $('#me-ll');
   const meHobbies = $('#me-hobbies');
   const meValues = $('#me-values');
-
+  const meName = document.getElementById('me-name') || document.querySelector('[data-me="name"]');
+  const meConn = document.getElementById('me-conn') || document.querySelector('[data-me="connection"]');
+ 
   const addForm = $('#add-form') || $('addForm') || document.querySelector('form.card');
   const fName   = $('#f-name') || $('#fName');
   const fCt     = $('#f-ct')   || $('#fCt');     // Connection
@@ -92,6 +94,31 @@ document.addEventListener('DOMContentLoaded', () => {
       const vPart = Math.min(1, vOverlap / Math.max(myV.length, frV.length));
       score += Math.round(vPart * 25);
     }
+    (function renderSnapshot(){
+     const me = loadProfile(); // jeigu pas tave 'me' jau globalus - gali nenaudoti šios eilutės
+   // Name
+     if (meName)  meName.textContent  = me.name || '—';
+
+    // Connection (priima įvairius raktažodžius)
+     const conn = me.connectionType || me.connection || me.typeOfConnection || '';
+     if (meConn)  meConn.textContent  = conn || '—';
+
+  // Love Language
+     const ll = me.loveLanguage || me.loveLang || '';
+     if (meLl)    meLl.textContent    = ll || '—';
+
+  // Hobbies
+     const hobbies = Array.isArray(me.hobbies)
+     ? me.hobbies
+     : (typeof me.hobbies === 'string' ? me.hobbies.split(',').map(s=>s.trim()).filter(Boolean) : []);
+     if (meHobbies) meHobbies.textContent = hobbies.length ? hobbies.join(', ') : '—';
+
+   // Values
+     const values = Array.isArray(me.values)
+    ? me.values
+    : (typeof me.values === 'string' ? me.values.split(',').map(s=>s.trim()).filter(Boolean) : []);
+     if (meValues)  meValues.textContent  = values.length ? values.join(', ') : '—';
+  })();
 
     // Clamp
     score = Math.max(0, Math.min(100, score));
