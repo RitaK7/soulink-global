@@ -708,5 +708,54 @@ button:hover,
 .modal-close{ position:absolute; right:14px; top:10px; border:0;
               background:transparent; color:#bff; font-size:24px; cursor:pointer; }
 
+              /* Friends page layout: left fixed, right fluid */
+.friends-layout{
+  display:grid; gap:1.2rem;
+  grid-template-columns: 360px 1fr;
+}
+@media (max-width: 980px){
+  .friends-layout{ grid-template-columns: 1fr; }
+}
+
+/* Card grid for friend items */
+.friends-grid{
+  display:grid;
+  gap:1rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  align-items:start;
+}
+
+/* Single friend card */
+.friend{
+  background: rgba(0, 253, 216, 0.06);
+  border: 1px solid rgba(0, 253, 216, .15);
+  border-radius: 14px;
+  padding: .9rem 1rem;
+  box-shadow: 0 6px 22px rgba(0,0,0,.12) inset;
+}
+
+.friend .row{ display:flex; align-items:center; justify-content:space-between; gap:.5rem; }
+.friend .score{
+  min-width: 30px; height: 26px; padding: 0 .5rem;
+  line-height: 26px; border-radius: 999px;
+  background: rgba(0, 253, 216, .10);
+  border: 1px solid rgba(0, 253, 216, .30);
+  color: #00fdd8; font-weight: 700; text-align:center;
+}
+
+.friend .mini-label{ font-size:.92rem; opacity:.9; margin-top:.25rem; }
+
+/* Hobbies / Values chips */
+.chips{ display:flex; flex-wrap:wrap; gap:.35rem .4rem; margin-top:.35rem; }
+.chip{
+  padding:.18rem .55rem; font-size:.85rem; border-radius:999px;
+  background: rgba(0, 253, 216, .08);
+  border: 1px solid rgba(0, 253, 216, .18);
+  color:#eaffff;
+}
+
+.friend .btn{ margin-top:.6rem; }
+
+
 
 

@@ -53,7 +53,16 @@
     (function(){const b=document.getElementById('navToggle'),m=document.getElementById('navMenu');function r(){if(innerWidth<800){b.style.display='block';m.style.display='none';}else{b.style.display='none';m.style.display='flex';}}if(b&&m){b.onclick=()=>{m.style.display=(m.style.display==='none'||!m.style.display)?'flex':'none';};addEventListener('resize',r);r();}})();
   </script>
 
-  <main class="container">
+  <main class="container friends-layout">
+  <section class="card">… Your Snapshot …</section>
+
+    <section>
+      <div class="card">… Add Friend / Candidate (forma) …</div>
+      <h3 class="section-title">Your Inner Circle</h3>
+      <div id="friends-list" class="friends-grid"></div>
+   </section>
+   </main>
+
     <h1 style="color:#dff; margin:0 0 1rem;">🤝 Friends & Matches</h1>
 
     <div class="grid">
@@ -124,7 +133,8 @@
 
         <div class="card">
           <h3 class="section-title">Your Inner Circle</h3>
-          <div id="friends-list" class="list"></div>
+        <div id="friends-list" class="friends-grid"></div>
+
           <p id="empty-note" class="hint" style="display:none;">No friends yet. Add someone above ✨</p>
         </div>
       </div>

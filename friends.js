@@ -43,43 +43,62 @@
   const container = $('#friends-list');
   const emptyNote = $('#empty-note');
 
-  function render(list) {
-    container.innerHTML = '';
-    if (!list.length) { emptyNote.style.display = 'block'; return; }
-    emptyNote.style.display = 'none';
+  function escapeHtml(s=''){ return String(s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
 
-    list.map(f => ({...f, score: scoreFriend(f)}))
-        .sort((a,b)=>b.score-a.score)
-        .forEach((f,i) => {
-          const div = document.createElement('div');
-          div.className = 'friend';
-          div.innerHTML = `
-            <div class="row" style="justify-content:space-between;">
-              <strong>${f.name || 'Friend'}</strong>
-              <span class="score">${f.score}</span>
-            </div>
-            <div style="margin-top:.3rem; font-size:.95rem;">
-              <div><strong>Connection:</strong> ${f.ct || '–'}</div>
-              <div><strong>Love Language:</strong> ${f.ll || '–'}</div>
-              <div><strong>Hobbies:</strong> ${f.hobbies?.length ? f.hobbies.join(', ') : '–'}</div>
-              <div><strong>Values:</strong> ${f.values?.length ? f.values.join(', ') : '–'}</div>
-            </div>
-            <div class="row" style="margin-top:.5rem;">
-              <button class="btn" data-del="${i}">Remove</button>
-            </div>`;
-          container.appendChild(div);
-        });
+function chips(arr){
+  if (!arr || !arr.length) return '<span class="mini-label">–</span>';
+  return `<div class="chips">${arr.map(x=>`<span class="chip">${escapeHtml(x)}</span>`).join('')}</div>`;
+}
 
-    $$('[data-del]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = +btn.getAttribute('data-del');
-        const arr = loadFriends();
-        arr.splice(idx, 1);
-        saveFriends(arr);
-        render(arr);
-      });
-    });
+function render(list){
+  const box = document.getElementById('friends-list');
+  const empty = document.getElementById('empty-note');
+  box.innerHTML = '';
+
+  if (!list.length){
+    if (empty) empty.style.display = 'block';
+    return;
   }
+  if (empty) empty.style.display = 'none';
+
+  list.map(f => ({...f, score: scoreFriend(f)}))
+      .sort((a,b)=> b.score - a.score)
+      .forEach((f,i)=>{
+        const div = document.createElement('div');
+        div.className = 'friend';
+        div.innerHTML = `
+          <div class="row">
+            <strong>${escapeHtml(f.name || 'Friend')}</strong>
+            <span class="score">${f.score}</span>
+          </div>
+
+          <div class="mini-label"><strong>Connection:</strong> ${escapeHtml(f.ct || '–')}</div>
+          <div class="mini-label"><strong>Love Language:</strong> ${escapeHtml(f.ll || '–')}</div>
+
+          <div class="mini-label"><strong>Hobbies:</strong></div>
+          ${chips(f.hobbies)}
+
+          <div class="mini-label"><strong>Values:</strong></div>
+          ${chips(f.values)}
+
+          <button class="btn" data-del="${i}">Remove</button>
+        `;
+        box.appendChild(div);
+      });
+
+  // remove handlers
+  [...box.querySelectorAll('[data-del]')].forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const idx = +btn.getAttribute('data-del');
+      const arr = loadFriends();
+      arr.splice(idx,1);
+      saveFriends(arr);
+      render(arr);
+    });
+  });
+}
 
   render(loadFriends());
 
