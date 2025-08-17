@@ -8,6 +8,37 @@
   const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
   // --- helpers ---
+  const fmt = (v) => {
+  const s = (v || '').trim();
+  if (!s) return '—';
+  const bad = ['any', 'unknown', '--', '-'];
+  return bad.includes(s.toLowerCase()) ? '—' : s;
+};
+
+function tokenizeCSV(v) {
+  return (v || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+const f = normFriend({
+  name:   document.getElementById('f-name')?.value.trim(),
+  ct:     document.getElementById('f-ct')?.value,
+  ll:     document.getElementById('f-ll')?.value,
+  hobbies: document.getElementById('f-hobbies')?.value,
+  values:  document.getElementById('f-values')?.value,
+  contact: (document.getElementById('f-contact')?.value || '').trim(),
+  notes:   (document.getElementById('f-notes')?.value   || '').trim()
+});
+
+// (nebūtina) mažytė dublikatų apsauga pagal vardą
+const all = loadFriends();
+if (all.some(x => (x.name || '').toLowerCase() === (f.name || '').toLowerCase())) {
+  const ok = confirm(`Friend "${f.name}" already exists. Add anyway?`);
+  if (!ok) return;
+}
+
   function escapeHTML(s=''){return s.replace(/[&<>"]/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m]));}
 
 const defaultMsg =
@@ -114,15 +145,17 @@ function contactLink(c) {
      <span class="badge">${score}</span>
     </div>
      <div class="friend-body">
-     <div><b>Connection:</b> ${escapeHTML(f.ct || '—')}</div>
-     <div><b>Love Language:</b> ${escapeHTML(f.ll || '—')}</div>
-     <div><b>Hobbies:</b> ${escapeHTML(csv(f.hobbies))}</div>
-     <div><b>Values:</b> ${escapeHTML(csv(f.values))}</div>
-    ${f.contact ? `
-     <div><b>Contact:</b> ${escapeHTML(f.contact)}
-        ${href ? ` <a class="btn btn-ghost btn-xs" href="${href}"
-                 target="_blank" rel="noopener">Message</a>` : ''}
-      </div>` : ''}
+    <div><b>Connection:</b> ${escapeHTML(fmt(f.ct))}</div>
+    <div><b>Love Language:</b> ${escapeHTML(fmt(f.ll))}</div>
+    <div><b>Hobbies:</b> ${escapeHTML((f.hobbies || []).join(', ') || '—')}</div>
+    <div><b>Values:</b> ${escapeHTML((f.values  || []).join(', ') || '—')}</div>
+
+    ${f.contact ? (() => {
+    const href = contactLink(f.contact);   // jei turi helper’į (nebūtina)
+    return `<div><b>Contact:</b> ${escapeHTML(f.contact)}
+           ${href ? ` <a class="btn btn-ghost btn-xs" href="${href}" target="_blank" rel="noopener">Message</a>` : ''}</div>`;
+    })() : ''}
+
     </div>
      <div class="friend-actions">
      <button class="btn btn-ghost" data-remove="${i}">Remove</button>
@@ -173,7 +206,7 @@ function contactLink(c) {
   $('#clearAll')?.addEventListener('click', () => {
     if (confirm('Clear all friends?')) {
       saveFriends([]);
-      render([]);
+      render();
     }
   });
 
@@ -199,7 +232,11 @@ function contactLink(c) {
         const text = await file.text();
         const arr = JSON.parse(text);
         if (!Array.isArray(arr)) throw new Error('JSON is not an array');
-        saveFriends(arr);       // <— tas pats KEY_FRIENDS
+        const imported = JSON.parse(text || '[]');
+        const normalized = imported.map(normFriend);
+        saveFriends(normalized);
+        render();
+     // <— tas pats KEY_FRIENDS
         render(arr);
       } catch (err) {
         alert('Import failed: ' + err.message);
