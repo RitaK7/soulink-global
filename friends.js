@@ -1,124 +1,101 @@
-// friends.js — Soulink (polished)
-// Simple friend list stored in localStorage 'soulinkFriends'.
-// Compatibility score vs your profile from 'soulQuiz'.
-
+// friends.js — Soulink (fixed)
 (() => {
-  const KEY_PROFILE = "soulQuiz";
-  const KEY_FRIENDS = "soulinkFriends";
+  const KEY_PROFILE  = 'soulQuiz';
+  const KEY_FRIENDS  = 'soulinkFriends';
 
-  const $ = (s, r = document) => r.querySelector(s);
-  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const $  = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
-  const me = (() => { try { return JSON.parse(localStorage.getItem(KEY_PROFILE) || "{}"); } catch { return {}; } })();
-  const friends = (() => { try { return JSON.parse(localStorage.getItem(KEY_FRIENDS) || "[]"); } catch { return []; } })();
+  // Profile (left panel)
+  const me = (() => { try { return JSON.parse(localStorage.getItem(KEY_PROFILE) || '{}'); } catch { return {}; } })();
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v || '–'; };
+  set('me-name',    me.name);
+  set('me-ct',      me.connectionType);
+  set('me-ll',      me.loveLanguage);
+  set('me-hobbies', (me.hobbies?.length ? me.hobbies.join(', ') : '–'));
+  set('me-values',  (me.values?.length  ? me.values.join(', ')  : '–'));
 
-  // Snapshot
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || "–"; };
-  set("me-name", me.name);
-  set("me-ct", me.connectionType);
-  set("me-ll", me.loveLanguage);
-  set("me-hobbies", (me.hobbies && me.hobbies.length) ? me.hobbies.join(", ") : "–");
-  set("me-values", (me.values && me.values.length) ? me.values.join(", ") : "–");
+  // Helpers
+  const loadFriends = () => { try { return JSON.parse(localStorage.getItem(KEY_FRIENDS) || '[]'); } catch { return []; } };
+  const saveFriends = (arr) => localStorage.setItem(KEY_FRIENDS, JSON.stringify(arr));
+  const tokenizeCSV = s => (s||'').split(',').map(x=>x.trim()).filter(Boolean);
 
-  // Scoring
-  function tokenizeCSV(s) {
-    return (s || "")
-      .split(",")
-      .map(x => x.trim())
-      .filter(Boolean);
-  }
+  // Scoring (very simple)
   function scoreFriend(f) {
-    let score = 50; // base
-    // Connection
-    if (me.connectionType && f.ct) {
-      const match = (me.connectionType === f.ct) || f.ct === "Both" || me.connectionType === "Both";
-      if (match) score += 20;
-    }
-    // Love language
+    let score = 50;
+    if (me.connectionType && f.ct && (me.connectionType === f.ct || f.ct === 'Both' || me.connectionType === 'Both')) score += 20;
     if (me.loveLanguage && f.ll && me.loveLanguage === f.ll) score += 20;
 
-    // Hobbies overlap
     const myH = new Set((me.hobbies || []).map(String));
     const hisH = new Set((f.hobbies || []).map(String));
-    let hShared = 0;
-    hisH.forEach(h => { if (myH.has(h)) hShared++; });
+    let hShared = 0; hisH.forEach(h => myH.has(h) && hShared++);
     score += Math.min(20, hShared * 5);
 
-    // Values overlap
     const myV = new Set((me.values || []).map(String));
     const hisV = new Set((f.values || []).map(String));
-    let vShared = 0;
-    hisV.forEach(v => { if (myV.has(v)) vShared++; });
+    let vShared = 0; hisV.forEach(v => myV.has(v) && vShared++);
     score += Math.min(30, vShared * 3);
 
     return Math.max(0, Math.min(100, score));
   }
 
-  function saveFriends(arr) {
-    localStorage.setItem(KEY_FRIENDS, JSON.stringify(arr));
-  }
-
   // Render
-  const container = $("#friends-list");
-  const emptyNote = $("#empty-note");
+  const container = $('#friends-list');
+  const emptyNote = $('#empty-note');
 
   function render(list) {
-    container.innerHTML = "";
-    if (!list.length) {
-      emptyNote.style.display = "block";
-      return;
-    }
-    emptyNote.style.display = "none";
-    list
-      .map(f => ({ ...f, score: scoreFriend(f) }))
-      .sort((a, b) => b.score - a.score)
-      .forEach((f, i) => {
-        const div = document.createElement("div");
-        div.className = "friend";
-        div.innerHTML = `
-          <div class="row" style="justify-content:space-between;">
-            <strong>${f.name || "Friend"}</strong>
-            <span class="score">${f.score}</span>
-          </div>
-          <div style="margin-top:.3rem; font-size:.95rem;">
-            <div><strong>Connection:</strong> ${f.ct || "–"}</div>
-            <div><strong>Love Language:</strong> ${f.ll || "–"}</div>
-            <div><strong>Hobbies:</strong> ${(f.hobbies && f.hobbies.length) ? f.hobbies.join(", ") : "–"}</div>
-            <div><strong>Values:</strong> ${(f.values && f.values.length) ? f.values.join(", ") : "–"}</div>
-          </div>
-          <div class="row" style="margin-top:.5rem;">
-            <button class="btn" data-del="${i}">Remove</button>
-          </div>
-        `;
-        container.appendChild(div);
-      });
+    container.innerHTML = '';
+    if (!list.length) { emptyNote.style.display = 'block'; return; }
+    emptyNote.style.display = 'none';
 
-    // delete handlers
+    list.map(f => ({...f, score: scoreFriend(f)}))
+        .sort((a,b)=>b.score-a.score)
+        .forEach((f,i) => {
+          const div = document.createElement('div');
+          div.className = 'friend';
+          div.innerHTML = `
+            <div class="row" style="justify-content:space-between;">
+              <strong>${f.name || 'Friend'}</strong>
+              <span class="score">${f.score}</span>
+            </div>
+            <div style="margin-top:.3rem; font-size:.95rem;">
+              <div><strong>Connection:</strong> ${f.ct || '–'}</div>
+              <div><strong>Love Language:</strong> ${f.ll || '–'}</div>
+              <div><strong>Hobbies:</strong> ${f.hobbies?.length ? f.hobbies.join(', ') : '–'}</div>
+              <div><strong>Values:</strong> ${f.values?.length ? f.values.join(', ') : '–'}</div>
+            </div>
+            <div class="row" style="margin-top:.5rem;">
+              <button class="btn" data-del="${i}">Remove</button>
+            </div>`;
+          container.appendChild(div);
+        });
+
     $$('[data-del]').forEach(btn => {
-      btn.addEventListener("click", () => {
-        const idx = +btn.getAttribute("data-del");
-        const arr = friends.slice();
+      btn.addEventListener('click', () => {
+        const idx = +btn.getAttribute('data-del');
+        const arr = loadFriends();
         arr.splice(idx, 1);
         saveFriends(arr);
-        location.reload();
+        render(arr);
       });
     });
   }
 
-  render(friends);
+  render(loadFriends());
 
-  // Add form
-  $("#add-form")?.addEventListener("submit", (e) => {
+  // Add friend
+  $('#add-form')?.addEventListener('submit', (e) => {
     e.preventDefault();
     const f = {
-      name: $("#f-name")?.value.trim(),
-      ct: $("#f-ct")?.value,
-      ll: $("#f-ll")?.value,
-      hobbies: tokenizeCSV($("#f-hobbies")?.value),
-      values: tokenizeCSV($("#f-values")?.value),
+      name:    $('#f-name')?.value.trim(),
+      ct:      $('#f-ct')?.value,
+      ll:      $('#f-ll')?.value,
+      hobbies: tokenizeCSV($('#f-hobbies')?.value),
+      values:  tokenizeCSV($('#f-values')?.value),
     };
-    if (!f.name) { alert("Please enter a name."); return; }
-    const arr = friends.slice();
+    if (!f.name) { alert('Please enter a name.'); return; }
+
+    const arr = loadFriends();
     arr.push(f);
     saveFriends(arr);
     e.target.reset();
@@ -126,49 +103,39 @@
   });
 
   // Clear all
-  $("#clearAll")?.addEventListener("click", () => {
-    if (confirm("Clear all friends?")) {
+  $('#clearAll')?.addEventListener('click', () => {
+    if (confirm('Clear all friends?')) {
       saveFriends([]);
-      location.reload();
+      render([]);
     }
   });
 
- // -------- Friends: Export / Import JSON (buttons only) --------
-(() => {
+  // Export / Import (IDs: exportFriends / importFriends / importFile)
   const btnExport = document.getElementById('exportFriends');
   const btnImport = document.getElementById('importFriends');
-  })();
+  const fileInput = document.getElementById('importFile');
 
-  // Export as JSON file
   btnExport?.addEventListener('click', () => {
-    const data = localStorage.getItem('friends') || '[]';
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    const data = JSON.stringify(loadFriends(), null, 2);
     const a = document.createElement('a');
-    a.href = url;
+    a.href = URL.createObjectURL(new Blob([data], {type:'application/json'}));
     a.download = 'soulink-friends.json';
     a.click();
-    URL.revokeObjectURL(url);
   });
 
-  // Import from JSON file (opens file picker)
-  btnImport?.addEventListener('click', () => {
-    const picker = document.createElement('input');
-    picker.type = 'file';
-    picker.accept = 'application/json,application/*+json';
-    picker.onchange = async () => {
-      const file = picker.files?.[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        const arr = JSON.parse(text);
-        if (!Array.isArray(arr)) throw new Error('JSON is not an array');
-        localStorage.setItem('friends', JSON.stringify(arr));
-        location.reload();
-      } catch (err) {
-        alert('Import failed: ' + err.message);
-      }
-    };
-    picker.click();
+  btnImport?.addEventListener('click', () => fileInput?.click());
+
+  fileInput?.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    try {
+      const text = await file.text();
+      const arr = JSON.parse(text);
+      if (!Array.isArray(arr)) throw new Error('JSON must be an array');
+      saveFriends(arr);
+      render(arr);
+    } catch (err) {
+      alert('Import failed: ' + err.message);
+    }
+    e.target.value = '';
   });
 })();
