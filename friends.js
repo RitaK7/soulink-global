@@ -8,6 +8,38 @@
   const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
   // --- helpers ---
+  function escapeHTML(s=''){return s.replace(/[&<>"]/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m]));}
+
+const defaultMsg =
+  `Hey! I added you on Soulink 💫 — want to compare our matches?`;
+function contactLink(c) {
+  if (!c) return null;
+  const v = c.trim();
+
+  // pilna nuoroda
+  if (/^https?:\/\//i.test(v)) return v;
+
+  // email
+  if (/^[\w.+-]+@[\w.-]+\.[a-z]{2,}$/i.test(v)) {
+    return `mailto:${v}?subject=${encodeURIComponent('Hi from Soulink')}`
+         + `&body=${encodeURIComponent(defaultMsg)}`;
+  }
+
+  // tel. -> WhatsApp
+  if (/^\+?\d[\d\s\-()]{6,}$/.test(v)) {
+    const num = v.replace(/\D/g,'');
+    return `https://wa.me/${num}?text=${encodeURIComponent(defaultMsg)}`;
+  }
+
+  // instagram handle
+  if (/^@?[\w.]{2,}$/i.test(v)) {
+    return `https://instagram.com/${v.replace(/^@/,'')}`;
+  }
+
+  // fallback – gal tai kitas identifikatorius
+  return v;
+}
+
   const loadProfile = () => {
     try { return JSON.parse(localStorage.getItem(KEY_PROFILE) || '{}'); }
     catch { return {}; }
@@ -75,21 +107,27 @@
       card.className = 'friend';
       const score = scoreWithMe(f);
 
+      const href = contactLink(f.contact);
       card.innerHTML = `
-        <div class="friend-head">
-          <strong>${f.name || '—'}</strong>
-          <span class="badge">${score}</span>
-        </div>
-        <div class="friend-body">
-          <div><b>Connection:</b> ${f.ct || '—'}</div>
-          <div><b>Love Language:</b> ${f.ll || '—'}</div>
-          <div><b>Hobbies:</b> ${csv(f.hobbies)}</div>
-          <div><b>Values:</b> ${csv(f.values)}</div>
-        </div>
-        <div class="friend-actions">
-          <button class="btn btn-ghost" data-remove="${i}">Remove</button>
-        </div>
-      `;
+     <div class="friend-head">
+     <strong>${escapeHTML(f.name || '—')}</strong>
+     <span class="badge">${score}</span>
+    </div>
+     <div class="friend-body">
+     <div><b>Connection:</b> ${escapeHTML(f.ct || '—')}</div>
+     <div><b>Love Language:</b> ${escapeHTML(f.ll || '—')}</div>
+     <div><b>Hobbies:</b> ${escapeHTML(csv(f.hobbies))}</div>
+     <div><b>Values:</b> ${escapeHTML(csv(f.values))}</div>
+    ${f.contact ? `
+     <div><b>Contact:</b> ${escapeHTML(f.contact)}
+        ${href ? ` <a class="btn btn-ghost btn-xs" href="${href}"
+                 target="_blank" rel="noopener">Message</a>` : ''}
+      </div>` : ''}
+    </div>
+     <div class="friend-actions">
+     <button class="btn btn-ghost" data-remove="${i}">Remove</button>
+    </div>
+   `;
       listEl.appendChild(card);
     });
 
@@ -116,10 +154,15 @@
       ll:     $('#f-ll')?.value,
       hobbies: tokenizeCSV($('#f-hobbies')?.value || ''),
       values:  tokenizeCSV($('#f-values')?.value  || ''),
+      contact: ($('#f-contact')?.value || '').trim()
     };
     if (!f.name) { alert('Please enter a name.'); return; }
 
     const arr = loadFriends();   // <— visada imame naujausią
+    if (loadFriends().some(x => (x.name||'').toLowerCase() === f.name.toLowerCase())) {
+  if (!confirm(`Friend "${f.name}" already exists. Add anyway?`)) return;
+ }
+
     arr.push(f);
     saveFriends(arr);
     e.target.reset();
