@@ -1,160 +1,250 @@
-// friends.js — Soulink (fixed)
-(() => {
-  const KEY_PROFILE  = 'soulQuiz';
-  const KEY_FRIENDS  = 'soulinkFriends';
+/* friends.js — Soulink (Friends & Matches) */
+/* robust to minor ID variations in friends.html */
 
-  const $  = (s, r=document) => r.querySelector(s);
-  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+document.addEventListener('DOMContentLoaded', () => {
+  // ---------- helpers ----------
+  const $ = (id) => document.getElementById(id);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const escapeHtml = (s = '') =>
+    s.replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+  const tag = (t) => `<span class="tag">${escapeHtml(t)}</span>`;
+  const csvToArr = (s = '') =>
+    s.split(',').map(v => v.trim()).filter(Boolean);
 
-  // Profile (left panel)
-  const me = (() => { try { return JSON.parse(localStorage.getItem(KEY_PROFILE) || '{}'); } catch { return {}; } })();
-  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v || '–'; };
-  set('me-name',    me.name);
-  set('me-ct',      me.connectionType);
-  set('me-ll',      me.loveLanguage);
-  set('me-hobbies', (me.hobbies?.length ? me.hobbies.join(', ') : '–'));
-  set('me-values',  (me.values?.length  ? me.values.join(', ')  : '–'));
+  // ---------- elements (with fallbacks for your markup variants) ----------
+  const meLl = $('#me-ll');
+  const meHobbies = $('#me-hobbies');
+  const meValues = $('#me-values');
 
-  // Helpers
-  const loadFriends = () => { try { return JSON.parse(localStorage.getItem(KEY_FRIENDS) || '[]'); } catch { return []; } };
-  const saveFriends = (arr) => localStorage.setItem(KEY_FRIENDS, JSON.stringify(arr));
-  const tokenizeCSV = s => (s||'').split(',').map(x=>x.trim()).filter(Boolean);
+  const addForm = $('#add-form') || $('addForm') || document.querySelector('form.card');
+  const fName   = $('#f-name') || $('#fName');
+  const fCt     = $('#f-ct')   || $('#fCt');     // Connection
+  const fLl     = $('#f-ll')   || $('#fLl');     // Love Language
+  const fHobbies= $('#f-hobbies') || $('#fHobbies');
+  const fValues = $('#f-values')  || $('#fValues');
+  const fNotes  = $('#f-notes')   || null;       // optional field
 
-  // Scoring (very simple)
-  function scoreFriend(f) {
-    let score = 50;
-    if (me.connectionType && f.ct && (me.connectionType === f.ct || f.ct === 'Both' || me.connectionType === 'Both')) score += 20;
-    if (me.loveLanguage && f.ll && me.loveLanguage === f.ll) score += 20;
+  const listEl  = $('#friends-list') || document.querySelector('.friends-list') || $('#friendsList');
 
-    const myH = new Set((me.hobbies || []).map(String));
-    const hisH = new Set((f.hobbies || []).map(String));
-    let hShared = 0; hisH.forEach(h => myH.has(h) && hShared++);
-    score += Math.min(20, hShared * 5);
+  const btnExport = $('#btnExport') || $('#exportFriends');
+  const btnImport = $('#btnImport') || $('#importFriends');
+  const fileInput = $('#fileImport') || $('#importFriendsFile') ||
+                    document.querySelector('input[type="file"][accept="application/json"]');
 
-    const myV = new Set((me.values || []).map(String));
-    const hisV = new Set((f.values || []).map(String));
-    let vShared = 0; hisV.forEach(v => myV.has(v) && vShared++);
-    score += Math.min(30, vShared * 3);
+  const emptyNote = $('#empty-note') || { style: { display: 'none' } };
 
-    return Math.max(0, Math.min(100, score));
-  }
+  // ---------- state ----------
+  const PROFILE_KEY = 'soulQuiz';
+  const FRIENDS_KEY = 'friends';
 
-  // Render
-  const container = $('#friends-list');
-  const emptyNote = $('#empty-note');
-
-  function escapeHtml(s=''){ return String(s)
-  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-  .replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
-
-function chips(arr){
-  if (!arr || !arr.length) return '<span class="mini-label">–</span>';
-  return `<div class="chips">${arr.map(x=>`<span class="chip">${escapeHtml(x)}</span>`).join('')}</div>`;
-}
-
-function render(list){
-  const box = document.getElementById('friends-list');
-  const empty = document.getElementById('empty-note');
-  box.innerHTML = '';
-
-  if (!list.length){
-    if (empty) empty.style.display = 'block';
-    return;
-  }
-  if (empty) empty.style.display = 'none';
-
-  list.map(f => ({...f, score: scoreFriend(f)}))
-      .sort((a,b)=> b.score - a.score)
-      .forEach((f,i)=>{
-        const div = document.createElement('div');
-        div.className = 'friend';
-        div.innerHTML = `
-          <div class="row">
-            <strong>${escapeHtml(f.name || 'Friend')}</strong>
-            <span class="score">${f.score}</span>
-          </div>
-
-          <div class="mini-label"><strong>Connection:</strong> ${escapeHtml(f.ct || '–')}</div>
-          <div class="mini-label"><strong>Love Language:</strong> ${escapeHtml(f.ll || '–')}</div>
-
-          <div class="mini-label"><strong>Hobbies:</strong></div>
-          ${chips(f.hobbies)}
-
-          <div class="mini-label"><strong>Values:</strong></div>
-          ${chips(f.values)}
-
-          <button class="btn" data-del="${i}">Remove</button>
-        `;
-        box.appendChild(div);
-      });
-
-  // remove handlers
-  [...box.querySelectorAll('[data-del]')].forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      const idx = +btn.getAttribute('data-del');
-      const arr = loadFriends();
-      arr.splice(idx,1);
-      saveFriends(arr);
-      render(arr);
-    });
-  });
-}
-
-  render(loadFriends());
-
-  // Add friend
-  $('#add-form')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const f = {
-      name:    $('#f-name')?.value.trim(),
-      ct:      $('#f-ct')?.value,
-      ll:      $('#f-ll')?.value,
-      hobbies: tokenizeCSV($('#f-hobbies')?.value),
-      values:  tokenizeCSV($('#f-values')?.value),
-    };
-    if (!f.name) { alert('Please enter a name.'); return; }
-
-    const arr = loadFriends();
-    arr.push(f);
-    saveFriends(arr);
-    e.target.reset();
-    render(arr);
-  });
-
-  // Clear all
-  $('#clearAll')?.addEventListener('click', () => {
-    if (confirm('Clear all friends?')) {
-      saveFriends([]);
-      render([]);
-    }
-  });
-
-  // Export / Import (IDs: exportFriends / importFriends / importFile)
-  const btnExport = document.getElementById('exportFriends');
-  const btnImport = document.getElementById('importFriends');
-  const fileInput = document.getElementById('importFile');
-
-  btnExport?.addEventListener('click', () => {
-    const data = JSON.stringify(loadFriends(), null, 2);
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([data], {type:'application/json'}));
-    a.download = 'soulink-friends.json';
-    a.click();
-  });
-
-  btnImport?.addEventListener('click', () => fileInput?.click());
-
-  fileInput?.addEventListener('change', async (e) => {
-    const file = e.target.files?.[0]; if (!file) return;
+  const loadProfile = () => {
+    try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); }
+    catch { return {}; }
+  };
+  const saveFriends = () => localStorage.setItem(FRIENDS_KEY, JSON.stringify(friends));
+  const loadFriends = () => {
     try {
-      const text = await file.text();
-      const arr = JSON.parse(text);
-      if (!Array.isArray(arr)) throw new Error('JSON must be an array');
-      saveFriends(arr);
-      render(arr);
-    } catch (err) {
-      alert('Import failed: ' + err.message);
+      const arr = JSON.parse(localStorage.getItem(FRIENDS_KEY) || '[]');
+      return Array.isArray(arr) ? arr : [];
+    } catch { return []; }
+  };
+
+  const me = loadProfile();
+  let friends = loadFriends();
+
+  // ---------- snapshot (left panel) ----------
+  (function renderSnapshot(){
+    if (meLl) meLl.textContent = me.loveLanguage || (me.loveLang || '') || '—';
+    if (meHobbies) meHobbies.textContent = (me.hobbies || []).join(', ') || '—';
+    if (meValues)  meValues.textContent  = (me.values  || []).join(', ') || '—';
+  })();
+
+  // ---------- scoring ----------
+  function scoreFriend(f) {
+    let score = 0;
+
+    // Connection
+    const myConn = (me.connectionType || me.connection || '').toLowerCase();
+    const ct = (f.ct || '').toLowerCase();
+    if (!ct || ct === 'any') score += 10;
+    else if (myConn && (ct === myConn || myConn === 'both' || ct === 'both')) score += 20;
+
+    // Love Language
+    const myLL = ((me.loveLanguage || me.loveLang || '') + '').toLowerCase();
+    const frLL = ((f.ll || '') + '').toLowerCase();
+    if (!frLL || frLL === 'unknown') score += 5;
+    else if (myLL && frLL && myLL === frLL) score += 25;
+
+    // Hobbies overlap
+    const myH = (me.hobbies || []).map(x => x.toLowerCase());
+    const frH = (f.hobbies || []).map(x => x.toLowerCase());
+    const hOverlap = myH.filter(x => frH.includes(x)).length;
+    if (myH.length && frH.length) {
+      const hPart = Math.min(1, hOverlap / Math.max(myH.length, frH.length));
+      score += Math.round(hPart * 25);
     }
-    e.target.value = '';
-  });
-})();
+
+    // Values overlap
+    const myV = (me.values || []).map(x => x.toLowerCase());
+    const frV = (f.values || []).map(x => x.toLowerCase());
+    const vOverlap = myV.filter(x => frV.includes(x)).length;
+    if (myV.length && frV.length) {
+      const vPart = Math.min(1, vOverlap / Math.max(myV.length, frV.length));
+      score += Math.round(vPart * 25);
+    }
+
+    // Clamp
+    score = Math.max(0, Math.min(100, score));
+    return score;
+  }
+
+  // ---------- render ----------
+  function renderFriends() {
+    if (!listEl) return;
+
+    listEl.innerHTML = '';
+    if (!friends.length) {
+      emptyNote.style.display = 'block';
+      return;
+    }
+    emptyNote.style.display = 'none';
+
+    friends.forEach((f, i) => {
+      // compute score if missing
+      f.score = typeof f.score === 'number' ? f.score : scoreFriend(f);
+
+      const hobbies = (f.hobbies || []).filter(Boolean);
+      const values  = (f.values  || []).filter(Boolean);
+      const ct = (f.ct && f.ct !== 'Any') ? f.ct : '';
+      const ll = (f.ll && f.ll !== 'Unknown') ? f.ll : '';
+
+      const rows = [
+        ct && `<div><strong>Connection:</strong> ${escapeHtml(ct)}</div>`,
+        ll && `<div><strong>Love Language:</strong> ${escapeHtml(ll)}</div>`,
+        hobbies.length && `<div><strong>Hobbies:</strong> ${hobbies.map(tag).join(' ')}</div>`,
+        values.length  && `<div><strong>Values:</strong> ${values.map(tag).join(' ')}</div>`,
+        (f.notes && f.notes.trim()) && `<div class="muted" style="margin-top:.25rem;">${escapeHtml(f.notes.trim())}</div>`
+      ].filter(Boolean).join('');
+
+      const card = document.createElement('article');
+      card.className = 'friend';
+      card.innerHTML = `
+        <div class="row" style="justify-content:space-between;align-items:flex-start;">
+          <h4 style="margin:0;">${escapeHtml(f.name || 'Unnamed')}</h4>
+          <span class="score">${f.score ?? '--'}</span>
+        </div>
+        ${rows || '<div class="muted">No details provided yet.</div>'}
+        <div class="row" style="margin-top:.6rem;">
+          <button class="btn btn-ghost" data-remove="${i}">Remove</button>
+        </div>
+      `;
+      listEl.appendChild(card);
+    });
+  }
+
+  // ---------- add ----------
+  function addFriend(friend) {
+    // normalize arrays & strings
+    friend.name = friend.name || 'Unnamed';
+    friend.hobbies = (friend.hobbies || []).filter(Boolean);
+    friend.values  = (friend.values  || []).filter(Boolean);
+    friend.ct = friend.ct || 'Any';
+    friend.ll = friend.ll || 'Unknown';
+    friend.notes = (friend.notes || '').trim();
+
+    // score & push
+    friend.score = scoreFriend(friend);
+    friends.push(friend);
+    saveFriends();
+    renderFriends();
+  }
+
+  if (addForm && fName && fCt && fLl && fHobbies && fValues) {
+    addForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const friend = {
+        name: fName.value.trim(),
+        ct: fCt.value,
+        ll: fLl.value,
+        hobbies: csvToArr(fHobbies.value),
+        values:  csvToArr(fValues.value),
+        notes: fNotes ? (fNotes.value.trim()) : ''
+      };
+      // if name empty – ignore
+      if (!friend.name) return;
+      addFriend(friend);
+
+      // clear inputs
+      fName.value = ''; fCt.value = ''; fLl.value = '';
+      fHobbies.value = ''; fValues.value = '';
+      if (fNotes) fNotes.value = '';
+    });
+  }
+
+  // "Clear All" (form) – jei yra
+  const btnClear = $('#clearAll') || $('#btnClear');
+  if (btnClear) {
+    btnClear.addEventListener('click', () => {
+      [fName,fCt,fLl,fHobbies,fValues,fNotes].forEach(el => el && (el.value = ''));
+      fCt && (fCt.value = ''); fLl && (fLl.value = '');
+    });
+  }
+
+  // ---------- remove (event delegation) ----------
+  if (listEl) {
+    listEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-remove]');
+      if (!btn) return;
+      const idx = +btn.getAttribute('data-remove');
+      if (Number.isInteger(idx) && idx >= 0) {
+        friends.splice(idx, 1);
+        saveFriends();
+        renderFriends();
+      }
+    });
+  }
+
+  // ---------- export / import JSON ----------
+  if (btnExport) {
+    btnExport.addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(friends, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'soulink-friends.json';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+  }
+
+  if (btnImport && fileInput) {
+    btnImport.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (!Array.isArray(data)) throw new Error('Invalid JSON');
+        // normalize each entry a bit
+        friends = data.map(x => ({
+          name: x.name || 'Unnamed',
+          ct: x.ct || x.connection || 'Any',
+          ll: x.ll || x.loveLanguage || 'Unknown',
+          hobbies: Array.isArray(x.hobbies) ? x.hobbies : csvToArr(x.hobbies || ''),
+          values: Array.isArray(x.values) ? x.values : csvToArr(x.values || ''),
+          notes: (x.notes || '').trim()
+        }));
+        saveFriends();
+        renderFriends();
+      } catch (err) {
+        alert('Import failed: ' + err.message);
+      } finally {
+        e.target.value = '';
+      }
+    });
+  }
+
+  // ---------- first paint ----------
+  renderFriends();
+});
