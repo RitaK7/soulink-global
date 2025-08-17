@@ -4,8 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Soulink – Friends & Matches</title>
-   <script src="nav.js?v=3" defer></script>
+
+  <!-- Nav + global styles -->
+  <script src="nav.js?v=3" defer></script>
   <link rel="stylesheet" href="style.css" />
+
+  <!-- Page-local mini CSS (tik šiam puslapiui) -->
   <style>
     .container { max-width: 980px; margin: 0 auto; padding: 2rem 1rem; }
     .grid { display:grid; grid-template-columns: 1.2fr 1.8fr; gap: 1.2rem; }
@@ -13,78 +17,63 @@
     .card { background: rgba(0, 90, 90, 0.35); border-radius: 14px; padding: 1.2rem; }
     .section-title { color:#dff; margin:.2rem 0 .6rem; font-weight:700; }
     .row { display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
-    .list { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:.8rem; }
-    @media (max-width: 720px){ .list { grid-template-columns: 1fr; } }
+    .btn { cursor:pointer; border:1px solid rgba(0,253,216,.45); border-radius:999px; padding:.6rem .95rem; font-weight:600; }
+    .btn:hover { box-shadow: 0 0 12px rgba(0,253,216,.35); }
+    .friends-grid { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:.8rem; }
+    @media (max-width: 720px){ .friends-grid { grid-template-columns: 1fr; } }
     .friend { background: rgba(0,0,0,0.15); border-radius:12px; padding:.8rem; }
     .score { display:inline-block; min-width: 2.5rem; text-align:center; padding:.15rem .45rem; border-radius:999px; border:1px solid rgba(0,253,216,.45); }
     .hint { opacity:.8; font-size:.9rem; }
-    .btn { cursor:pointer; border:1px solid rgba(0,253,216,.45); border-radius:999px; padding:.6rem .95rem; font-weight:600; }
-    .btn:hover { box-shadow: 0 0 12px rgba(0,253,216,.35); }
     input, textarea, select { width:100%; }
   </style>
 </head>
 <body>
- <!-- Soulink Global Navbar -->
-<nav class="navbar" style="background:#002e30; box-shadow:0 0 12px rgba(0,253,216,0.25);">
-  <div class="container" style="max-width:980px; margin:0 auto; padding:.8rem 1rem; display:flex; align-items:center; justify-content:space-between; gap:1rem;">
-    <!-- brand -->
-    <a href="index.html" class="brand" style="font-weight:700; text-decoration:none; color:#00fdd8;">Soulink</a>
+  <!-- Global navbar (vienas) -->
+  <nav class="navbar" style="background:#002e30; box-shadow:0 0 12px rgba(0,253,216,0.25);">
+    <div class="container" style="display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.8rem 1rem;">
+      <a href="index.html" class="brand" style="font-weight:700; text-decoration:none; color:#00fdd8;">Soulink</a>
+      <button id="navToggle" aria-label="Toggle navigation"
+              style="background:transparent; border:1px solid #00fdd8; border-radius:10px; padding:.4rem .6rem; color:#00fdd8; display:none;">☰</button>
+      <ul id="navMenu" style="list-style:none; display:flex; flex-wrap:wrap; gap:.6rem; margin:0; padding:0;">
+        <li><a href="quiz.html">Quiz</a></li>
+        <li><a href="edit-profile.html">Edit Profile</a></li>
+        <li><a href="my-soul.html">My Soul</a></li>
+        <li><a href="soul-chart.html">Soul Chart</a></li>
+        <li><a href="soul-coach.html">Soul Coach</a></li>
+        <li><a href="friends.html">Friends</a></li>
+        <li><a href="match.html">Match</a></li>
+        <li><a href="result.html">Results</a></li>
+      </ul>
+    </div>
+  </nav>
 
-    <!-- mobile toggle -->
-    <button id="navToggle" aria-label="Toggle navigation"
-            style="background:transparent; border:1px solid #00fdd8; border-radius:10px; padding:.4rem .6rem; color:#00fdd8; display:none;">
-      ☰
-    </button>
-
-    <!-- menu -->
-    <ul id="navMenu" style="list-style:none; display:flex; flex-wrap:wrap; gap:.6rem; margin:0; padding:0;">
-      <li><a href="quiz.html">Quiz</a></li>
-      <li><a href="edit-profile.html">Edit Profile</a></li>
-      <li><a href="my-soul.html">My Soul</a></li>
-      <li><a href="soul-chart.html">Soul Chart</a></li>
-      <li><a href="soul-coach.html">Soul Coach</a></li>
-      <li><a href="friends.html">Friends</a></li>
-      <li><a href="match.html">Match</a></li>
-      <li><a href="result.html">Results</a></li>
-    </ul>
-  </div>
-</nav>
-  <script>
-    (function(){const b=document.getElementById('navToggle'),m=document.getElementById('navMenu');function r(){if(innerWidth<800){b.style.display='block';m.style.display='none';}else{b.style.display='none';m.style.display='flex';}}if(b&&m){b.onclick=()=>{m.style.display=(m.style.display==='none'||!m.style.display)?'flex':'none';};addEventListener('resize',r);r();}})();
-  </script>
-
-  <main class="container friends-layout">
-  <section class="card">… Your Snapshot …</section>
-
-    <section>
-      <div class="card">… Add Friend / Candidate (forma) …</div>
-      <h3 class="section-title">Your Inner Circle</h3>
-      <div id="friends-list" class="friends-grid"></div>
-   </section>
-   </main>
-
-    <h1 style="color:#dff; margin:0 0 1rem;">🤝 Friends & Matches</h1>
+  <!-- Turinys -->
+  <main class="container">
+    <h1 class="section-title" style="font-size:1.6rem;">🤝 Friends & Matches</h1>
 
     <div class="grid">
-      <!-- LEFT: your snapshot + actions -->
-      <div class="card">
+      <!-- Kairė: tavo snapshot + eksportas/importas -->
+      <section class="card">
         <h3 class="section-title">Your Snapshot</h3>
         <p><strong>Name:</strong> <span id="me-name">–</span></p>
         <p><strong>Connection:</strong> <span id="me-ct">–</span></p>
         <p><strong>Love Language:</strong> <span id="me-ll">–</span></p>
         <p><strong>Hobbies:</strong> <span id="me-hobbies">–</span></p>
         <p><strong>Values:</strong> <span id="me-values">–</span></p>
+
         <div class="row" style="margin-top:.8rem;">
           <a class="btn" href="edit-profile.html">Edit Profile</a>
-           <button id="exportFriends" class="btn" type="button">Export Friends JSON</button>
-           <button id="importFriends" class="btn" type="button">Import JSON</button>
-           <input id="importFile" type="file" accept="application/json" style="display:none;">
-      </div>
+          <button id="exportFriends" class="btn" type="button">Export Friends JSON</button>
+          <button id="importFriends" class="btn" type="button">Import JSON</button>
+          <input id="importFile" type="file" accept="application/json" style="display:none;">
+        </div>
+      </section>
 
-      <!-- RIGHT: add friend + list -->
-      <div>
+      <!-- Dešinė: forma + sąrašas -->
+      <section>
         <form id="add-form" class="card" novalidate>
           <h3 class="section-title">Add Friend / Candidate</h3>
+
           <div class="row" style="gap:.8rem;">
             <div style="flex:1;">
               <label for="f-name">Name</label>
@@ -133,22 +122,23 @@
 
         <div class="card">
           <h3 class="section-title">Your Inner Circle</h3>
-        <div id="friends-list" class="friends-grid"></div>
-
+          <div id="friends-list" class="friends-grid"></div>
           <p id="empty-note" class="hint" style="display:none;">No friends yet. Add someone above ✨</p>
         </div>
-      </div>
+      </section>
     </div>
+
+    <nav class="row" style="justify-content:space-between; margin-top:1.2rem;">
+      <a class="btn btn-ghost" href="soul-coach.html">← Back: Soul Coach</a>
+      <a class="btn" href="match.html">Next: Match →</a>
+    </nav>
   </main>
-  <nav class="pager">
-  <a class="btn btn-ghost" href="soul-coach.html">← Back: Soul Coach</a>
-  <a class="btn" href="match.html">Next: Match →</a>
-</nav>
 
   <footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
     © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
   </footer>
 
+  <!-- Vienas JS (nepalietas) -->
   <script src="friends.js"></script>
 </body>
 </html>
