@@ -1,4 +1,4 @@
-// friends.js — Soulink (clean, stable)
+// friends.js — Soulink (compat %, edit modal, clean rendering)
 (() => {
   const KEY_PROFILE = 'soulQuiz';
   const KEY_FRIENDS = 'soulinkFriends';
@@ -11,11 +11,9 @@
     s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;'}[m]));
 
   const csv = (arr=[]) => (arr || []).filter(Boolean).join(', ');
+  const tokenizeCSV = (s='') => s.split(',').map(v => v.trim()).filter(Boolean);
 
-  const tokenizeCSV = (s='') =>
-    s.split(',').map(v => v.trim()).filter(Boolean);
-
-  // “tuščių” reikšmių normalizavimas (kad nedingtų su “—”)
+  // “tuščių” reikšmių normalizavimas
   const clean = (v='') => {
     const s = String(v).trim();
     if (!s) return '';
@@ -34,11 +32,7 @@
     notes:   (o.notes || '').trim()
   });
 
-  const loadProfile = () => {
-    try { return JSON.parse(localStorage.getItem(KEY_PROFILE) || '{}'); }
-    catch { return {}; }
-  };
-
+  const loadProfile = () => { try { return JSON.parse(localStorage.getItem(KEY_PROFILE) || '{}'); } catch { return {}; } };
   const loadFriends = () => {
     try {
       const raw = JSON.parse(localStorage.getItem(KEY_FRIENDS) || '[]');
@@ -47,15 +41,11 @@
         localStorage.setItem(KEY_FRIENDS, JSON.stringify(normed));
       }
       return normed;
-    } catch {
-      return [];
-    }
+    } catch { return []; }
   };
+  const saveFriends = (list) => localStorage.setItem(KEY_FRIENDS, JSON.stringify(list));
 
-  const saveFriends = (list) =>
-    localStorage.setItem(KEY_FRIENDS, JSON.stringify(list));
-
-  // migracija iš seno rakto, jei buvo
+  // migracija iš seno rakto (jei buvo)
   try {
     const legacy = localStorage.getItem('friends');
     if (legacy && !localStorage.getItem(KEY_FRIENDS)) {
@@ -64,7 +54,7 @@
     }
   } catch {}
 
-  // ---------- snapshot (kairė korta) ----------
+  // ---------- Me snapshot ----------
   const me = loadProfile();
   const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? '–'; };
 
@@ -74,7 +64,7 @@
   setTxt('me-hobbies', csv(me.hobbies));
   setTxt('me-values',  csv(me.values));
 
-  // ---------- scoring ----------
+  // ---------- scoring (0..100) ----------
   function scoreWithMe(f){
     let score = 0;
     if (me.connectionType && f.ct && me.connectionType === f.ct) score += 20;
@@ -93,14 +83,14 @@
     return Math.max(0, Math.min(100, score));
   }
 
-  // clickable contact
+  // kontaktų link’ai
   function contactLink(c){
     if (!c) return null;
     const v = c.trim();
-    if (/^https?:\/\//i.test(v)) return v;                                     // link
-    if (/^[\w.+-]+@[\w.-]+\.[a-z]{2,}$/i.test(v)) return `mailto:${v}`;        // email
-    if (/^\+?\d[\d\s\-()]{6,}$/.test(v)) return `https://wa.me/${v.replace(/\D/g,'')}`; // phone -> WhatsApp
-    if (/^@?[\w.]{2,}$/i.test(v)) return `https://instagram.com/${v.replace(/^@/,'')}`; // @handle
+    if (/^https?:\/\//i.test(v)) return v;
+    if (/^[\w.+-]+@[\w.-]+\.[a-z]{2,}$/i.test(v)) return `mailto:${v}`;
+    if (/^\+?\d[\d\s\-()]{6,}$/.test(v)) return `https://wa.me/${v.replace(/\D/g,'')}`;
+    if (/^@?[\w.]{2,}$/i.test(v)) return `https://instagram.com/${v.replace(/^@/,'')}`;
     return null;
   }
 
@@ -123,6 +113,7 @@
       card.className = 'friend';
 
       const score = scoreWithMe(f);
+      const cls = score >= 75 ? 'good' : score >= 50 ? 'ok' : 'low';
       const msg   = contactLink(f.contact);
 
       const lines = [];
@@ -134,16 +125,18 @@
         const a = msg ? ` <a class="btn btn-ghost btn-xs" href="${msg}" target="_blank" rel="noopener">Message</a>` : '';
         lines.push(`<div><b>Contact:</b> ${escapeHTML(f.contact)}${a}</div>`);
       }
+      if (f.notes) lines.push(`<div><i>${escapeHTML(f.notes)}</i></div>`);
 
       card.innerHTML = `
         <div class="friend-head">
           <strong>${escapeHTML(f.name || '—')}</strong>
-          <span class="score">${score}</span>
+          <span class="score ${cls}" title="Compatibility">${score}%</span>
         </div>
         <div class="friend-body">
           ${lines.join('') || '<div><i>No extra details.</i></div>'}
         </div>
-        <div class="friend-actions">
+        <div class="friend-actions" style="display:flex; gap:.5rem;">
+          <button class="btn btn-ghost" data-edit="${i}">Edit</button>
           <button class="btn btn-ghost" data-rm="${i}">Remove</button>
         </div>
       `;
@@ -159,6 +152,11 @@
         saveFriends(arr);
         render(arr);
       });
+    });
+
+    // edit
+    $$('[data-edit]').forEach(btn => {
+      btn.addEventListener('click', () => openEdit(+btn.getAttribute('data-edit')));
     });
   }
 
@@ -234,4 +232,56 @@
     };
     picker.click();
   });
+
+  // ---------- EDIT MODAL ----------
+  const modal = $('#editModal');
+  let editIdx = -1;
+
+  function openEdit(i){
+    const arr = loadFriends();
+    const f = arr[i];
+    if (!f) return;
+
+    editIdx = i;
+    $('#e-name').value    = f.name || '';
+    $('#e-ct').value      = f.ct || '';
+    $('#e-ll').value      = f.ll || '';
+    $('#e-hobbies').value = (f.hobbies || []).join(', ');
+    $('#e-values').value  = (f.values  || []).join(', ');
+    $('#e-contact').value = f.contact || '';
+    $('#e-notes').value   = f.notes || '';
+
+    modal.hidden = false;
+  }
+
+  $('#editCancel')?.addEventListener('click', () => {
+    modal.hidden = true;
+    editIdx = -1;
+  });
+
+  $('#editForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (editIdx < 0) return;
+
+    const arr = loadFriends();
+    const f = arr[editIdx];
+    if (!f) return;
+
+    const updated = normFriend({
+      name:    $('#e-name').value,
+      ct:      $('#e-ct').value,
+      ll:      $('#e-ll').value,
+      hobbies: $('#e-hobbies').value,
+      values:  $('#e-values').value,
+      contact: $('#e-contact').value,
+      notes:   $('#e-notes').value
+    });
+
+    arr[editIdx] = updated;
+    saveFriends(arr);
+    modal.hidden = true;
+    editIdx = -1;
+    render(arr);
+  });
+
 })();
