@@ -186,9 +186,10 @@ function contactLink(c){
 
   render(); // pirmas piešimas
 
-  // ---------- add friend ----------
-  $('#add-form')?.addEventListener('submit', (e) => {
+ // ---------- add friend ----------
+$('#add-form')?.addEventListener('submit', (e) => {
   e.preventDefault();
+
   const f = normFriend({
     name:    $('#f-name')?.value,
     ct:      $('#f-ct')?.value,
@@ -196,22 +197,20 @@ function contactLink(c){
     hobbies: $('#f-hobbies')?.value,
     values:  $('#f-values')?.value,
     contact: $('#f-contact')?.value,
-    notes:   $('#f-notes')?.value,   // <- kablelis čia
+    notes:   $('#f-notes')?.value,
     photo:   $('#f-photo')?.value,
   });
   if (!f.name){ alert('Please enter a name.'); return; }
-  });
 
+  const arr = loadFriends();
+  if (arr.some(x => (x.name||'').toLowerCase() === f.name.toLowerCase()) &&
+      !confirm(`"${f.name}" already exists. Add anyway?`)) return;
 
-    const arr = loadFriends();
-    if (arr.some(x => (x.name||'').toLowerCase() === f.name.toLowerCase())){
-      if (!confirm(`"${f.name}" already exists. Add anyway?`)) return;
-    }
-    arr.push(f);
-    saveFriends(arr);
-    e.target.reset();
-    render(arr);
-  });
+  arr.push(f);
+  saveFriends(arr);
+  e.target.reset();
+  render(arr);
+});
 
   // ---------- clear all ----------
   $('#clearAll')?.addEventListener('click', () => {
@@ -309,5 +308,7 @@ $('#edit-form')?.addEventListener('submit', (e) => {
   saveFriends(arr);
   modal.hidden = true;
   editIdx = -1;
-  render(arr);
-});
+    render(arr);
+});         // uždaro '#edit-form' submit listener
+})();       // uždaro IIFE, kuri prasidėjo pačioje pradžioje
+
