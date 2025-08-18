@@ -159,12 +159,32 @@ function contactLink(c){
     ${lines.join('') || '<div><i>No extra details.</i></div>'}
     </div>
     <div class="friend-actions" style="display:flex; gap:.5rem;">
-    <button class="btn btn-ghost" data-edit="${i}">Edit</button>
-    <button class="btn btn-ghost" data-rm="${i}">Remove</button>
-    </div>
+    <button type="button" class="btn btn-ghost" data-edit="${i}">Edit</button>
+    <button type="button" class="btn btn-ghost" data-rm="${i}">Remove</button>
+  </div>
 `;
 // !!! čia NEBETURI BŪTI ".;" eilutės !!!
    listEl.appendChild(card);
+   // po to kai sudedi korteles į listEl:
+$$('#list [data-edit]').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const i = +btn.getAttribute('data-edit');
+    openEdit(i);
+  });
+});
+
+$$('#list [data-rm]').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const i = +btn.getAttribute('data-rm');
+    const arr = loadFriends();
+    arr.splice(i, 1);
+    saveFriends(arr);
+    render(arr);
+  });
+});
+
     });
 
     // remove
