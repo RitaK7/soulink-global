@@ -15,46 +15,47 @@
   const tokenizeCSV = (s='') =>
     s.split(',').map(v => v.trim()).filter(Boolean);
 
-  const fmt = (v) => {
-    const s = (v || '').trim();
-    if (!s) return '—';
+  // “tuščių” reikšmių normalizavimas (kad nedingtų su “—”)
+  const clean = (v='') => {
+    const s = String(v).trim();
+    if (!s) return '';
     const bad = ['any','unknown','–','-'];
-    return bad.includes(s.toLowerCase()) ? '—' : s;
+    return bad.includes(s.toLowerCase()) ? '' : s;
   };
 
+  // friend objektas į tvarkingą formą
   const normFriend = (o = {}) => ({
-   name:    (o.name || '').trim(),
-  ct:      (o.ct || o.connection || o.type || '').trim(),
-  ll:      (o.ll || o.loveLanguage || o.language || '').trim(),
-  hobbies: Array.isArray(o.hobbies) ? o.hobbies.map(String) : tokenizeCSV(o.hobbies || ''),
-  values:  Array.isArray(o.values)  ? o.values.map(String)  : tokenizeCSV(o.values  || ''),
-  contact: (o.contact || o.email || o.phone || o.link || '').trim(),
-  notes:   (o.notes || '').trim()
-});
-
+    name:    (o.name || '').trim(),
+    ct:      clean(o.ct || o.connection || o.type),
+    ll:      clean(o.ll || o.loveLanguage || o.language),
+    hobbies: Array.isArray(o.hobbies) ? o.hobbies.map(String) : tokenizeCSV(o.hobbies || ''),
+    values:  Array.isArray(o.values)  ? o.values.map(String)  : tokenizeCSV(o.values  || ''),
+    contact: (o.contact || o.email || o.phone || o.link || '').trim(),
+    notes:   (o.notes || '').trim()
+  });
 
   const loadProfile = () => {
     try { return JSON.parse(localStorage.getItem(KEY_PROFILE) || '{}'); }
     catch { return {}; }
-   const loadFriends = () => {
-  try {
-    const raw = JSON.parse(localStorage.getItem(KEY_FRIENDS) || '[]');
-    const normed = raw.map(normFriend);
-    if (JSON.stringify(raw) !== JSON.stringify(normed)) {
-      localStorage.setItem(KEY_FRIENDS, JSON.stringify(normed));
-    }
-    return normed;
-  } catch {
-    return [];
-  }
-};
-
-
-  const saveFriends = (list) => {
-    localStorage.setItem(KEY_FRIENDS, JSON.stringify(list));
   };
 
-  // migrate old key (if any)
+  const loadFriends = () => {
+    try {
+      const raw = JSON.parse(localStorage.getItem(KEY_FRIENDS) || '[]');
+      const normed = raw.map(normFriend);
+      if (JSON.stringify(raw) !== JSON.stringify(normed)) {
+        localStorage.setItem(KEY_FRIENDS, JSON.stringify(normed));
+      }
+      return normed;
+    } catch {
+      return [];
+    }
+  };
+
+  const saveFriends = (list) =>
+    localStorage.setItem(KEY_FRIENDS, JSON.stringify(list));
+
+  // migracija iš seno rakto, jei buvo
   try {
     const legacy = localStorage.getItem('friends');
     if (legacy && !localStorage.getItem(KEY_FRIENDS)) {
@@ -63,7 +64,7 @@
     }
   } catch {}
 
-  // ---------- snapshot (left card) ----------
+  // ---------- snapshot (kairė korta) ----------
   const me = loadProfile();
   const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? '–'; };
 
@@ -96,7 +97,7 @@
   function contactLink(c){
     if (!c) return null;
     const v = c.trim();
-    if (/^https?:\/\//i.test(v)) return v;                                     // full link
+    if (/^https?:\/\//i.test(v)) return v;                                     // link
     if (/^[\w.+-]+@[\w.-]+\.[a-z]{2,}$/i.test(v)) return `mailto:${v}`;        // email
     if (/^\+?\d[\d\s\-()]{6,}$/.test(v)) return `https://wa.me/${v.replace(/\D/g,'')}`; // phone -> WhatsApp
     if (/^@?[\w.]{2,}$/i.test(v)) return `https://instagram.com/${v.replace(/^@/,'')}`; // @handle
@@ -116,41 +117,40 @@
       return;
     }
     if (emptyEl) emptyEl.style.display = 'none';
-    }
 
-   
-  list.forEach((f, i) => {
-    const card = document.createElement('div');
-    card.className = 'friend';
+    list.forEach((f, i) => {
+      const card = document.createElement('div');
+      card.className = 'friend';
 
-    const score = scoreWithMe(f);
-    const msg   = contactLink(f.contact);
+      const score = scoreWithMe(f);
+      const msg   = contactLink(f.contact);
 
-    const lines = [];
-    if (f.ct) lines.push(`<div><b>Connection:</b> ${escapeHTML(f.ct)}</div>`);
-    if (f.ll) lines.push(`<div><b>Love Language:</b> ${escapeHTML(f.ll)}</div>`);
-    if ((f.hobbies||[]).length) lines.push(`<div><b>Hobbies:</b> ${escapeHTML(f.hobbies.join(', '))}</div>`);
-    if ((f.values||[]).length)  lines.push(`<div><b>Values:</b> ${escapeHTML(f.values.join(', '))}</div>`);
-    if (f.contact) {
-      const a = msg ? ` <a class="btn btn-ghost btn-xs" href="${msg}" target="_blank" rel="noopener">Message</a>` : '';
-      lines.push(`<div><b>Contact:</b> ${escapeHTML(f.contact)}${a}</div>`);
-    }
+      const lines = [];
+      if (f.ct) lines.push(`<div><b>Connection:</b> ${escapeHTML(f.ct)}</div>`);
+      if (f.ll) lines.push(`<div><b>Love Language:</b> ${escapeHTML(f.ll)}</div>`);
+      if ((f.hobbies||[]).length) lines.push(`<div><b>Hobbies:</b> ${escapeHTML(f.hobbies.join(', '))}</div>`);
+      if ((f.values||[]).length)  lines.push(`<div><b>Values:</b> ${escapeHTML(f.values.join(', '))}</div>`);
+      if (f.contact) {
+        const a = msg ? ` <a class="btn btn-ghost btn-xs" href="${msg}" target="_blank" rel="noopener">Message</a>` : '';
+        lines.push(`<div><b>Contact:</b> ${escapeHTML(f.contact)}${a}</div>`);
+      }
 
-    card.innerHTML = `
-      <div class="friend-head">
-        <strong>${escapeHTML(f.name || '—')}</strong>
-        <span class="score">${score}</span>
-      </div>
-      <div class="friend-body">
-        ${lines.join('') || '<div><i>No extra details.</i></div>'}
-      </div>
-      <div class="friend-actions">
-        <button class="btn btn-ghost" data-rm="${i}">Remove</button>
-      </div>
-    `;
-    listEl.appendChild(card);
-  });
-  
+      card.innerHTML = `
+        <div class="friend-head">
+          <strong>${escapeHTML(f.name || '—')}</strong>
+          <span class="score">${score}</span>
+        </div>
+        <div class="friend-body">
+          ${lines.join('') || '<div><i>No extra details.</i></div>'}
+        </div>
+        <div class="friend-actions">
+          <button class="btn btn-ghost" data-rm="${i}">Remove</button>
+        </div>
+      `;
+      listEl.appendChild(card);
+    });
+
+    // remove
     $$('[data-rm]').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = +btn.getAttribute('data-rm');
@@ -162,15 +162,15 @@
     });
   }
 
-  render(); // first paint
+  render(); // pirmas piešimas
 
   // ---------- add friend ----------
   $('#add-form')?.addEventListener('submit', (e) => {
     e.preventDefault();
     const f = normFriend({
-      name:   $('#f-name')?.value,
-      ct:     $('#f-ct')?.value,
-      ll:     $('#f-ll')?.value,
+      name:    $('#f-name')?.value,
+      ct:      $('#f-ct')?.value,
+      ll:      $('#f-ll')?.value,
       hobbies: $('#f-hobbies')?.value,
       values:  $('#f-values')?.value,
       contact: $('#f-contact')?.value,
