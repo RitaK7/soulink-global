@@ -22,16 +22,17 @@
   };
 
   // friend objektas į tvarkingą formą
-  const normFriend = (o = {}) => ({
+    const normFriend = (o = {}) => ({
     name:    (o.name || '').trim(),
+    photo:   (o.photo || o.avatar || '').trim(),
     ct:      clean(o.ct || o.connection || o.type),
     ll:      clean(o.ll || o.loveLanguage || o.language),
     hobbies: Array.isArray(o.hobbies) ? o.hobbies.map(String) : tokenizeCSV(o.hobbies || ''),
     values:  Array.isArray(o.values)  ? o.values.map(String)  : tokenizeCSV(o.values  || ''),
     contact: (o.contact || o.email || o.phone || o.link || '').trim(),
     notes:   (o.notes || '').trim()
-  });
-
+   });
+ 
   const loadProfile = () => { try { return JSON.parse(localStorage.getItem(KEY_PROFILE) || '{}'); } catch { return {}; } };
   const loadFriends = () => {
     try {
@@ -84,15 +85,32 @@
   }
 
   // kontaktų link’ai
-  function contactLink(c){
-    if (!c) return null;
-    const v = c.trim();
-    if (/^https?:\/\//i.test(v)) return v;
-    if (/^[\w.+-]+@[\w.-]+\.[a-z]{2,}$/i.test(v)) return `mailto:${v}`;
-    if (/^\+?\d[\d\s\-()]{6,}$/.test(v)) return `https://wa.me/${v.replace(/\D/g,'')}`;
-    if (/^@?[\w.]{2,}$/i.test(v)) return `https://instagram.com/${v.replace(/^@/,'')}`;
-    return null;
-  }
+  // --- Avatar (ATSIRANDA AUKŠTAI, UŽ contactLink RIBŲ) ---
+function avatarFor(f){
+  const url = (f.photo || '').trim();
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:image')) return url;
+
+  const ch = (f.name || '?').trim().charAt(0).toUpperCase() || 'S';
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+       <rect width="100%" height="100%" fill="#064a4a"/>
+       <text x="50%" y="58%" font-size="42" font-family="system-ui"
+             text-anchor="middle" fill="#00fdd8">${ch}</text>
+     </svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+// --- Kontaktų nuorodos normalizatorius (ATSIRANDA ATSKIRAI) ---
+function contactLink(c){
+  if (!c) return null;
+  const v = c.trim();
+
+  if (/^https?:\/\//i.test(v)) return v;
+  if (/^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(v)) return `mailto:${v}`;
+  if (/^\+?\d[\d\s-]{6,}$/.test(v)) return `https://wa.me/${v.replace(/\D/g,'')}`;
+  if (/^@?[\w.]{2,}$/i.test(v)) return `https://instagram.com/${v.replace(/^@/,'')}`;
+  return null;
+}
 
   // ---------- render ----------
   const listEl  = $('#friends-list');
@@ -127,20 +145,26 @@
       }
       if (f.notes) lines.push(`<div><i>${escapeHTML(f.notes)}</i></div>`);
 
-      card.innerHTML = `
-        <div class="friend-head">
-          <strong>${escapeHTML(f.name || '—')}</strong>
-          <span class="score ${cls}" title="Compatibility">${score}%</span>
-        </div>
-        <div class="friend-body">
-          ${lines.join('') || '<div><i>No extra details.</i></div>'}
-        </div>
-        <div class="friend-actions" style="display:flex; gap:.5rem;">
-          <button class="btn btn-ghost" data-edit="${i}">Edit</button>
-          <button class="btn btn-ghost" data-rm="${i}">Remove</button>
-        </div>
-      `;
-      listEl.appendChild(card);
+      const img = `<img class="avatar" src="${avatarFor(f)}" alt="">`;
+
+    card.innerHTML = `
+    <div class="friend-head">
+    <div class="friend-meta">
+      ${img}
+    <span class="name">${escapeHTML(f.name || '--')}</span>
+     </div>
+    <span class="score ${cls}" title="Compatibility">${score}%</span>
+     </div>
+    <div class="friend-body">
+    ${lines.join('') || '<div><i>No extra details.</i></div>'}
+    </div>
+    <div class="friend-actions" style="display:flex; gap:.5rem;">
+    <button class="btn btn-ghost" data-edit="${i}">Edit</button>
+    <button class="btn btn-ghost" data-rm="${i}">Remove</button>
+    </div>
+`;
+// !!! čia NEBETURI BŪTI ".;" eilutės !!!
+   listEl.appendChild(card);
     });
 
     // remove
@@ -164,17 +188,20 @@
 
   // ---------- add friend ----------
   $('#add-form')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const f = normFriend({
-      name:    $('#f-name')?.value,
-      ct:      $('#f-ct')?.value,
-      ll:      $('#f-ll')?.value,
-      hobbies: $('#f-hobbies')?.value,
-      values:  $('#f-values')?.value,
-      contact: $('#f-contact')?.value,
-      notes:   $('#f-notes')?.value
-    });
-    if (!f.name){ alert('Please enter a name.'); return; }
+  e.preventDefault();
+  const f = normFriend({
+    name:    $('#f-name')?.value,
+    ct:      $('#f-ct')?.value,
+    ll:      $('#f-ll')?.value,
+    hobbies: $('#f-hobbies')?.value,
+    values:  $('#f-values')?.value,
+    contact: $('#f-contact')?.value,
+    notes:   $('#f-notes')?.value,   // <- kablelis čia
+    photo:   $('#f-photo')?.value,
+  });
+  if (!f.name){ alert('Please enter a name.'); return; }
+  });
+
 
     const arr = loadFriends();
     if (arr.some(x => (x.name||'').toLowerCase() === f.name.toLowerCase())){
@@ -234,54 +261,53 @@
   });
 
   // ---------- EDIT MODAL ----------
-  const modal = $('#editModal');
-  let editIdx = -1;
+const modal = $('#editModal');
+let editIdx = -1;
 
-  function openEdit(i){
-    const arr = loadFriends();
-    const f = arr[i];
-    if (!f) return;
+function openEdit(i){
+  const arr = loadFriends();
+  const f = arr[i];
+  if (!f) return;
 
-    editIdx = i;
-    $('#e-name').value    = f.name || '';
-    $('#e-ct').value      = f.ct || '';
-    $('#e-ll').value      = f.ll || '';
-    $('#e-hobbies').value = (f.hobbies || []).join(', ');
-    $('#e-values').value  = (f.values  || []).join(', ');
-    $('#e-contact').value = f.contact || '';
-    $('#e-notes').value   = f.notes || '';
+  editIdx = i;
+  $('#e-name').value    = f.name || '';
+  $('#e-ct').value      = f.ct || '';
+  $('#e-ll').value      = f.ll || '';
+  $('#e-hobbies').value = (f.hobbies || []).join(', ');
+  $('#e-values').value  = (f.values  || []).join(', ');
+  $('#e-contact').value = f.contact || '';
+  $('#e-notes').value   = f.notes || '';
+  $('#e-photo').value   = f.photo || '';
 
-    modal.hidden = false;
-  }
+  modal.hidden = false;
+}
 
-  $('#editCancel')?.addEventListener('click', () => {
-    modal.hidden = true;
-    editIdx = -1;
+$('#editCancel')?.addEventListener('click', () => {
+  modal.hidden = true;
+  editIdx = -1;
+});
+
+// ---------- EDIT: save ----------
+$('#edit-form')?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (editIdx < 0) return;
+
+  const arr = loadFriends();
+
+  const updated = normFriend({
+    name:    $('#e-name').value,
+    photo:   $('#e-photo').value,
+    ct:      $('#e-ct').value,
+    ll:      $('#e-ll').value,
+    hobbies: $('#e-hobbies').value,
+    values:  $('#e-values').value,
+    contact: $('#e-contact').value,
+    notes:   $('#e-notes').value,
   });
 
-  $('#editForm')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (editIdx < 0) return;
-
-    const arr = loadFriends();
-    const f = arr[editIdx];
-    if (!f) return;
-
-    const updated = normFriend({
-      name:    $('#e-name').value,
-      ct:      $('#e-ct').value,
-      ll:      $('#e-ll').value,
-      hobbies: $('#e-hobbies').value,
-      values:  $('#e-values').value,
-      contact: $('#e-contact').value,
-      notes:   $('#e-notes').value
-    });
-
-    arr[editIdx] = updated;
-    saveFriends(arr);
-    modal.hidden = true;
-    editIdx = -1;
-    render(arr);
-  });
-
-})();
+  arr[editIdx] = updated;
+  saveFriends(arr);
+  modal.hidden = true;
+  editIdx = -1;
+  render(arr);
+});

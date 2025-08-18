@@ -22,6 +22,14 @@
     .friends-grid { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:.8rem; }
     @media (max-width: 720px){ .friends-grid { grid-template-columns: 1fr; } }
     .friend { background: rgba(0,0,0,0.15); border-radius:12px; padding:.8rem; }
+    /* avatar + header */
+    .friend-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem}
+    .friend-meta{display:flex;align-items:center;gap:.6rem;min-width:0}
+    .friend-meta .avatar{width:40px;height:40px;border-radius:999px;object-fit:cover;flex:0 0 auto;box-shadow:0 0 0 2px rgba(0,253,216,.35)}
+    .friend-meta .name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .score.good{color:#00fdd8}
+    .score.ok{color:#aef}
+    .score.low{color:#9bd}
     .score { display:inline-block; min-width: 2.5rem; text-align:center; padding:.15rem .45rem; border-radius:999px; border:1px solid rgba(0,253,216,.45); }
     .hint { opacity:.8; font-size:.9rem; }
     input, textarea, select { width:100%; }
@@ -73,10 +81,14 @@
       <section>
         <form id="add-form" class="card" novalidate>
           <h3 class="section-title">Add Friend / Candidate</h3>
-
+          <label for="f-photo">Photo URL (optional)</label>
+          <input id="f-photo" type="url" placeholder="https://.../avatar.jpg" />
           <div class="row" style="gap:.8rem;">
             <div style="flex:1;">
               <label for="f-name">Name</label>
+              <label>Photo URL
+              <input id="e-photo" type="url" placeholder="https://.../avatar.jpg" />
+              </label>
               <input id="f-name" type="text" placeholder="Name" required />
             </div>
             <div style="flex:1;">

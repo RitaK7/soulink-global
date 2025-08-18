@@ -773,6 +773,51 @@ button:hover,
 /* little XS button used for Message */
 .btn-xs{ padding:.15rem .45rem; font-size:.78rem; border-radius:999px; }
 
+.friend-head{
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  margin-bottom:.5rem;
+}
+
+.avatar{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  flex:0 0 40px;
+  object-fit:cover;
+  box-shadow:0 0 0 2px rgba(255,255,255,.08);
+}
+
+.avatar--text{
+  display:grid;
+  place-items:center;
+  font-weight:700;
+  letter-spacing:.5px;
+  user-select:none;
+}
+
+.friend-meta{min-width:0}
+.friend-name{
+  font-weight:700;
+  line-height:1.1;
+  display:flex;
+  align-items:center;
+  gap:.35rem;
+}
+.friend-connection{
+  opacity:.85;
+  font-size:.9rem;
+}
+
+.badge{
+  background:var(--teal, #00fdd8);
+  color:#023;
+  padding:.05rem .45rem;
+  border-radius:999px;
+  font-size:.8rem;
+}
+
 
 
 
