@@ -23,24 +23,32 @@
   };
 
   const normFriend = (o = {}) => ({
-    name:    (o.name || '').trim(),
-    ct:      (o.ct   || '').trim(),           // connection type
-    ll:      (o.ll   || '').trim(),           // love language
-    hobbies: Array.isArray(o.hobbies) ? o.hobbies.map(String) : tokenizeCSV(o.hobbies || ''),
-    values:  Array.isArray(o.values)  ? o.values.map(String)  : tokenizeCSV(o.values  || ''),
-    contact: (o.contact || '').trim(),
-    notes:   (o.notes   || '').trim()
-  });
+   name:    (o.name || '').trim(),
+  ct:      (o.ct || o.connection || o.type || '').trim(),
+  ll:      (o.ll || o.loveLanguage || o.language || '').trim(),
+  hobbies: Array.isArray(o.hobbies) ? o.hobbies.map(String) : tokenizeCSV(o.hobbies || ''),
+  values:  Array.isArray(o.values)  ? o.values.map(String)  : tokenizeCSV(o.values  || ''),
+  contact: (o.contact || o.email || o.phone || o.link || '').trim(),
+  notes:   (o.notes || '').trim()
+});
+
 
   const loadProfile = () => {
     try { return JSON.parse(localStorage.getItem(KEY_PROFILE) || '{}'); }
     catch { return {}; }
-  };
+   const loadFriends = () => {
+  try {
+    const raw = JSON.parse(localStorage.getItem(KEY_FRIENDS) || '[]');
+    const normed = raw.map(normFriend);
+    if (JSON.stringify(raw) !== JSON.stringify(normed)) {
+      localStorage.setItem(KEY_FRIENDS, JSON.stringify(normed));
+    }
+    return normed;
+  } catch {
+    return [];
+  }
+};
 
-  const loadFriends = () => {
-    try { return JSON.parse(localStorage.getItem(KEY_FRIENDS) || '[]'); }
-    catch { return []; }
-  };
 
   const saveFriends = (list) => {
     localStorage.setItem(KEY_FRIENDS, JSON.stringify(list));
@@ -108,34 +116,41 @@
       return;
     }
     if (emptyEl) emptyEl.style.display = 'none';
+    }
 
-    list.forEach((f, i) => {
-      const card  = document.createElement('div');
-      card.className = 'friend';
+   
+  list.forEach((f, i) => {
+    const card = document.createElement('div');
+    card.className = 'friend';
 
-      const score = scoreWithMe(f);
-      const msg   = contactLink(f.contact);
+    const score = scoreWithMe(f);
+    const msg   = contactLink(f.contact);
 
-      card.innerHTML = `
-        <div class="friend-head">
-          <strong>${escapeHTML(f.name || '—')}</strong>
-          <span class="score">${score}</span>
-        </div>
-        <div class="friend-body">
-          <div><b>Connection:</b> ${escapeHTML(fmt(f.ct))}</div>
-          <div><b>Love Language:</b> ${escapeHTML(fmt(f.ll))}</div>
-          <div><b>Hobbies:</b> ${escapeHTML((f.hobbies || []).join(', ') || '—')}</div>
-          <div><b>Values:</b> ${escapeHTML((f.values  || []).join(', ') || '—')}</div>
-          ${f.contact ? `<div><b>Contact:</b> ${escapeHTML(f.contact)}
-            ${msg ? ` <a class="btn btn-ghost btn-xs" href="${msg}" target="_blank" rel="noopener">Message</a>` : ''}</div>` : ''}
-        </div>
-        <div class="friend-actions">
-          <button class="btn btn-ghost" data-rm="${i}">Remove</button>
-        </div>
-      `;
-      listEl.appendChild(card);
-    });
+    const lines = [];
+    if (f.ct) lines.push(`<div><b>Connection:</b> ${escapeHTML(f.ct)}</div>`);
+    if (f.ll) lines.push(`<div><b>Love Language:</b> ${escapeHTML(f.ll)}</div>`);
+    if ((f.hobbies||[]).length) lines.push(`<div><b>Hobbies:</b> ${escapeHTML(f.hobbies.join(', '))}</div>`);
+    if ((f.values||[]).length)  lines.push(`<div><b>Values:</b> ${escapeHTML(f.values.join(', '))}</div>`);
+    if (f.contact) {
+      const a = msg ? ` <a class="btn btn-ghost btn-xs" href="${msg}" target="_blank" rel="noopener">Message</a>` : '';
+      lines.push(`<div><b>Contact:</b> ${escapeHTML(f.contact)}${a}</div>`);
+    }
 
+    card.innerHTML = `
+      <div class="friend-head">
+        <strong>${escapeHTML(f.name || '—')}</strong>
+        <span class="score">${score}</span>
+      </div>
+      <div class="friend-body">
+        ${lines.join('') || '<div><i>No extra details.</i></div>'}
+      </div>
+      <div class="friend-actions">
+        <button class="btn btn-ghost" data-rm="${i}">Remove</button>
+      </div>
+    `;
+    listEl.appendChild(card);
+  });
+  
     $$('[data-rm]').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = +btn.getAttribute('data-rm');
