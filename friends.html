@@ -134,6 +134,59 @@
           <div id="friends-list" class="friends-grid"></div>
           <p id="empty-note" class="hint" style="display:none;">No friends yet. Add someone above ✨</p>
         </div>
+        <!-- Edit Friend modal -->
+        <div id="editModal" class="modal" hidden>
+         <div class="modal-box">
+          <h3 class="section-title">Edit Friend</h3>
+          <form id="editForm" class="grid grid-gap">
+        <label>Name
+        <input id="e-name" type="text" required />
+        </label>
+
+        <label>Connection
+        <select id="e-ct">
+          <option value="">—</option>
+          <option>Friendship</option>
+          <option>Romantic</option>
+          <option>Both</option>
+         </select>
+        </label>
+
+       <label>Love Language
+       <select id="e-ll">
+          <option value="">—</option>
+          <option>Words of Affirmation</option>
+          <option>Acts of Service</option>
+          <option>Receiving Gifts</option>
+          <option>Quality Time</option>
+          <option>Physical Touch</option>
+        </select>
+        </label>
+
+        <label>Hobbies (comma separated)
+         <input id="e-hobbies" type="text" placeholder="e.g., Traveling, Reading" />
+        </label>
+
+        <label>Values (comma separated)
+         <input id="e-values" type="text" placeholder="e.g., Honesty, Kindness" />
+        </label>
+
+        <label>Contact
+         <input id="e-contact" type="text" placeholder="email / phone / @handle / link" />
+        </label>
+
+        <label>Notes
+         <textarea id="e-notes" rows="3" placeholder="How you met, vibe, etc."></textarea>
+        </label>
+
+        <div class="row" style="justify-content:flex-end; gap:.5rem;">
+          <button id="editCancel" class="btn btn-ghost" type="button">Cancel</button>
+          <button id="editSave" class="btn" type="submit">Save</button>
+        </div>
+       </form>
+      </div>
+     </div>
+
       </section>
     </div>
 
