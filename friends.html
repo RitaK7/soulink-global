@@ -8,6 +8,7 @@
   <!-- Nav + global styles -->
   <script src="nav.js?v=3" defer></script>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
   <!-- Page-local mini CSS (tik šiam puslapiui) -->
   <style>
@@ -132,7 +133,29 @@
              placeholder="e.g., anna@email.com, +3706..., @anna, https://link" />
 
             <textarea id="f-notes" rows="2" placeholder="How you met, vibe, etc."></textarea>
-          </div>
+            <!-- Contact links (optional) -->
+          <div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+            <label class="form-control">
+          <div class="label"><span class="label-text">WhatsApp</span></div>
+          <input id="f-whatsapp" type="text" class="input" placeholder="+3706..., 3706..., arba numeris">
+          </label>
+
+          <label class="form-control">
+          <div class="label"><span class="label-text">Instagram</span></div>
+          <input id="f-instagram" type="text" class="input" placeholder="@vardas arba https://instagram.com/vardas">
+          </label>
+
+          <label class="form-control">
+          <div class="label"><span class="label-text">Facebook</span></div>
+          <input id="f-facebook" type="text" class="input" placeholder="profilo nuoroda arba vartotojo vardas">
+          </label>
+
+          <label class="form-control">
+          <div class="label"><span class="label-text">Email</span></div>
+          <input id="f-email" type="email" class="input" placeholder="name@example.com">
+        </label>
+       </div>
+    </div>
 
           <div class="row" style="margin-top:.8rem;">
             <button class="btn" type="submit">Add</button>
@@ -195,6 +218,29 @@
         </label>
 
      <div class="actions">
+      <!-- Contact links (optional) -->
+     <div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+       <label class="form-control">
+     <div class="label"><span class="label-text">WhatsApp</span></div>
+       <input id="e-whatsapp" type="text" class="input" placeholder="+3706..., 3706..., arba numeris">
+      </label>
+
+      <label class="form-control">
+    <div class="label"><span class="label-text">Instagram</span></div>
+      <input id="e-instagram" type="text" class="input" placeholder="@vardas arba https://instagram.com/vardas">
+     </label>
+
+      <label class="form-control">
+    <div class="label"><span class="label-text">Facebook</span></div>
+      <input id="e-facebook" type="text" class="input" placeholder="profilo nuoroda arba vartotojo vardas">
+     </label>
+
+      <label class="form-control">
+      <div class="label"><span class="label-text">Email</span></div>
+      <input id="e-email" type="email" class="input" placeholder="name@example.com">
+      </label>
+    </div>
+
       <button type="submit" class="btn">Save</button>
       <button type="button" id="editCancel" class="btn btn-ghost">Cancel</button>
     </div>
