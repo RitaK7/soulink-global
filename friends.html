@@ -12,44 +12,99 @@
 
   <!-- Local styles -->
   <style>
-    .container { max-width: 980px; margin: 0 auto; padding: 2rem 1rem; }
-    .grid { display:grid; grid-template-columns: 1.2fr 1.8fr; gap: 1.2rem; }
-    @media (max-width: 960px){ .grid { grid-template-columns: 1fr; } }
-    .card { background: rgba(0, 90, 90, 0.35); border-radius: 14px; padding: 1.2rem; }
-    .section-title { color:#dff; margin:.2rem 0 .6rem; font-weight:700; }
-    .row { display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
-    .btn { cursor:pointer; border:1px solid rgba(0,253,216,.45); border-radius:999px; padding:.6rem .95rem; font-weight:600; color:#dff; background:transparent; text-decoration:none; }
-    .btn:hover { box-shadow: 0 0 12px rgba(0,253,216,.35); }
-    .friends-grid { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:.8rem; }
-    @media (max-width: 720px){ .friends-grid { grid-template-columns: 1fr; } }
-    .friend { background: rgba(0,0,0,0.15); border-radius:12px; padding:.8rem; }
-    .friend-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem}
-    .friend-meta{display:flex;align-items:center;gap:.6rem;min-width:0}
-    .friend-meta .avatar{width:40px;height:40px;border-radius:999px;object-fit:cover;flex:0 0 auto;box-shadow:0 0 0 2px rgba(0,253,216,.35)}
-    .friend-meta .name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .score.good{color:#00fdd8}
-    .score.ok{color:#aef}
-    .score.low{color:#9bd}
-    .score { display:inline-block; min-width: 2.5rem; text-align:center; padding:.15rem .45rem; border-radius:999px; border:1px solid rgba(0,253,216,.45); }
+:root{
+  --bg:#003c43;
+  --surface:#074c4f;     /* kortelės */
+  --surface-2:#0a3f42;   /* draugo kortelės */
+  --stroke:rgba(0,253,216,.28);
+  --glow:rgba(0,253,216,.35);
+  --text:#eafff9;
+  --muted:#c8f7ef;
+  --link:#9afcf0;
+  --accent:#00fdd8;
+}
 
-    input, textarea, select { width:100%; }
+html,body{ background:var(--bg); color:var(--text); }
+a{ color:var(--link); text-decoration:none; }
+a:hover{ color:var(--accent); }
 
-    /* Social icons (WOW glow) */
-    .social-icons { display:flex; gap:.5rem; flex-wrap:wrap; }
-    .social-icons .icon{
-      display:inline-flex; align-items:center; justify-content:center;
-      width:38px; height:38px; border-radius:50%;
-      background: rgba(0,253,216,0.08);
-      box-shadow: 0 0 12px rgba(0,253,216,0.35);
-      color:#00fdd8; text-decoration:none; transition:transform .2s ease, box-shadow .2s ease;
-    }
-    .social-icons .icon .bi{ font-size:1.1rem; line-height:1; }
-    .social-icons .icon:hover{
-      transform:translateY(-2px);
-      box-shadow: 0 0 18px rgba(0,253,216,0.55);
-    }
-    .social-icons [hidden]{ display:none !important; }
-  </style>
+.container{ max-width:980px; margin:0 auto; padding:2rem 1rem; }
+.grid{ display:grid; grid-template-columns:1.2fr 1.8fr; gap:1.2rem; }
+@media (max-width:960px){ .grid{ grid-template-columns:1fr; } }
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--stroke);
+  border-radius:16px; padding:1.2rem;
+  box-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(0,253,216,.06) inset;
+}
+.section-title{ color:var(--text); margin:.2rem 0 .6rem; font-weight:800; letter-spacing:.2px; }
+
+.row{ display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
+.btn{
+  cursor:pointer; border:1px solid var(--stroke); border-radius:999px;
+  padding:.55rem .95rem; font-weight:700; color:var(--text);
+  background:linear-gradient(180deg, rgba(0,253,216,.08), rgba(0,253,216,.02));
+  box-shadow:0 0 12px rgba(0,253,216,.2); transition:transform .15s ease, box-shadow .15s ease;
+}
+.btn:hover{ box-shadow:0 0 18px rgba(0,253,216,.45); transform:translateY(-1px); }
+
+.friends-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:.9rem; }
+@media (max-width:720px){ .friends-grid{ grid-template-columns:1fr; } }
+
+.friend{
+  background:var(--surface-2);
+  border:1px solid var(--stroke);
+  border-radius:14px; padding:.9rem;
+  box-shadow:0 6px 18px rgba(0,0,0,.35);
+}
+.friend-head{ display:flex; align-items:center; justify-content:space-between; gap:.6rem; }
+.friend-meta{ display:flex; align-items:center; gap:.6rem; min-width:0; }
+.friend-meta .avatar{
+  width:44px; height:44px; border-radius:999px; object-fit:cover; flex:0 0 auto;
+  box-shadow:0 0 0 2px var(--stroke), 0 0 10px var(--glow);
+}
+.friend-meta .name{ font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.score{
+  display:inline-block; min-width:2.6rem; text-align:center;
+  padding:.2rem .5rem; border-radius:999px; border:1px solid var(--stroke);
+  background:rgba(0,253,216,.08);
+}
+.score.good{ color:var(--accent); }
+.score.ok{ color:#b5fff5; }
+.score.low{ color:#9fd7d0; }
+
+input, textarea, select{
+  width:100%; background:#002f31; color:var(--text);
+  border:1px solid var(--stroke); border-radius:10px; padding:.55rem .6rem;
+  box-shadow:0 0 0 1px rgba(0,253,216,.04) inset;
+}
+input::placeholder, textarea::placeholder{ color:rgba(233,255,249,.55); }
+input:focus, textarea:focus, select:focus{
+  outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(0,253,216,.35);
+}
+
+/* Social icons (WOW glow) */
+.social-icons{ display:flex; gap:.5rem; flex-wrap:wrap; }
+.social-icons .icon{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:38px; height:38px; border-radius:50%;
+  background:rgba(0,253,216,.08);
+  box-shadow:0 0 12px rgba(0,253,216,.45), 0 0 0 1px rgba(0,253,216,.2) inset;
+  color:var(--accent); text-decoration:none;
+  transition:transform .15s ease, box-shadow .15s ease, filter .2s;
+}
+.social-icons .icon .bi{ font-size:1.1rem; line-height:1; }
+.social-icons .icon:hover{
+  transform:translateY(-2px); filter:brightness(1.15);
+  box-shadow:0 0 20px rgba(0,253,216,.65), 0 0 0 1px rgba(0,253,216,.4) inset;
+}
+.social-icons [hidden]{ display:none !important; }
+
+.hint{ color:var(--muted); }
+</style>
+
 </head>
 <body>
   <!-- Navbar -->
