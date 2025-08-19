@@ -1,348 +1,249 @@
-// match.js — Soulink (romantic compatibility)
-// Stores candidates in localStorage 'soulinkMatches' and scores them vs your profile 'soulQuiz'.
-// Weights are user-tweakable and auto-normalized based on available data.
-
 (() => {
-  const KEY_PROFILE = "soulQuiz";
-  const KEY_MATCHES = "soulinkMatches";
 
-  const $ = (s, r = document) => r.querySelector(s);
-  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+// ------------ helpers ------------
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const READ = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
 
-  // --- Load state
-  const me = (() => { try { return JSON.parse(localStorage.getItem(KEY_PROFILE) || "{}"); } catch { return {}; } })();
-  const matches = (() => { try { return JSON.parse(localStorage.getItem(KEY_MATCHES) || "[]"); } catch { return []; } })();
+const LS_FRIENDS = 'soulFriends';
+const LS_ME = 'soulQuiz';
 
-  // --- Fill snapshot
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || "–"; };
-  set("me-name", me.name);
-  set("me-ct", me.connectionType);
-  set("me-ll", me.loveLanguage);
-  set("me-bd", me.birthday);
-  set("me-hobbies", (me.hobbies && me.hobbies.length) ? me.hobbies.join(", ") : "–");
-  set("me-values",  (me.values && me.values.length)   ? me.values.join(", ")  : "–");
+function normList(v){
+  if (!v) return [];
+  if (Array.isArray(v)) return v.map(x=>String(x).trim().toLowerCase()).filter(Boolean);
+  return String(v).split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
+}
+const digits = s => (s||'').toString().replace(/\D+/g,'');
 
-  // --- Helpers
-  const DATE_RE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+// Avatar
+function avatarFor(name, photo){
+  const url = (photo||'').trim();
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:image')) return url;
+  const ch = (name||'?').trim().charAt(0).toUpperCase() || 'S';
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+       <rect width="100%" height="100%" fill="#064a4a"/>
+       <text x="50%" y="58%" font-size="42" font-family="system-ui"
+             text-anchor="middle" fill="#00fdd8">${ch}</text>
+     </svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
 
-  function tokenizeCSV(s) {
-    return (s || "")
-      .split(",")
-      .map(x => x.trim())
-      .filter(Boolean);
+// Social icons html
+function socialIconsHTML(f){
+  const items = [];
+  if (f.whatsapp){
+    const n = digits(f.whatsapp);
+    if (n) items.push(`<a class="icon" href="https://wa.me/${n}" target="_blank" rel="noopener" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>`);
   }
-
-  function signOf(iso) {
-    if (!iso || !DATE_RE.test(iso)) return null;
-    const [y,m,d] = iso.split("-").map(Number);
-    // West zodiac sign by Sun
-    const z = [
-      { n:"Capricorn",  f:[12,22], t:[1,19] },
-      { n:"Aquarius",   f:[1,20],  t:[2,18] },
-      { n:"Pisces",     f:[2,19],  t:[3,20] },
-      { n:"Aries",      f:[3,21],  t:[4,19] },
-      { n:"Taurus",     f:[4,20],  t:[5,20] },
-      { n:"Gemini",     f:[5,21],  t:[6,20] },
-      { n:"Cancer",     f:[6,21],  t:[7,22] },
-      { n:"Leo",        f:[7,23],  t:[8,22] },
-      { n:"Virgo",      f:[8,23],  t:[9,22] },
-      { n:"Libra",      f:[9,23],  t:[10,22] },
-      { n:"Scorpio",    f:[10,23], t:[11,21] },
-      { n:"Sagittarius",f:[11,22], t:[12,21] },
-    ];
-    const oa=(M,D,mm,dd)=>(M>mm)||(M===mm&&D>=dd), ob=(M,D,mm,dd)=>(M<mm)||(M===mm&&D<=dd);
-    for (const s of z) {
-      const [fm,fd]=s.f, [tm,td]=s.t;
-      if (fm<=tm) { if (oa(m,d,fm,fd) && ob(m,d,tm,td)) return s.n; }
-      else { if (oa(m,d,fm,fd) || ob(m,d,tm,td)) return s.n; }
-    }
-    return null;
+  if (f.instagram){
+    const h = /^https?:\/\//i.test(f.instagram) ? f.instagram : `https://instagram.com/${f.instagram.replace(/^@/,'')}`;
+    items.push(`<a class="icon" href="${h}" target="_blank" rel="noopener" title="Instagram"><i class="bi bi-instagram"></i></a>`);
   }
-
-  function elementOf(sign) {
-    const map = {
-      Fire: ["Aries","Leo","Sagittarius"],
-      Earth:["Taurus","Virgo","Capricorn"],
-      Air:  ["Gemini","Libra","Aquarius"],
-      Water:["Cancer","Scorpio","Pisces"]
-    };
-    for (const [el, arr] of Object.entries(map)) if (arr.includes(sign)) return el;
-    return null;
+  if (f.facebook){
+    const h = /^https?:\/\//i.test(f.facebook) ? f.facebook : `https://facebook.com/${f.facebook.replace(/^@/,'')}`;
+    items.push(`<a class="icon" href="${h}" target="_blank" rel="noopener" title="Facebook"><i class="bi bi-facebook"></i></a>`);
   }
-
-  function zodiacCompat(s1, s2) {
-    if (!s1 || !s2) return null;
-    const e1 = elementOf(s1), e2 = elementOf(s2);
-    if (!e1 || !e2) return null;
-    if (e1 === e2) return 1; // same element: great
-    const pairs = { Fire:"Air", Air:"Fire", Earth:"Water", Water:"Earth" };
-    if (pairs[e1] === e2) return 0.8;   // complementary elements
-    return 0.3;                         // less natural, still possible
+  if (f.email && /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(f.email)){
+    items.push(`<a class="icon" href="mailto:${f.email}" title="Email"><i class="bi bi-envelope"></i></a>`);
   }
+  if (!items.length) return '';
+  return `<div class="social-icons">${items.join('')}</div>`;
+}
 
-  function lifePath(iso){
-    if (!iso || !DATE_RE.test(iso)) return null;
-    const sum = (s) => String(s).split("").reduce((a,c)=>a + (/\d/.test(c)?+c:0), 0);
-    function reduce(n){ while (![11,22,33].includes(n) && n>9) n = sum(n); return n; }
-    return reduce(sum(iso.replace(/-/g,"")));
-  }
+// Jaccard similarity
+function jaccard(a,b){
+  const A = new Set(normList(a)), B = new Set(normList(b));
+  if (A.size === 0 && B.size === 0) return 0;
+  let inter = 0; A.forEach(v => { if (B.has(v)) inter++; });
+  const union = A.size + B.size - inter;
+  return union ? inter / union : 0;
+}
 
-  // --- Scoring (0..100)
-  function scoreCandidate(c, opts) {
-    // Feature scores in 0..1, null if not applicable
-    const feats = {
-      connection: null,
-      loveLang: null,
-      values: null,
-      hobbies: null,
-      zodiac: null,
-      life: null
-    };
-
-    // Connection alignment (Romantic focus)
-    if (me.connectionType) {
-      const wantRomance = /Romantic/i.test(me.connectionType);
-      const candRom = /Romantic/i.test(c.ct) || /Both/i.test(c.ct);
-      feats.connection = wantRomance ? (candRom ? 1 : 0.2) : 0.8; // if you don't require romance, be softer
-    }
-
-    // Love language
-    if (me.loveLanguage && c.ll) feats.loveLang = (me.loveLanguage === c.ll) ? 1 : 0;
-
-    // Values overlap (Jaccard-like)
-    if (Array.isArray(me.values) && me.values.length && Array.isArray(c.values) && c.values.length) {
-      const A = new Set(me.values.map(String));
-      const B = new Set(c.values.map(String));
-      let inter = 0; B.forEach(v => { if (A.has(v)) inter++; });
-      const union = new Set([...A, ...B]).size || 1;
-      feats.values = inter / union; // 0..1
-    }
-
-    // Hobbies overlap
-    if (Array.isArray(me.hobbies) && me.hobbies.length && Array.isArray(c.hobbies) && c.hobbies.length) {
-      const A = new Set(me.hobbies.map(String));
-      const B = new Set(c.hobbies.map(String));
-      let inter = 0; B.forEach(v => { if (A.has(v)) inter++; });
-      const union = new Set([...A, ...B]).size || 1;
-      feats.hobbies = inter / union;
-    }
-
-    // Zodiac (optional)
-    if (opts.useZodiac) {
-      const s1 = signOf(me.birthday || "");
-      const s2 = signOf(c.bd || "");
-      const z = zodiacCompat(s1, s2);
-      feats.zodiac = (z == null) ? null : z; // 0..1
-    }
-
-    // Life path (optional)
-    if (opts.useLife) {
-      const L1 = lifePath(me.birthday || "");
-      const L2 = lifePath(c.bd || "");
-      if (L1 && L2) {
-        const diff = Math.abs(L1 - L2);
-        feats.life = diff === 0 ? 1 : diff === 1 ? 0.7 : diff === 2 ? 0.4 : 0.2;
-      }
-    }
-
-    // Weights (will be normalized across available features)
-    const rawW = {
-      connection: opts.w.ct,
-      loveLang:  opts.w.ll,
-      values:    opts.w.val,
-      hobbies:   opts.w.hob,
-      zodiac:    opts.w.zod,
-      life:      opts.w.life
-    };
-
-    // Normalize to only features with scores != null
-    let sumW = 0;
-    Object.entries(feats).forEach(([k, v]) => { if (v != null) sumW += rawW[k] || 0; });
-    if (!sumW) return { total: 0, feats, weights: rawW };
-
-    let total = 0;
-    Object.entries(feats).forEach(([k, v]) => {
-      if (v != null) total += v * (rawW[k] / sumW);
-    });
-
-    return { total: Math.round(total * 100), feats, weights: rawW };
-  }
-
-  // --- Persist matches
-  function saveMatches(arr) {
-    localStorage.setItem(KEY_MATCHES, JSON.stringify(arr));
-  }
-
-  // --- UI state
-  const filterRomantic = $("#f-romantic");
-  const useZod = $("#f-zodiac");
-  const useLife = $("#f-life");
-  const sortBy = $("#sortBy");
-  const weights = {
-    ct:  $("#w-ct"),
-    ll:  $("#w-ll"),
-    val: $("#w-val"),
-    hob: $("#w-hob"),
-    zod: $("#w-zod"),
-    life:$("#w-life")
+// ------------ data ------------
+function me(){
+  const m = READ(LS_ME) || {};
+  return {
+    name: m.name || '',
+    ct: m.connectionType || '',
+    ll: m.loveLanguage || '',
+    hobbies: m.hobbies || [],
+    values: m.values || [],
   };
+}
+function friends(){
+  const list = READ(LS_FRIENDS);
+  return Array.isArray(list) ? list : [];
+}
 
-  function getWeightValue(input, def) {
-    return input ? Number(input.value) : def;
+// ------------ scoring ------------
+function llMatch(a, b){
+  if (!a || !b) return 0;
+  return a.trim().toLowerCase() === b.trim().toLowerCase() ? 1 : 0;
+}
+function ctMatch(desired, candidate){
+  if (!desired || desired === 'Any') return 1;               // no filter
+  if (!candidate) return 0;
+  if (candidate === 'Both') return 1;
+  return desired.toLowerCase() === candidate.toLowerCase() ? 1 : 0;
+}
+
+/*
+ Final score (0..100):
+   25 * LL_match * weightLL
+ + 15 * CT_match
+ + 30 * Jaccard(hobbies)
+ + 30 * Jaccard(values)
+*/
+function score(me, f, weightLL=1){
+  const sLL = 25 * llMatch(me.ll, f.ll) * weightLL;
+  const sCT = 15 * ctMatch(me.ct, f.ct);
+  const sH  = 30 * jaccard(me.hobbies, f.hobbies);
+  const sV  = 30 * jaccard(me.values,  f.values);
+  let total = sLL + sCT + sH + sV;
+
+  // If candidate is missing most data, soften extreme highs
+  const infoPieces =
+    (f.ll?1:0) + (normList(f.hobbies).length?1:0) + (normList(f.values).length?1:0);
+  if (infoPieces <= 1) total *= 0.8;
+
+  return Math.max(0, Math.min(100, Math.round(total)));
+}
+
+// ------------ rendering ------------
+const resultsEl = $('#results'), emptyEl = $('#empty');
+
+function render(){
+  const m = me();
+  $('#me-name')?.replaceChildren(document.createTextNode(m.name || '–'));
+  $('#me-ct')?.replaceChildren(document.createTextNode(m.ct || '–'));
+  $('#me-ll')?.replaceChildren(document.createTextNode(m.ll || '–'));
+  $('#me-hobbies')?.replaceChildren(document.createTextNode(normList(m.hobbies).join(', ') || '–'));
+  $('#me-values')?.replaceChildren(document.createTextNode(normList(m.values).join(', ') || '–'));
+
+  const list = friends();
+  if (!list.length){
+    resultsEl.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
   }
 
-  // --- Render list
-  const list = $("#match-list");
-  const empty = $("#empty-note");
+  const q = ($('#f-search')?.value || '').trim().toLowerCase();
+  const desiredCT = $('#f-ct')?.value || '';
+  const minScore = parseInt($('#f-min')?.value || '0', 10) || 0;
+  const weightLL = parseFloat($('#f-llw')?.value || '1') || 1;
 
-  function render() {
-    list.innerHTML = "";
-    let arr = matches.slice();
-
-    // romantic filter
-    if (filterRomantic?.checked) {
-      arr = arr.filter(c => /Romantic/i.test(c.ct) || /Both/i.test(c.ct));
-    }
-
-    // score each
-    const opts = {
-      useZodiac: !!useZod?.checked,
-      useLife:   !!useLife?.checked,
-      w: {
-        ct:  getWeightValue(weights.ct, 30),
-        ll:  getWeightValue(weights.ll, 30),
-        val: getWeightValue(weights.val, 20),
-        hob: getWeightValue(weights.hob, 15),
-        zod: getWeightValue(weights.zod, 5),
-        life:getWeightValue(weights.life, 0),
-      }
-    };
-
-    const scored = arr.map(c => ({ c, s: scoreCandidate(c, opts) }));
-
-    // sort
-    const key = sortBy?.value || "score";
-    scored.sort((a, b) => {
-      if (key === "name") return (a.c.name || "").localeCompare(b.c.name || "");
-      return b.s.total - a.s.total;
-    });
-
-    if (!scored.length) { empty.style.display = "block"; return; }
-    empty.style.display = "none";
-
-    scored.forEach((row, i) => {
-      const { c, s } = row;
-      const div = document.createElement("div");
-      div.className = "cand";
-      const zTxt = (c.bd && signOf(c.bd)) ? ` (${signOf(c.bd)})` : "";
-      div.innerHTML = `
-        <div class="row" style="justify-content:space-between;">
-          <strong>${c.name || "Candidate"}</strong>
-          <span class="score">${s.total}</span>
-        </div>
-        <div style="margin-top:.3rem; font-size:.95rem;">
-          <div><strong>Intent:</strong> ${c.ct || "–"}</div>
-          <div><strong>Love Language:</strong> ${c.ll || "–"}</div>
-          <div><strong>Birth Date:</strong> ${c.bd || "–"}${zTxt}</div>
-          <div><strong>Hobbies:</strong> ${(c.hobbies && c.hobbies.length) ? c.hobbies.join(", ") : "–"}</div>
-          <div><strong>Values:</strong> ${(c.values && c.values.length) ? c.values.join(", ") : "–"}</div>
-        </div>
-        <details style="margin-top:.4rem;">
-          <summary>Compatibility breakdown</summary>
-          <div class="hint" style="margin-top:.3rem;">
-            <div>Connection: ${formatFeat(s.feats.connection)}</div>
-            <div>Love Language: ${formatFeat(s.feats.loveLang)}</div>
-            <div>Values Overlap: ${formatFeat(s.feats.values)}</div>
-            <div>Hobbies Overlap: ${formatFeat(s.feats.hobbies)}</div>
-            <div>Zodiac: ${formatFeat(s.feats.zodiac)}</div>
-            <div>Life Path: ${formatFeat(s.feats.life)}</div>
-          </div>
-        </details>
-        <div class="row" style="margin-top:.5rem;">
-          <button class="btn" data-del="${i}">Remove</button>
-        </div>
-      `;
-      list.appendChild(div);
-    });
-
-    // delete handlers
-    $$('[data-del]').forEach(btn => {
-      btn.addEventListener("click", () => {
-        const idx = +btn.getAttribute("data-del");
-        const arr = matches.slice();
-        arr.splice(idx, 1);
-        saveMatches(arr);
-        location.reload();
-      });
-    });
-  }
-
-  function formatFeat(v){
-    if (v == null) return "—";
-    return Math.round(v * 100) + "%";
-    // we show % of that feature, prior to weight normalization
-  }
-
-  // Initial render + listeners
-  ["change","input"].forEach(evt => {
-    filterRomantic?.addEventListener(evt, render);
-    useZod?.addEventListener(evt, render);
-    useLife?.addEventListener(evt, render);
-    sortBy?.addEventListener(evt, render);
-    Object.values(weights).forEach(w => w?.addEventListener(evt, render));
+  let rows = list.map(f => {
+    const s = score(m, f, weightLL);
+    return {f, s};
   });
-  render();
 
-  // --- Add candidate
-  $("#add-form")?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const c = {
-      name: $("#c-name")?.value.trim(),
-      ct:   $("#c-ct")?.value,
-      ll:   $("#c-ll")?.value,
-      bd:   $("#c-bd")?.value.trim(),
-      hobbies: tokenizeCSV($("#c-hobbies")?.value),
-      values:  tokenizeCSV($("#c-values")?.value),
+  // filter by search
+  if (q){
+    const passes = ({f}) => {
+      const hay = [
+        f.name, f.ct, f.ll, f.contact, f.notes, f.whatsapp, f.instagram, f.facebook, f.email,
+        ...(Array.isArray(f.hobbies)?f.hobbies:[String(f.hobbies||'')]),
+        ...(Array.isArray(f.values)?f.values:[String(f.values||'')]),
+      ].join(' ').toLowerCase();
+      return hay.includes(q);
     };
-    if (!c.name) { alert("Please enter a name."); return; }
-    if (c.bd && !DATE_RE.test(c.bd)) { alert("Please use YYYY-MM-DD for Birth Date."); return; }
+    rows = rows.filter(passes);
+  }
 
-    const arr = matches.slice();
-    arr.push(c);
-    saveMatches(arr);
-    e.target.reset();
+  // filter by ct + min score
+  rows = rows.filter(({f,s}) => ctMatch(desiredCT||'Any', f.ct) && s >= minScore);
+
+  // sort desc by score, then name
+  rows.sort((a,b) => b.s - a.s || String(a.f.name||'').localeCompare(String(b.f.name||'')));
+
+  resultsEl.innerHTML = '';
+  if (!rows.length){
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  rows.forEach(({f, s}) => {
+    const card = document.createElement('div');
+    card.className = 'match-card';
+
+    const cls = s >= 75 ? 'good' : s >= 55 ? 'ok' : 'low';
+
+    const hobbies = normList(f.hobbies).join(', ');
+    const values  = normList(f.values).join(', ');
+
+    card.innerHTML = `
+      <div class="head">
+        <div class="meta">
+          <img class="avatar" src="${avatarFor(f.name, f.photo)}" alt="">
+          <div style="min-width:0;">
+            <div class="name">${escapeHTML(f.name||'—')}</div>
+            <div class="hint" style="font-size:.9rem;">
+              ${escapeHTML(f.ct || '—')} · ${escapeHTML(f.ll || '—')}
+            </div>
+          </div>
+        </div>
+        <span class="score ${cls}" title="Compatibility">${s}%</span>
+      </div>
+
+      ${socialIconsHTML(f)}
+
+      <div style="margin-top:.2rem;">
+        ${hobbies ? `<div><b>Hobbies:</b> ${escapeHTML(hobbies)}</div>` : ''}
+        ${values  ? `<div><b>Values:</b> ${escapeHTML(values)}</div>`   : ''}
+        ${f.contact ? `<div><b>Contact:</b> ${escapeHTML(f.contact)}</div>` : ''}
+        ${f.notes ? `<div><i>${escapeHTML(f.notes)}</i></div>` : ''}
+      </div>
+
+      <div class="row" style="margin-top:.6rem;">
+        <a class="btn" href="friends.html">Edit in Friends</a>
+        ${messageLinkHTML(f)}
+      </div>
+    `;
+    resultsEl.appendChild(card);
+  });
+}
+
+function messageLinkHTML(f){
+  // Prefer WhatsApp -> Instagram -> Facebook -> Email -> contactLink (best effort)
+  if (f.whatsapp && digits(f.whatsapp))
+    return `<a class="btn" href="https://wa.me/${digits(f.whatsapp)}" target="_blank" rel="noopener">Message</a>`;
+  if (f.instagram)
+    return `<a class="btn" href="${/^https?:\/\//i.test(f.instagram)?f.instagram:'https://instagram.com/'+f.instagram.replace(/^@/,'')}" target="_blank" rel="noopener">Message</a>`;
+  if (f.facebook)
+    return `<a class="btn" href="${/^https?:\/\//i.test(f.facebook)?f.facebook:'https://facebook.com/'+f.facebook.replace(/^@/,'')}" target="_blank" rel="noopener">Message</a>`;
+  if (f.email && /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(f.email))
+    return `<a class="btn" href="mailto:${f.email}">Message</a>`;
+  if (f.contact){
+    const v = String(f.contact).trim();
+    if (/^https?:\/\//i.test(v)) return `<a class="btn" href="${v}" target="_blank" rel="noopener">Message</a>`;
+    if (/^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(v)) return `<a class="btn" href="mailto:${v}">Message</a>`;
+    if (/^\+?\d[\d\s-]{6,}$/.test(v)) return `<a class="btn" href="https://wa.me/${digits(v)}" target="_blank" rel="noopener">Message</a>`;
+    if (/^@?[\w.]{2,}$/i.test(v)) return `<a class="btn" href="https://instagram.com/${v.replace(/^@/,'')}" target="_blank" rel="noopener">Message</a>`;
+  }
+  return '';
+}
+
+function escapeHTML(str=''){
+  return str.replace(/[&<>"']/g, c => (
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+  ));
+}
+
+// ------------ events ------------
+['#f-search','#f-ct','#f-min','#f-llw'].forEach(sel=>{
+  $(sel)?.addEventListener('input', ()=>{
+    if (sel==='#f-llw') { $('#llw-label').textContent = (parseFloat($('#f-llw').value)||1).toFixed(1)+'×'; }
     render();
   });
+});
+$('#btn-reset')?.addEventListener('click', ()=>{
+  $('#f-search').value=''; $('#f-ct').value=''; $('#f-min').value='0'; $('#f-llw').value='1';
+  $('#llw-label').textContent='1.0×'; render();
+});
 
-  // Export / Import / Clear
-  $("#exportMatches")?.addEventListener("click", () => {
-    const blob = new Blob([JSON.stringify(matches, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = "soulink-matches.json"; a.click();
-    URL.revokeObjectURL(url);
-  });
+// ------------ init ------------
+render();
 
-  $("#importMatches")?.addEventListener("change", (e) => {
-    const file = e.target.files?.[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const arr = JSON.parse(ev.target.result);
-        if (!Array.isArray(arr)) throw new Error("Not an array");
-        saveMatches(arr);
-        location.reload();
-      } catch {
-        alert("Invalid JSON file.");
-      }
-    };
-    reader.readAsText(file);
-  });
-
-  $("#clearAll")?.addEventListener("click", () => {
-    if (confirm("Clear all matches?")) {
-      localStorage.removeItem(KEY_MATCHES);
-      location.reload();
-    }
-  });
 })();
