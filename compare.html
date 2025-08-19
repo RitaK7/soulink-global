@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Soulink – Compare</title>
+
+  <!-- Icons -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+  :root{
+    --bg:#003c43;
+    --surface:#074c4f;
+    --surface-2:#0a3f42;
+    --stroke:rgba(0,253,216,.28);
+    --glow:rgba(0,253,216,.35);
+    --text:#eafff9;
+    --muted:#c8f7ef;
+    --link:#9afcf0;
+    --accent:#00fdd8;
+  }
+  html,body{ background:var(--bg); color:var(--text); }
+  a{ color:var(--link); text-decoration:none; }
+  a:hover{ color:var(--accent); }
+
+  nav.navbar{ background:#002e30; box-shadow:0 0 12px rgba(0,253,216,0.25); }
+  nav .container-flex{ display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.8rem 1rem; }
+  nav .brand{ font-weight:700; color:var(--accent); }
+
+  .container{ max-width:1100px; margin:0 auto; padding:2rem 1rem; }
+  .grid{ display:grid; grid-template-columns: 1.2fr 1.8fr; gap:1.2rem; }
+  @media (max-width:1000px){ .grid{ grid-template-columns:1fr; } }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--stroke);
+    border-radius:16px; padding:1.2rem;
+    box-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(0,253,216,.06) inset;
+  }
+  .section-title{ font-weight:800; letter-spacing:.2px; margin:.2rem 0 .8rem; }
+  .row{ display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
+
+  .btn{
+    cursor:pointer; border:1px solid var(--stroke); border-radius:999px;
+    padding:.55rem .95rem; font-weight:700; color:var(--text);
+    background:linear-gradient(180deg, rgba(0,253,216,.08), rgba(0,253,216,.02));
+    box-shadow:0 0 12px rgba(0,253,216,.2); transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover{ box-shadow:0 0 18px rgba(0,253,216,.45); transform:translateY(-1px); }
+
+  input, select{
+    width:100%; background:#002f31; color:var(--text);
+    border:1px solid var(--stroke); border-radius:10px; padding:.55rem .6rem;
+    box-shadow:0 0 0 1px rgba(0,253,216,.04) inset;
+  }
+
+  .pick-grid{ display:grid; grid-template-columns:1fr 1fr; gap:.8rem; }
+  @media (max-width:700px){ .pick-grid{ grid-template-columns:1fr; } }
+
+  /* Compare cards */
+  .compare-grid{ display:grid; grid-template-columns:1fr 200px 1fr; gap:1rem; align-items:start; }
+  @media (max-width:1000px){ .compare-grid{ grid-template-columns:1fr; } }
+
+  .person{
+    background:var(--surface-2);
+    border:1px solid var(--stroke);
+    border-radius:14px; padding:1rem;
+    box-shadow:0 6px 18px rgba(0,0,0,.35);
+  }
+  .head{ display:flex; align-items:center; gap:.8rem; }
+  .avatar{ width:52px; height:52px; border-radius:999px; object-fit:cover;
+           box-shadow:0 0 0 2px var(--stroke), 0 0 10px var(--glow); }
+  .name{ font-weight:800; }
+
+  .social-icons{ display:flex; gap:.5rem; flex-wrap:wrap; margin:.4rem 0; }
+  .social-icons .icon{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:38px; height:38px; border-radius:50%;
+    background:rgba(0,253,216,.08);
+    box-shadow:0 0 12px rgba(0,253,216,.45), 0 0 0 1px rgba(0,253,216,.2) inset;
+    color:var(--accent); text-decoration:none;
+    transition:transform .15s ease, box-shadow .15s ease, filter .2s;
+  }
+  .social-icons .icon .bi{ font-size:1.1rem; line-height:1; }
+  .social-icons .icon:hover{ transform:translateY(-2px); filter:brightness(1.15);
+    box-shadow:0 0 20px rgba(0,253,216,.65), 0 0 0 1px rgba(0,253,216,.4) inset; }
+
+  /* Middle column: score & breakdown */
+  .score-box{ text-align:center; }
+  .score-big{
+    font-size:2.4rem; font-weight:900; color:var(--accent);
+    display:inline-block; padding:.2rem .8rem; border-radius:999px;
+    border:1px solid var(--stroke); background:rgba(0,253,216,.08);
+    box-shadow:0 0 18px rgba(0,253,216,.4);
+  }
+  .bars{ margin-top:.8rem; display:grid; gap:.5rem; }
+  .bar{ height:12px; border-radius:999px; background:#013a3c; border:1px solid var(--stroke); position:relative; overflow:hidden; }
+  .bar > i{ position:absolute; inset:0; width:0%; display:block;
+            background:linear-gradient(90deg, rgba(0,253,216,.15), rgba(0,253,216,.6));
+            box-shadow:0 0 16px rgba(0,253,216,.45); }
+  .bar-label{ display:flex; justify-content:space-between; font-size:.9rem; color:var(--muted); }
+
+  .list{ margin-top:.6rem; }
+  .list b{ color:var(--link); }
+  </style>
+</head>
+<body>
+  <!-- Navbar (tas pats, kaip kituose puslapiuose) -->
+  <nav class="navbar">
+    <div class="container container-flex">
+      <a href="index.html" class="brand">Soulink</a>
+      <ul style="list-style:none; display:flex; gap:.6rem; margin:0; padding:0; flex-wrap:wrap;">
+        <li><a href="quiz.html">Quiz</a></li>
+        <li><a href="edit-profile.html">Edit Profile</a></li>
+        <li><a href="my-soul.html">My Soul</a></li>
+        <li><a href="soul-chart.html">Soul Chart</a></li>
+        <li><a href="soul-coach.html">Soul Coach</a></li>
+        <li><a href="friends.html">Friends</a></li>
+        <li><a href="match.html">Match</a></li>
+        <li><a href="result.html">Results</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container">
+    <h1 class="section-title" style="font-size:1.6rem;">🔍 Compare</h1>
+
+    <div class="grid">
+      <!-- Picker + settings -->
+      <section class="card">
+        <h3 class="section-title">Pick Two Profiles</h3>
+        <div class="pick-grid">
+          <div>
+            <label for="leftSel">Left</label>
+            <select id="leftSel"></select>
+          </div>
+          <div>
+            <label for="rightSel">Right</label>
+            <select id="rightSel"></select>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:.6rem;">
+          <button id="swapBtn" class="btn" type="button">Swap</button>
+          <button id="clearBtn" class="btn" type="button">Clear</button>
+          <a class="btn" href="match.html">← Match</a>
+        </div>
+
+        <hr style="border-color:var(--stroke); border-width:1px; margin:1rem 0;">
+
+        <h3 class="section-title">Scoring Weights</h3>
+        <div class="row" style="align-items:center;">
+          <div style="flex:1;">
+            <label>Love Language Weight (x)
+              <input id="llWeight" type="range" min="0" max="2" step="0.1" value="1">
+            </label>
+          </div>
+          <div style="width:72px; text-align:center;"><span id="llwLabel">1.0×</span></div>
+        </div>
+      </section>
+
+      <!-- Compare -->
+      <section class="card">
+        <h3 class="section-title">Result</h3>
+
+        <div class="compare-grid">
+          <!-- Left -->
+          <div class="person" id="leftCard"></div>
+
+          <!-- Middle -->
+          <div class="score-box">
+            <div id="scoreBig" class="score-big">–%</div>
+            <div class="bars">
+              <div class="bar-label"><span>Love Language</span><span id="LLv">0</span></div>
+              <div class="bar"><i id="LLb"></i></div>
+              <div class="bar-label"><span>Connection</span><span id="CTv">0</span></div>
+              <div class="bar"><i id="CTb"></i></div>
+              <div class="bar-label"><span>Hobbies</span><span id="Hv">0</span></div>
+              <div class="bar"><i id="Hb"></i></div>
+              <div class="bar-label"><span>Values</span><span id="Vv">0</span></div>
+              <div class="bar"><i id="Vb"></i></div>
+            </div>
+
+            <div class="list" id="overlap"></div>
+          </div>
+
+          <!-- Right -->
+          <div class="person" id="rightCard"></div>
+        </div>
+
+      </section>
+    </div>
+
+    <nav class="row" style="justify-content:space-between; margin-top:1.2rem;">
+      <a class="btn" href="friends.html">← Friends</a>
+      <a class="btn" href="result.html">Next: Results →</a>
+    </nav>
+  </main>
+
+  <footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
+    © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
+  </footer>
+
+  <script src="compare.js"></script>
+</body>
+</html>

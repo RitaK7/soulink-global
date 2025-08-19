@@ -1,0 +1,235 @@
+(() => {
+
+// ---------- helpers ----------
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const READ = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+
+const LS_ME = 'soulQuiz';
+const LS_FRIENDS = 'soulFriends';
+
+function normList(v){
+  if (!v) return [];
+  if (Array.isArray(v)) return v.map(x=>String(x).trim().toLowerCase()).filter(Boolean);
+  return String(v).split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
+}
+const digits = s => (s||'').toString().replace(/\D+/g,'');
+
+function escapeHTML(str=''){
+  return str.replace(/[&<>"']/g, c => (
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+  ));
+}
+
+function avatarFor(name, photo){
+  const url = (photo||'').trim();
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:image')) return url;
+  const ch = (name||'?').trim().charAt(0).toUpperCase() || 'S';
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+       <rect width="100%" height="100%" fill="#064a4a"/>
+       <text x="50%" y="58%" font-size="42" font-family="system-ui"
+             text-anchor="middle" fill="#00fdd8">${ch}</text>
+     </svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+function socialIconsHTML(f){
+  const items = [];
+  if (f.whatsapp){
+    const n = digits(f.whatsapp);
+    if (n) items.push(`<a class="icon" href="https://wa.me/${n}" target="_blank" rel="noopener" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>`);
+  }
+  if (f.instagram){
+    const h = /^https?:\/\//i.test(f.instagram) ? f.instagram : `https://instagram.com/${f.instagram.replace(/^@/,'')}`;
+    items.push(`<a class="icon" href="${h}" target="_blank" rel="noopener" title="Instagram"><i class="bi bi-instagram"></i></a>`);
+  }
+  if (f.facebook){
+    const h = /^https?:\/\//i.test(f.facebook) ? f.facebook : `https://facebook.com/${f.facebook.replace(/^@/,'')}`;
+    items.push(`<a class="icon" href="${h}" target="_blank" rel="noopener" title="Facebook"><i class="bi bi-facebook"></i></a>`);
+  }
+  if (f.email && /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(f.email)){
+    items.push(`<a class="icon" href="mailto:${f.email}" title="Email"><i class="bi bi-envelope"></i></a>`);
+  }
+  return items.length ? `<div class="social-icons">${items.join('')}</div>` : '';
+}
+
+// ---------- data ----------
+function me(){
+  const m = READ(LS_ME) || {};
+  return {
+    id: 'me',
+    name: m.name || 'Me',
+    ct: m.connectionType || '',
+    ll: m.loveLanguage || '',
+    hobbies: m.hobbies || [],
+    values: m.values || [],
+    photo: m.profilePhoto1 || ''
+  };
+}
+function friends(){
+  const list = READ(LS_FRIENDS);
+  return Array.isArray(list) ? list.map((f, i)=>({...f, id:'f'+i})) : [];
+}
+const ALL = () => [me(), ...friends()];
+
+// ---------- scoring ----------
+function jaccard(a,b){
+  const A = new Set(normList(a)), B = new Set(normList(b));
+  if (A.size === 0 && B.size === 0) return 0;
+  let inter = 0; A.forEach(v => { if (B.has(v)) inter++; });
+  const union = A.size + B.size - inter;
+  return union ? inter / union : 0;
+}
+function llMatch(a, b){
+  if (!a || !b) return 0;
+  return a.trim().toLowerCase() === b.trim().toLowerCase() ? 1 : 0;
+}
+// pair compatibility: equal OR 'Both' OR missing
+function ctPairMatch(a,b){
+  if (!a || !b) return 1;
+  if (a === 'Both' || b === 'Both') return 1;
+  return a.trim().toLowerCase() === b.trim().toLowerCase() ? 1 : 0;
+}
+
+function breakdown(A, B, weightLL=1){
+  const sLL = 25 * llMatch(A.ll, B.ll) * weightLL;
+  const sCT = 15 * ctPairMatch(A.ct, B.ct);
+  const jH  = jaccard(A.hobbies, B.hobbies);
+  const jV  = jaccard(A.values,  B.values);
+  const sH  = 30 * jH;
+  const sV  = 30 * jV;
+  let total = sLL + sCT + sH + sV;
+
+  // soft penalty when one side lacks info
+  const infoA = (A.ll?1:0) + (normList(A.hobbies).length?1:0) + (normList(A.values).length?1:0);
+  const infoB = (B.ll?1:0) + (normList(B.hobbies).length?1:0) + (normList(B.values).length?1:0);
+  if (Math.min(infoA, infoB) <= 1) total *= 0.85;
+
+  return {
+    sLL: Math.round(sLL),
+    sCT: Math.round(sCT),
+    sH:  Math.round(sH),
+    sV:  Math.round(sV),
+    jH, jV,
+    total: Math.max(0, Math.min(100, Math.round(total)))
+  };
+}
+
+// ---------- UI ----------
+const leftSel  = $('#leftSel');
+const rightSel = $('#rightSel');
+
+function fillSelectors(){
+  const list = ALL();
+  const opts = list.map(p => `<option value="${p.id}">${escapeHTML(p.name || '—')}</option>`);
+  leftSel.innerHTML  = opts.join('');
+  rightSel.innerHTML = opts.join('');
+
+  // defaults: left = Me, right = first friend if exists
+  leftSel.value = 'me';
+  const firstFriend = list.find(p=>p.id!=='me');
+  rightSel.value = firstFriend ? firstFriend.id : (list[0]?.id || 'me');
+}
+
+function getById(id){ return ALL().find(p => p.id === id); }
+
+function render(){
+  const A = getById(leftSel.value);
+  const B = getById(rightSel.value);
+  const w = parseFloat($('#llWeight').value || '1') || 1;
+  $('#llwLabel').textContent = w.toFixed(1)+'×';
+
+  // Cards
+  $('#leftCard').innerHTML = personHTML(A);
+  $('#rightCard').innerHTML = personHTML(B);
+
+  // Breakdown
+  const bd = breakdown(A, B, w);
+  $('#scoreBig').textContent = bd.total + '%';
+  setBar('#LLb', '#LLv', bd.sLL);
+  setBar('#CTb', '#CTv', bd.sCT);
+  setBar('#Hb',  '#Hv',  bd.sH);
+  setBar('#Vb',  '#Vv',  bd.sV);
+
+  // Overlaps
+  const commonH = intersect(normList(A.hobbies), normList(B.hobbies));
+  const commonV = intersect(normList(A.values),  normList(B.values));
+  const uniqAH  = difference(normList(A.hobbies), normList(B.hobbies));
+  const uniqBH  = difference(normList(B.hobbies), normList(A.hobbies));
+  const uniqAV  = difference(normList(A.values),  normList(B.values));
+  const uniqBV  = difference(normList(B.values),  normList(A.values));
+
+  $('#overlap').innerHTML = `
+    ${commonH.length ? `<div><b>Common hobbies:</b> ${escapeHTML(commonH.join(', '))}</div>` : ''}
+    ${commonV.length ? `<div><b>Common values:</b> ${escapeHTML(commonV.join(', '))}</div>` : ''}
+    ${uniqAH.length ? `<div><b>${escapeHTML(A.name)} only (hobbies):</b> ${escapeHTML(uniqAH.join(', '))}</div>` : ''}
+    ${uniqBH.length ? `<div><b>${escapeHTML(B.name)} only (hobbies):</b> ${escapeHTML(uniqBH.join(', '))}</div>` : ''}
+    ${uniqAV.length ? `<div><b>${escapeHTML(A.name)} only (values):</b> ${escapeHTML(uniqAV.join(', '))}</div>` : ''}
+    ${uniqBV.length ? `<div><b>${escapeHTML(B.name)} only (values):</b> ${escapeHTML(uniqBV.join(', '))}</div>` : ''}
+  `;
+}
+
+function setBar(barSel, labelSel, value /* 0..100 */){
+  const el = $(barSel), lab = $(labelSel);
+  if (el) el.style.width = Math.max(0, Math.min(100, value)) + '%';
+  if (lab) lab.textContent = value;
+}
+
+function intersect(a,b){ const B=new Set(b); return a.filter(x=>B.has(x)); }
+function difference(a,b){ const B=new Set(b); return a.filter(x=>!B.has(x)); }
+
+function messageLinkHTML(f){
+  if (f.id==='me') return '';
+  if (f.whatsapp && digits(f.whatsapp))
+    return `<a class="btn" href="https://wa.me/${digits(f.whatsapp)}" target="_blank" rel="noopener">Message</a>`;
+  if (f.instagram)
+    return `<a class="btn" href="${/^https?:\/\//i.test(f.instagram)?f.instagram:'https://instagram.com/'+f.instagram.replace(/^@/,'')}" target="_blank" rel="noopener">Message</a>`;
+  if (f.facebook)
+    return `<a class="btn" href="${/^https?:\/\//i.test(f.facebook)?f.facebook:'https://facebook.com/'+f.facebook.replace(/^@/,'')}" target="_blank" rel="noopener">Message</a>`;
+  if (f.email && /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(f.email))
+    return `<a class="btn" href="mailto:${f.email}">Message</a>`;
+  return '';
+}
+
+function personHTML(p){
+  const hobbies = normList(p.hobbies).join(', ');
+  const values  = normList(p.values).join(', ');
+  return `
+    <div class="head">
+      <img class="avatar" src="${avatarFor(p.name, p.photo)}" alt="">
+      <div>
+        <div class="name">${escapeHTML(p.name||'—')}</div>
+        <div style="opacity:.85">${escapeHTML(p.ct || '—')} · ${escapeHTML(p.ll || '—')}</div>
+      </div>
+    </div>
+    ${p.id!=='me' ? socialIconsHTML(p) : ''}
+    <div style="margin-top:.4rem;">
+      ${hobbies ? `<div><b>Hobbies:</b> ${escapeHTML(hobbies)}</div>` : ''}
+      ${values  ? `<div><b>Values:</b> ${escapeHTML(values)}</div>`   : ''}
+    </div>
+    <div class="row" style="margin-top:.6rem;">
+      ${p.id!=='me' ? `<a class="btn" href="friends.html">Edit</a>` : '<a class="btn" href="edit-profile.html">Edit My Profile</a>'}
+      ${messageLinkHTML(p)}
+    </div>
+  `;
+}
+
+// ---------- events ----------
+$('#swapBtn')?.addEventListener('click', ()=>{
+  const a = leftSel.value, b = rightSel.value;
+  leftSel.value = b; rightSel.value = a;
+  render();
+});
+$('#clearBtn')?.addEventListener('click', ()=>{
+  fillSelectors(); render();
+});
+leftSel?.addEventListener('change', render);
+rightSel?.addEventListener('change', render);
+$('#llWeight')?.addEventListener('input', render);
+
+// ---------- init ----------
+fillSelectors();
+render();
+
+})();
