@@ -86,7 +86,7 @@
           <div class="row" style="gap:.8rem;">
             <div style="flex:1;">
               <label for="f-name">Name</label>
-              
+
               </label>
               <input id="f-name" type="text" placeholder="Name" required />
             </div>
@@ -190,10 +190,14 @@
          <textarea id="e-notes" rows="3" placeholder="How you met, vibe, etc."></textarea>
         </label>
 
-        <div class="row" style="justify-content:flex-end; gap:.5rem;">
-          <button id="editCancel" class="btn btn-ghost" type="button">Cancel</button>
-          <button id="editSave" class="btn" type="submit">Save</button>
-        </div>
+        <label> Photo URL
+        <input id="e-photo" type="url" placeholder="https://.../avatar.jpg">
+        </label>
+
+     <div class="actions">
+      <button type="submit" class="btn">Save</button>
+      <button type="button" id="editCancel" class="btn btn-ghost">Cancel</button>
+    </div>
        </form>
       </div>
      </div>
