@@ -126,7 +126,7 @@ function fillSelectors(){
   leftSel.innerHTML  = opts.join('');
   rightSel.innerHTML = opts.join('');
 
-  // defaults: left = Me, right = first friend if exists
+  // defaults
   leftSel.value = 'me';
   const firstFriend = list.find(p=>p.id!=='me');
   rightSel.value = firstFriend ? firstFriend.id : (list[0]?.id || 'me');
@@ -134,6 +134,80 @@ function fillSelectors(){
 
 function getById(id){ return ALL().find(p => p.id === id); }
 
+// ---- Deep link: read a,b from URL ----
+function findByQuery(q){
+  if (!q) return null;
+  const list = ALL();
+  const needle = decodeURIComponent(q).trim().toLowerCase();
+
+  // 1) direct id
+  const byId = list.find(p => p.id.toLowerCase() === needle);
+  if (byId) return byId.id;
+
+  // 2) exact name
+  const exact = list.find(p => (p.name||'').trim().toLowerCase() === needle);
+  if (exact) return exact.id;
+
+  // 3) startsWith/contains
+  const starts = list.find(p => (p.name||'').trim().toLowerCase().startsWith(needle));
+  if (starts) return starts.id;
+
+  const contains = list.find(p => (p.name||'').toLowerCase().includes(needle));
+  if (contains) return contains.id;
+
+  // 4) numeric index fallback: f<number>
+  if (/^\d+$/.test(needle)) {
+    const idx = parseInt(needle,10);
+    const friend = friends()[idx];
+    if (friend) return friend.id;
+  }
+  return null;
+}
+
+function applyDeepLink(){
+  const url = new URL(window.location.href);
+  const a = url.searchParams.get('a');
+  const b = url.searchParams.get('b');
+
+  const aId = findByQuery(a);
+  const bId = findByQuery(b);
+
+  if (aId) leftSel.value = aId;
+  if (bId) rightSel.value = bId;
+}
+
+// ---- Share link ----
+function updateShareLink(pushToAddressBar=false){
+  const u = new URL(window.location.href);
+  u.searchParams.set('a', leftSel.value);
+  u.searchParams.set('b', rightSel.value);
+
+  const val = u.toString();
+  const input = $('#shareUrl');
+  if (input) input.value = val;
+
+  if (pushToAddressBar) {
+    history.replaceState(null, '', u);
+  }
+}
+
+$('#copyShare')?.addEventListener('click', async ()=>{
+  const val = $('#shareUrl')?.value || '';
+  try{
+    await navigator.clipboard.writeText(val);
+    // minimalist feedback (be alertless if desired)
+    const btn = $('#copyShare');
+    const old = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(()=>btn.textContent = old, 1200);
+  }catch(e){
+    // fallback
+    $('#shareUrl')?.select();
+    document.execCommand?.('copy');
+  }
+});
+
+// ------------ render ------------
 function render(){
   const A = getById(leftSel.value);
   const B = getById(rightSel.value);
@@ -168,6 +242,8 @@ function render(){
     ${uniqAV.length ? `<div><b>${escapeHTML(A.name)} only (values):</b> ${escapeHTML(uniqAV.join(', '))}</div>` : ''}
     ${uniqBV.length ? `<div><b>${escapeHTML(B.name)} only (values):</b> ${escapeHTML(uniqBV.join(', '))}</div>` : ''}
   `;
+
+  updateShareLink(true);
 }
 
 function setBar(barSel, labelSel, value /* 0..100 */){
@@ -222,7 +298,7 @@ $('#swapBtn')?.addEventListener('click', ()=>{
   render();
 });
 $('#clearBtn')?.addEventListener('click', ()=>{
-  fillSelectors(); render();
+  fillSelectors(); applyDeepLink(); render();
 });
 leftSel?.addEventListener('change', render);
 rightSel?.addEventListener('change', render);
@@ -230,6 +306,8 @@ $('#llWeight')?.addEventListener('input', render);
 
 // ---------- init ----------
 fillSelectors();
+applyDeepLink();
+updateShareLink(true);
 render();
 
 })();
