@@ -3,6 +3,8 @@
 // ---------- helpers ----------
 const $  = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
+const LS_KEY = 'soulFriends';
+const LEGACY_KEYS = ['friends', 'friendsList']; // senieji galimi raktai
 
 function escapeHTML(str=''){
   return str.replace(/[&<>"']/g, c => (
@@ -10,14 +12,30 @@ function escapeHTML(str=''){
   ));
 }
 
-// ---------- storage ----------
-function loadFriends(){
-  try {
-    return JSON.parse(localStorage.getItem('soulFriends')) || [];
-  } catch { return []; }
+// ---------- storage + migration ----------
+function readJSON(key){
+  try { return JSON.parse(localStorage.getItem(key)); }
+  catch { return null; }
 }
+
+function loadFriends(){
+  // 1) pagrindinis raktas
+  const cur = readJSON(LS_KEY);
+  if (Array.isArray(cur)) return cur;
+
+  // 2) migracija iš senų raktų
+  for (const k of LEGACY_KEYS){
+    const legacy = readJSON(k);
+    if (Array.isArray(legacy) && legacy.length){
+      localStorage.setItem(LS_KEY, JSON.stringify(legacy));
+      return legacy;
+    }
+  }
+  return [];
+}
+
 function saveFriends(list){
-  localStorage.setItem('soulFriends', JSON.stringify(list));
+  localStorage.setItem(LS_KEY, JSON.stringify(list || []));
 }
 
 // ---------- avatar ----------
@@ -43,13 +61,14 @@ function contactLink(c){
   if (/^https?:\/\//i.test(v)) return v;
   if (/^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(v)) return `mailto:${v}`;
   if (/^\+?\d[\d\s-]{6,}$/.test(v)) return `https://wa.me/${v.replace(/\D/g,'')}`;
-  if (/^@?[\w.]{2,}$/i.test(v)) return `https://instagram.com/${v.replace(/^@/,'')}`;
+  if (/^@?[\w.]{2,}$/i.test(v)) return `https://instagram.com/${v.replace(/^@/, '')}`;
   return null;
 }
 
-// ---------- scoring (placeholder) ----------
+// ---------- scoring (demo) ----------
 function scoreWithMe(f){
-  return Math.floor(Math.random()*41)+60; // demo: 60–100
+  // jei turi tikrą formulę – įdėsim; kol kas demo, kad matytųsi %-ai
+  return Math.floor(Math.random()*41) + 60; // 60–100
 }
 
 // ---------- normalize friend ----------
@@ -121,7 +140,7 @@ function render(list = loadFriends()){
   });
 }
 
-// ---------- delegated actions ----------
+// ---------- delegated actions (Edit/Remove) ----------
 listEl?.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-edit],[data-rm]');
   if (!btn) return;
@@ -235,7 +254,24 @@ $('#edit-form')?.addEventListener('submit', (e) => {
   render(arr);
 });
 
+// ---------- snapshot iš soulQuiz ----------
+function fillSnapshot(){
+  const me = readJSON('soulQuiz') || {};
+  $('#me-name')?.replaceChildren(document.createTextNode(me.name || '–'));
+  $('#me-ct')?.replaceChildren(document.createTextNode(me.connectionType || '–'));
+  $('#me-ll')?.replaceChildren(document.createTextNode(me.loveLanguage || '–'));
+
+  const hobbies = Array.isArray(me.hobbies) ? me.hobbies.join(', ')
+                 : (typeof me.hobbies === 'string' ? me.hobbies : '–');
+  const values  = Array.isArray(me.values) ? me.values.join(', ')
+                 : (typeof me.values === 'string' ? me.values : '–');
+
+  $('#me-hobbies')?.replaceChildren(document.createTextNode(hobbies || '–'));
+  $('#me-values')?.replaceChildren(document.createTextNode(values  || '–'));
+}
+
 // ---------- init ----------
+fillSnapshot();
 render();
 
 })();
