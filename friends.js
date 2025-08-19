@@ -204,8 +204,19 @@ $('#exportFriends')?.addEventListener('click', () => {
 });
 
 // ---------- EDIT MODAL ----------
+// ---------- EDIT MODAL ----------
 const modal = $('#editModal');
 let editIdx = -1;
+
+function setVal(sel, val){
+  const el = document.querySelector(sel);
+  if (!el) {
+    console.warn('Edit field not found:', sel);
+    return false;
+  }
+  el.value = val ?? '';
+  return true;
+}
 
 function openEdit(i){
   const arr = loadFriends();
@@ -213,20 +224,27 @@ function openEdit(i){
   if (!f) return;
 
   editIdx = i;
-  $('#e-name').value    = f.name || '';
-  $('#e-ct').value      = f.ct || '';
-  $('#e-ll').value      = f.ll || '';
-  $('#e-hobbies').value = (f.hobbies || []).join(', ');
-  $('#e-values').value  = (f.values  || []).join(', ');
-  $('#e-contact').value = f.contact || '';
-  $('#e-notes').value   = f.notes || '';
-  $('#e-photo').value   = f.photo || '';
 
-  modal.hidden = false;
+  // saugiai pildom laukus; jei kurio nėra – parasysim į Console
+  const ok1 = setVal('#e-name',    f.name);
+  const ok2 = setVal('#e-ct',      f.ct);
+  const ok3 = setVal('#e-ll',      f.ll);
+  const ok4 = setVal('#e-hobbies', (f.hobbies||[]).join(', '));
+  const ok5 = setVal('#e-values',  (f.values ||[]).join(', '));
+  const ok6 = setVal('#e-contact', f.contact);
+  const ok7 = setVal('#e-notes',   f.notes);
+  const ok8 = setVal('#e-photo',   f.photo);
+
+  if (!(ok1 && ok2 && ok3 && ok4 && ok5 && ok6 && ok7 && ok8)) {
+    alert('Edit form is missing one or more fields. Please refresh the page (Ctrl+F5) to load the newest HTML.');
+    return;
+  }
+
+  if (modal) modal.hidden = false;
 }
 
 $('#editCancel')?.addEventListener('click', () => {
-  modal.hidden = true;
+  if (modal) modal.hidden = true;
   editIdx = -1;
 });
 
@@ -237,22 +255,23 @@ $('#edit-form')?.addEventListener('submit', (e) => {
   const arr = loadFriends();
 
   const updated = normFriend({
-    name:    $('#e-name').value,
-    photo:   $('#e-photo').value,
-    ct:      $('#e-ct').value,
-    ll:      $('#e-ll').value,
-    hobbies: $('#e-hobbies').value,
-    values:  $('#e-values').value,
-    contact: $('#e-contact').value,
-    notes:   $('#e-notes').value,
+    name:    $('#e-name')?.value,
+    photo:   $('#e-photo')?.value,
+    ct:      $('#e-ct')?.value,
+    ll:      $('#e-ll')?.value,
+    hobbies: $('#e-hobbies')?.value,
+    values:  $('#e-values')?.value,
+    contact: $('#e-contact')?.value,
+    notes:   $('#e-notes')?.value,
   });
 
   arr[editIdx] = updated;
   saveFriends(arr);
-  modal.hidden = true;
+  if (modal) modal.hidden = true;
   editIdx = -1;
   render(arr);
 });
+
 
 // ---------- snapshot iš soulQuiz ----------
 function fillSnapshot(){
