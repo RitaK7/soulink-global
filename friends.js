@@ -165,6 +165,9 @@ function contactLink(c){
 `;
 // !!! čia NEBETURI BŪTI ".;" eilutės !!!
    listEl.appendChild(card);
+   $$('#list [data-edit]')
+   $$('#list [data-rm]')
+
    // po to kai sudedi korteles į listEl:
 $$('#list [data-edit]').forEach(btn => {
   btn.addEventListener('click', (e) => {
