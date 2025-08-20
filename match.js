@@ -188,20 +188,20 @@ function render(){
       </div>
 
       ${socialIconsHTML(f)}
+    <div style="margin-top:.2rem;">
+       ${hobbies ? `<div><b>Hobbies:</b> ${escapeHTML(hobbies)}</div>` : ''}
+       ${values  ? `<div><b>Values:</b> ${escapeHTML(values)}</div>`   : ''}
+       ${f.contact ? `<div><b>Contact:</b> ${escapeHTML(f.contact)}</div>` : ''}
+       ${f.notes ? `<div><i>${escapeHTML(f.notes)}</i></div>` : ''}
+     </div>
 
-      <div style="margin-top:.2rem;">
-        ${hobbies ? `<div><b>Hobbies:</b> ${escapeHTML(hobbies)}</div>` : ''}
-        ${values  ? `<div><b>Values:</b> ${escapeHTML(values)}</div>`   : ''}
-        ${f.contact ? `<div><b>Contact:</b> ${escapeHTML(f.contact)}</div>` : ''}
-        ${f.notes ? `<div><i>${escapeHTML(f.notes)}</i></div>` : ''}
-      </div>
-
-      <div class="row" style="margin-top:.6rem;">
-        <a class="btn" href="friends.html">Edit in Friends</a>
-        ${messageLinkHTML(f)}
-      </div>
-    `;
-    resultsEl.appendChild(card);
+     <div class="row" style="margin-top:.6rem;">
+    <a class="btn" href="friends.html">Edit in Friends</a>
+       ${messageLinkHTML(f)}
+       ${compareLinkHTML(f)}
+     </div>
+`;
+resultsEl.appendChild(card);
   });
 }
 
@@ -223,6 +223,12 @@ function messageLinkHTML(f){
     if (/^@?[\w.]{2,}$/i.test(v)) return `<a class="btn" href="https://instagram.com/${v.replace(/^@/,'')}" target="_blank" rel="noopener">Message</a>`;
   }
   return '';
+
+  function compareLinkHTML(f){
+  const name = (f.name || '').trim();
+  if (!name) return '';
+  return `<a class="btn" href="compare.html?a=me&b=${encodeURIComponent(name)}">Compare →</a>`;
+}
 }
 
 function escapeHTML(str=''){
