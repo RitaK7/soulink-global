@@ -164,12 +164,11 @@ function render(){
   }
   emptyEl.style.display = 'none';
 
-  rows.forEach(({f, s}) => {
+    rows.forEach(({f, s}) => {
     const card = document.createElement('div');
     card.className = 'match-card';
 
     const cls = s >= 75 ? 'good' : s >= 55 ? 'ok' : 'low';
-
     const hobbies = normList(f.hobbies).join(', ');
     const values  = normList(f.values).join(', ');
 
@@ -188,33 +187,45 @@ function render(){
       </div>
 
       ${socialIconsHTML(f)}
-    <div style="margin-top:.2rem;">
-       ${hobbies ? `<div><b>Hobbies:</b> ${escapeHTML(hobbies)}</div>` : ''}
-       ${values  ? `<div><b>Values:</b> ${escapeHTML(values)}</div>`   : ''}
-       ${f.contact ? `<div><b>Contact:</b> ${escapeHTML(f.contact)}</div>` : ''}
-       ${f.notes ? `<div><i>${escapeHTML(f.notes)}</i></div>` : ''}
-     </div>
 
-     <div class="row" style="margin-top:.6rem;">
-    <a class="btn" href="friends.html">Edit in Friends</a>
-       ${messageLinkHTML(f)}
-       ${compareLinkHTML(f)}
-     </div>
-`;
-resultsEl.appendChild(card);
+      <div style="margin-top:.2rem;">
+        ${hobbies ? `<div><b>Hobbies:</b> ${escapeHTML(hobbies)}</div>` : ''}
+        ${values  ? `<div><b>Values:</b> ${escapeHTML(values)}</div>`   : ''}
+        ${f.contact ? `<div><b>Contact:</b> ${escapeHTML(f.contact)}</div>` : ''}
+        ${f.notes ? `<div><i>${escapeHTML(f.notes)}</i></div>` : ''}
+      </div>
+
+      <div class="row" style="margin-top:.6rem;">
+        <a class="btn" href="friends.html">Edit in Friends</a>
+        ${messageLinkHTML(f)}
+        ${compareLinkHTML(f)}
+      </div>
+    `;
+    resultsEl.appendChild(card);
   });
-}
+} // ← uždarom render()
 
+// ====== helper buttons ======
 function messageLinkHTML(f){
-  // Prefer WhatsApp -> Instagram -> Facebook -> Email -> contactLink (best effort)
-  if (f.whatsapp && digits(f.whatsapp))
+  // WhatsApp → Instagram → Facebook → Email → contact (best effort)
+  if (f.whatsapp && digits(f.whatsapp)) {
     return `<a class="btn" href="https://wa.me/${digits(f.whatsapp)}" target="_blank" rel="noopener">Message</a>`;
-  if (f.instagram)
-    return `<a class="btn" href="${/^https?:\/\//i.test(f.instagram)?f.instagram:'https://instagram.com/'+f.instagram.replace(/^@/,'')}" target="_blank" rel="noopener">Message</a>`;
-  if (f.facebook)
-    return `<a class="btn" href="${/^https?:\/\//i.test(f.facebook)?f.facebook:'https://facebook.com/'+f.facebook.replace(/^@/,'')}" target="_blank" rel="noopener">Message</a>`;
-  if (f.email && /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(f.email))
+  }
+  if (f.instagram) {
+    const u = /^https?:\/\//i.test(f.instagram)
+      ? f.instagram
+      : `https://instagram.com/${f.instagram.replace(/^@/, '')}`;
+    return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
+  }
+  if (f.facebook) {
+    const u = /^https?:\/\//i.test(f.facebook)
+      ? f.facebook
+      : `https://facebook.com/${f.facebook.replace(/^@/, '')}`;
+    return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
+  }
+  if (f.email && /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(f.email)) {
     return `<a class="btn" href="mailto:${f.email}">Message</a>`;
+  }
   if (f.contact){
     const v = String(f.contact).trim();
     if (/^https?:\/\//i.test(v)) return `<a class="btn" href="${v}" target="_blank" rel="noopener">Message</a>`;
@@ -223,21 +234,15 @@ function messageLinkHTML(f){
     if (/^@?[\w.]{2,}$/i.test(v)) return `<a class="btn" href="https://instagram.com/${v.replace(/^@/,'')}" target="_blank" rel="noopener">Message</a>`;
   }
   return '';
+}
 
-  function compareLinkHTML(f){
+function compareLinkHTML(f){
   const name = (f.name || '').trim();
   if (!name) return '';
   return `<a class="btn" href="compare.html?a=me&b=${encodeURIComponent(name)}">Compare →</a>`;
 }
-}
 
-function escapeHTML(str=''){
-  return str.replace(/[&<>"']/g, c => (
-    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
-  ));
-}
-
-// ------------ events ------------
+// ====== events ======
 ['#f-search','#f-ct','#f-min','#f-llw'].forEach(sel=>{
   $(sel)?.addEventListener('input', ()=>{
     if (sel==='#f-llw') { $('#llw-label').textContent = (parseFloat($('#f-llw').value)||1).toFixed(1)+'×'; }
@@ -249,7 +254,7 @@ $('#btn-reset')?.addEventListener('click', ()=>{
   $('#llw-label').textContent='1.0×'; render();
 });
 
-// ------------ init ------------
+// ====== init ======
 render();
 
 })();
