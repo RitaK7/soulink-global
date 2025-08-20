@@ -14,6 +14,15 @@ function normList(v){
   return String(v).split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
 }
 const digits = s => (s||'').toString().replace(/\D+/g,'');
+function escapeHTML(str=''){
+  return String(str).replace(/[&<>"']/g, ch => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  })[ch]);
+}
 
 // Avatar
 function avatarFor(name, photo){
@@ -28,6 +37,7 @@ function avatarFor(name, photo){
      </svg>`;
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
+
 
 // Social icons html
 function socialIconsHTML(f){
@@ -185,8 +195,10 @@ function render(){
         </div>
         <span class="score ${cls}" title="Compatibility">${s}%</span>
       </div>
+      
 
       ${socialIconsHTML(f)}
+
 
       <div style="margin-top:.2rem;">
         ${hobbies ? `<div><b>Hobbies:</b> ${escapeHTML(hobbies)}</div>` : ''}
