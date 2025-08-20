@@ -53,6 +53,142 @@ function socialIconsHTML(f){
   }
   return items.length ? `<div class="social-icons">${items.join('')}</div>` : '';
 }
+function fillFeedbackContext(data){
+  $('#fbWeight')?.setAttribute('value', (parseFloat($('#llWeight')?.value || '1')||1).toFixed(1));
+  $('#fbAvg')?.setAttribute('value', data.avg);
+  $('#fbTop3')?.setAttribute('value', (data.top3||[]).join(', '));
+  $('#fbH')?.setAttribute('value', (data.topH||[]).join(', '));
+  $('#fbV')?.setAttribute('value', (data.topV||[]).join(', '));
+  $('#fbTs')?.setAttribute('value', new Date().toISOString());
+
+  function fillFeedbackContext({avg, top3, topH, topV}){
+  const w = parseFloat(document.querySelector('#llWeight')?.value || '1') || 1;
+  document.querySelector('#fbWeight')?.setAttribute('value', w.toFixed(1));
+  document.querySelector('#fbAvg')?.setAttribute('value', avg ?? 0);
+  document.querySelector('#fbTop3')?.setAttribute('value', (top3||[]).join(', '));
+  document.querySelector('#fbH')?.setAttribute('value', (topH||[]).join(', '));
+  document.querySelector('#fbV')?.setAttribute('value', (topV||[]).join(', '));
+
+  function setupFeedbackOnce(){
+  if (setupFeedbackOnce._done) return;
+  setupFeedbackOnce._done = true;
+
+  const stars = Array.from(document.querySelectorAll('#fbStars label'));
+  const radios = Array.from(document.querySelectorAll('#fbStars input[type="radio"]'));
+  const highlight = v => stars.forEach((lab,i)=>lab.classList.toggle('active', i < v));
+  stars.forEach((lab,i)=> lab.addEventListener('click', ()=>{ radios[i].checked = true; highlight(i+1); }));
+  // default 5*
+  if (!radios.some(r=>r.checked)) { radios[4].checked = true; highlight(5); }
+
+  const txt = document.querySelector('#fbText');
+  const cnt = document.querySelector('#fbCount');
+  const upd = ()=>{ if(cnt&&txt) cnt.textContent = String(txt.value.length); };
+  txt?.addEventListener('input', upd); upd();
+
+  const form = document.querySelector('#feedbackForm');
+  const btn  = document.querySelector('#fbSend');
+  const status = document.querySelector('#fbStatus');
+
+  form?.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const rating = (document.querySelector('input[name="rating"]:checked')||{}).value || '';
+    if (!rating){ alert('Please select a rating.'); return; }
+
+    const params = {
+      user_email: (document.querySelector('#fbEmail')?.value || '').trim(),
+      page: 'result.html',
+      rating,
+      feedback: (txt?.value || '').trim(),
+      weightLL: document.querySelector('#fbWeight')?.value || '',
+      avg: document.querySelector('#fbAvg')?.value || '',
+      top3: document.querySelector('#fbTop3')?.value || '',
+      sharedHobbies: document.querySelector('#fbH')?.value || '',
+      sharedValues: document.querySelector('#fbV')?.value || ''
+    };
+
+    btn.disabled = true; const old = btn.textContent; btn.textContent = 'Sending…'; status.textContent = '';
+
+    try{ emailjs.init('UYuKR_3UnPjeqJFL7'); }catch(_){} // saugu kartoti
+    emailjs.send('service_3j9h9ei', 'template_99hg4ni', params)
+      .then(()=>{
+        status.textContent = '✓ Sent. Ačiū!'; form.reset();
+        radios.forEach(r=>r.checked=false); radios[4].checked=true; highlight(5); upd();
+      })
+      .catch(err=>{
+        console.error(err);
+        status.textContent = '✘ Send failed. Try again later.';
+      })
+      .finally(()=>{ btn.disabled=false; btn.textContent=old; });
+  });
+}
+function setupFeedbackOnce(){
+  if (setupFeedbackOnce._done) return;
+  setupFeedbackOnce._done = true;
+
+  const stars = Array.from(document.querySelectorAll('#fbStars label'));
+  const radios = Array.from(document.querySelectorAll('#fbStars input[type="radio"]'));
+  const highlight = v => stars.forEach((lab,i)=>lab.classList.toggle('active', i < v));
+  stars.forEach((lab,i)=> lab.addEventListener('click', ()=>{ radios[i].checked = true; highlight(i+1); }));
+  // default 5*
+  if (!radios.some(r=>r.checked)) { radios[4].checked = true; highlight(5); }
+
+  const txt = document.querySelector('#fbText');
+  const cnt = document.querySelector('#fbCount');
+  const upd = ()=>{ if(cnt&&txt) cnt.textContent = String(txt.value.length); };
+  txt?.addEventListener('input', upd); upd();
+
+  const form = document.querySelector('#feedbackForm');
+  const btn  = document.querySelector('#fbSend');
+  const status = document.querySelector('#fbStatus');
+
+  form?.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const rating = (document.querySelector('input[name="rating"]:checked')||{}).value || '';
+    if (!rating){ alert('Please select a rating.'); return; }
+
+    const params = {
+      user_email: (document.querySelector('#fbEmail')?.value || '').trim(),
+      page: 'result.html',
+      rating,
+      feedback: (txt?.value || '').trim(),
+      weightLL: document.querySelector('#fbWeight')?.value || '',
+      avg: document.querySelector('#fbAvg')?.value || '',
+      top3: document.querySelector('#fbTop3')?.value || '',
+      sharedHobbies: document.querySelector('#fbH')?.value || '',
+      sharedValues: document.querySelector('#fbV')?.value || ''
+    };
+
+    btn.disabled = true; const old = btn.textContent; btn.textContent = 'Sending…'; status.textContent = '';
+
+    try{ emailjs.init('UYuKR_3UnPjeqJFL7'); }catch(_){} // saugu kartoti
+    emailjs.send('service_3j9h9ei', 'template_99hg4ni', params)
+      .then(()=>{
+        status.textContent = '✓ Sent. Ačiū!'; form.reset();
+        radios.forEach(r=>r.checked=false); radios[4].checked=true; highlight(5); upd();
+      })
+      .catch(err=>{
+        console.error(err);
+        status.textContent = '✘ Send failed. Try again later.';
+      })
+      .finally(()=>{ btn.disabled=false; btn.textContent=old; });
+  });
+}
+
+  // Prefill email iš quiz, jei turim
+  try {
+    const me = JSON.parse(localStorage.getItem('soulQuiz')||'{}');
+    if (me.email && document.querySelector('#fbEmail') && !document.querySelector('#fbEmail').value){
+      document.querySelector('#fbEmail').value = me.email;
+    }
+  } catch {}
+}
+
+  // Prefill vardą/el. paštą jei yra quiz’e
+  const m = READ(LS_ME) || {};
+  if (m.name && $('#fbName') && !$('#fbName').value) $('#fbName').value = m.name;
+  if (m.email && $('#fbEmail') && !$('#fbEmail').value) $('#fbEmail').value = m.email;
+}
+
 
 // ---------- data ----------
 function me(){
@@ -212,14 +348,22 @@ function renderList(el, items){
 
 // ---------- UI ----------
 function render(){
+  
+
   const w = parseFloat($('#llWeight').value || '1') || 1;
   $('#llwLabel').textContent = w.toFixed(1)+'×';
 
   const { rom, fri, avg, top3, topH, topV } = compute(w);
+
+  fillFeedbackContext({avg, top3, topH, topV});
+  setupFeedbackOnce();
+
+
   const romEl = $('#romantic'), friEl = $('#friendship'), emptyEl = $('#empty');
 
   const hasAny = rom.length || fri.length;
   emptyEl.style.display = hasAny ? 'none' : 'block';
+  
 
   renderList(romEl, rom);
   renderList(friEl, fri);
@@ -264,6 +408,42 @@ $('#btnExport')?.addEventListener('click', () => {
 });
 
 // init
-render();
+render(); 
+
+// ----- feedback submit -----
+const fbForm = $('#feedbackForm');
+if (fbForm && fbForm.action && fbForm.action !== 'FORM_ENDPOINT_HERE'){
+  fbForm.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const status = $('#fbStatus');
+    status.textContent = 'Sending…';
+
+    try{
+      const fd = new FormData(fbForm);
+      const res = await fetch(fbForm.action, {
+        method: 'POST',
+        body: fd,
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok){
+        status.textContent = 'Ačiū! Gauta 💚';
+        fbForm.reset();
+        fillFeedbackContext({ // atstatom hidden po reset
+          avg: $('#fbAvg')?.value || 0,
+          top3: ($('#fbTop3')?.value || '').split(',').map(s=>s.trim()).filter(Boolean),
+          topH: ($('#fbH')?.value || '').split(',').map(s=>s.trim()).filter(Boolean),
+          topV: ($('#fbV')?.value || '').split(',').map(s=>s.trim()).filter(Boolean),
+        });
+      } else {
+        status.textContent = 'Submit nepavyko, bandau atidaryti el. paštą…';
+        window.location.href = `mailto:hello@soulink.global?subject=Soulink%20Beta%20Feedback&body=${encodeURIComponent([...fd.entries()].map(([k,v])=>`${k}: ${v}`).join('\n'))}`;
+      }
+    }catch(err){
+      status.textContent = 'Offline? Bandau el. paštu…';
+      const fd = new FormData(fbForm);
+      window.location.href = `mailto:hello@soulink.global?subject=Soulink%20Beta%20Feedback&body=${encodeURIComponent([...fd.entries()].map(([k,v])=>`${k}: ${v}`).join('\n'))}`;
+    }
+  });
+}
 
 })();

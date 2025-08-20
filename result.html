@@ -123,6 +123,47 @@
     </div>
   </nav>
 
+  <section class="card" id="feedback-card" style="margin-top:1rem;">
+  <h3 class="section-title">Feedback</h3>
+  <form id="feedbackForm" novalidate>
+    <div class="row">
+      <label style="flex:1;">
+        Email (optional)
+        <input type="email" id="fbEmail" placeholder="you@example.com" autocomplete="email">
+      </label>
+      <label style="flex:1;">
+        Rating
+        <div id="fbStars" class="stars" role="radiogroup" aria-label="Rate">
+          <input id="s1" type="radio" name="rating" value="1"><label for="s1">★</label>
+          <input id="s2" type="radio" name="rating" value="2"><label for="s2">★</label>
+          <input id="s3" type="radio" name="rating" value="3"><label for="s3">★</label>
+          <input id="s4" type="radio" name="rating" value="4"><label for="s4">★</label>
+          <input id="s5" type="radio" name="rating" value="5"><label for="s5">★</label>
+        </div>
+      </label>
+    </div>
+
+    <label style="display:block; margin-top:.6rem;">
+      Comments
+      <textarea id="fbText" rows="4" maxlength="600" placeholder="What worked well? What should we improve?"></textarea>
+      <small class="hint" style="float:right;"><span id="fbCount">0</span>/600</small>
+    </label>
+
+    <!-- Kontekstas iš Results (užpildys JS) -->
+    <input type="hidden" id="fbWeight">
+    <input type="hidden" id="fbAvg">
+    <input type="hidden" id="fbTop3">
+    <input type="hidden" id="fbH">
+    <input type="hidden" id="fbV">
+
+    <div class="row" style="margin-top:.8rem;">
+      <button class="btn" type="submit" id="fbSend">Send Feedback</button>
+      <span id="fbStatus" class="hint" style="margin-left:.6rem;"></span>
+    </div>
+  </form>
+</section>
+
+
   <main class="container">
     <h1 class="section-title" style="font-size:1.6rem;">🏁 Results</h1>
 
@@ -173,6 +214,68 @@
 
         <p id="empty" class="hint" style="display:none; margin-top:.6rem;">No friends yet. Add some on the Friends page.</p>
       </section>
+
+      <section class="card" id="feedback-card" style="margin-top:1rem;">
+      <h3 class="section-title">Feedback</h3>
+      <form id="feedbackForm" action="FORM_ENDPOINT_HERE" method="POST">
+    <!-- anti-spam honeypot -->
+      <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
+
+      <div class="row">
+      <label style="flex:1;">
+        Name
+        <input type="text" name="name" id="fbName" placeholder="Your name" required>
+       </label>
+       <label style="flex:1;">
+        Email (optional)
+        <input type="email" name="email" id="fbEmail" placeholder="you@example.com">
+       </label>
+     </div>
+
+    <div class="row" style="margin-top:.6rem;">
+      <label style="flex:1;">
+        Rating
+        <select name="rating" id="fbRating" required>
+          <option value="">Choose…</option>
+          <option>5 – Loved it</option>
+          <option>4 – Great</option>
+          <option>3 – Good</option>
+          <option>2 – Needs work</option>
+          <option>1 – Didn’t work</option>
+        </select>
+      </label>
+      <div style="flex:2;">
+        <div class="hint" style="margin-bottom:.25rem;">Which parts were most useful?</div>
+        <label class="pill"><input type="checkbox" name="features" value="Friends"> Friends</label>
+        <label class="pill"><input type="checkbox" name="features" value="Match"> Match</label>
+        <label class="pill"><input type="checkbox" name="features" value="Compare"> Compare</label>
+        <label class="pill"><input type="checkbox" name="features" value="Results"> Results</label>
+        <label class="pill"><input type="checkbox" name="features" value="Design"> Design</label>
+        <label class="pill"><input type="checkbox" name="features" value="Speed"> Speed</label>
+      </div>
+    </div>
+
+    <label style="display:block; margin-top:.6rem;">
+      Comments
+      <textarea name="comments" id="fbComments" rows="4" placeholder="What worked well? What should we improve?" required></textarea>
+    </label>
+
+    <!-- Hidden context – užpildys JS -->
+    <input type="hidden" name="context_weightLL" id="fbWeight">
+    <input type="hidden" name="context_avg" id="fbAvg">
+    <input type="hidden" name="context_top3" id="fbTop3">
+    <input type="hidden" name="context_sharedHobbies" id="fbH">
+    <input type="hidden" name="context_sharedValues" id="fbV">
+    <input type="hidden" name="context_timestamp" id="fbTs">
+    <input type="hidden" name="context_page" value="results">
+
+    <div class="row" style="margin-top:.8rem;">
+      <button class="btn" type="submit">Send Feedback</button>
+      <button class="btn" type="reset">Clear</button>
+      <span id="fbStatus" class="hint" style="margin-left:.6rem;"></span>
+    </div>
+  </form>
+</section>
     </div>
   </main>
 
@@ -181,5 +284,8 @@
   </footer>
 
   <script src="result.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>try{ emailjs.init("UYuKR_3UnPjeqJFL7"); }catch(e){ console.warn("EmailJS init skipped:", e); }</script>
+
 </body>
 </html>
