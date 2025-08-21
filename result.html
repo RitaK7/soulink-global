@@ -138,6 +138,24 @@
   <form id="feedbackForm" novalidate>
     <div class="row">
       <label style="flex:1;">
+        <div class="row" style="flex-direction:column; gap:.6rem;">
+  <div>
+    <div class="hint" style="margin-bottom:.25rem;">Rating</div>
+    <div id="fbStars" class="stars" role="radiogroup" aria-label="Rate">
+      <input id="s1" type="radio" name="rating" value="1"><label for="s1">★</label>
+      <input id="s2" type="radio" name="rating" value="2"><label for="s2">★</label>
+      <input id="s3" type="radio" name="rating" value="3"><label for="s3">★</label>
+      <input id="s4" type="radio" name="rating" value="4"><label for="s4">★</label>
+      <input id="s5" type="radio" name="rating" value="5"><label for="s5">★</label>
+    </div>
+  </div>
+
+  <label style="width:100%;">
+    Email (optional)
+    <input type="email" id="fbEmail" placeholder="you@example.com" autocomplete="email">
+  </label>
+ </div>
+
         Email (optional)
         <input type="email" id="fbEmail" placeholder="you@example.com" autocomplete="email">
       </label>
