@@ -292,7 +292,9 @@
       if (status) status.textContent = '';
 
       ensureEmailJSReady(()=>{
-        emailjs.send('service_ifo7026', 'template_99hg4ni', params, 'UYuKR_3UnPjeqJFL7')
+       // buvo: emailjs.send('service_ifo7026', 'template_99hg4ni', params)
+      emailjs.send('service_ifo7026', 'template_99hg4ni', params, 'SV7ptjuNI88paiVbz')
+
 
           .then(()=>{
             if (status) status.textContent = '✓ Sent. Ačiū!';
