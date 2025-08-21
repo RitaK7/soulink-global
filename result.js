@@ -58,13 +58,17 @@
   // Dynamically ensure EmailJS is loaded & inited
   function ensureEmailJSReady(cb){
     if (window.emailjs && typeof window.emailjs.send === 'function'){
-      try{ emailjs.init('UYuKR_3UnPjeqJFL7'); }catch(_){}
+      try{ emailjs.init('SV7ptjuNI88paiVbz'); }catch(_){}
+      emailjs.send('service_ifo7026', 'template_99hg4ni', params, 'SV7ptjuNI88paiVbz')
+
       cb && cb();
       return;
     }
     const s = document.createElement('script');
     s.src = 'https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js';
-    s.onload = () => { try{ emailjs.init('UYuKR_3UnPjeqJFL7'); }catch(_){ } cb && cb(); };
+    s.onload = () => { try{ emailjs.init('SV7ptjuNI88paiVbz'); }catch(_){}
+    emailjs.send('service_ifo7026', 'template_99hg4ni', params, 'SV7ptjuNI88paiVbz')
+    cb && cb(); };
     document.head.appendChild(s);
   }
 
