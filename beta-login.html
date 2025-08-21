@@ -7,16 +7,17 @@
 <title>Soulink Beta Access</title>
 <link href="style.css" rel="stylesheet"/>
 <style>
-    body {
-      background-color: #003c43;
-      color: white;
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
+   body {
+  background-color: #003c43;
+  color: white;
+  font-family: 'Segoe UI', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+  
     .login-box {
       background-color: #015255;
       padding: 2rem;
@@ -48,6 +49,72 @@
       margin-top: 1rem;
       display: none;
     }
+    /* bazė */
+html, body { height: 100%; margin: 0; }
+body{
+  min-height: 100svh;              /* gerai dirba iOS/Android */
+  display: flex;
+  flex-direction: column;          /* nav viršuje, footer apačioje */
+  background-color: #003c43;
+  color: white;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* centras */
+.beta-main{
+  flex: 1;
+  display: grid;
+  place-items: center;             /* kortelė į centrą */
+  padding: 24px;
+}
+
+/* pati kortelė */
+.login-box{
+  width: min(560px, 92vw);
+  background-color: #015255;
+  padding: clamp(16px, 3.5vw, 28px);
+  border-radius: 1rem;
+  box-shadow: 0 8px 20px rgba(0, 255, 204, 0.3);
+  text-align: center;
+  z-index: 10;                     /* virš bet kokių „fixed“ sluoksnių */
+}
+
+/* įvestis + mygtukas */
+input[type="password"]{
+  padding: 0.7rem;
+  width: 100%;
+  border-radius: 0.5rem;
+  border: none;
+  margin-top: 1rem;
+  font-size: 1rem;
+  background:#002f31;
+  color:#eafff9;
+}
+button{
+  margin-top: 1rem;
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: 2rem;
+  background: linear-gradient(135deg,#00ffd0,#00bfa5);
+  color: #003c43;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.error{ color:#ff6b6b; margin-top:1rem; display:none; }
+
+/* footer šiame puslapyje – nefiksuotas */
+.beta-footer{
+  position: static !important;
+  width: 100%;
+  text-align:center;
+  color:#bff;
+  background:#002e30;
+  box-shadow: 0 0 12px rgba(0,253,216,0.25) inset;
+  padding: 1.2rem;
+}
+
   </style>
 </head>
 <body>
@@ -84,12 +151,14 @@
 nav.navbar a { color:#dff; text-decoration:none; padding:.35rem .55rem; border-radius:10px; }
 nav.navbar a:hover { box-shadow:0 0 10px rgba(0,253,216,0.45), inset 0 0 12px rgba(0,253,216,0.15); }
 </style>
-<div class="login-box">
-<h2>Enter Beta Password</h2>
-<input id="betaPassword" placeholder="Enter password..." type="password"/>
-<button onclick="checkPassword()">Enter</button>
-<p class="error" id="error">Incorrect password. Please try again.</p>
-</div>
+<main class="beta-main">
+  <div class="login-box">
+    <h2>Enter Beta Password</h2>
+    <input id="betaPassword" type="password" placeholder="Enter password..."/>
+    <button onclick="checkPassword()">Enter</button>
+    <p class="error" id="error">Incorrect password. Please try again.</p>
+  </div>
+</main>
 <script>
     function checkPassword() {
       const entered = document.getElementById('betaPassword').value.trim();
@@ -102,7 +171,9 @@ nav.navbar a:hover { box-shadow:0 0 10px rgba(0,253,216,0.45), inset 0 0 12px rg
       }
     }
   </script>
-<footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
+  <footer class="beta-footer">
   © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
+  </footer>
+
 </footer></body>
 </html>
