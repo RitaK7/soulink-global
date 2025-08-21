@@ -214,47 +214,6 @@
 
         <p id="empty" class="hint" style="display:none; margin-top:.6rem;">No friends yet. Add some on the Friends page.</p>
       </section>
-
-     <section class="card" id="feedback-card" style="margin-top:1rem;">
-  <h3 class="section-title">Feedback</h3>
-  <form id="feedbackForm" novalidate>
-    <div class="row">
-      <label style="flex:1;">
-        Email (optional)
-        <input type="email" id="fbEmail" placeholder="you@example.com" autocomplete="email">
-      </label>
-      <label style="flex:1;">
-        Rating
-        <div id="fbStars" class="stars" role="radiogroup" aria-label="Rate">
-          <input id="s1" type="radio" name="rating" value="1"><label for="s1">★</label>
-          <input id="s2" type="radio" name="rating" value="2"><label for="s2">★</label>
-          <input id="s3" type="radio" name="rating" value="3"><label for="s3">★</label>
-          <input id="s4" type="radio" name="rating" value="4"><label for="s4">★</label>
-          <input id="s5" type="radio" name="rating" value="5"><label for="s5">★</label>
-        </div>
-      </label>
-    </div>
-
-    <label style="display:block; margin-top:.6rem;">
-      Comments
-      <textarea id="fbText" rows="4" maxlength="600" placeholder="What worked well? What should we improve?"></textarea>
-      <small class="hint" style="float:right;"><span id="fbCount">0</span>/600</small>
-    </label>
-
-    <!-- Hidden context (užpildys result.js) -->
-    <input type="hidden" id="fbWeight">
-    <input type="hidden" id="fbAvg">
-    <input type="hidden" id="fbTop3">
-    <input type="hidden" id="fbH">
-    <input type="hidden" id="fbV">
-    <input type="hidden" id="fbTs">
-
-    <div class="row" style="margin-top:.8rem;">
-      <button class="btn" type="submit" id="fbSend">Send Feedback</button>
-      <span id="fbStatus" class="hint" style="margin-left:.6rem;"></span>
-    </div>
-  </form>
-</section>
   </main>
 
   <footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">

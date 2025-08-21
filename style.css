@@ -840,6 +840,16 @@ button:hover,
 }
 #fbStars label.active{ color:var(--accent); transform:translateY(-1px); }
 
+#fbStars{ display:flex; gap:.35rem; align-items:center; }
+#fbStars input{ display:none; }
+#fbStars label{
+  cursor:pointer; font-size:1.6rem; line-height:1;
+  color:rgba(0,253,216,.45); transition:opacity .15s, transform .1s;
+  text-shadow:0 0 6px rgba(0,253,216,.25);
+}
+#fbStars label.active{ color:var(--accent); transform:translateY(-1px); }
+
+
 
 
 
