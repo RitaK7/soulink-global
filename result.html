@@ -96,15 +96,23 @@
   @media (max-width:900px){ .insights-grid{ grid-template-columns:1fr; } }
   .pill{ display:inline-block; padding:.3rem .6rem; border-radius:999px; border:1px solid var(--stroke); background:rgba(0,253,216,.08); }
   /* Feedback stars */
-  #fbStars{ display:flex; gap:.35rem; align-items:center; }
-  #fbStars input{ display:none; }                 /* paslepiam radijo burbuliukus */
-  #fbStars label{
+  /* Feedback stars (geltonos) */
+#feedback-card .row{ align-items:flex-start; }
+#fbStars{ display:flex; gap:.4rem; flex-wrap:wrap; }
+#fbStars input{ display:none; } /* slepiam radio burbuliukus */
+#fbStars label{
   cursor:pointer; font-size:1.6rem; line-height:1;
-  color:rgba(0,253,216,.45); transition:opacity .15s, transform .1s;
-  text-shadow:0 0 6px rgba(0,253,216,.25);
+  color:#8a8a8a;                    /* neaktyvios – pilkos */
+  text-shadow:0 0 6px rgba(0,0,0,.15);
+  transition: transform .1s, color .15s;
 }
-  #fbStars label.active{ color:var(--accent); transform:translateY(-1px); }
-
+#fbStars label.active{
+  color:#FFD166;                    /* aktyvios – geltonos */
+  text-shadow:0 0 10px rgba(255,209,102,.35);
+  transform: translateY(-1px);
+}
+/* laukai per visą plotį */
+#feedback-card input[type="email"], #feedback-card textarea{ width:100%; }
 
   /* Print */
   @media print{
@@ -135,34 +143,23 @@
 
   <section class="card" id="feedback-card" style="margin-top:1rem;">
   <h3 class="section-title">Feedback</h3>
-  <form id="feedbackForm" novalidate>
-    <div class="row">
-      <label style="flex:1;">
-        <div class="row" style="flex-direction:column; gap:.6rem;">
-  <div>
-    <div class="hint" style="margin-bottom:.25rem;">Rating</div>
-    <div id="fbStars" class="stars" role="radiogroup" aria-label="Rate">
-      <input id="s1" type="radio" name="rating" value="1"><label for="s1">★</label>
-      <input id="s2" type="radio" name="rating" value="2"><label for="s2">★</label>
-      <input id="s3" type="radio" name="rating" value="3"><label for="s3">★</label>
-      <input id="s4" type="radio" name="rating" value="4"><label for="s4">★</label>
-      <input id="s5" type="radio" name="rating" value="5"><label for="s5">★</label>
-    </div>
-  </div>
 
-      Email (optional)
-        <input type="email" id="fbEmail" placeholder="you@example.com" autocomplete="email">
-      </label>
-      <label style="flex:1;">
-        Rating
+  <form id="feedbackForm" novalidate>
+    <div class="row" style="flex-direction:column; gap:.6rem;">
+      <div>
+        <div class="hint" style="margin-bottom:.25rem;">Rating</div>
         <div id="fbStars" class="stars" role="radiogroup" aria-label="Rate">
           <input id="s1" type="radio" name="rating" value="1"><label for="s1">★</label>
           <input id="s2" type="radio" name="rating" value="2"><label for="s2">★</label>
           <input id="s3" type="radio" name="rating" value="3"><label for="s3">★</label>
           <input id="s4" type="radio" name="rating" value="4"><label for="s4">★</label>
           <input id="s5" type="radio" name="rating" value="5"><label for="s5">★</label>
-
         </div>
+      </div>
+
+      <label style="width:100%;">
+        Email (optional)
+        <input type="email" id="fbEmail" placeholder="you@example.com" autocomplete="email">
       </label>
     </div>
 
@@ -172,7 +169,7 @@
       <small class="hint" style="float:right;"><span id="fbCount">0</span>/600</small>
     </label>
 
-    <!-- Kontekstas iš Results (užpildys JS) -->
+    <!-- Hidden context (užpildys JS) -->
     <input type="hidden" id="fbWeight">
     <input type="hidden" id="fbAvg">
     <input type="hidden" id="fbTop3">
@@ -180,13 +177,13 @@
     <input type="hidden" id="fbV">
     <input type="hidden" id="fbTs">
 
-
     <div class="row" style="margin-top:.8rem;">
       <button class="btn" type="submit" id="fbSend">Send Feedback</button>
       <span id="fbStatus" class="hint" style="margin-left:.6rem;"></span>
     </div>
   </form>
 </section>
+
 
 
   <main class="container">
