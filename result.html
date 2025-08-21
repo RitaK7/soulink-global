@@ -95,6 +95,16 @@
   .insights-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.8rem; }
   @media (max-width:900px){ .insights-grid{ grid-template-columns:1fr; } }
   .pill{ display:inline-block; padding:.3rem .6rem; border-radius:999px; border:1px solid var(--stroke); background:rgba(0,253,216,.08); }
+  /* Feedback stars */
+  #fbStars{ display:flex; gap:.35rem; align-items:center; }
+  #fbStars input{ display:none; }                 /* paslepiam radijo burbuliukus */
+  #fbStars label{
+  cursor:pointer; font-size:1.6rem; line-height:1;
+  color:rgba(0,253,216,.45); transition:opacity .15s, transform .1s;
+  text-shadow:0 0 6px rgba(0,253,216,.25);
+}
+  #fbStars label.active{ color:var(--accent); transform:translateY(-1px); }
+
 
   /* Print */
   @media print{
@@ -139,6 +149,7 @@
           <input id="s3" type="radio" name="rating" value="3"><label for="s3">★</label>
           <input id="s4" type="radio" name="rating" value="4"><label for="s4">★</label>
           <input id="s5" type="radio" name="rating" value="5"><label for="s5">★</label>
+
         </div>
       </label>
     </div>
@@ -155,6 +166,8 @@
     <input type="hidden" id="fbTop3">
     <input type="hidden" id="fbH">
     <input type="hidden" id="fbV">
+    <input type="hidden" id="fbTs">
+
 
     <div class="row" style="margin-top:.8rem;">
       <button class="btn" type="submit" id="fbSend">Send Feedback</button>
@@ -214,6 +227,7 @@
 
         <p id="empty" class="hint" style="display:none; margin-top:.6rem;">No friends yet. Add some on the Friends page.</p>
       </section>
+      </div> <!-- ← uždarom .grid -->
   </main>
 
   <footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
