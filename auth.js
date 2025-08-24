@@ -43,15 +43,16 @@ function hasBetaAccess() {
   if (isPublicPage()) return;
   if (!hasBetaAccess()) {
     try {
-      // Apsauga: išvalyk bet kokias apėjimo būsenas
       sessionStorage.removeItem("soulinkBeta");
-      // Peradresuok į login
-      window.location.replace(BETA_LOGIN_PAGE);
+      const page = currentPageName();
+      const url  = `${BETA_LOGIN_PAGE}?next=${encodeURIComponent(page)}`;
+      window.location.replace(url);
     } catch {
       window.location.href = BETA_LOGIN_PAGE;
     }
   }
 })();
+
 
 // 🔓 Logout util (naudok iš bet kurio puslapio)
 window.soulinkLogout = function () {

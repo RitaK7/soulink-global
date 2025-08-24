@@ -132,38 +132,39 @@
   </footer>
 
   <script>
-  (function(){
-    const PASS = 'soulink332332'; // tavo beta slaptažodis
-    const form = document.getElementById('betaForm');
-    const inp  = document.getElementById('betaPassword');
-    const msg  = document.getElementById('betaError');
+(function(){
+  const PASS = 'soulink332332';            // tavo beta slaptažodis
+  const form = document.getElementById('betaForm');
+  const inp  = document.getElementById('betaPassword');
+  const msg  = document.getElementById('betaError');
 
-    // Kur siųsti po sėkmingo login
-    const params = new URLSearchParams(location.search);
-    const nextUrl = params.get('next') || 'home.html'; // gali rinktis 'home.html' ar 'quiz.html'
+  // Po login – kur siųsti? (numatytasis: quiz.html)
+  const params = new URLSearchParams(location.search);
+  const nextUrl = params.get('next') || 'quiz.html';
 
-    // Jei jau turime prieigą — leidžiam praeiti
-    if (sessionStorage.getItem('soulinkBeta') === 'true') {
+  // Jei jau turime prieigą — leidžiam praeiti
+  if (sessionStorage.getItem('soulinkBeta') === 'true') {
+    location.replace(nextUrl);
+    return;
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const val = (inp.value || '').trim();
+    if (val === PASS) {
+      sessionStorage.setItem('soulinkBeta', 'true');
+      sessionStorage.setItem('soulinkBetaStartedAt', String(Date.now()));
       location.replace(nextUrl);
-      return;
+    } else {
+      msg.style.display = 'block';
+      inp.focus();
+      inp.select();
     }
+  });
 
-    form.addEventListener('submit', function(e){
-      e.preventDefault();
-      const val = (inp.value || '').trim();
-      if (val === PASS) {
-        sessionStorage.setItem('soulinkBeta', 'true');
-        sessionStorage.setItem('soulinkBetaStartedAt', String(Date.now()));
-        location.replace(nextUrl);
-      } else {
-        msg.style.display = 'block';
-        inp.focus();
-        inp.select();
-      }
-    });
-
-    inp.focus();
-  })();
+  inp.focus();
+})();
 </script>
+
 </body>
 </html>
