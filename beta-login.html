@@ -140,7 +140,7 @@
 
   // Po login – kur siųsti? (numatytasis: quiz.html)
   const params = new URLSearchParams(location.search);
-  const nextUrl = params.get('next') || 'quiz.html';
+  const nextUrl = params.get('next') || 'home.html';
 
   // Jei jau turime prieigą — leidžiam praeiti
   if (sessionStorage.getItem('soulinkBeta') === 'true') {
