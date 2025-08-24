@@ -4,7 +4,7 @@
 */
 
 // ✅ Nustatyk savo login puslapio kelią (pakeisk jei reikia)
-const BETA_LOGIN_PAGE = "index.html"; // arba "login.html"
+const BETA_LOGIN_PAGE = "beta-login.html"; // arba "login.html"
 
 // ❗Puslapiai, kurie neprivalo reikalauti beta (pvz., vieša privatumo politika)
 const PUBLIC_PAGES = new Set([
