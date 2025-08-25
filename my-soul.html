@@ -6,69 +6,103 @@
   <title>Soulink · My Soul</title>
   <style>
     :root{
-      --bg:#003c43;
-      --fg:#eaf8f6;
-      --muted:#bde5df;
-      --accent:#00fdd8;
-      --card:#014a52;
+      --bg:#003c43;          /* dark teal */
+      --fg:#eaf8f6;          /* light text */
+      --muted:#bde5df;       /* muted text */
+      --accent:#00fdd8;      /* neon */
+      --card:#014a52;        /* card base */
       --border:rgba(0,253,216,.35);
       --shadow:0 0 0 1px var(--border), 0 10px 30px rgba(0,253,216,.06), 0 0 40px rgba(0,253,216,.04) inset;
+      --maxw:1100px;
     }
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Arial,sans-serif}
     a{color:var(--accent);text-decoration:none}
-    .container{max-width:1100px;margin:0 auto;padding:24px;}
+    img{max-width:100%;height:auto}
+    .container{max-width:var(--maxw);margin:0 auto;padding:24px}
 
-    /* Navbar */
+    /* NAVBAR */
     .navbar{position:sticky;top:0;z-index:50;background:rgba(0,60,67,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
-    .nav-inner{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;}
-    .brand{font-weight:700;color:var(--accent)}
+    .navbar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transform:scaleX(.2);transform-origin:center;transition:opacity .25s ease, transform .25s ease}
+    .navbar.scrolled::after{opacity:.85;transform:scaleX(1)}
+    .nav-inner{display:flex;justify-content:space-between;align-items:center;padding:10px 16px}
+    .brand{font-weight:800;color:var(--accent);letter-spacing:.4px}
     .nav-links{display:flex;gap:14px;flex-wrap:wrap}
-    .nav-links a{padding:6px 10px;border-radius:8px}
-    .nav-links a:hover{background:rgba(0,253,216,.08)}
+    .nav-links a{padding:8px 10px;border-radius:10px;border:1px solid transparent;transition:box-shadow .15s ease, border-color .15s ease}
+    .nav-links a:hover{border-color:var(--border);box-shadow:0 0 0 1px var(--border),0 0 16px rgba(0,253,216,.18)}
+    .nav-links a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     .hamburger{display:none}
+    .hamburger button{appearance:none;background:transparent;border:1px solid var(--border);color:var(--fg);padding:8px 10px;border-radius:10px;cursor:pointer}
     @media(max-width:800px){.nav-links{display:none}.hamburger{display:block}}
 
-    /* Drawer */
+    /* DRAWER */
     .drawer{position:fixed;inset:0;display:none}
     .drawer.open{display:block}
     .drawer .backdrop{position:absolute;inset:0;background:rgba(0,0,0,.4)}
-    .drawer .panel{position:absolute;top:0;right:0;width:75%;max-width:320px;height:100%;background:#003c43;border-left:1px solid var(--border);padding:20px;}
-    .drawer .panel a{display:block;padding:12px 0}
+    .drawer .panel{position:absolute;top:0;right:0;width:min(82vw,360px);height:100%;background:#003c43;border-left:1px solid var(--border);padding:18px;transform:translateX(100%);transition:transform .25s ease}
+    .drawer.open .panel{transform:translateX(0)}
+    @media (prefers-reduced-motion: reduce){.drawer .panel{transition:none}}
+    .drawer .panel a{display:block;padding:12px 8px;border-radius:10px}
+    .drawer .panel a:hover{background:rgba(0,253,216,.08)}
 
-    /* Header */
-    .header{display:flex;align-items:center;gap:16px;padding:16px;border-radius:16px;background:linear-gradient(180deg,rgba(0,253,216,.06),rgba(0,253,216,.02));box-shadow:var(--shadow);}
+    /* HEADER */
+    .header{display:flex;align-items:center;gap:18px;padding:16px;border-radius:18px;background:linear-gradient(180deg,rgba(0,253,216,.06),rgba(0,253,216,.02));box-shadow:var(--shadow)}
     .avatar{position:relative}
-    .avatar img{width:70px;height:70px;border-radius:999px;object-fit:cover;border:1px solid var(--border)}
+    .avatar img{width:76px;height:76px;border-radius:999px;object-fit:cover;border:1px solid var(--border);box-shadow:0 0 0 3px rgba(0,253,216,.08)}
+    .avatar::before{content:"";position:absolute;inset:-6px;border-radius:999px;border:1px solid rgba(0,253,216,.25);box-shadow:0 0 30px rgba(0,253,216,.14);animation:pulse 6s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
+    @media (prefers-reduced-motion: reduce){.avatar::before{animation:none}}
     .name-and-tags h1{margin:0;font-size:1.6rem}
     .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-    .tag{font-size:.8rem;padding:6px 10px;border-radius:999px;background:rgba(0,253,216,.08);border:1px solid var(--border)}
+    .tag{font-size:.85rem;padding:6px 10px;border-radius:999px;background:rgba(0,253,216,.08);border:1px solid var(--border)}
 
-    /* Cards */
-    .card{background:linear-gradient(180deg,rgba(1,74,82,.7),rgba(1,74,82,.55));border:1px solid var(--border);box-shadow:var(--shadow);border-radius:18px;padding:18px;margin:18px 0}
+    /* CARDS */
+    .card{background:linear-gradient(180deg,rgba(1,74,82,.74),rgba(1,74,82,.56));border:1px solid var(--border);box-shadow:var(--shadow);border-radius:18px;padding:18px;margin:22px 0}
     .card-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+
     .chips{display:flex;flex-wrap:wrap;gap:10px}
-    .chip{padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:rgba(0,253,216,.06)}
+    .chip{padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:rgba(0,253,216,.06);font-size:.92rem;white-space:nowrap}
     .chip.primary{background:rgba(0,253,216,.16);box-shadow:0 0 20px rgba(0,253,216,.08) inset}
+    .chip.gem{background:rgba(0,253,216,.1);box-shadow:inset 0 0 20px rgba(0,253,216,.08)}
+    .hobby{display:inline-flex;align-items:center;gap:8px}
+    .hobby .ico{width:1.1rem;display:inline-block;text-align:center}
+
     .empty{color:var(--muted)}
 
-    /* Actions */
-    .actions-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-end;margin:24px 0}
-    .btn{border:none;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:600}
-    .btn.primary{background:var(--accent);color:#003c43}
-    .btn.outline{background:transparent;color:var(--fg);border:1px solid var(--border)}
-    .btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--border)}
+    .typewriter p{margin:10px 0 0;min-height:18px;opacity:0;transform:translateY(4px)}
+    .typewriter p.show{opacity:1;transform:none;transition:opacity .25s ease, transform .25s ease}
+    @media (prefers-reduced-motion: reduce){.typewriter p{opacity:1;transform:none;transition:none}}
 
-    footer{margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:.9rem;display:flex;justify-content:space-between;flex-wrap:wrap}
-    @media(max-width:720px){.header{flex-direction:column;align-items:flex-start}.actions-row{justify-content:flex-start}}
+    /* Sparkle */
+    .sparkle{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);pointer-events:none;animation:sparkleUp .3s ease-out forwards}
+    @keyframes sparkleUp{from{transform:translate(-50%,-50%) scale(1);opacity:1}to{transform:translate(-50%,-120%) scale(.6);opacity:0}}
+    @media (prefers-reduced-motion: reduce){.sparkle{animation:none;display:none}}
+
+    /* ACTIONS */
+    .actions-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-end;margin:28px 0}
+    .btn{appearance:none;border:none;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700;min-height:44px}
+    .btn.primary{background:var(--accent);color:#003136}
+    .btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--border)}
+    .btn.outline{background:transparent;color:var(--fg);border:1px solid var(--border)}
+    .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+    footer{margin:40px 0 16px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:.95rem;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+    /* RESPONSIVE spacing polish */
+    @media (max-width:760px){
+      .header{flex-direction:column;align-items:flex-start}
+      .card{margin:26px 0}
+      .actions-row{justify-content:flex-start}
+    }
   </style>
 </head>
 <body>
   <!-- NAVBAR -->
-  <nav class="navbar">
+  <nav class="navbar" role="navigation" aria-label="Main">
     <div class="nav-inner">
       <div class="brand">Soulink</div>
-      <div class="nav-links">
+      <div class="nav-links" aria-label="Primary">
         <a href="index.html">Home</a>
         <a href="quiz.html">Quiz</a>
         <a href="edit-profile.html">Edit Profile</a>
@@ -82,17 +116,18 @@
         <a href="signup.html">Sign Up</a>
         <a href="#" id="logoutLink">Log Out</a>
       </div>
-      <div class="hamburger"><button id="openDrawer">☰</button></div>
+      <div class="hamburger"><button id="openDrawer" aria-label="Open menu">☰ Menu</button></div>
     </div>
   </nav>
 
-  <div class="drawer" id="drawer">
-    <div class="backdrop" id="drawerBackdrop"></div>
-    <div class="panel">
+  <!-- MOBILE DRAWER -->
+  <div class="drawer" id="drawer" aria-hidden="true">
+    <div class="backdrop" id="drawerBackdrop" tabindex="-1" aria-label="Close"></div>
+    <aside class="panel" role="dialog" aria-modal="true" aria-label="Navigation">
       <a href="index.html">Home</a>
       <a href="quiz.html">Quiz</a>
       <a href="edit-profile.html">Edit Profile</a>
-      <a href="my-soul.html">My Soul</a>
+      <a href="my-soul.html" aria-current="page">My Soul</a>
       <a href="soul-chart.html">Soul Chart</a>
       <a href="soul-coach.html">Soul Coach</a>
       <a href="match.html">Match</a>
@@ -101,14 +136,14 @@
       <a href="login.html">Log In</a>
       <a href="signup.html">Sign Up</a>
       <a href="#" id="logoutLinkMobile">Log Out</a>
-      <button id="closeDrawer" class="btn ghost">Close</button>
-    </div>
+      <button class="btn ghost" id="closeDrawer" style="margin-top:8px">Close</button>
+    </aside>
   </div>
 
   <div class="container">
-    <!-- HEADER -->
+    <!-- COSMIC HEADER -->
     <header class="header">
-      <div class="avatar"><img id="avatar" alt="avatar" /></div>
+      <div class="avatar"><img id="avatar" alt="Profile photo" /></div>
       <div class="name-and-tags">
         <h1 id="userName">My Soul</h1>
         <div class="tags">
@@ -124,12 +159,12 @@
     <section class="card">
       <div class="card-header">
         <h2>🌌 Soul Portrait of <span id="nameInStory">You</span></h2>
-        <div>
+        <div style="position:relative">
           <button id="regenBtn" class="btn ghost">Regenerate ✨</button>
           <button id="copyBtn" class="btn ghost">Copy</button>
         </div>
       </div>
-      <div id="storyText"></div>
+      <div id="storyText" class="typewriter" aria-live="polite"></div>
     </section>
 
     <section class="card">
@@ -152,7 +187,7 @@
 
     <section class="card">
       <h3>🕊️ Soul Summary</h3>
-      <p id="summaryText" class="empty"></p>
+      <p id="summaryText" class="empty" aria-live="polite"></p>
     </section>
 
     <section class="actions-row">
@@ -162,33 +197,199 @@
     </section>
 
     <footer>
-      <span>© 2025 Soulink.global | All rights reserved</span>
-      <span>Created with love by Soulink Team</span>
+      <span>© 2025 Soulink.global | Created with love by Soulink Team</span>
     </footer>
   </div>
 
   <script>
     (function(){
       const $=s=>document.querySelector(s);
-      const ui={avatar:$('#avatar'),userName:$('#userName'),nameInStory:$('#nameInStory'),zodiacTag:$('#zodiacTag'),chineseTag:$('#chineseTag'),lifePathTag:$('#lifePathTag'),connectionTag:$('#connectionTag'),storyText:$('#storyText'),loveList:$('#loveList'),loveEmpty:$('#loveEmpty'),valuesList:$('#valuesList'),valuesEmpty:$('#valuesEmpty'),hobbiesList:$('#hobbiesList'),hobbiesEmpty:$('#hobbiesEmpty'),summaryText:$('#summaryText'),regenBtn:$('#regenBtn'),copyBtn:$('#copyBtn'),editBtn:$('#editBtn'),homeBtn:$('#homeBtn'),downloadBtn:$('#downloadBtn'),openDrawer:$('#openDrawer'),closeDrawer:$('#closeDrawer'),drawer:$('#drawer'),drawerBackdrop:$('#drawerBackdrop'),logout:$('#logoutLink'),logoutM:$('#logoutLinkMobile')};
+      const ui={
+        avatar:$('#avatar'), userName:$('#userName'), nameInStory:$('#nameInStory'),
+        zodiacTag:$('#zodiacTag'), chineseTag:$('#chineseTag'), lifePathTag:$('#lifePathTag'), connectionTag:$('#connectionTag'),
+        storyText:$('#storyText'),
+        loveList:$('#loveList'), loveEmpty:$('#loveEmpty'),
+        valuesList:$('#valuesList'), valuesEmpty:$('#valuesEmpty'),
+        hobbiesList:$('#hobbiesList'), hobbiesEmpty:$('#hobbiesEmpty'),
+        summaryText:$('#summaryText'),
+        regenBtn:$('#regenBtn'), copyBtn:$('#copyBtn'),
+        editBtn:$('#editBtn'), homeBtn:$('#homeBtn'), downloadBtn:$('#downloadBtn'),
+        openDrawer:$('#openDrawer'), closeDrawer:$('#closeDrawer'), drawer:$('#drawer'), drawerBackdrop:$('#drawerBackdrop'),
+        logout:$('#logoutLink'), logoutM:$('#logoutLinkMobile'),
+        navbar:document.querySelector('.navbar')
+      };
 
-      function parse(){try{const raw=localStorage.getItem('soulQuiz');return raw?JSON.parse(raw):{}}catch{return{}}}
-      function list(v){if(Array.isArray(v))return v;if(typeof v==='string'){return v.split(/[,\n]/).map(x=>x.trim()).filter(Boolean)}return[]}
-      function zodiac(iso){if(!iso)return null;const d=new Date(iso);if(isNaN(d))return null;const m=d.getMonth()+1,day=d.getDate();const z=[['Capricorn',1,19],['Aquarius',2,18],['Pisces',3,20],['Aries',4,19],['Taurus',5,20],['Gemini',6,20],['Cancer',7,22],['Leo',8,22],['Virgo',9,22],['Libra',10,22],['Scorpio',11,21],['Sagittarius',12,21],['Capricorn',12,31]];for(let i=0;i<z.length-1;i++){const [nm,mm,dd]=z[i];const [nn,nmth,ndd]=z[i+1];if((m===mm&&day<=dd)||(m===nmth&&day<=ndd&&i===z.length-2))return nm;if(m< nmth&&m>mm)return nm;}return'Capricorn'}
-      function chinese(y){if(!y)return null;const animals=['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig'];return animals[(y-1900)%12]}
-      function life(iso){if(!iso)return null;const digits=iso.replace(/\D/g,'');if(!digits)return null;const master=n=>[11,22,33].includes(n);const sum=n=>String(n).split('').reduce((a,b)=>a+ +b,0);let n=digits.split('').reduce((a,b)=>a+ +b,0);while(n>9&&!master(n))n=sum(n);return n}
+      // ===== helpers =====
+      function parse(){ try{ const raw=localStorage.getItem('soulQuiz'); return raw? JSON.parse(raw): {}; } catch { return {}; } }
+      function list(v){ if(Array.isArray(v)) return v; if(typeof v==='string') return v.split(/[\n,]/).map(s=>s.trim()).filter(Boolean); return []; }
+      function zodiac(iso){ if(!iso) return null; const d=new Date(iso); if(isNaN(d)) return null; const m=d.getMonth()+1,day=d.getDate(); const inR=(m,d,m1,d1,m2,d2)=> (m===m1&&d>=d1)||(m===m2&&d<=d2)||(m>m1&&m<m2)||(m1>m2&&(m>=m1||m<=m2)); if(inR(m,day,3,21,4,19))return'Aries'; if(inR(m,day,4,20,5,20))return'Taurus'; if(inR(m,day,5,21,6,20))return'Gemini'; if(inR(m,day,6,21,7,22))return'Cancer'; if(inR(m,day,7,23,8,22))return'Leo'; if(inR(m,day,8,23,9,22))return'Virgo'; if(inR(m,day,9,23,10,22))return'Libra'; if(inR(m,day,10,23,11,21))return'Scorpio'; if(inR(m,day,11,22,12,21))return'Sagittarius'; if(inR(m,day,12,22,1,19))return'Capricorn'; if(inR(m,day,1,20,2,18))return'Aquarius'; if(inR(m,day,2,19,3,20))return'Pisces'; return null; }
+      function chinese(y){ if(!y) return null; const animals=['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig']; const i=(y-1900)%12; return animals[(i+12)%12]; }
+      function life(iso){ if(!iso) return null; const digits=String(iso).replace(/\D/g,''); if(!digits) return null; const master=n=>[11,22,33].includes(n); const sum=n=>String(n).split('').reduce((a,b)=>a+ +b,0); let n=digits.split('').reduce((a,b)=>a+ +b,0); while(n>9&&!master(n)) n=sum(n); return n; }
+      function hobbyIcon(label){ const s=(label||'').toLowerCase(); const map=[ ['travel','✈️'], ['yoga','🧘'], ['music','🎵'], ['reading','📚'], ['books','📚'], ['gym','🏋️'], ['running','🏃'], ['dance','💃'], ['art','🎨'], ['photo','📷'], ['cook','🍳'], ['bake','🧁'], ['hiking','🥾'], ['garden','🌿'], ['meditation','🕯️'], ['movie','🎬'], ['game','🎮'] ]; for(const [k,ico] of map){ if(s.includes(k)) return ico; } return '✨'; }
+      const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      function buildStory(d){const n=d.name||'Friend';const z=d.zodiac||zodiac(d.birthday);const lp=d.lifePath||life(d.birthday);const loves=list(d.loveLanguages);const p=loves[0];const vals=list(d.values);const hobs=list(d.hobbies);let out=`Your soul shines brightly, ${n}.`;if(z)out+=` Born under ${z}, you carry its gifts.`;if(lp)out+=` Life Path ${lp} is your compass.`;if(p)out+=` Your heart speaks ${p}.`;if(vals.length)out+=` You value ${vals.join(', ')}.`;if(hobs.length)out+=` You love ${hobs.join(', ')}.`;return out}
-      function buildSummary(d){const n=d.name||'You';const loves=list(d.loveLanguages);const p=loves[0];const ct=d.connectionType||'connections';if(p)return`${n} is open to ${ct}, with a heart blossoming in ${p}.`;return`${n} is seeking ${ct}, guided by values and light.`}
+      // ===== Poetic two-paragraph story with bold key phrases =====
+      function buildPoeticParagraphs(d){
+        const n=d.name||'Friend';
+        const z=d.zodiac || zodiac(d.birthday);
+        const lp=d.lifePath || life(d.birthday);
+        const loves=list(d.loveLanguages||d.loveLanguage); const p=loves[0]; const others=loves.slice(1);
+        const vals=list(d.values); const topVals=vals.slice(0,2);
+        const hobs=list(d.hobbies).slice(0,3);
 
-      function render(){const d=parse();ui.avatar.src=d.profilePhoto1||'';ui.userName.textContent=d.name||'My Soul';ui.nameInStory.textContent=d.name||'You';const z=d.zodiac||zodiac(d.birthday);if(z){ui.zodiacTag.textContent=z;ui.zodiacTag.hidden=false}const cz=chinese((d.birthday||'').slice(0,4));if(cz){ui.chineseTag.textContent=cz;ui.chineseTag.hidden=false}const lp=d.lifePath||life(d.birthday);if(lp){ui.lifePathTag.textContent='Life Path '+lp;ui.lifePathTag.hidden=false}if(d.connectionType){ui.connectionTag.textContent=d.connectionType;ui.connectionTag.hidden=false}ui.storyText.textContent=buildStory(d);ui.loveList.innerHTML='';const loves=list(d.loveLanguages);if(loves.length){loves.forEach((l,i)=>{const s=document.createElement('span');s.className='chip'+(i===0?' primary':'');s.textContent=i===0?l+' · Primary':l;ui.loveList.appendChild(s)});ui.loveEmpty.hidden=true}else ui.loveEmpty.hidden=false;ui.valuesList.innerHTML='';const vals=list(d.values);if(vals.length){vals.forEach(v=>{const s=document.createElement('span');s.className='chip';s.textContent=v;ui.valuesList.appendChild(s)});ui.valuesEmpty.hidden=true}else ui.valuesEmpty.hidden=false;ui.hobbiesList.innerHTML='';const hobs=list(d.hobbies);if(hobs.length){hobs.forEach(h=>{const s=document.createElement('span');s.className='chip';s.textContent=h;ui.hobbiesList.appendChild(s)});ui.hobbiesEmpty.hidden=true}else ui.hobbiesEmpty.hidden=false;ui.summaryText.textContent=buildSummary(d)}
+        const p1Parts=[];
+        p1Parts.push(`Your light has a calm shimmer, ${n}—a star that remembers its sky.`);
+        if(z) p1Parts.push(`Born under ${z}, you carry its quiet signature.`);
+        if(lp!=null) p1Parts.push(`Life Path ${lp} is your inner compass, turning toward what feels true.`);
+        if(p && others.length) p1Parts.push(`Your heart speaks ${p} first, yet understands ${others.join(', ')} like harmonies.`);
+        else if(p) p1Parts.push(`Your heart speaks ${p}, a language that blossoms when it’s heard.`);
 
-      function bind(){ui.regenBtn.onclick=render;ui.copyBtn.onclick=()=>{const t=ui.storyText.textContent;if(t)navigator.clipboard.writeText(t)};ui.editBtn.onclick=()=>location.href='edit-profile.html';ui.homeBtn.onclick=()=>location.href='index.html';ui.downloadBtn.onclick=()=>alert('PDF export coming soon');ui.openDrawer.onclick=()=>ui.drawer.classList.add('open');ui.closeDrawer.onclick=()=>ui.drawer.classList.remove('open');ui.drawerBackdrop.onclick=()=>ui.drawer.classList.remove('open');ui.logout.onclick=()=>{localStorage.clear();location.href='index.html'};ui.logoutM.onclick=()=>{localStorage.clear();location.href='index.html'}}
+        const p2Parts=[];
+        if(topVals.length) p2Parts.push(`You honor ${topVals.join(', ')}—your pocketful of crystals.`);
+        if(hobs.length) p2Parts.push(`Rituals like ${hobs.join(', ')} water the garden of your spirit.`);
+        p2Parts.push(`Walk softly, shine openly—the path brightens as you move.`);
+        return [p1Parts.join(' '), p2Parts.join(' ')];
+      }
 
-      document.addEventListener('DOMContentLoaded',()=>{render();bind()});
+      function typeParagraphs(container, paragraphs, boldPhrases){
+        container.innerHTML='';
+        let idx=0; const total=paragraphs.length;
+        const typeOne = ()=>{
+          if(idx>=total) return;
+          const pEl=document.createElement('p'); container.appendChild(pEl); pEl.classList.add('show');
+          if(reduceMotion){ pEl.textContent = paragraphs[idx]; applyBold(pEl, boldPhrases); idx++; return typeOne(); }
+          const text=paragraphs[idx++];
+          const dur = 1200 + Math.floor(Math.random()*400); // 1.2–1.6s
+          const steps = Math.max(20, Math.ceil(text.length/2));
+          const interval = Math.max(12, Math.floor(dur/steps));
+          let i=0; const id=setInterval(()=>{
+            i+=Math.ceil(text.length/steps);
+            pEl.textContent = text.slice(0, Math.min(i, text.length));
+            if(i>=text.length){ clearInterval(id); applyBold(pEl, boldPhrases); setTimeout(typeOne, 120); }
+          }, interval);
+        };
+        typeOne();
+      }
+
+      function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+      function applyBold(pEl, phrases){
+        let html = pEl.textContent; if(!html) return;
+        let used=0;
+        for(const ph of phrases){
+          if(!ph || used>=3) break;
+          const re = new RegExp('(\\b'+escapeRegExp(ph)+'\\b)','i');
+          if(re.test(html)){ html = html.replace(re,'<strong>$1</strong>'); used++; }
+        }
+        pEl.innerHTML = html;
+      }
+
+      // ===== CHIPS with Show more =====
+      function renderChipGroup(arr, container, emptyEl, {type='values'}={}){
+        container.innerHTML='';
+        const MAX=10; const total=arr.length;
+        if(!total){ emptyEl.hidden=false; return; } else emptyEl.hidden=true;
+        const showBtn=document.createElement('button');
+        showBtn.className='btn ghost'; showBtn.style.padding='6px 10px'; showBtn.style.borderRadius='999px';
+        let expanded=false;
+        function paint(){
+          container.innerHTML='';
+          const items = expanded? arr : arr.slice(0,MAX);
+          items.forEach(v=>{
+            const s=document.createElement('span');
+            s.className = 'chip' + (type==='values'? ' gem':'') + (type==='hobby'?' hobby':'');
+            if(type==='hobby'){
+              const ico=document.createElement('span'); ico.className='ico'; ico.textContent=hobbyIcon(v);
+              const t=document.createElement('span'); t.textContent=v; s.appendChild(ico); s.appendChild(t);
+            } else { s.textContent=v; }
+            container.appendChild(s);
+          });
+          if(total>MAX){ showBtn.textContent = expanded? 'Show less' : `Show more (+${total-MAX})`; container.appendChild(showBtn); }
+        }
+        showBtn.addEventListener('click', ()=>{ expanded=!expanded; paint(); });
+        paint();
+      }
+
+      // ===== RENDER =====
+      function render(){
+        const d=parse();
+        // Avatar with placeholder
+        const ph = 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><defs><radialGradient id="g" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00fdd8" stop-opacity=".35"/><stop offset="100%" stop-color="#00fdd8" stop-opacity=".05"/></radialGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><circle cx="48" cy="38" r="18" fill="#0a6a6f"/><rect x="20" y="58" width="56" height="22" rx="11" fill="#0a6a6f"/></svg>');
+        ui.avatar.src = d.profilePhoto1 || localStorage.getItem('profilePhoto1') || ph;
+        ui.avatar.alt = 'Profile photo';
+
+        // Name & chips
+        const name=d.name||'My Soul'; ui.userName.textContent=name; ui.nameInStory.textContent=name;
+        const z=d.zodiac||zodiac(d.birthday); if(z){ ui.zodiacTag.textContent=z; ui.zodiacTag.hidden=false; }
+        const yr = (()=>{ if(d.birthday){ const dt=new Date(d.birthday); if(!isNaN(dt)) return dt.getFullYear(); const y=String(d.birthday).slice(0,4); if(/^\d{4}$/.test(y)) return Number(y);} return null; })();
+        const cz=chinese(yr); if(cz){ ui.chineseTag.textContent=cz; ui.chineseTag.hidden=false; }
+        const lp=d.lifePath||life(d.birthday); if(lp!=null){ ui.lifePathTag.textContent='Life Path '+lp; ui.lifePathTag.hidden=false; }
+        if(d.connectionType){ ui.connectionTag.textContent=d.connectionType; ui.connectionTag.hidden=false; }
+
+        // Build bold phrases (primary love + top 2 values)
+        const loves=list(d.loveLanguages||d.loveLanguage); const primary = loves[0];
+        const vals=list(d.values); const bolds=[primary, vals[0], vals[1]].filter(Boolean);
+
+        // Story — two paragraphs with typewriter per paragraph
+        const paragraphs=buildPoeticParagraphs(d);
+        typeParagraphs(ui.storyText, paragraphs, bolds);
+
+        // Love languages
+        ui.loveList.innerHTML='';
+        if(loves.length){
+          loves.forEach((l,i)=>{ const s=document.createElement('span'); s.className='chip'+(i===0?' primary':''); s.textContent=i===0? l+' · Primary' : l; ui.loveList.appendChild(s); });
+          ui.loveEmpty.hidden=true;
+        } else ui.loveEmpty.hidden=false;
+
+        // Values & Hobbies with show more
+        renderChipGroup(list(d.values), ui.valuesList, ui.valuesEmpty, {type:'values'});
+        renderChipGroup(list(d.hobbies), ui.hobbiesList, ui.hobbiesEmpty, {type:'hobby'});
+
+        // Summary — 2–3 inspirational sentences
+        ui.summaryText.textContent = buildSummary(d);
+      }
+
+      function buildSummary(d){
+        const n=d.name||'You';
+        const loves=list(d.loveLanguages||d.loveLanguage); const p=loves[0];
+        const ct=d.connectionType||'meaningful connections';
+        const about=(d.about||'').trim(); if(about) return about;
+        const a = p? `${n} is ready for ${ct}. Your heart blossoms in ${p}—let it be seen.` : `${n} is ready for ${ct}. Lead with your values and steady light.`;
+        const b = `Trust your pace. The right souls will recognize your glow.`;
+        return `${a} ${b}`;
+      }
+
+      // NAV + sparkle + Copy feedback + PDF placeholder
+      function sparkle(el){ if(reduceMotion) return; const r=el.getBoundingClientRect(); const sp=document.createElement('span'); sp.className='sparkle'; sp.style.left=(r.left+r.width-8)+'px'; sp.style.top=(r.top+window.scrollY+8)+'px'; document.body.appendChild(sp); setTimeout(()=>sp.remove(),300); }
+      function exportPdf(){ alert('PDF export coming soon'); }
+
+      function bind(){
+        // navbar underline on scroll
+        const onScroll=()=>{ if(window.scrollY>6) ui.navbar.classList.add('scrolled'); else ui.navbar.classList.remove('scrolled'); };
+        onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+
+        // drawer
+        $('#openDrawer')?.addEventListener('click',()=> ui.drawer.classList.add('open'));
+        $('#closeDrawer')?.addEventListener('click',()=> ui.drawer.classList.remove('open'));
+        $('#drawerBackdrop')?.addEventListener('click',()=> ui.drawer.classList.remove('open'));
+        document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') ui.drawer.classList.remove('open'); });
+
+        // actions
+        ui.regenBtn?.addEventListener('click', (e)=>{ render(); sparkle(e.currentTarget); });
+        ui.copyBtn?.addEventListener('click', ()=>{ const t=[...ui.storyText.querySelectorAll('p')].map(p=>p.textContent).join('\n\n'); if(!t) return; navigator.clipboard.writeText(t).then(()=>{ const prev=ui.copyBtn.textContent; ui.copyBtn.textContent='Copied ✨'; setTimeout(()=> ui.copyBtn.textContent=prev, 900); }); });
+        ui.editBtn?.addEventListener('click', ()=> location.href='edit-profile.html');
+        ui.homeBtn?.addEventListener('click', ()=> location.href='index.html');
+        ui.downloadBtn?.addEventListener('click', exportPdf);
+
+        ui.logout?.addEventListener('click', (e)=>{ e.preventDefault(); localStorage.clear(); location.href='index.html'; });
+        ui.logoutM?.addEventListener('click', (e)=> {
+        e.preventDefault();
+        localStorage.clear();
+        location.href = 'index.html';
+      });
+      }
+
+      document.addEventListener('DOMContentLoaded', ()=>{ render(); bind(); });
     })();
   </script>
 </body>
 </html>
-
-<!-- MAGIC ENHANCEMENTS APPLIED -->
