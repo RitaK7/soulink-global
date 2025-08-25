@@ -3,345 +3,190 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Soulink · My Soul (Skeleton)</title>
+  <title>Soulink · My Soul</title>
   <style>
     :root{
-      --bg:#003c43;          /* Soulink dark teal */
-      --fg:#eaf8f6;          /* light text */
-      --muted:#bde5df;       /* muted text */
-      --accent:#00fdd8;      /* neon glow */
-      --card:#014a52;        /* slightly lighter box */
+      --bg:#003c43;
+      --fg:#eaf8f6;
+      --muted:#bde5df;
+      --accent:#00fdd8;
+      --card:#014a52;
       --border:rgba(0,253,216,.35);
       --shadow:0 0 0 1px var(--border), 0 10px 30px rgba(0,253,216,.06), 0 0 40px rgba(0,253,216,.04) inset;
     }
     *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; background:var(--bg); color:var(--fg);
-      font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;
-      letter-spacing:.2px;
-    }
-    a{color:var(--accent); text-decoration:none}
-    .container{max-width:1100px; margin:0 auto; padding:24px;}
+    body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Arial,sans-serif}
+    a{color:var(--accent);text-decoration:none}
+    .container{max-width:1100px;margin:0 auto;padding:24px;}
+
+    /* Navbar */
+    .navbar{position:sticky;top:0;z-index:50;background:rgba(0,60,67,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+    .nav-inner{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;}
+    .brand{font-weight:700;color:var(--accent)}
+    .nav-links{display:flex;gap:14px;flex-wrap:wrap}
+    .nav-links a{padding:6px 10px;border-radius:8px}
+    .nav-links a:hover{background:rgba(0,253,216,.08)}
+    .hamburger{display:none}
+    @media(max-width:800px){.nav-links{display:none}.hamburger{display:block}}
+
+    /* Drawer */
+    .drawer{position:fixed;inset:0;display:none}
+    .drawer.open{display:block}
+    .drawer .backdrop{position:absolute;inset:0;background:rgba(0,0,0,.4)}
+    .drawer .panel{position:absolute;top:0;right:0;width:75%;max-width:320px;height:100%;background:#003c43;border-left:1px solid var(--border);padding:20px;}
+    .drawer .panel a{display:block;padding:12px 0}
 
     /* Header */
-    .header{display:flex; align-items:center; gap:16px; padding:16px 24px; border-radius:16px; background:linear-gradient(180deg, rgba(0,253,216,.06), rgba(0,253,216,.02)); box-shadow:var(--shadow);}
-    .brand{font-weight:700; letter-spacing:.6px; color:var(--accent)}
-    .user{display:flex; align-items:center; gap:16px; flex-wrap:wrap}
-    .avatar{width:64px; height:64px; border-radius:999px; object-fit:cover; border:1px solid var(--border); box-shadow:0 0 0 3px rgba(0,253,216,.08)}
-    .name-and-tags h1{margin:0; font-size:1.6rem;}
-    .tags{display:flex; gap:8px; flex-wrap:wrap; margin-top:6px}
-    .tag{font-size:.8rem; padding:6px 10px; border-radius:999px; background:rgba(0,253,216,.08); border:1px solid var(--border)}
+    .header{display:flex;align-items:center;gap:16px;padding:16px;border-radius:16px;background:linear-gradient(180deg,rgba(0,253,216,.06),rgba(0,253,216,.02));box-shadow:var(--shadow);}
+    .avatar{position:relative}
+    .avatar img{width:70px;height:70px;border-radius:999px;object-fit:cover;border:1px solid var(--border)}
+    .name-and-tags h1{margin:0;font-size:1.6rem}
+    .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+    .tag{font-size:.8rem;padding:6px 10px;border-radius:999px;background:rgba(0,253,216,.08);border:1px solid var(--border)}
 
     /* Cards */
-    .card{background:linear-gradient(180deg, rgba(1,74,82,.7), rgba(1,74,82,.55)); border:1px solid var(--border); box-shadow:var(--shadow); border-radius:18px; padding:18px; margin:18px 0;}
-    .card h2, .card h3{margin:0 0 10px}
-    .card-header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px}
-
-    /* Sections */
-    .chips{display:flex; flex-wrap:wrap; gap:10px}
-    .chip{padding:8px 12px; border-radius:999px; border:1px solid var(--border); background:rgba(0,253,216,.06); font-size:.9rem}
-    .chip.primary{background:rgba(0,253,216,.16); box-shadow:0 0 20px rgba(0,253,216,.08) inset}
-    .list{display:flex; flex-wrap:wrap; gap:10px}
-
-    .empty{color:var(--muted); font-size:.95rem}
-    .hidden{display:none}
+    .card{background:linear-gradient(180deg,rgba(1,74,82,.7),rgba(1,74,82,.55));border:1px solid var(--border);box-shadow:var(--shadow);border-radius:18px;padding:18px;margin:18px 0}
+    .card-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+    .chips{display:flex;flex-wrap:wrap;gap:10px}
+    .chip{padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:rgba(0,253,216,.06)}
+    .chip.primary{background:rgba(0,253,216,.16);box-shadow:0 0 20px rgba(0,253,216,.08) inset}
+    .empty{color:var(--muted)}
 
     /* Actions */
-    .actions-row{display:flex; flex-wrap:wrap; gap:12px; justify-content:flex-end; margin:24px 0}
-    .btn{appearance:none; border:none; padding:10px 14px; border-radius:12px; cursor:pointer; color:#002b2e; background:var(--muted); font-weight:600}
-    .btn.primary{background:var(--accent);}
-    .btn.ghost{background:transparent; color:var(--fg); border:1px solid var(--border)}
-    .btn.outline{background:transparent; color:var(--fg); border:1px solid var(--border)}
-    .btn:disabled{opacity:.6; cursor:not-allowed}
+    .actions-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-end;margin:24px 0}
+    .btn{border:none;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:600}
+    .btn.primary{background:var(--accent);color:#003c43}
+    .btn.outline{background:transparent;color:var(--fg);border:1px solid var(--border)}
+    .btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--border)}
 
-    /* Typewriter placeholder (simple) */
-    .typewriter{min-height:72px; white-space:pre-wrap}
-    .caret::after{content:"|"; margin-left:2px; opacity:.8; animation:blink 1s step-end infinite}
-    @keyframes blink{50%{opacity:.1}}
-
-    /* Footer */
-    footer{margin:36px 0 12px; padding-top:16px; border-top:1px solid var(--border); color:var(--muted); font-size:.9rem; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap}
-
-    /* Responsive */
-    @media (max-width:720px){
-      .header{flex-direction:column; align-items:flex-start}
-      .card-header{flex-direction:column; align-items:flex-start}
-      .actions-row{justify-content:flex-start}
-    }
+    footer{margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:.9rem;display:flex;justify-content:space-between;flex-wrap:wrap}
+    @media(max-width:720px){.header{flex-direction:column;align-items:flex-start}.actions-row{justify-content:flex-start}}
   </style>
 </head>
 <body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="brand">Soulink</div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="quiz.html">Quiz</a>
+        <a href="edit-profile.html">Edit Profile</a>
+        <a href="my-soul.html" aria-current="page">My Soul</a>
+        <a href="soul-chart.html">Soul Chart</a>
+        <a href="soul-coach.html">Soul Coach</a>
+        <a href="match.html">Match</a>
+        <a href="friends.html">Friends</a>
+        <a href="result.html">Results</a>
+        <a href="login.html">Log In</a>
+        <a href="signup.html">Sign Up</a>
+        <a href="#" id="logoutLink">Log Out</a>
+      </div>
+      <div class="hamburger"><button id="openDrawer">☰</button></div>
+    </div>
+  </nav>
+
+  <div class="drawer" id="drawer">
+    <div class="backdrop" id="drawerBackdrop"></div>
+    <div class="panel">
+      <a href="index.html">Home</a>
+      <a href="quiz.html">Quiz</a>
+      <a href="edit-profile.html">Edit Profile</a>
+      <a href="my-soul.html">My Soul</a>
+      <a href="soul-chart.html">Soul Chart</a>
+      <a href="soul-coach.html">Soul Coach</a>
+      <a href="match.html">Match</a>
+      <a href="friends.html">Friends</a>
+      <a href="result.html">Results</a>
+      <a href="login.html">Log In</a>
+      <a href="signup.html">Sign Up</a>
+      <a href="#" id="logoutLinkMobile">Log Out</a>
+      <button id="closeDrawer" class="btn ghost">Close</button>
+    </div>
+  </div>
+
   <div class="container">
     <!-- HEADER -->
-    <header class="header" id="header">
-      <div class="brand">Soulink</div>
-      <div class="user">
-        <img id="avatar" class="avatar" alt="avatar" />
-        <div class="name-and-tags">
-          <h1 id="userName">My Soul</h1>
-          <div class="tags">
-            <span id="zodiacTag" class="tag hidden"></span>
-            <span id="chineseTag" class="tag hidden"></span>
-            <span id="lifePathTag" class="tag hidden"></span>
-            <span id="connectionTag" class="tag hidden"></span>
-          </div>
+    <header class="header">
+      <div class="avatar"><img id="avatar" alt="avatar" /></div>
+      <div class="name-and-tags">
+        <h1 id="userName">My Soul</h1>
+        <div class="tags">
+          <span id="zodiacTag" class="tag" hidden></span>
+          <span id="chineseTag" class="tag" hidden></span>
+          <span id="lifePathTag" class="tag" hidden></span>
+          <span id="connectionTag" class="tag" hidden></span>
         </div>
       </div>
     </header>
 
-    <!-- STORY CARD -->
-    <section class="card" id="storyCard">
+    <!-- STORY -->
+    <section class="card">
       <div class="card-header">
         <h2>🌌 Soul Portrait of <span id="nameInStory">You</span></h2>
-        <div class="actions-right" style="display:flex; gap:8px">
-          <button id="regenBtn" class="btn ghost" title="Regenerate basic story (placeholder)">Regenerate</button>
-          <button id="copyBtn" class="btn ghost" title="Copy story">Copy</button>
+        <div>
+          <button id="regenBtn" class="btn ghost">Regenerate ✨</button>
+          <button id="copyBtn" class="btn ghost">Copy</button>
         </div>
       </div>
-      <div id="storyText" class="typewriter caret"></div>
+      <div id="storyText"></div>
     </section>
 
-    <!-- LOVE LANGUAGES -->
-    <section class="card" id="loveSection">
+    <section class="card">
       <h3>💖 Love Languages</h3>
       <div id="loveList" class="chips"></div>
-      <p id="loveEmpty" class="empty hidden">Add your love languages in <a href="quiz.html">Quiz</a> or <a href="edit-profile.html">Edit Profile</a>.</p>
+      <p id="loveEmpty" class="empty" hidden>Add love languages in Quiz or Edit Profile.</p>
     </section>
 
-    <!-- VALUES -->
-    <section class="card" id="valuesSection">
+    <section class="card">
       <h3>💎 Values</h3>
       <div id="valuesList" class="chips"></div>
-      <p id="valuesEmpty" class="empty hidden">Add a few values to illuminate your compass ✨</p>
+      <p id="valuesEmpty" class="empty" hidden>Add values to guide your compass ✨</p>
     </section>
 
-    <!-- HOBBIES -->
-    <section class="card" id="hobbiesSection">
+    <section class="card">
       <h3>🌿 Hobbies</h3>
       <div id="hobbiesList" class="chips"></div>
-      <p id="hobbiesEmpty" class="empty hidden">Add 2–3 interests so we can enrich your sky ✨</p>
+      <p id="hobbiesEmpty" class="empty" hidden>Add hobbies to enrich your sky ✨</p>
     </section>
 
-    <!-- SOUL SUMMARY -->
-    <section class="card" id="summarySection">
+    <section class="card">
       <h3>🕊️ Soul Summary</h3>
       <p id="summaryText" class="empty"></p>
     </section>
 
-    <!-- ACTIONS ROW -->
     <section class="actions-row">
       <button id="editBtn" class="btn primary">Edit Profile</button>
-      <button id="downloadBtn" class="btn" disabled title="Coming soon">Download PDF</button>
+      <button id="downloadBtn" class="btn">Download PDF</button>
       <button id="homeBtn" class="btn outline">Home</button>
     </section>
 
-    <!-- FOOTER -->
     <footer>
-      <span>© 2025 Soulink.global</span>
-      <span>Sukurta su meile ir ChatGPT pagalba</span>
+      <span>© 2025 Soulink.global | All rights reserved</span>
+      <span>Created with love by Soulink Team</span>
     </footer>
   </div>
 
   <script>
     (function(){
-      const $ = (sel) => document.querySelector(sel);
-      const byId = (id) => document.getElementById(id);
+      const $=s=>document.querySelector(s);
+      const ui={avatar:$('#avatar'),userName:$('#userName'),nameInStory:$('#nameInStory'),zodiacTag:$('#zodiacTag'),chineseTag:$('#chineseTag'),lifePathTag:$('#lifePathTag'),connectionTag:$('#connectionTag'),storyText:$('#storyText'),loveList:$('#loveList'),loveEmpty:$('#loveEmpty'),valuesList:$('#valuesList'),valuesEmpty:$('#valuesEmpty'),hobbiesList:$('#hobbiesList'),hobbiesEmpty:$('#hobbiesEmpty'),summaryText:$('#summaryText'),regenBtn:$('#regenBtn'),copyBtn:$('#copyBtn'),editBtn:$('#editBtn'),homeBtn:$('#homeBtn'),downloadBtn:$('#downloadBtn'),openDrawer:$('#openDrawer'),closeDrawer:$('#closeDrawer'),drawer:$('#drawer'),drawerBackdrop:$('#drawerBackdrop'),logout:$('#logoutLink'),logoutM:$('#logoutLinkMobile')};
 
-      const ui = {
-        avatar: byId('avatar'),
-        userName: byId('userName'),
-        nameInStory: byId('nameInStory'),
-        zodiacTag: byId('zodiacTag'),
-        chineseTag: byId('chineseTag'),
-        lifePathTag: byId('lifePathTag'),
-        connectionTag: byId('connectionTag'),
-        storyText: byId('storyText'),
-        loveList: byId('loveList'), loveEmpty: byId('loveEmpty'),
-        valuesList: byId('valuesList'), valuesEmpty: byId('valuesEmpty'),
-        hobbiesList: byId('hobbiesList'), hobbiesEmpty: byId('hobbiesEmpty'),
-        summaryText: byId('summaryText'),
-        regenBtn: byId('regenBtn'), copyBtn: byId('copyBtn'),
-        editBtn: byId('editBtn'), homeBtn: byId('homeBtn'), downloadBtn: byId('downloadBtn')
-      };
+      function parse(){try{const raw=localStorage.getItem('soulQuiz');return raw?JSON.parse(raw):{}}catch{return{}}}
+      function list(v){if(Array.isArray(v))return v;if(typeof v==='string'){return v.split(/[,\n]/).map(x=>x.trim()).filter(Boolean)}return[]}
+      function zodiac(iso){if(!iso)return null;const d=new Date(iso);if(isNaN(d))return null;const m=d.getMonth()+1,day=d.getDate();const z=[['Capricorn',1,19],['Aquarius',2,18],['Pisces',3,20],['Aries',4,19],['Taurus',5,20],['Gemini',6,20],['Cancer',7,22],['Leo',8,22],['Virgo',9,22],['Libra',10,22],['Scorpio',11,21],['Sagittarius',12,21],['Capricorn',12,31]];for(let i=0;i<z.length-1;i++){const [nm,mm,dd]=z[i];const [nn,nmth,ndd]=z[i+1];if((m===mm&&day<=dd)||(m===nmth&&day<=ndd&&i===z.length-2))return nm;if(m< nmth&&m>mm)return nm;}return'Capricorn'}
+      function chinese(y){if(!y)return null;const animals=['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig'];return animals[(y-1900)%12]}
+      function life(iso){if(!iso)return null;const digits=iso.replace(/\D/g,'');if(!digits)return null;const master=n=>[11,22,33].includes(n);const sum=n=>String(n).split('').reduce((a,b)=>a+ +b,0);let n=digits.split('').reduce((a,b)=>a+ +b,0);while(n>9&&!master(n))n=sum(n);return n}
 
-      function parseSoulQuiz(){
-        try{
-          const raw = localStorage.getItem('soulQuiz');
-          return raw ? JSON.parse(raw) : {};
-        }catch(e){ return {}; }
-      }
+      function buildStory(d){const n=d.name||'Friend';const z=d.zodiac||zodiac(d.birthday);const lp=d.lifePath||life(d.birthday);const loves=list(d.loveLanguages);const p=loves[0];const vals=list(d.values);const hobs=list(d.hobbies);let out=`Your soul shines brightly, ${n}.`;if(z)out+=` Born under ${z}, you carry its gifts.`;if(lp)out+=` Life Path ${lp} is your compass.`;if(p)out+=` Your heart speaks ${p}.`;if(vals.length)out+=` You value ${vals.join(', ')}.`;if(hobs.length)out+=` You love ${hobs.join(', ')}.`;return out}
+      function buildSummary(d){const n=d.name||'You';const loves=list(d.loveLanguages);const p=loves[0];const ct=d.connectionType||'connections';if(p)return`${n} is open to ${ct}, with a heart blossoming in ${p}.`;return`${n} is seeking ${ct}, guided by values and light.`}
 
-      function normalizeList(v){
-        if(Array.isArray(v)) return v.map(x=>String(x).trim()).filter(Boolean);
-        if(typeof v === 'string'){
-          if(v.includes(',')) return v.split(',').map(x=>x.trim()).filter(Boolean);
-          if(v.includes('\n')) return v.split('\n').map(x=>x.trim()).filter(Boolean);
-          if(v) return [v.trim()];
-        }
-        return [];
-      }
+      function render(){const d=parse();ui.avatar.src=d.profilePhoto1||'';ui.userName.textContent=d.name||'My Soul';ui.nameInStory.textContent=d.name||'You';const z=d.zodiac||zodiac(d.birthday);if(z){ui.zodiacTag.textContent=z;ui.zodiacTag.hidden=false}const cz=chinese((d.birthday||'').slice(0,4));if(cz){ui.chineseTag.textContent=cz;ui.chineseTag.hidden=false}const lp=d.lifePath||life(d.birthday);if(lp){ui.lifePathTag.textContent='Life Path '+lp;ui.lifePathTag.hidden=false}if(d.connectionType){ui.connectionTag.textContent=d.connectionType;ui.connectionTag.hidden=false}ui.storyText.textContent=buildStory(d);ui.loveList.innerHTML='';const loves=list(d.loveLanguages);if(loves.length){loves.forEach((l,i)=>{const s=document.createElement('span');s.className='chip'+(i===0?' primary':'');s.textContent=i===0?l+' · Primary':l;ui.loveList.appendChild(s)});ui.loveEmpty.hidden=true}else ui.loveEmpty.hidden=false;ui.valuesList.innerHTML='';const vals=list(d.values);if(vals.length){vals.forEach(v=>{const s=document.createElement('span');s.className='chip';s.textContent=v;ui.valuesList.appendChild(s)});ui.valuesEmpty.hidden=true}else ui.valuesEmpty.hidden=false;ui.hobbiesList.innerHTML='';const hobs=list(d.hobbies);if(hobs.length){hobs.forEach(h=>{const s=document.createElement('span');s.className='chip';s.textContent=h;ui.hobbiesList.appendChild(s)});ui.hobbiesEmpty.hidden=true}else ui.hobbiesEmpty.hidden=false;ui.summaryText.textContent=buildSummary(d)}
 
-      function zodiacFromDate(iso){
-        if(!iso) return null;
-        const d = new Date(iso);
-        if(isNaN(d.getTime())) return null;
-        const m = d.getUTCMonth()+1, day = d.getUTCDate();
-        const z = [
-          ['Capricorn', 1, 19], ['Aquarius', 2, 18], ['Pisces', 3, 20], ['Aries', 4, 19], ['Taurus', 5, 20], ['Gemini', 6, 20],
-          ['Cancer', 7, 22], ['Leo', 8, 22], ['Virgo', 9, 22], ['Libra',10, 22], ['Scorpio',11, 21], ['Sagittarius',12, 21], ['Capricorn',12,31]
-        ];
-        // Find sign boundary
-        for(let i=0;i<z.length-1;i++){
-          const [name, mm, dd] = z[i];
-          const next = z[i+1];
-          if((m === mm && day <= dd) || (m === next[1] && day <= next[2] && i===z.length-2)) return name;
-          if(m < next[1] && m > mm) return name;
-        }
-        return 'Capricorn';
-      }
+      function bind(){ui.regenBtn.onclick=render;ui.copyBtn.onclick=()=>{const t=ui.storyText.textContent;if(t)navigator.clipboard.writeText(t)};ui.editBtn.onclick=()=>location.href='edit-profile.html';ui.homeBtn.onclick=()=>location.href='index.html';ui.downloadBtn.onclick=()=>alert('PDF export coming soon');ui.openDrawer.onclick=()=>ui.drawer.classList.add('open');ui.closeDrawer.onclick=()=>ui.drawer.classList.remove('open');ui.drawerBackdrop.onclick=()=>ui.drawer.classList.remove('open');ui.logout.onclick=()=>{localStorage.clear();location.href='index.html'};ui.logoutM.onclick=()=>{localStorage.clear();location.href='index.html'}}
 
-      function chineseZodiac(year){
-        if(!year) return null;
-        const animals = ['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig'];
-        // 1900 was Rat
-        const idx = (year - 1900) % 12; return animals[(idx+12)%12];
-      }
-
-      function lifePath(iso){
-        if(!iso) return null;
-        const digits = iso.replace(/\D/g,'');
-        if(!digits) return null;
-        const master = (n)=> n===11||n===22||n===33;
-        const sumDigits = (n)=> String(n).split('').reduce((a,b)=>a+Number(b),0);
-        let n = digits.split('').reduce((a,b)=>a+Number(b),0);
-        while(n>9 && !master(n)) n = sumDigits(n);
-        return n;
-      }
-
-      function pickPrimaryLove(loves){ return loves && loves.length ? loves[0] : null; }
-
-      function typeText(el, text, speed=14){
-        el.classList.add('caret');
-        el.textContent = '';
-        let i=0; const id = setInterval(()=>{
-          el.textContent = text.slice(0, i++);
-          if(i>text.length){ clearInterval(id); el.classList.remove('caret'); }
-        }, speed);
-      }
-
-      function buildBasicStory(data){
-        const name = data.name || 'Friend';
-        const sign = data.zodiac || zodiacFromDate(data.birthday) || '';
-        const lp = data.lifePath || lifePath(data.birthday) || '';
-        const loves = normalizeList(data.loveLanguages || data.loveLanguage);
-        const primary = pickPrimaryLove(loves);
-        const vals = normalizeList(data.values);
-        const hobs = normalizeList(data.hobbies);
-        const parts = [];
-        parts.push(`Tavo siela švyti kaip žvaigždė, ${name}.`);
-        if(sign) parts.push(`Gimei po ${sign} ženklu — jis dovanoja tau unikalias dovanas.`);
-        if(lp) parts.push(`Tavo gyvenimo kelio skaičius ${lp} yra tavo vidinis kompasas.`);
-        if(primary || loves.length){
-          const other = loves.filter(l=>l!==primary);
-          if(primary && other.length){
-            parts.push(`Tavo širdies kalba — ${primary}, bet ji atpažįsta ir ${other.join(', ')}.`);
-          } else if(primary){
-            parts.push(`Tavo širdies kalba — ${primary}.`);
-          }
-        }
-        if(vals.length) parts.push(`Tave veda vertybės: ${vals.join(', ')}.`);
-        if(hobs.length) parts.push(`Tavo kasdienybės ritualai: ${hobs.join(', ')}.`);
-        return parts.join(' ');
-      }
-
-      function buildSummary(data){
-        const name = data.name || 'You';
-        const loves = normalizeList(data.loveLanguages || data.loveLanguage);
-        const primary = pickPrimaryLove(loves);
-        const ctype = data.connectionType || 'both';
-        const about = (data.about || '').trim();
-        if(about) return about;
-        const seek = ctype==='romance' ? 'romance' : (ctype==='friendship' ? 'friendship' : 'meaningful connections');
-        if(primary){
-          return `${name} is seeking ${seek}. Your heart blossoms with ${primary}. Be open, gentle and clear — resonance will find you.`;
-        }
-        return `${name} is ready for ${seek}. Lead with your values, and let your light be seen.`;
-      }
-
-      function render(){
-        const data = parseSoulQuiz();
-        // Avatar
-        const avatar = data.profilePhoto1 || localStorage.getItem('profilePhoto1') || '';
-        if(avatar){ ui.avatar.src = avatar; ui.avatar.alt = 'avatar'; } else { ui.avatar.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="24" r="14" fill="%2300fdd833"/><rect x="10" y="40" width="44" height="18" rx="9" fill="%2300fdd820"/></svg>'; }
-
-        // Name & tags
-        const name = data.name || 'My Soul';
-        ui.userName.textContent = name;
-        ui.nameInStory.textContent = name;
-
-        const z = data.zodiac || zodiacFromDate(data.birthday);
-        if(z){ ui.zodiacTag.textContent = z; ui.zodiacTag.classList.remove('hidden'); }
-        const year = (data.birthday||'').slice(0,4);
-        const cz = chineseZodiac(Number(year));
-        if(cz){ ui.chineseTag.textContent = cz; ui.chineseTag.classList.remove('hidden'); }
-        const lp = data.lifePath || lifePath(data.birthday);
-        if(lp){ ui.lifePathTag.textContent = `Life Path ${lp}`; ui.lifePathTag.classList.remove('hidden'); }
-        const ct = data.connectionType; if(ct){ ui.connectionTag.textContent = ct; ui.connectionTag.classList.remove('hidden'); }
-
-        // Story (basic placeholder, to be replaced by GPT-5 output later)
-        const story = buildBasicStory(data);
-        typeText(ui.storyText, story);
-
-        // Love Languages
-        const loves = normalizeList(data.loveLanguages || data.loveLanguage);
-        ui.loveList.innerHTML = '';
-        if(loves.length){
-          loves.forEach((l,idx)=>{
-            const span = document.createElement('span');
-            span.className = 'chip'+(idx===0?' primary':'');
-            span.textContent = idx===0 ? `${l} · Primary` : l;
-            ui.loveList.appendChild(span);
-          });
-          ui.loveEmpty.classList.add('hidden');
-        } else { ui.loveEmpty.classList.remove('hidden'); }
-
-        // Values
-        const vals = normalizeList(data.values);
-        ui.valuesList.innerHTML = '';
-        if(vals.length){
-          vals.forEach(v=>{ const s=document.createElement('span'); s.className='chip'; s.textContent=v; ui.valuesList.appendChild(s); });
-          ui.valuesEmpty.classList.add('hidden');
-        } else { ui.valuesEmpty.classList.remove('hidden'); }
-
-        // Hobbies
-        const hobs = normalizeList(data.hobbies);
-        ui.hobbiesList.innerHTML = '';
-        if(hobs.length){
-          hobs.forEach(h=>{ const s=document.createElement('span'); s.className='chip'; s.textContent=h; ui.hobbiesList.appendChild(s); });
-          ui.hobbiesEmpty.classList.add('hidden');
-        } else { ui.hobbiesEmpty.classList.remove('hidden'); }
-
-        // Summary
-        ui.summaryText.textContent = buildSummary(data);
-      }
-
-      // Actions
-      ui.regenBtn.addEventListener('click', ()=>{ render(); });
-      ui.copyBtn.addEventListener('click', ()=>{
-        const text = ui.storyText.textContent.trim();
-        if(!text) return;
-        navigator.clipboard.writeText(text).then(()=>{
-          ui.copyBtn.textContent = 'Copied'; setTimeout(()=>ui.copyBtn.textContent='Copy', 900);
-        });
-      });
-      ui.editBtn.addEventListener('click', ()=>{ location.href = 'edit-profile.html'; });
-      ui.homeBtn.addEventListener('click', ()=>{ location.href = 'index.html'; });
-
-      document.addEventListener('DOMContentLoaded', render);
+      document.addEventListener('DOMContentLoaded',()=>{render();bind()});
     })();
   </script>
-  <script src="/assets/js/core/soul-utils.js" defer></script>
-  <script src="/assets/js/pages/my-soul.js" defer></script>
 </body>
 </html>
