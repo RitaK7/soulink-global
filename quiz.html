@@ -1,261 +1,451 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Soulink – Soul Compatibility Quiz</title>
-  <!-- auth guard: turi būti prieš kitus skriptus -->
-  <script src="auth.js"></script>
-
-   <script src="nav.js?v=3" defer></script>
-
-  <!-- Your global styles -->
-  <link rel="stylesheet" href="style.css" />
-
+  <title>Soulink · Quiz</title>
   <style>
-    /* Small, safe tweaks that won’t fight your theme */
-    .container { max-width: 980px; margin: 0 auto; padding: 2rem 1rem; }
-    .card { background: rgba(0, 90, 90, 0.35); border-radius: 14px; padding: 1.2rem; }
-    .field-group { margin: 1rem 0; }
-    .field-group label { display: block; margin-bottom: .35rem; }
-    .hint { display:inline-block; margin-left:.6rem; opacity:.8; font-size:.85rem; }
-    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-    @media (max-width: 720px){ .grid-2 { grid-template-columns:1fr; } }
-    .actions { display:flex; justify-content:flex-start; gap:.8rem; margin-top:1.2rem; }
-    .btn-primary { cursor:pointer; border:none; border-radius:999px; padding:.8rem 1.2rem; font-weight:600; }
+    :root{
+      --bg:#003c43; --fg:#eaf8f6; --muted:#bde5df; --accent:#00fdd8; --card:#014a52; --border:rgba(0,253,216,.35);
+      --shadow:0 0 0 1px var(--border), 0 10px 30px rgba(0,253,216,.06), 0 0 40px rgba(0,253,216,.04) inset; --maxw:1100px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Arial,sans-serif}
+    a{color:var(--accent);text-decoration:none}
+    img{max-width:100%;height:auto}
+    .container{max-width:var(--maxw);margin:0 auto;padding:24px}
+
+    /* NAVBAR (same as My Soul) */
+    .navbar{position:sticky;top:0;z-index:50;background:rgba(0,60,67,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+    .navbar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transform:scaleX(.2);transform-origin:center;transition:opacity .25s ease, transform .25s ease}
+    .navbar.scrolled::after{opacity:.85;transform:scaleX(1)}
+    .nav-inner{display:flex;justify-content:space-between;align-items:center;padding:10px 16px}
+    .brand{font-weight:800;color:var(--accent);letter-spacing:.4px}
+    .nav-links{display:flex;gap:14px;flex-wrap:wrap}
+    .nav-links a{padding:8px 10px;border-radius:10px;border:1px solid transparent;transition:box-shadow .15s ease, border-color .15s ease}
+    .nav-links a:hover{border-color:var(--border);box-shadow:0 0 0 1px var(--border),0 0 16px rgba(0,253,216,.18)}
+    .nav-links a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    .hamburger{display:none}
+    .hamburger button{appearance:none;background:transparent;border:1px solid var(--border);color:var(--fg);padding:8px 10px;border-radius:10px;cursor:pointer}
+    @media(max-width:800px){.nav-links{display:none}.hamburger{display:block}}
+
+    /* DRAWER overlay */
+    .drawer{position:fixed;inset:0;display:none;z-index:100}
+    .drawer.open{display:block}
+    .drawer .backdrop{position:absolute;inset:0;background:rgba(0,60,67,.96)}
+    .drawer .panel{position:absolute;top:0;right:0;width:min(82vw,360px);height:100%;background:#003c43;border-left:1px solid var(--border);padding:18px;transform:translateX(100%);transition:transform .25s ease}
+    .drawer.open .panel{transform:translateX(0)}
+    @media (prefers-reduced-motion: reduce){.drawer .panel{transition:none}}
+    body.no-scroll{overflow:hidden}
+    .drawer .panel a{display:block;padding:14px 12px;border-radius:12px;min-height:44px;transition:box-shadow .15s ease, background .15s ease}
+    .drawer .panel a:hover{background:rgba(0,253,216,.08);box-shadow:0 0 0 1px var(--border),0 0 14px rgba(0,253,216,.18)}
+    .drawer .panel a:active,.drawer .panel a:focus-visible{box-shadow:0 0 0 1px var(--border),0 0 16px rgba(0,253,216,.22);outline:none}
+
+    /* CARDS */
+    .card{background:linear-gradient(180deg,rgba(1,74,82,.74),rgba(1,74,82,.56));border:1px solid var(--border);box-shadow:var(--shadow);border-radius:18px;padding:18px;margin:22px 0}
+    .card h2{margin:0 0 8px}
+    .sub{color:var(--muted);font-size:.95rem;margin:-4px 0 12px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:760px){.row{grid-template-columns:1fr}}
+
+    label{display:block;font-weight:600;margin-bottom:6px}
+    input[type=text], textarea, select{width:100%;padding:12px 12px;border-radius:12px;border:1px solid var(--border);background:rgba(0,253,216,.06);color:var(--fg)}
+    textarea{min-height:120px;resize:vertical}
+    .hint{color:var(--muted);font-size:.9rem;margin-top:6px}
+
+    /* chips */
+    .chips{display:flex;flex-wrap:wrap;gap:10px}
+    .chip{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid var(--border);background:rgba(0,253,216,.06);min-height:44px;cursor:pointer;user-select:none}
+    .chip input{display:none}
+    .chip.selected{background:rgba(0,253,216,.16);box-shadow:0 0 0 1px var(--border), inset 0 0 20px rgba(0,253,216,.08)}
+    .chip.primary{transform:scale(1.06);box-shadow:0 0 0 1px var(--border),0 0 18px rgba(0,253,216,.16), inset 0 0 20px rgba(0,253,216,.1)}
+    .chip.gem{background:rgba(0,253,216,.1);box-shadow:inset 0 0 20px rgba(0,253,216,.08)}
+    .ico{width:1.1rem;text-align:center}
+
+    .addline{display:flex;gap:8px;margin-top:10px}
+    .addline input{flex:1}
+    .addline button{appearance:none;border:1px solid var(--border);background:transparent;color:var(--fg);padding:10px 14px;border-radius:12px;min-height:44px}
+
+    /* actions */
+    .actions-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;margin:28px 0}
+    .left-actions,.right-actions{display:flex;flex-wrap:wrap;gap:12px}
+    .btn{appearance:none;border:none;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700;min-height:44px}
+    .btn.primary{background:var(--accent);color:#003136}
+    .btn.outline{background:transparent;color:var(--fg);border:1px solid var(--border)}
+    .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+    footer{margin:40px 0 16px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:.95rem;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+    /* spacing mobile-first */
+    @media(max-width:760px){
+      .actions-row{flex-direction:column}
+      .left-actions,.right-actions{flex-direction:column}
+      .btn{width:100%}
+    }
   </style>
 </head>
 <body>
+  <!-- NAVBAR -->
+  <nav class="navbar" role="navigation" aria-label="Main">
+    <div class="nav-inner">
+      <div class="brand">Soulink</div>
+      <div class="nav-links" aria-label="Primary">
+        <a href="index.html">Home</a>
+        <a href="quiz.html" aria-current="page">Quiz</a>
+        <a href="edit-profile.html">Edit Profile</a>
+        <a href="my-soul.html">My Soul</a>
+        <a href="soul-chart.html">Soul Chart</a>
+        <a href="soul-coach.html">Soul Coach</a>
+        <a href="match.html">Match</a>
+        <a href="friends.html">Friends</a>
+        <a href="result.html">Results</a>
+        <a href="login.html">Log In</a>
+        <a href="signup.html">Sign Up</a>
+        <a href="#" id="logoutLink">Log Out</a>
+      </div>
+      <div class="hamburger"><button id="openDrawer" aria-label="Open menu">☰ Menu</button></div>
+    </div>
+  </nav>
 
-  <!-- Soulink Global Navbar -->
-<nav class="navbar" style="background:#002e30; box-shadow:0 0 12px rgba(0,253,216,0.25);">
-  <div class="container" style="max-width:980px; margin:0 auto; padding:.8rem 1rem; display:flex; align-items:center; justify-content:space-between; gap:1rem;">
-    <!-- brand -->
-    <a href="index.html" class="brand" style="font-weight:700; text-decoration:none; color:#00fdd8;">Soulink</a>
-
-    <!-- mobile toggle -->
-    <button id="navToggle" aria-label="Toggle navigation"
-            style="background:transparent; border:1px solid #00fdd8; border-radius:10px; padding:.4rem .6rem; color:#00fdd8; display:none;">
-      ☰
-    </button>
-
-    <!-- menu -->
-    <ul id="navMenu" style="list-style:none; display:flex; flex-wrap:wrap; gap:.6rem; margin:0; padding:0;">
-      <li><a href="quiz.html">Quiz</a></li>
-      <li><a href="edit-profile.html">Edit Profile</a></li>
-      <li><a href="my-soul.html">My Soul</a></li>
-      <li><a href="soul-chart.html">Soul Chart</a></li>
-      <li><a href="soul-coach.html">Soul Coach</a></li>
-      <li><a href="friends.html">Friends</a></li>
-      <li><a href="match.html">Match</a></li>
-      <li><a href="result.html">Results</a></li>
-    </ul>
+  <!-- MOBILE DRAWER -->
+  <div class="drawer" id="drawer" aria-hidden="true">
+    <div class="backdrop" id="drawerBackdrop" tabindex="-1" aria-label="Close"></div>
+    <aside class="panel" role="dialog" aria-modal="true" aria-label="Navigation">
+      <a href="index.html">Home</a>
+      <a href="quiz.html" aria-current="page">Quiz</a>
+      <a href="edit-profile.html">Edit Profile</a>
+      <a href="my-soul.html">My Soul</a>
+      <a href="soul-chart.html">Soul Chart</a>
+      <a href="soul-coach.html">Soul Coach</a>
+      <a href="match.html">Match</a>
+      <a href="friends.html">Friends</a>
+      <a href="result.html">Results</a>
+      <a href="login.html">Log In</a>
+      <a href="signup.html">Sign Up</a>
+      <a href="#" id="logoutLinkMobile">Log Out</a>
+      <button class="btn outline" id="closeDrawer" style="margin-top:8px">Close</button>
+    </aside>
   </div>
-</nav>
+
+  <div class="container">
+    <!-- BASIC INFO -->
+    <section class="card">
+      <h2>🎂 Basic Info</h2>
+      <p class="sub">Tell us a little about you. Simple and gentle.</p>
+      <div class="row">
+        <div>
+          <label for="name">Name</label>
+          <input id="name" type="text" placeholder="Your name" />
+        </div>
+        <div>
+          <label for="country">Country</label>
+          <input id="country" type="text" placeholder="Where you live" />
+        </div>
+        <div>
+          <label for="birthday">Birth date</label>
+          <input id="birthday" type="text" inputmode="numeric" placeholder="1972-11-22" />
+          <div class="hint" id="birthdayHint">Example: 1993-02-24 (or type 19930224)</div>
+        </div>
+        <div>
+          <label for="height">Height (cm)</label>
+          <input id="height" type="text" inputmode="numeric" placeholder="e.g., 170" />
+        </div>
+        <div>
+          <label for="weight">Weight (kg)</label>
+          <input id="weight" type="text" inputmode="numeric" placeholder="e.g., 60" />
+        </div>
+      </div>
+    </section>
+
+    <!-- CONNECTION -->
+    <section class="card">
+      <h2>🧭 Connection</h2>
+      <p class="sub">What kind of connections are you open to?</p>
+      <div class="chips" id="connectionChips"></div>
+    </section>
+
+    <!-- LOVE LANGUAGES -->
+    <section class="card">
+      <h2>💖 Love Languages</h2>
+      <p class="sub">Choose one or more. The first becomes your Primary.</p>
+      <div class="chips" id="loveChips"></div>
+    </section>
+
+    <!-- GENDER & ORIENTATION -->
+    <section class="card">
+      <h2>⚧︎ Gender & Orientation</h2>
+      <div class="row" id="genderRow"></div>
+      <div class="row" id="orientationRow" style="margin-top:12px"></div>
+    </section>
+
+    <!-- HOBBIES -->
+    <section class="card">
+      <h2>🌿 Hobbies</h2>
+      <div class="chips" id="hobbyChips"></div>
+      <div class="addline"><input id="hobbyInput" type="text" placeholder="Add custom hobby…" /><button id="addHobby">Add</button></div>
+    </section>
+
+    <!-- VALUES -->
+    <section class="card">
+      <h2>💎 Values</h2>
+      <div class="chips" id="valueChips"></div>
+      <div class="addline"><input id="valueInput" type="text" placeholder="Add custom value…" /><button id="addValue">Add</button></div>
+    </section>
+
+    <!-- BOUNDARIES -->
+    <section class="card">
+      <h2>🕊️ Boundaries</h2>
+      <textarea id="boundaries" placeholder="What behaviors are not aligned with your soul? 🌑"></textarea>
+      <div class="hint"><span id="boundariesCount">0</span>/300</div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="card">
+      <h2>📜 About Me</h2>
+      <textarea id="aboutMe" placeholder="Tell us about your soul journey… ✨"></textarea>
+      <div class="hint"><span id="aboutCount">0</span>/500</div>
+    </section>
+
+    <!-- ACTIONS -->
+    <section class="actions-row">
+      <div class="left-actions">
+        <button id="backHome" class="btn outline">Back ← Home</button>
+      </div>
+      <div class="right-actions">
+        <button id="nextEdit" class="btn primary">Next → Edit Profile</button>
+      </div>
+    </section>
+
+    <footer>
+      <span>© 2025 Soulink.global | Created with love by Soulink Team</span>
+    </footer>
+  </div>
+
   <script>
-    (function(){
-      const btn = document.getElementById('navToggle');
-      const menu = document.getElementById('navMenu');
-      function onResize(){
-        if(window.innerWidth<800){ btn.style.display='block'; menu.style.display='none'; }
-        else { btn.style.display='none'; menu.style.display='flex'; }
+    (()=>{
+      const $=s=>document.querySelector(s);
+      const $$=s=>Array.from(document.querySelectorAll(s));
+      const ui={
+        name:$('#name'), country:$('#country'), birthday:$('#birthday'), height:$('#height'), weight:$('#weight'), birthdayHint:$('#birthdayHint'),
+        connectionChips:$('#connectionChips'), loveChips:$('#loveChips'),
+        genderRow:$('#genderRow'), orientationRow:$('#orientationRow'),
+        hobbyChips:$('#hobbyChips'), valueChips:$('#valueChips'),
+        hobbyInput:$('#hobbyInput'), addHobby:$('#addHobby'),
+        valueInput:$('#valueInput'), addValue:$('#addValue'),
+        boundaries:$('#boundaries'), boundariesCount:$('#boundariesCount'),
+        aboutMe:$('#aboutMe'), aboutCount:$('#aboutCount'),
+        backHome:$('#backHome'), nextEdit:$('#nextEdit'),
+        openDrawer:$('#openDrawer'), closeDrawer:$('#closeDrawer'), drawer:$('#drawer'), drawerBackdrop:$('#drawerBackdrop'),
+        logout:$('#logoutLink'), logoutM:$('#logoutLinkMobile'), navbar:document.querySelector('.navbar')
+      };
+
+      /* ===== helpers ===== */
+      function getData(){ try{ return JSON.parse(localStorage.getItem('soulQuiz'))||{}; }catch{ return {}; } }
+      function setData(patch){ const data={...getData(), ...patch}; localStorage.setItem('soulQuiz', JSON.stringify(data)); return data; }
+      function list(v){ if(Array.isArray(v)) return v; if(typeof v==='string') return v.split(/[\n,]/).map(s=>s.trim()).filter(Boolean); return []; }
+
+      // birthdate auto-format YYYYMMDD -> YYYY-MM-DD (numbers only)
+      function formatBirthOnInput(){
+        let digits = ui.birthday.value.replace(/\D/g,'').slice(0,8);
+        let out = digits;
+        if(digits.length>4) out = digits.slice(0,4)+'-'+digits.slice(4,6);
+        if(digits.length>6) out = digits.slice(0,4)+'-'+digits.slice(4,6)+'-'+digits.slice(6,8);
+        ui.birthday.value = out;
+        const valid = /^\d{4}-\d{2}-\d{2}$/.test(out);
+        ui.birthdayHint.style.opacity = valid? .6 : 1;
       }
-      if(btn && menu){
-        btn.addEventListener('click', ()=>{ menu.style.display = (menu.style.display==='none'||!menu.style.display)?'flex':'none'; });
-        window.addEventListener('resize', onResize); onResize();
+
+      // chips helpers
+      function chip(label, opts={}){
+        const el=document.createElement('button');
+        el.type='button'; el.className='chip'+(opts.gem?' gem':'');
+        if(opts.icon){ const i=document.createElement('span'); i.className='ico'; i.textContent=opts.icon; el.appendChild(i); }
+        const t=document.createElement('span'); t.textContent=label; el.appendChild(t);
+        return el;
       }
+
+      function renderConnection(selected){
+        const choices=['romance','friendship','both'];
+        ui.connectionChips.innerHTML='';
+        choices.forEach(c=>{
+          const el=chip(c);
+          if(selected===c) el.classList.add('selected','primary');
+          el.addEventListener('click',()=>{ setData({connectionType:c}); renderAll(); });
+          ui.connectionChips.appendChild(el);
+        });
+      }
+
+      function renderLove(loves){
+        const all=['Words of Affirmation','Quality Time','Acts of Service','Physical Touch','Receiving Gifts'];
+        const sel=list(loves);
+        ui.loveChips.innerHTML='';
+        all.forEach(lbl=>{
+          const el=chip(lbl);
+          const idx=sel.indexOf(lbl);
+          if(idx>-1){ el.classList.add('selected'); if(idx===0) el.classList.add('primary'); }
+          el.addEventListener('click',()=>{
+            let data=list(getData().loveLanguages);
+            const i=data.indexOf(lbl);
+            if(i>-1){
+              // toggle off
+              data.splice(i,1);
+            }else{
+              data.push(lbl);
+              // first selected becomes primary automatically
+            }
+            // ensure primary first
+            if(data.length>1){
+              // clicking an already-selected chip should allow making it primary
+              // if user clicked and it exists (after push), move to front
+              const j=data.indexOf(lbl);
+              if(j>0) { const v=data.splice(j,1)[0]; data.unshift(v); }
+            }
+            setData({loveLanguages:data});
+            renderLove(data);
+          });
+          ui.loveChips.appendChild(el);
+        });
+      }
+
+      function hobbyIcon(text){ const s=(text||'').toLowerCase();
+        const map=[['travel','✈️'],['yoga','🧘'],['music','🎵'],['reading','📚'],['books','📚'],['gym','🏋️'],['run','🏃'],['dance','💃'],['art','🎨'],['photo','📷'],['cook','🍳'],['bake','🧁'],['hike','🥾'],['garden','🌿'],['medit','🕯️'],['movie','🎬'],['game','🎮']];
+        for(const [k,ico] of map){ if(s.includes(k)) return ico; } return '✨'; }
+
+      function renderListChips(container, values, {gem=false, icon=false, key}){
+        container.innerHTML='';
+        const arr=list(values);
+        arr.forEach(v=>{
+          const el=chip(v,{gem, icon:icon? hobbyIcon(v): null});
+          el.classList.add('selected');
+          el.addEventListener('click',()=>{
+            let data=list(getData()[key]);
+            const i=data.indexOf(v); if(i>-1){ data.splice(i,1); } else { data.push(v); }
+            setData({[key]:data});
+            renderListChips(container, data, {gem, icon, key});
+          });
+          container.appendChild(el);
+        });
+      }
+
+      function addCustom(inputEl, key, container, opts){
+        const add=()=>{
+          const v=inputEl.value.trim(); if(!v) return; inputEl.value='';
+          let data=list(getData()[key]); if(!data.includes(v)) data.push(v);
+          setData({[key]:data}); renderListChips(container, data, opts);
+        };
+        inputEl.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); add(); }});
+        (opts.btn||null)?.addEventListener?.('click', add);
+      }
+
+      function renderGenderSection(d){
+        const genderChoices=['Woman','Man','Non-binary','Self-describe'];
+        const openToChoices=['Women','Men','Non-binary','Everyone'];
+        const orChoices=['Heterosexual','Gay','Lesbian','Bisexual','Pansexual','Queer','Asexual','Questioning','Self-describe'];
+
+        // gender
+        ui.genderRow.innerHTML='';
+        const left=document.createElement('div'); const right=document.createElement('div');
+        ui.genderRow.append(left,right);
+        const gWrap=document.createElement('div'); gWrap.className='chips'; left.appendChild(gWrap);
+        genderChoices.forEach(lbl=>{
+          const el=chip(lbl);
+          if(d.gender===lbl || (lbl==='Self-describe' && d.genderSelf)) el.classList.add('selected');
+          el.addEventListener('click',()=>{ if(lbl==='Self-describe'){ setData({gender:null}); selfInput('genderSelf', left, d.genderSelf); } else { setData({gender:lbl, genderSelf:null}); renderAll(); } });
+          gWrap.appendChild(el);
+        });
+        if(d.genderSelf) selfInput('genderSelf', left, d.genderSelf);
+
+        // open to
+        const openWrap=document.createElement('div'); openWrap.className='chips'; right.appendChild(openWrap);
+        openToChoices.forEach(lbl=>{
+          const el=chip(lbl);
+          if(d.openTo===lbl) el.classList.add('selected','primary');
+          el.addEventListener('click',()=>{ setData({openTo:lbl}); renderAll(); });
+          openWrap.appendChild(el);
+        });
+
+        // orientation row below
+        ui.orientationRow.innerHTML='';
+        const orWrap=document.createElement('div'); orWrap.className='chips'; ui.orientationRow.appendChild(orWrap);
+        orChoices.forEach(lbl=>{
+          const el=chip(lbl);
+          if(d.orientation===lbl || (lbl==='Self-describe' && d.orientationSelf)) el.classList.add('selected');
+          el.addEventListener('click',()=>{ if(lbl==='Self-describe'){ setData({orientation:null}); selfInput('orientationSelf', ui.orientationRow, d.orientationSelf); } else { setData({orientation:lbl, orientationSelf:null}); renderAll(); } });
+          orWrap.appendChild(el);
+        });
+        if(d.orientationSelf) selfInput('orientationSelf', ui.orientationRow, d.orientationSelf);
+      }
+
+      function selfInput(key, mount, value=''){
+        let holder = mount.querySelector(`[data-self="${key}"]`);
+        if(!holder){ holder=document.createElement('div'); holder.dataset.self=key; holder.style.marginTop='10px'; mount.appendChild(holder); }
+        holder.innerHTML=`<label style="font-weight:600">Self-describe</label><input type="text" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:rgba(0,253,216,.06);color:var(--fg)" value="${value||''}">`;
+        const input=holder.querySelector('input');
+        input.addEventListener('input',()=>{ setData({[key]: input.value.trim()||null}); });
+      }
+
+      // counters
+      function bindCounters(){
+        const maxB=300, maxA=500;
+        const upd=()=>{ ui.boundariesCount.textContent = Math.min(maxB, ui.boundaries.value.length); ui.aboutCount.textContent = Math.min(maxA, ui.aboutMe.value.length); };
+        ui.boundaries.addEventListener('input',()=>{ if(ui.boundaries.value.length>maxB) ui.boundaries.value=ui.boundaries.value.slice(0,maxB); setData({boundaries:ui.boundaries.value}); upd(); });
+        ui.aboutMe.addEventListener('input',()=>{ if(ui.aboutMe.value.length>maxA) ui.aboutMe.value=ui.aboutMe.value.slice(0,maxA); setData({aboutMe:ui.aboutMe.value}); upd(); });
+        upd();
+      }
+
+      // load & render
+      function populateBasics(d){
+        ui.name.value=d.name||''; ui.country.value=d.country||''; ui.birthday.value=d.birthday||''; ui.height.value=d.height||''; ui.weight.value=d.weight||'';
+      }
+
+      function bindBasics(){
+        ui.name.addEventListener('input',()=> setData({name:ui.name.value.trim()}));
+        ui.country.addEventListener('input',()=> setData({country:ui.country.value.trim()}));
+        ui.birthday.addEventListener('input',()=>{ formatBirthOnInput(); setData({birthday:ui.birthday.value}); });
+        ui.height.addEventListener('input',()=> setData({height:ui.height.value.replace(/[^\d.]/g,'')}));
+        ui.weight.addEventListener('input',()=> setData({weight:ui.weight.value.replace(/[^\d.]/g,'')}));
+      }
+
+      function renderAll(){
+        const d=getData();
+        populateBasics(d);
+        renderConnection(d.connectionType);
+        renderLove(d.loveLanguages);
+        renderGenderSection(d);
+        renderListChips(ui.hobbyChips, d.hobbies, {icon:true, key:'hobbies'});
+        renderListChips(ui.valueChips, d.values, {gem:true, key:'values'});
+        ui.boundaries.value=d.boundaries||'';
+        ui.aboutMe.value=d.aboutMe||'';
+        ui.boundariesCount.textContent=String((d.boundaries||'').length);
+        ui.aboutCount.textContent=String((d.aboutMe||'').length);
+      }
+
+      // add custom inputs
+      addCustom(ui.hobbyInput, 'hobbies', ui.hobbyChips, {icon:true, key:'hobbies', btn:ui.addHobby});
+      addCustom(ui.valueInput, 'values', ui.valueChips, {gem:true, key:'values', btn:ui.addValue});
+
+      // actions
+      ui.backHome.addEventListener('click',()=> location.href='index.html');
+      ui.nextEdit.addEventListener('click',()=> location.href='edit-profile.html');
+
+      // drawer + navbar scroll
+      const onScroll=()=>{ if(window.scrollY>6) ui.navbar.classList.add('scrolled'); else ui.navbar.classList.remove('scrolled'); };
+      onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+      const openDrawer=()=>{ ui.drawer.classList.add('open'); document.body.classList.add('no-scroll'); };
+      const closeDrawer=()=>{ ui.drawer.classList.remove('open'); document.body.classList.remove('no-scroll'); };
+      ui.openDrawer?.addEventListener('click', openDrawer);
+      ui.closeDrawer?.addEventListener('click', closeDrawer);
+      ui.drawerBackdrop?.addEventListener('click', closeDrawer);
+      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeDrawer(); });
+
+      // logout
+      ui.logout?.addEventListener('click', (e)=>{ e.preventDefault(); localStorage.clear(); location.href='index.html'; });
+      ui.logoutM?.addEventListener('click', (e)=>{ e.preventDefault(); localStorage.clear(); location.href='index.html'; });
+
+      // init
+      renderAll(); bindBasics(); bindCounters(); formatBirthOnInput();
     })();
   </script>
-
-  <main class="container">
-    <h1 style="color:#dff; margin: 0 0 1rem;">🌈 Soul Compatibility Quiz</h1>
-
-    <form id="quizForm" class="card" novalidate>
-      <!-- Name -->
-      <div class="field-group">
-        <label for="name">Name</label>
-        <input id="name" name="name" type="text" placeholder="Your name" required />
-      </div>
-
-      <!-- Birth Date -->
-      <div class="field-group">
-        <label for="birthday">Birth Date (YYYY-MM-DD)
-          <span class="hint">Example: 1972-11-22</span>
-        </label>
-        <input
-          id="birthday"
-          name="birthday"
-          type="text"
-          placeholder="YYYY-MM-DD"
-          inputmode="numeric"
-          autocomplete="bday"
-          minlength="10"
-          maxlength="10"
-          pattern="\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])"
-          oninput="this.setCustomValidity('')"
-          oninvalid="this.setCustomValidity('Please use YYYY-MM-DD (e.g., 1972-11-22)')"
-        />
-      </div>
-
-      <!-- Country -->
-      <div class="field-group">
-        <label for="country">Country</label>
-        <select id="country" name="country">
-          <option value="">Select your country</option>
-          <option value="Lithuania">Lithuania</option>
-          <option value="Norway">Norway</option>
-          <option value="Latvia">Latvia</option>
-          <option value="Poland">Poland</option>
-          <option value="Germany">Germany</option>
-          <!-- You can add your full country list here -->
-        </select>
-      </div>
-
-      <!-- Height / Weight -->
-      <div class="grid-2">
-        <div class="field-group">
-          <label for="height">Height (cm)</label>
-          <input id="height" name="height" type="number" inputmode="numeric" min="0" placeholder="e.g., 168" />
-        </div>
-        <div class="field-group">
-          <label for="weight">Weight (kg)</label>
-          <input id="weight" name="weight" type="number" inputmode="numeric" min="0" placeholder="e.g., 65" />
-        </div>
-      </div>
-
-      <!-- Connection Type -->
-      <div class="field-group">
-        <label>Type of Connection</label>
-        <div>
-          <label><input type="radio" name="connectionType" value="Romantic" /> Romantic</label>
-          <label style="margin-left:1rem;"><input type="radio" name="connectionType" value="Friendship" /> Friendship</label>
-          <label style="margin-left:1rem;"><input type="radio" name="connectionType" value="Both" /> Both</label>
-        </div>
-      </div>
-
-      <!-- Love Language -->
-      <div class="field-group">
-        <label>Primary Love Language</label>
-        <div class="card">
-          <label><input type="radio" name="loveLanguage" value="Words of Affirmation" /> <strong>Words of Affirmation</strong><br><span class="hint">Kind, encouraging, and supportive words to express love.</span></label><br>
-          <label><input type="radio" name="loveLanguage" value="Acts of Service" /> <strong>Acts of Service</strong><br><span class="hint">Actions that help or ease your burden, showing love through effort.</span></label><br>
-          <label><input type="radio" name="loveLanguage" value="Receiving Gifts" /> <strong>Receiving Gifts</strong><br><span class="hint">Thoughtful gifts or gestures that show you were remembered.</span></label><br>
-          <label><input type="radio" name="loveLanguage" value="Quality Time" /> <strong>Quality Time</strong><br><span class="hint">Focused, undivided attention, deep conversations or shared moments.</span></label><br>
-          <label><input type="radio" name="loveLanguage" value="Physical Touch" /> <strong>Physical Touch</strong><br><span class="hint">Hugs, hand-holding, cuddles or gentle touches that express love.</span></label>
-        </div>
-      </div>
-
-      <!-- Gender identity -->
-<div class="field-group">
-  <label>Gender</label>
-  <div class="card">
-    <label><input type="radio" name="gender" value="Woman"> Woman</label><br>
-    <label><input type="radio" name="gender" value="Man"> Man</label><br>
-    <label><input type="radio" name="gender" value="Non-binary"> Non-binary</label><br>
-    <label><input type="radio" name="gender" value="Prefer not to say"> Prefer not to say</label><br>
-    <label>
-      <input type="radio" name="gender" value="Self-describe"> Self-describe
-      <input id="genderSelf" type="text" placeholder="Type here…" style="margin-left:.6rem; max-width:320px;">
-    </label>
-  </div>
-</div>
-
-<!-- Who I'm open to connecting with (multiple) -->
-<div class="field-group">
-  <label>I'm open to connecting with</label>
-  <div class="card">
-    <label><input type="checkbox" name="seekingGender[]" value="Women"> Women</label><br>
-    <label><input type="checkbox" name="seekingGender[]" value="Men"> Men</label><br>
-    <label><input type="checkbox" name="seekingGender[]" value="Non-binary"> Non-binary</label><br>
-    <label><input type="checkbox" name="seekingGender[]" value="All genders"> All genders</label>
-  </div>
-</div>
-
-<!-- (Optional) Orientation label for visibility only -->
-<div class="field-group">
-  <label for="orientation">Orientation (optional)</label>
-  <select id="orientation" name="orientation">
-    <option value="">Prefer not to say</option>
-    <option>Straight</option>
-    <option>Gay</option>
-    <option>Lesbian</option>
-    <option>Bisexual</option>
-    <option>Pansexual</option>
-    <option>Asexual</option>
-    <option>Queer</option>
-    <option>Questioning</option>
-  </select>
-</div>
-
-      <!-- Hobbies -->
-      <div class="field-group">
-        <label>Select Your Hobbies</label>
-        <div class="grid-2 card">
-          <div>
-            <label><input type="checkbox" name="hobbies[]" value="Music" /> Music</label><br>
-            <label><input type="checkbox" name="hobbies[]" value="Cooking" /> Cooking</label><br>
-            <label><input type="checkbox" name="hobbies[]" value="Sports" /> Sports</label><br>
-            <label><input type="checkbox" name="hobbies[]" value="Dancing" /> Dancing</label><br>
-            <label><input type="checkbox" name="hobbies[]" value="Nature Walks" /> Nature Walks</label>
-          </div>
-          <div>
-            <label><input type="checkbox" name="hobbies[]" value="Traveling" /> Traveling</label><br>
-            <label><input type="checkbox" name="hobbies[]" value="Art" /> Art</label><br>
-            <label><input type="checkbox" name="hobbies[]" value="Reading" /> Reading</label><br>
-            <label><input type="checkbox" name="hobbies[]" value="Meditation" /> Meditation</label><br>
-            <label><input type="checkbox" name="hobbies[]" value="Gaming" /> Gaming</label>
-          </div>
-        </div>
-      </div>
-
-      <!-- Values -->
-      <div class="field-group">
-        <label>Values Most Important to You</label>
-        <div class="grid-2 card">
-          <div>
-            <label><input type="checkbox" name="values[]" value="Honesty" /> Honesty</label><br>
-            <label><input type="checkbox" name="values[]" value="Freedom" /> Freedom</label><br>
-            <label><input type="checkbox" name="values[]" value="Kindness" /> Kindness</label><br>
-            <label><input type="checkbox" name="values[]" value="Spirituality" /> Spirituality</label><br>
-            <label><input type="checkbox" name="values[]" value="Empathy" /> Empathy</label>
-          </div>
-          <div>
-            <label><input type="checkbox" name="values[]" value="Growth" /> Growth</label><br>
-            <label><input type="checkbox" name="values[]" value="Loyalty" /> Loyalty</label><br>
-            <label><input type="checkbox" name="values[]" value="Creativity" /> Creativity</label><br>
-            <label><input type="checkbox" name="values[]" value="Adventure" /> Adventure</label><br>
-            <label><input type="checkbox" name="values[]" value="Balance" /> Balance</label>
-          </div>
-        </div>
-      </div>
-
-      <!-- Unacceptable Behavior -->
-      <div class="field-group">
-        <label for="unacceptable">Unacceptable Behavior</label>
-        <textarea id="unacceptable" name="unacceptable" rows="3" placeholder="What behaviors are not acceptable for you?"></textarea>
-      </div>
-
-      <!-- About Me -->
-      <div class="field-group">
-        <label for="about">About Me</label>
-        <textarea id="about" name="about" rows="4" placeholder="Write a short intro about yourself..."></textarea>
-      </div>
-
-      <div class="actions">
-        <button class="btn-primary" type="submit">Edit Profile →</button>
-      </div>
-    </form>
-  </main>
-  <nav class="pager">
-  <a class="btn btn-ghost" href="index.html">← Home</a>
-  <a class="btn" href="edit-profile.html">Next: Edit Profile →</a>
-</nav>
-
-  <footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
-    © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
-  </footer>
-
-  <!-- Page script -->
-  <script src="quiz.js"></script>
 </body>
 </html>
