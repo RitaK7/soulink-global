@@ -67,6 +67,10 @@
     .addline input{flex:1}
     .addline button{appearance:none;border:1px solid var(--border);background:transparent;color:var(--fg);padding:10px 14px;border-radius:12px;min-height:44px}
 
+    /* helper lines under Love Languages */
+    .help-lines{margin-top:8px;color:var(--muted);font-size:.92rem;line-height:1.5}
+    .help-lines .item{margin:4px 0}
+
     /* actions */
     .actions-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;margin:28px 0}
     .left-actions,.right-actions{display:flex;flex-wrap:wrap;gap:12px}
@@ -170,7 +174,14 @@
       <h2>💖 Love Languages</h2>
       <p class="sub">Choose one or more. The first becomes your Primary.</p>
       <div class="chips" id="loveChips"></div>
-    </section>
+      <div class="help-lines" aria-live="polite" aria-atomic="true">
+      <div class="item"><strong>Words of Affirmation</strong> — Kind, encouraging words that express love.</div>
+      <div class="item"><strong>Acts of Service</strong> — Helpful actions that ease your load and show care.</div>
+      <div class="item"><strong>Receiving Gifts</strong> — Thoughtful tokens that say “I remembered you.”</div>
+      <div class="item"><strong>Quality Time</strong> — Focused, undivided attention and deep conversations.</div>
+      <div class="item"><strong>Physical Touch</strong> — Hugs, hand-holding, and gentle physical closeness.</div>
+      </div>
+     </section>
 
     <!-- GENDER & ORIENTATION -->
     <section class="card">
