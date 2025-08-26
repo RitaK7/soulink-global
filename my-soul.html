@@ -37,20 +37,23 @@
     @media(max-width:800px){.nav-links{display:none}.hamburger{display:block}}
 
     /* DRAWER */
-    .drawer{position:fixed;inset:0;display:none}
+    .drawer{position:fixed;inset:0;display:none;z-index:100}
     .drawer.open{display:block}
-    .drawer .backdrop{position:absolute;inset:0;background:rgba(0,0,0,.4)}
+    .drawer .backdrop{position:absolute;inset:0;background:rgba(0,60,67,.96)}
     .drawer .panel{position:absolute;top:0;right:0;width:min(82vw,360px);height:100%;background:#003c43;border-left:1px solid var(--border);padding:18px;transform:translateX(100%);transition:transform .25s ease}
     .drawer.open .panel{transform:translateX(0)}
     @media (prefers-reduced-motion: reduce){.drawer .panel{transition:none}}
-    .drawer .panel a{display:block;padding:12px 8px;border-radius:10px}
-    .drawer .panel a:hover{background:rgba(0,253,216,.08)}
+    /* prevent background scroll when drawer open */
+    body.no-scroll{overflow:hidden}
+    .drawer .panel a{display:block;padding:14px 12px;border-radius:12px;min-height:44px;transition:box-shadow .15s ease, background .15s ease}
+    .drawer .panel a:hover{background:rgba(0,253,216,.08);box-shadow:0 0 0 1px var(--border),0 0 14px rgba(0,253,216,.18)}
+    .drawer .panel a:active,.drawer .panel a:focus-visible{box-shadow:0 0 0 1px var(--border),0 0 16px rgba(0,253,216,.22);outline:none}
 
     /* HEADER */
     .header{display:flex;align-items:center;gap:18px;padding:16px;border-radius:18px;background:linear-gradient(180deg,rgba(0,253,216,.06),rgba(0,253,216,.02));box-shadow:var(--shadow)}
     .avatar{position:relative}
     .avatar img{width:76px;height:76px;border-radius:999px;object-fit:cover;border:1px solid var(--border);box-shadow:0 0 0 3px rgba(0,253,216,.08)}
-    .avatar::before{content:"";position:absolute;inset:-6px;border-radius:999px;border:1px solid rgba(0,253,216,.25);box-shadow:0 0 30px rgba(0,253,216,.14);animation:pulse 6s ease-in-out infinite}
+    .avatar::before{content:"";position:absolute;inset:-6px;border-radius:999px;border:1px solid rgba(0,253,216,.25);box-shadow:0 0 36px rgba(0,253,216,.24),0 0 0 2px rgba(0,253,216,.18);animation:pulse 2.6s ease-in-out infinite}
     @keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
     @media (prefers-reduced-motion: reduce){.avatar::before{animation:none}}
     .name-and-tags h1{margin:0;font-size:1.6rem}
@@ -93,7 +96,7 @@
     @media (max-width:760px){
       .header{flex-direction:column;align-items:flex-start}
       .card{margin:26px 0}
-      .actions-row{justify-content:flex-start}
+      .actions-row{justify-content:flex-start;flex-direction:column;gap:16px}.actions-row .btn{width:100%}
     }
   </style>
 </head>
@@ -349,47 +352,82 @@
       }
 
       function buildSummary(d){
-        const n=d.name||'You';
-        const loves=list(d.loveLanguages||d.loveLanguage); const p=loves[0];
-        const ct=d.connectionType||'meaningful connections';
-        const about=(d.about||'').trim(); if(about) return about;
-        const a = p? `${n} is ready for ${ct}. Your heart blossoms in ${p}—let it be seen.` : `${n} is ready for ${ct}. Lead with your values and steady light.`;
-        const b = `Trust your pace. The right souls will recognize your glow.`;
-        return `${a} ${b}`;
-      }
+      const n = d.name || 'You';
+      const loves = list(d.loveLanguages || d.loveLanguage);
+      const p = loves[0];
+      const ct = d.connectionType || 'meaningful connections';
+      const about = (d.about || '').trim();
+      const blessing = 'Your soul is seeking resonance. Trust your path, and the right connections will find you.';
+
+      if (about) {
+      const normalized = about.replaceAll('!','.').replaceAll('?','.').trim();
+      const count = normalized.split('.').filter(s => s.trim()).length;
+      const ensured = normalized.endsWith('.') ? normalized : normalized + '.';
+      return count < 2 ? ensured + ' ' + blessing : about;
+  }
+  const a = p
+    ? `${n} is ready for ${ct}. Your heart blossoms in ${p}—let it be seen.`
+    : `${n} is ready for ${ct}. Lead with your values and steady light.`;
+  const b = `Trust your pace. The right souls will recognize your glow.`;
+  return `${a} ${b} ${blessing}`;
+}
+
 
       // NAV + sparkle + Copy feedback + PDF placeholder
       function sparkle(el){ if(reduceMotion) return; const r=el.getBoundingClientRect(); const sp=document.createElement('span'); sp.className='sparkle'; sp.style.left=(r.left+r.width-8)+'px'; sp.style.top=(r.top+window.scrollY+8)+'px'; document.body.appendChild(sp); setTimeout(()=>sp.remove(),300); }
       function exportPdf(){ alert('PDF export coming soon'); }
-
       function bind(){
-        // navbar underline on scroll
-        const onScroll=()=>{ if(window.scrollY>6) ui.navbar.classList.add('scrolled'); else ui.navbar.classList.remove('scrolled'); };
-        onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+    // navbar underline on scroll
+      const onScroll = () => {
+      if (window.scrollY > 6) ui.navbar.classList.add('scrolled');
+      else ui.navbar.classList.remove('scrolled');
+    };
+      onScroll();
+      window.addEventListener('scroll', onScroll, { passive: true });
 
-        // drawer
-        $('#openDrawer')?.addEventListener('click',()=> ui.drawer.classList.add('open'));
-        $('#closeDrawer')?.addEventListener('click',()=> ui.drawer.classList.remove('open'));
-        $('#drawerBackdrop')?.addEventListener('click',()=> ui.drawer.classList.remove('open'));
-        document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') ui.drawer.classList.remove('open'); });
+    // drawer helpers
+      const openDrawer = () => { ui.drawer.classList.add('open'); document.body.classList.add('no-scroll'); };
+      const closeDrawer = () => { ui.drawer.classList.remove('open'); document.body.classList.remove('no-scroll'); };
 
-        // actions
-        ui.regenBtn?.addEventListener('click', (e)=>{ render(); sparkle(e.currentTarget); });
-        ui.copyBtn?.addEventListener('click', ()=>{ const t=[...ui.storyText.querySelectorAll('p')].map(p=>p.textContent).join('\n\n'); if(!t) return; navigator.clipboard.writeText(t).then(()=>{ const prev=ui.copyBtn.textContent; ui.copyBtn.textContent='Copied ✨'; setTimeout(()=> ui.copyBtn.textContent=prev, 900); }); });
-        ui.editBtn?.addEventListener('click', ()=> location.href='edit-profile.html');
-        ui.homeBtn?.addEventListener('click', ()=> location.href='index.html');
-        ui.downloadBtn?.addEventListener('click', exportPdf);
+    // drawer events
+    ui.openDrawer?.addEventListener('click', openDrawer);
+    ui.closeDrawer?.addEventListener('click', closeDrawer);
+    ui.drawerBackdrop?.addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
 
-        ui.logout?.addEventListener('click', (e)=>{ e.preventDefault(); localStorage.clear(); location.href='index.html'; });
-        ui.logoutM?.addEventListener('click', (e)=> {
-        e.preventDefault();
-        localStorage.clear();
-        location.href = 'index.html';
+    // actions
+    ui.regenBtn?.addEventListener('click', (e) => { render(); sparkle(e.currentTarget); });
+
+    ui.copyBtn?.addEventListener('click', () => {
+      const t = [...ui.storyText.querySelectorAll('p')].map(p => p.textContent).join('\n\n');
+      if (!t) return;
+      navigator.clipboard.writeText(t).then(() => {
+        const prev = ui.copyBtn.textContent;
+        ui.copyBtn.textContent = 'Copied ✨';
+        setTimeout(() => { ui.copyBtn.textContent = prev; }, 900);
       });
-      }
+    });
 
-      document.addEventListener('DOMContentLoaded', ()=>{ render(); bind(); });
-    })();
-  </script>
+    ui.editBtn?.addEventListener('click', () => { location.href = 'edit-profile.html'; });
+    ui.homeBtn?.addEventListener('click', () => { location.href = 'index.html'; });
+    ui.downloadBtn?.addEventListener('click', exportPdf);
+
+    // logout (desktop)
+    ui.logout?.addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.clear();
+      location.href = 'index.html';
+    });
+    // logout (mobile)
+    ui.logoutM?.addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.clear();
+      location.href = 'index.html';
+    });
+  }
+
+ document.addEventListener('DOMContentLoaded', () => { render(); bind(); });
+})();
+</script>
 </body>
 </html>
