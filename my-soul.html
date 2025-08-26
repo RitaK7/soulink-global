@@ -75,7 +75,7 @@
 
     .typewriter p{margin:10px 0 0;min-height:18px;opacity:0;transform:translateY(4px)}
     .typewriter p.show{opacity:1;transform:none;transition:opacity .25s ease, transform .25s ease}
-    @media (prefers-reduced-motion: reduce){.typewriter p{opacity:1;transform:none;transition:none}}
+    @media (prefers-reduced-motion: reduce){ .typewriter p{ transform:none } }
 
     /* Sparkle */
     .sparkle{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);pointer-events:none;animation:sparkleUp .3s ease-out forwards}
@@ -195,8 +195,7 @@
 
     <section class="actions-row">
       <button id="editBtn" class="btn primary">Edit Profile</button>
-      <button id="downloadBtn" class="btn">Download PDF</button>
-      <button id="homeBtn" class="btn outline">Home</button>
+      <button id="nextChartBtn" class="btn outline">Next → Soul Chart</button>
     </section>
 
     <footer>
@@ -205,229 +204,186 @@
   </div>
 
   <script>
-    (function(){
-      const $=s=>document.querySelector(s);
-      const ui={
-        avatar:$('#avatar'), userName:$('#userName'), nameInStory:$('#nameInStory'),
-        zodiacTag:$('#zodiacTag'), chineseTag:$('#chineseTag'), lifePathTag:$('#lifePathTag'), connectionTag:$('#connectionTag'),
-        storyText:$('#storyText'),
-        loveList:$('#loveList'), loveEmpty:$('#loveEmpty'),
-        valuesList:$('#valuesList'), valuesEmpty:$('#valuesEmpty'),
-        hobbiesList:$('#hobbiesList'), hobbiesEmpty:$('#hobbiesEmpty'),
-        summaryText:$('#summaryText'),
-        regenBtn:$('#regenBtn'), copyBtn:$('#copyBtn'),
-        editBtn:$('#editBtn'), homeBtn:$('#homeBtn'), downloadBtn:$('#downloadBtn'),
-        openDrawer:$('#openDrawer'), closeDrawer:$('#closeDrawer'), drawer:$('#drawer'), drawerBackdrop:$('#drawerBackdrop'),
-        logout:$('#logoutLink'), logoutM:$('#logoutLinkMobile'),
-        navbar:document.querySelector('.navbar')
-      };
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const ui = {
+    avatar: $('#avatar'), userName: $('#userName'), nameInStory: $('#nameInStory'),
+    zodiacTag: $('#zodiacTag'), chineseTag: $('#chineseTag'), lifePathTag: $('#lifePathTag'), connectionTag: $('#connectionTag'),
+    storyText: $('#storyText'),
+    loveList: $('#loveList'), loveEmpty: $('#loveEmpty'),
+    valuesList: $('#valuesList'), valuesEmpty: $('#valuesEmpty'),
+    hobbiesList: $('#hobbiesList'), hobbiesEmpty: $('#hobbiesEmpty'),
+    summaryText: $('#summaryText'),
+    regenBtn: $('#regenBtn'), copyBtn: $('#copyBtn'),
+    editBtn: $('#editBtn'), nextChartBtn: $('#nextChartBtn'),
+    openDrawer: $('#openDrawer'), closeDrawer: $('#closeDrawer'), drawer: $('#drawer'), drawerBackdrop: $('#drawerBackdrop'),
+    logout: $('#logoutLink'), logoutM: $('#logoutLinkMobile'),
+    navbar: document.querySelector('.navbar')
+  };
 
-      // ===== helpers =====
-      function parse(){ try{ const raw=localStorage.getItem('soulQuiz'); return raw? JSON.parse(raw): {}; } catch { return {}; } }
-      function list(v){ if(Array.isArray(v)) return v; if(typeof v==='string') return v.split(/[\n,]/).map(s=>s.trim()).filter(Boolean); return []; }
-      function zodiac(iso){ if(!iso) return null; const d=new Date(iso); if(isNaN(d)) return null; const m=d.getMonth()+1,day=d.getDate(); const inR=(m,d,m1,d1,m2,d2)=> (m===m1&&d>=d1)||(m===m2&&d<=d2)||(m>m1&&m<m2)||(m1>m2&&(m>=m1||m<=m2)); if(inR(m,day,3,21,4,19))return'Aries'; if(inR(m,day,4,20,5,20))return'Taurus'; if(inR(m,day,5,21,6,20))return'Gemini'; if(inR(m,day,6,21,7,22))return'Cancer'; if(inR(m,day,7,23,8,22))return'Leo'; if(inR(m,day,8,23,9,22))return'Virgo'; if(inR(m,day,9,23,10,22))return'Libra'; if(inR(m,day,10,23,11,21))return'Scorpio'; if(inR(m,day,11,22,12,21))return'Sagittarius'; if(inR(m,day,12,22,1,19))return'Capricorn'; if(inR(m,day,1,20,2,18))return'Aquarius'; if(inR(m,day,2,19,3,20))return'Pisces'; return null; }
-      function chinese(y){ if(!y) return null; const animals=['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig']; const i=(y-1900)%12; return animals[(i+12)%12]; }
-      function life(iso){ if(!iso) return null; const digits=String(iso).replace(/\D/g,''); if(!digits) return null; const master=n=>[11,22,33].includes(n); const sum=n=>String(n).split('').reduce((a,b)=>a+ +b,0); let n=digits.split('').reduce((a,b)=>a+ +b,0); while(n>9&&!master(n)) n=sum(n); return n; }
-      function hobbyIcon(label){ const s=(label||'').toLowerCase(); const map=[ ['travel','✈️'], ['yoga','🧘'], ['music','🎵'], ['reading','📚'], ['books','📚'], ['gym','🏋️'], ['running','🏃'], ['dance','💃'], ['art','🎨'], ['photo','📷'], ['cook','🍳'], ['bake','🧁'], ['hiking','🥾'], ['garden','🌿'], ['meditation','🕯️'], ['movie','🎬'], ['game','🎮'] ]; for(const [k,ico] of map){ if(s.includes(k)) return ico; } return '✨'; }
-      const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* ===== helpers ===== */
+  function parse(){ try{ const raw=localStorage.getItem('soulQuiz'); return raw? JSON.parse(raw): {}; } catch { return {}; } }
+  function list(v){ if(Array.isArray(v)) return v.map(x=>String(x).trim()).filter(Boolean);
+    if(typeof v==='string') return v.split(/[\n,]/).map(s=>s.trim()).filter(Boolean); return []; }
+  function zodiac(iso){ if(!iso) return null; const d=new Date(iso); if(isNaN(d)) return null;
+    const m=d.getMonth()+1,day=d.getDate();
+    const inR=(m,d,m1,d1,m2,d2)=> (m===m1&&day>=d1)||(m===m2&&day<=d2)||(m>m1&&m<m2)||(m1>m2&&(m>=m1||m<=m2));
+    if(inR(m,day,3,21,4,19))return'Aries'; if(inR(m,day,4,20,5,20))return'Taurus';
+    if(inR(m,day,5,21,6,20))return'Gemini'; if(inR(m,day,6,21,7,22))return'Cancer';
+    if(inR(m,day,7,23,8,22))return'Leo'; if(inR(m,day,8,23,9,22))return'Virgo';
+    if(inR(m,day,9,23,10,22))return'Libra'; if(inR(m,day,10,23,11,21))return'Scorpio';
+    if(inR(m,day,11,22,12,21))return'Sagittarius'; if(inR(m,day,12,22,1,19))return'Capricorn';
+    if(inR(m,day,1,20,2,18))return'Aquarius'; if(inR(m,day,2,19,3,20))return'Pisces'; return null; }
+  function chinese(y){ if(!y) return null; const a=['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig']; const i=(y-1900)%12; return a[(i+12)%12]; }
+  function life(iso){ if(!iso) return null; const digits=String(iso).replace(/\D/g,''); if(!digits) return null;
+    const master=n=>[11,22,33].includes(n), sum=n=>String(n).split('').reduce((a,b)=>a+ +b,0);
+    let n=digits.split('').reduce((a,b)=>a+ +b,0); while(n>9&&!master(n)) n=sum(n); return n; }
+  function hobbyIcon(label){ const s=(label||'').toLowerCase();
+    const map=[['travel','✈️'],['yoga','🧘'],['music','🎵'],['reading','📚'],['books','📚'],['gym','🏋️'],['running','🏃'],['dance','💃'],['art','🎨'],['photo','📷'],['cook','🍳'],['bake','🧁'],['hiking','🥾'],['garden','🌿'],['meditation','🕯️'],['movie','🎬'],['game','🎮']];
+    for(const [k,ico] of map){ if(s.includes(k)) return ico; } return '✨'; }
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      // ===== Poetic two-paragraph story with bold key phrases =====
-      function buildPoeticParagraphs(d){
-        const n=d.name||'Friend';
-        const z=d.zodiac || zodiac(d.birthday);
-        const lp=d.lifePath || life(d.birthday);
-        const loves=list(d.loveLanguages||d.loveLanguage); const p=loves[0]; const others=loves.slice(1);
-        const vals=list(d.values); const topVals=vals.slice(0,2);
-        const hobs=list(d.hobbies).slice(0,3);
+  /* ===== poetic 2 paragraphs ===== */
+  function buildPoeticParagraphs(d){
+    const n=d.name||'Friend'; const z=d.zodiac||zodiac(d.birthday); const lp=d.lifePath||life(d.birthday);
+    const loves=list(d.loveLanguages||d.loveLanguage); const p=loves[0]; const others=loves.slice(1);
+    const vals=list(d.values); const topVals=vals.slice(0,2); const hobs=list(d.hobbies).slice(0,3);
 
-        const p1Parts=[];
-        p1Parts.push(`Your light has a calm shimmer, ${n}—a star that remembers its sky.`);
-        if(z) p1Parts.push(`Born under ${z}, you carry its quiet signature.`);
-        if(lp!=null) p1Parts.push(`Life Path ${lp} is your inner compass, turning toward what feels true.`);
-        if(p && others.length) p1Parts.push(`Your heart speaks ${p} first, yet understands ${others.join(', ')} like harmonies.`);
-        else if(p) p1Parts.push(`Your heart speaks ${p}, a language that blossoms when it’s heard.`);
+    const p1=[`Your light has a calm shimmer, ${n}—a star that remembers its sky.`];
+    if(z) p1.push(`Born under ${z}, you carry its quiet signature.`);
+    if(lp!=null) p1.push(`Life Path ${lp} is your inner compass, turning toward what feels true.`);
+    if(p && others.length) p1.push(`Your heart speaks ${p} first, yet understands ${others.join(', ')} like harmonies.`);
+    else if(p) p1.push(`Your heart speaks ${p}, a language that blossoms when it’s heard.`);
 
-        const p2Parts=[];
-        if(topVals.length) p2Parts.push(`You honor ${topVals.join(', ')}—your pocketful of crystals.`);
-        if(hobs.length) p2Parts.push(`Rituals like ${hobs.join(', ')} water the garden of your spirit.`);
-        p2Parts.push(`Walk softly, shine openly—the path brightens as you move.`);
-        return [p1Parts.join(' '), p2Parts.join(' ')];
-      }
-
-      function typeParagraphs(container, paragraphs, boldPhrases){
-        container.innerHTML='';
-        let idx=0; const total=paragraphs.length;
-        const typeOne = ()=>{
-          if(idx>=total) return;
-          const pEl=document.createElement('p'); container.appendChild(pEl); pEl.classList.add('show');
-          if(reduceMotion){ pEl.textContent = paragraphs[idx]; applyBold(pEl, boldPhrases); idx++; return typeOne(); }
-          const text=paragraphs[idx++];
-          const dur = 1200 + Math.floor(Math.random()*400); // 1.2–1.6s
-          const steps = Math.max(20, Math.ceil(text.length/2));
-          const interval = Math.max(12, Math.floor(dur/steps));
-          let i=0; const id=setInterval(()=>{
-            i+=Math.ceil(text.length/steps);
-            pEl.textContent = text.slice(0, Math.min(i, text.length));
-            if(i>=text.length){ clearInterval(id); applyBold(pEl, boldPhrases); setTimeout(typeOne, 120); }
-          }, interval);
-        };
-        typeOne();
-      }
-
-      function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
-      function applyBold(pEl, phrases){
-        let html = pEl.textContent; if(!html) return;
-        let used=0;
-        for(const ph of phrases){
-          if(!ph || used>=3) break;
-          const re = new RegExp('(\\b'+escapeRegExp(ph)+'\\b)','i');
-          if(re.test(html)){ html = html.replace(re,'<strong>$1</strong>'); used++; }
-        }
-        pEl.innerHTML = html;
-      }
-
-      // ===== CHIPS with Show more =====
-      function renderChipGroup(arr, container, emptyEl, {type='values'}={}){
-        container.innerHTML='';
-        const MAX=10; const total=arr.length;
-        if(!total){ emptyEl.hidden=false; return; } else emptyEl.hidden=true;
-        const showBtn=document.createElement('button');
-        showBtn.className='btn ghost'; showBtn.style.padding='6px 10px'; showBtn.style.borderRadius='999px';
-        let expanded=false;
-        function paint(){
-          container.innerHTML='';
-          const items = expanded? arr : arr.slice(0,MAX);
-          items.forEach(v=>{
-            const s=document.createElement('span');
-            s.className = 'chip' + (type==='values'? ' gem':'') + (type==='hobby'?' hobby':'');
-            if(type==='hobby'){
-              const ico=document.createElement('span'); ico.className='ico'; ico.textContent=hobbyIcon(v);
-              const t=document.createElement('span'); t.textContent=v; s.appendChild(ico); s.appendChild(t);
-            } else { s.textContent=v; }
-            container.appendChild(s);
-          });
-          if(total>MAX){ showBtn.textContent = expanded? 'Show less' : `Show more (+${total-MAX})`; container.appendChild(showBtn); }
-        }
-        showBtn.addEventListener('click', ()=>{ expanded=!expanded; paint(); });
-        paint();
-      }
-
-      // ===== RENDER =====
-      function render(){
-        const d=parse();
-        // Avatar with placeholder
-        const ph = 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><defs><radialGradient id="g" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00fdd8" stop-opacity=".35"/><stop offset="100%" stop-color="#00fdd8" stop-opacity=".05"/></radialGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><circle cx="48" cy="38" r="18" fill="#0a6a6f"/><rect x="20" y="58" width="56" height="22" rx="11" fill="#0a6a6f"/></svg>');
-        ui.avatar.src = d.profilePhoto1 || localStorage.getItem('profilePhoto1') || ph;
-        ui.avatar.alt = 'Profile photo';
-
-        // Name & chips
-        const name=d.name||'My Soul'; ui.userName.textContent=name; ui.nameInStory.textContent=name;
-        const z=d.zodiac||zodiac(d.birthday); if(z){ ui.zodiacTag.textContent=z; ui.zodiacTag.hidden=false; }
-        const yr = (()=>{ if(d.birthday){ const dt=new Date(d.birthday); if(!isNaN(dt)) return dt.getFullYear(); const y=String(d.birthday).slice(0,4); if(/^\d{4}$/.test(y)) return Number(y);} return null; })();
-        const cz=chinese(yr); if(cz){ ui.chineseTag.textContent=cz; ui.chineseTag.hidden=false; }
-        const lp=d.lifePath||life(d.birthday); if(lp!=null){ ui.lifePathTag.textContent='Life Path '+lp; ui.lifePathTag.hidden=false; }
-        if(d.connectionType){ ui.connectionTag.textContent=d.connectionType; ui.connectionTag.hidden=false; }
-
-        // Build bold phrases (primary love + top 2 values)
-        const loves=list(d.loveLanguages||d.loveLanguage); const primary = loves[0];
-        const vals=list(d.values); const bolds=[primary, vals[0], vals[1]].filter(Boolean);
-
-        // Story — two paragraphs with typewriter per paragraph
-        const paragraphs=buildPoeticParagraphs(d);
-        typeParagraphs(ui.storyText, paragraphs, bolds);
-
-        // Love languages
-        ui.loveList.innerHTML='';
-        if(loves.length){
-          loves.forEach((l,i)=>{ const s=document.createElement('span'); s.className='chip'+(i===0?' primary':''); s.textContent=i===0? l+' · Primary' : l; ui.loveList.appendChild(s); });
-          ui.loveEmpty.hidden=true;
-        } else ui.loveEmpty.hidden=false;
-
-        // Values & Hobbies with show more
-        renderChipGroup(list(d.values), ui.valuesList, ui.valuesEmpty, {type:'values'});
-        renderChipGroup(list(d.hobbies), ui.hobbiesList, ui.hobbiesEmpty, {type:'hobby'});
-
-        // Summary — 2–3 inspirational sentences
-        ui.summaryText.textContent = buildSummary(d);
-      }
-
-      function buildSummary(d){
-      const n = d.name || 'You';
-      const loves = list(d.loveLanguages || d.loveLanguage);
-      const p = loves[0];
-      const ct = d.connectionType || 'meaningful connections';
-      const about = (d.about || '').trim();
-      const blessing = 'Your soul is seeking resonance. Trust your path, and the right connections will find you.';
-
-      if (about) {
-      const normalized = about.replaceAll('!','.').replaceAll('?','.').trim();
-      const count = normalized.split('.').filter(s => s.trim()).length;
-      const ensured = normalized.endsWith('.') ? normalized : normalized + '.';
-      return count < 2 ? ensured + ' ' + blessing : about;
+    const p2=[];
+    if(topVals.length) p2.push(`You honor ${topVals.join(', ')}—your pocketful of crystals.`);
+    if(hobs.length) p2.push(`Rituals like ${hobs.join(', ')} water the garden of your spirit.`);
+    p2.push(`Walk softly, shine openly—the path brightens as you move.`);
+    return [p1.join(' '), p2.join(' ')];
   }
-  const a = p
-    ? `${n} is ready for ${ct}. Your heart blossoms in ${p}—let it be seen.`
-    : `${n} is ready for ${ct}. Lead with your values and steady light.`;
-  const b = `Trust your pace. The right souls will recognize your glow.`;
-  return `${a} ${b} ${blessing}`;
-}
 
+  function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+  function applyBold(pEl, phrases){
+    let html=pEl.textContent||'', used=0;
+    for(const ph of phrases){ if(!ph||used>=3) break;
+      const re=new RegExp('(\\b'+escapeRegExp(ph)+'\\b)','i');
+      if(re.test(html)){ html=html.replace(re,'<strong>$1</strong>'); used++; } }
+    pEl.innerHTML=html;
+  }
 
-      // NAV + sparkle + Copy feedback + PDF placeholder
-      function sparkle(el){ if(reduceMotion) return; const r=el.getBoundingClientRect(); const sp=document.createElement('span'); sp.className='sparkle'; sp.style.left=(r.left+r.width-8)+'px'; sp.style.top=(r.top+window.scrollY+8)+'px'; document.body.appendChild(sp); setTimeout(()=>sp.remove(),300); }
-      function exportPdf(){ alert('PDF export coming soon'); }
-      function bind(){
-    // navbar underline on scroll
-      const onScroll = () => {
-      if (window.scrollY > 6) ui.navbar.classList.add('scrolled');
-      else ui.navbar.classList.remove('scrolled');
+  function typeParagraphs(container, paragraphs, boldPhrases){
+    container.innerHTML='';
+    let idx=0; const typeOne=()=>{ if(idx>=paragraphs.length) return;
+      const pEl=document.createElement('p'); container.appendChild(pEl); pEl.classList.add('show');
+      if(reduceMotion){ pEl.textContent=paragraphs[idx++]; applyBold(pEl,boldPhrases); return typeOne(); }
+      const text=paragraphs[idx++]; const dur=1200+Math.floor(Math.random()*400);
+      const steps=Math.max(20,Math.ceil(text.length/2)); const interval=Math.max(12,Math.floor(dur/steps));
+      let i=0; const id=setInterval(()=>{ i+=Math.ceil(text.length/steps);
+        pEl.textContent=text.slice(0,Math.min(i,text.length));
+        if(i>=text.length){ clearInterval(id); applyBold(pEl,boldPhrases); setTimeout(typeOne,120); }
+      },interval);
+    }; typeOne();
+  }
+
+  /* ===== chips with Show more ===== */
+  function renderChipGroup(arr, container, emptyEl, {type='values'}={}){
+    container.innerHTML=''; const MAX=10; const total=arr.length;
+    if(!total){ emptyEl.hidden=false; return; } else emptyEl.hidden=true;
+    let expanded=false; const btn=document.createElement('button');
+    btn.className='btn ghost'; btn.style.padding='6px 10px'; btn.style.borderRadius='999px';
+    const paint=()=>{ container.innerHTML=''; const items=expanded?arr:arr.slice(0,MAX);
+      items.forEach(v=>{ const s=document.createElement('span');
+        s.className='chip'+(type==='values'?' gem':'')+(type==='hobby'?' hobby':'');
+        if(type==='hobby'){ const ico=document.createElement('span'); ico.className='ico'; ico.textContent=hobbyIcon(v);
+          const t=document.createElement('span'); t.textContent=v; s.appendChild(ico); s.appendChild(t); }
+        else s.textContent=v; container.appendChild(s); });
+      if(total>MAX){ btn.textContent=expanded?'Show less':`Show more (+${total-MAX})`; container.appendChild(btn); }
     };
-      onScroll();
-      window.addEventListener('scroll', onScroll, { passive: true });
+    btn.addEventListener('click',()=>{ expanded=!expanded; paint(); }); paint();
+  }
 
-    // drawer helpers
-      const openDrawer = () => { ui.drawer.classList.add('open'); document.body.classList.add('no-scroll'); };
-      const closeDrawer = () => { ui.drawer.classList.remove('open'); document.body.classList.remove('no-scroll'); };
+  /* ===== summary ===== */
+  function buildSummary(d){
+    const n=d.name||'You'; const loves=list(d.loveLanguages||d.loveLanguage); const p=loves[0];
+    const ct=d.connectionType||'meaningful connections'; const about=(d.about||'').trim();
+    const blessing='Your soul is seeking resonance. Trust your path, and the right connections will find you.';
+    if(about){
+      const normalized=about.replaceAll('!','.').replaceAll('?','.').trim();
+      const count=normalized.split('.').filter(s=>s.trim()).length;
+      const ensured=normalized.endsWith('.')? normalized : (normalized+'.');
+      return count<2 ? (ensured+' '+blessing) : about;
+    }
+    const a=p? `${n} is ready for ${ct}. Your heart blossoms in ${p}—let it be seen.`
+             : `${n} is ready for ${ct}. Lead with your values and steady light.`;
+    const b=`Trust your pace. The right souls will recognize your glow.`;
+    return `${a} ${b} ${blessing}`;
+  }
 
-    // drawer events
+  /* ===== render ===== */
+  function render(){
+    const d=parse();
+    // avatar
+    const ph='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 96 96\"><defs><radialGradient id=\"g\" cx=\"50%\" cy=\"50%\" r=\"50%\"><stop offset=\"0%\" stop-color=\"#00fdd8\" stop-opacity=\".35\"/><stop offset=\"100%\" stop-color=\"#00fdd8\" stop-opacity=\".05\"/></radialGradient></defs><rect width=\"100%\" height=\"100%\" fill=\"url(#g)\"/><circle cx=\"48\" cy=\"38\" r=\"18\" fill=\"#0a6a6f\"/><rect x=\"20\" y=\"58\" width=\"56\" height=\"22\" rx=\"11\" fill=\"#0a6a6f\"/></svg>');
+    const stored=d.profilePhoto1||localStorage.getItem('profilePhoto1'); ui.avatar.src=stored||ph; ui.avatar.alt='Profile photo';
+
+    // name & tags
+    const name=d.name||'My Soul'; ui.userName.textContent=name; ui.nameInStory.textContent=name;
+    const z=d.zodiac||zodiac(d.birthday); if(z){ ui.zodiacTag.textContent=z; ui.zodiacTag.hidden=false; }
+    const yr=(()=>{ if(d.birthday){ const dt=new Date(d.birthday); if(!isNaN(dt)) return dt.getFullYear();
+      const y=String(d.birthday).slice(0,4); if(/^\d{4}$/.test(y)) return Number(y);} return null; })();
+    const cz=chinese(yr); if(cz){ ui.chineseTag.textContent=cz; ui.chineseTag.hidden=false; }
+    const lp=d.lifePath||life(d.birthday); if(lp!=null){ ui.lifePathTag.textContent='Life Path '+lp; ui.lifePathTag.hidden=false; }
+    if(d.connectionType){ ui.connectionTag.textContent=d.connectionType; ui.connectionTag.hidden=false; }
+
+    // portrait
+    const loves=list(d.loveLanguages||d.loveLanguage); const primary=loves[0];
+    const vals=list(d.values); const bolds=[primary, vals[0], vals[1]].filter(Boolean);
+    const paragraphs=buildPoeticParagraphs(d); typeParagraphs(ui.storyText, paragraphs, bolds);
+
+    // love languages
+    ui.loveList.innerHTML=''; if(loves.length){ loves.forEach((l,i)=>{ const s=document.createElement('span');
+      s.className='chip'+(i===0?' primary':''); s.textContent=i===0? `${l} · Primary` : l; ui.loveList.appendChild(s); });
+      ui.loveEmpty.hidden=true; } else ui.loveEmpty.hidden=false;
+
+    // values & hobbies
+    renderChipGroup(list(d.values), ui.valuesList, ui.valuesEmpty, {type:'values'});
+    renderChipGroup(list(d.hobbies), ui.hobbiesList, ui.hobbiesEmpty, {type:'hobby'});
+
+    // summary
+    ui.summaryText.textContent=buildSummary(d);
+  }
+
+  /* ===== sparkle + nav + actions ===== */
+  function sparkle(el){ if(reduceMotion) return;
+    const r=el.getBoundingClientRect(); const sp=document.createElement('span');
+    sp.className='sparkle'; sp.style.left=(r.left+r.width-8)+'px'; sp.style.top=(r.top+window.scrollY+8)+'px';
+    document.body.appendChild(sp); setTimeout(()=>sp.remove(),300); }
+
+  function bind(){
+    const onScroll=()=>{ if(window.scrollY>6) ui.navbar?.classList.add('scrolled'); else ui.navbar?.classList.remove('scrolled'); };
+    onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+
+    const openDrawer=()=>{ ui.drawer?.classList.add('open'); document.body.classList.add('no-scroll'); };
+    const closeDrawer=()=>{ ui.drawer?.classList.remove('open'); document.body.classList.remove('no-scroll'); };
     ui.openDrawer?.addEventListener('click', openDrawer);
     ui.closeDrawer?.addEventListener('click', closeDrawer);
     ui.drawerBackdrop?.addEventListener('click', closeDrawer);
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeDrawer(); });
 
-    // actions
-    ui.regenBtn?.addEventListener('click', (e) => { render(); sparkle(e.currentTarget); });
+    ui.regenBtn?.addEventListener('click', (e)=>{ render(); sparkle(e.currentTarget); });
+    ui.copyBtn?.addEventListener('click', ()=>{ const t=[...ui.storyText.querySelectorAll('p')].map(p=>p.textContent).join('\\n\\n');
+      if(!t) return; navigator.clipboard.writeText(t).then(()=>{ const prev=ui.copyBtn.textContent; ui.copyBtn.textContent='Copied ✨'; setTimeout(()=>ui.copyBtn.textContent=prev,900); }); });
 
-    ui.copyBtn?.addEventListener('click', () => {
-      const t = [...ui.storyText.querySelectorAll('p')].map(p => p.textContent).join('\n\n');
-      if (!t) return;
-      navigator.clipboard.writeText(t).then(() => {
-        const prev = ui.copyBtn.textContent;
-        ui.copyBtn.textContent = 'Copied ✨';
-        setTimeout(() => { ui.copyBtn.textContent = prev; }, 900);
-      });
-    });
+    ui.editBtn?.addEventListener('click', ()=>{ location.href='edit-profile.html'; });
+    ui.nextChartBtn?.addEventListener('click', ()=>{ location.href='soul-chart.html'; });
 
-    ui.editBtn?.addEventListener('click', () => { location.href = 'edit-profile.html'; });
-    ui.homeBtn?.addEventListener('click', () => { location.href = 'index.html'; });
-    ui.downloadBtn?.addEventListener('click', exportPdf);
-
-    // logout (desktop)
-    ui.logout?.addEventListener('click', (e) => {
-      e.preventDefault();
-      localStorage.clear();
-      location.href = 'index.html';
-    });
-    // logout (mobile)
-    ui.logoutM?.addEventListener('click', (e) => {
-      e.preventDefault();
-      localStorage.clear();
-      location.href = 'index.html';
-    });
+    ui.logout?.addEventListener('click', (e)=>{ e.preventDefault(); localStorage.clear(); location.href='index.html'; });
+    ui.logoutM?.addEventListener('click', (e)=>{ e.preventDefault(); localStorage.clear(); location.href='index.html'; });
   }
 
- document.addEventListener('DOMContentLoaded', () => { render(); bind(); });
+  document.addEventListener('DOMContentLoaded', ()=>{ render(); bind(); });
 })();
 </script>
+
 </body>
 </html>
