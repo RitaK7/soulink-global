@@ -45,7 +45,7 @@
     /* CARDS */
     .card{background:linear-gradient(180deg,rgba(1,74,82,.74),rgba(1,74,82,.56));border:1px solid var(--border);box-shadow:var(--shadow);border-radius:18px;padding:18px;margin:22px 0}
     .card h2{margin:0 0 8px}
-    .sub{color:var(--muted);font-size:.95rem;margin:-4px 0 12px}
+    .sub{color:var(--muted);font-size:.95rem;margin:.25rem 0 .5rem}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media(max-width:760px){.row{grid-template-columns:1fr}}
 
@@ -58,7 +58,8 @@
     .chips{display:flex;flex-wrap:wrap;gap:10px}
     .chip{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid var(--border);background:rgba(0,253,216,.06);min-height:44px;cursor:pointer;user-select:none}
     .chip input{display:none}
-    .chip.selected{background:rgba(0,253,216,.16);box-shadow:0 0 0 1px var(--border), inset 0 0 20px rgba(0,253,216,.08)}
+    .chip.selected{background:rgba(0,253,216,.18);box-shadow:0 0 0 1px var(--border), inset 0 0 20px rgba(0,253,216,.1)}
+    .chip.selected::after{content:"✓";margin-left:6px;opacity:.9}
     .chip.primary{transform:scale(1.06);box-shadow:0 0 0 1px var(--border),0 0 18px rgba(0,253,216,.16), inset 0 0 20px rgba(0,253,216,.1)}
     .chip.gem{background:rgba(0,253,216,.1);box-shadow:inset 0 0 20px rgba(0,253,216,.08)}
     .ico{width:1.1rem;text-align:center}
@@ -148,7 +149,7 @@
         </div>
         <div>
           <label for="birthday">Birth date</label>
-          <input id="birthday" type="text" inputmode="numeric" placeholder="1972-11-22" />
+          <input id="birthday" type="text" inputmode="numeric" pattern="[0-9\-]*" aria-describedby="birthdayHint" placeholder="1972-11-22" />
           <div class="hint" id="birthdayHint">Example: 1993-02-24 (or type 19930224)</div>
         </div>
         <div>
@@ -175,29 +176,29 @@
       <p class="sub">Choose one or more. The first becomes your Primary.</p>
       <div class="chips" id="loveChips"></div>
       <div class="help-lines" aria-live="polite" aria-atomic="true">
-      <div class="item"><strong>Words of Affirmation</strong> — Kind, encouraging words that express love.</div>
-      <div class="item"><strong>Acts of Service</strong> — Helpful actions that ease your load and show care.</div>
-      <div class="item"><strong>Receiving Gifts</strong> — Thoughtful tokens that say “I remembered you.”</div>
-      <div class="item"><strong>Quality Time</strong> — Focused, undivided attention and deep conversations.</div>
-      <div class="item"><strong>Physical Touch</strong> — Hugs, hand-holding, and gentle physical closeness.</div>
+        <div class="item"><strong>Words of Affirmation</strong> — Kind, encouraging words that express love.</div>
+        <div class="item"><strong>Acts of Service</strong> — Helpful actions that ease your load and show care.</div>
+        <div class="item"><strong>Receiving Gifts</strong> — Thoughtful tokens that say “I remembered you.”</div>
+        <div class="item"><strong>Quality Time</strong> — Focused, undivided attention and deep conversations.</div>
+        <div class="item"><strong>Physical Touch</strong> — Hugs, hand-holding, and gentle physical closeness.</div>
       </div>
-     </section>
+    </section>
 
-    <!-- GENDER & ORIENTATION -->
+    <!-- GENDER IDENTITY -->
     <section class="card" id="genderIdentityCard">
-    <h2>⚧︎ Your Gender Identity</h2>
-    <p class="sub">How you identify yourself.</p>
-    <div class="chips" id="genderIdChips"></div>
-    <div id="genderSelfMount"></div>
+      <h2>⚧︎ Your Gender Identity</h2>
+      <p class="sub">How you identify yourself.</p>
+      <div class="chips" id="genderIdChips"></div>
+      <div id="genderSelfMount"></div>
     </section>
 
+    <!-- CONNECT WITH -->
     <section class="card" id="connectWithCard">
-    <h2>🤝 Who you want to connect with</h2>
-    <p class="sub">Choose who you’d like to connect with. For friendship, you can keep it open.</p>
-    <div class="chips" id="connectWithChips"></div>
-    <div id="connectWithCustomMount"></div>
+      <h2>🤝 Who you want to connect with</h2>
+      <p class="sub">Choose who you’d like to connect with. For friendship, you can keep it open.</p>
+      <div class="chips" id="connectWithChips"></div>
+      <div id="connectWithCustomMount"></div>
     </section>
-
 
     <!-- HOBBIES -->
     <section class="card">
@@ -249,11 +250,8 @@
       const ui={
         name:$('#name'), country:$('#country'), birthday:$('#birthday'), height:$('#height'), weight:$('#weight'), birthdayHint:$('#birthdayHint'),
         connectionChips:$('#connectionChips'), loveChips:$('#loveChips'),
-        genderRow:$('#genderRow'), orientationRow:$('#orientationRow'),
-        genderIdChips: $('#genderIdChips'),
-        genderSelfMount: $('#genderSelfMount'),
-        connectWithChips: $('#connectWithChips'),
-        connectWithCustomMount: $('#connectWithCustomMount'),
+        genderIdChips:$('#genderIdChips'), genderSelfMount:$('#genderSelfMount'),
+        connectWithChips:$('#connectWithChips'), connectWithCustomMount:$('#connectWithCustomMount'),
         hobbyChips:$('#hobbyChips'), valueChips:$('#valueChips'),
         hobbyInput:$('#hobbyInput'), addHobby:$('#addHobby'),
         valueInput:$('#valueInput'), addValue:$('#addValue'),
@@ -271,13 +269,32 @@
 
       // birthdate auto-format YYYYMMDD -> YYYY-MM-DD (numbers only)
       function formatBirthOnInput(){
-        let digits = ui.birthday.value.replace(/\D/g,'').slice(0,8);
+        const raw = ui.birthday.value;
+        const clean = raw.replace(/[^0-9-]/g,'');
+        const digits = clean.replace(/\D/g,'').slice(0,8);
         let out = digits;
         if(digits.length>4) out = digits.slice(0,4)+'-'+digits.slice(4,6);
         if(digits.length>6) out = digits.slice(0,4)+'-'+digits.slice(4,6)+'-'+digits.slice(6,8);
         ui.birthday.value = out;
         const valid = /^\d{4}-\d{2}-\d{2}$/.test(out);
         ui.birthdayHint.style.opacity = valid? .6 : 1;
+      }
+
+      function validateBirthday(){
+        const raw = ui.birthday.value.trim();
+        const digits = raw.replace(/\D/g,'');
+        const hintMsg = 'Example: 1993-02-24 (you can also type 19930224)';
+        if(digits.length !== 8){ ui.birthdayHint.textContent = hintMsg; ui.birthdayHint.style.opacity = 1; return false; }
+        const y = +digits.slice(0,4), m = +digits.slice(4,6), d = +digits.slice(6,8);
+        if(y < 1900 || y > 2035 || m < 1 || m > 12){ ui.birthdayHint.textContent = hintMsg; ui.birthdayHint.style.opacity = 1; return false; }
+        const dt = new Date(y, m-1, d);
+        if(dt.getFullYear() !== y || dt.getMonth() !== m-1 || dt.getDate() !== d){ ui.birthdayHint.textContent = hintMsg; ui.birthdayHint.style.opacity = 1; return false; }
+        const formatted = `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        ui.birthday.value = formatted;
+        ui.birthdayHint.textContent = hintMsg;
+        ui.birthdayHint.style.opacity = .6;
+        setData({birthday: formatted});
+        return true;
       }
 
       // chips helpers
@@ -320,8 +337,6 @@
             }
             // ensure primary first
             if(data.length>1){
-              // clicking an already-selected chip should allow making it primary
-              // if user clicked and it exists (after push), move to front
               const j=data.indexOf(lbl);
               if(j>0) { const v=data.splice(j,1)[0]; data.unshift(v); }
             }
@@ -333,118 +348,78 @@
       }
 
       function hobbyIcon(text){ const s=(text||'').toLowerCase();
-        const map=[['travel','✈️'],['yoga','🧘'],['music','🎵'],['reading','📚'],['books','📚'],['gym','🏋️'],['run','🏃'],['dance','💃'],['art','🎨'],['photo','📷'],['cook','🍳'],['bake','🧁'],['hike','🥾'],['garden','🌿'],['medit','🕯️'],['movie','🎬'],['game','🎮']];
+        const map=[["travel","✈️"],["yoga","🧘"],["music","🎵"],["reading","📚"],["books","📚"],["gym","🏋️"],["run","🏃"],["dance","💃"],["art","🎨"],["photo","📷"],["cook","🍳"],["bake","🧁"],["hike","🥾"],["garden","🌿"],["medit","🕯️"],["movie","🎬"],["game","🎮"]];
         for(const [k,ico] of map){ if(s.includes(k)) return ico; } return '✨'; }
 
-      function renderListChips(container, values, {gem=false, icon=false, key}){
+      // Default option pools (you can extend freely)
+      const DEFAULT_HOBBIES=["Travel","Yoga","Music","Reading","Gym","Running","Dancing","Art","Photography","Cooking","Baking","Hiking","Gardening","Meditation","Movies","Gaming"];
+      const DEFAULT_VALUES=["Honesty","Kindness","Loyalty","Freedom","Creativity","Growth","Family","Adventure","Compassion","Integrity","Humor","Respect","Balance","Spirituality","Curiosity"];
+
+      // Toggle renderer that shows all options and highlights selections
+      function renderToggles(container, selectedArr, allOptions, {gem=false, icon=false, key}){
+        const selected = Array.isArray(selectedArr)? [...selectedArr]: [];
+        const extras = selected.filter(v=>!allOptions.includes(v));
+        const full = [...allOptions, ...extras];
         container.innerHTML='';
-        const arr=list(values);
-        arr.forEach(v=>{
-          const el=chip(v,{gem, icon:icon? hobbyIcon(v): null});
-          el.classList.add('selected');
+        full.forEach(lbl=>{
+          const el=document.createElement('button');
+          el.type='button';
+          el.className='chip'+(gem?' gem':'');
+          if(icon){ const i=document.createElement('span'); i.className='ico'; i.textContent=hobbyIcon(lbl); el.appendChild(i); }
+          const t=document.createElement('span'); t.textContent=lbl; el.appendChild(t);
+          const isSel = selected.includes(lbl);
+          if(isSel){ el.classList.add('selected'); }
           el.addEventListener('click',()=>{
-            let data=list(getData()[key]);
-            const i=data.indexOf(v); if(i>-1){ data.splice(i,1); } else { data.push(v); }
+            let data = list(getData()[key]);
+            const i=data.indexOf(lbl);
+            if(i>-1){ data.splice(i,1);} else { data.push(lbl);} // toggle
             setData({[key]:data});
-            renderListChips(container, data, {gem, icon, key});
+            renderToggles(container, data, allOptions, {gem, icon, key});
           });
           container.appendChild(el);
-          // Default option pools (you can extend freely)
-const DEFAULT_HOBBIES = [
-  'Travel','Yoga','Music','Reading','Gym','Running','Dancing','Art','Photography',
-  'Cooking','Baking','Hiking','Gardening','Meditation','Movies','Gaming'
-];
-const DEFAULT_VALUES = [
-  'Honesty','Kindness','Loyalty','Freedom','Creativity','Growth','Family','Adventure',
-  'Compassion','Integrity','Humor','Respect','Balance','Spirituality','Curiosity'
-];
-
-// Render a full list of chips; keep selected visible with highlight; click toggles
-function renderToggles(container, selectedArr, allOptions, {gem=false, icon=false, key}){
-  const selected = Array.isArray(selectedArr) ? [...selectedArr] : [];
-  const extras = selected.filter(v => !allOptions.includes(v)); // custom added by user
-  const full = [...allOptions, ...extras];
-
-  container.innerHTML = '';
-  full.forEach(lbl => {
-    const el = document.createElement('button');
-    el.type = 'button';
-    el.className = 'chip' + (gem ? ' gem' : '');
-    if(icon){
-      const i = document.createElement('span');
-      i.className = 'ico';
-      i.textContent = hobbyIcon(lbl);
-      el.appendChild(i);
-    }
-    const t = document.createElement('span');
-    t.textContent = lbl;
-    el.appendChild(t);
-
-    const isSel = selected.includes(lbl);
-    if(isSel) el.classList.add('selected');
-
-    el.addEventListener('click', () => {
-      let data = list(getData()[key]);
-      const i = data.indexOf(lbl);
-      if(i > -1) data.splice(i,1); else data.push(lbl); // toggle
-      setData({ [key]: data });
-      renderToggles(container, data, allOptions, {gem, icon, key});
-    });
-
-    container.appendChild(el);
-  });
-}
-
         });
       }
 
-      function addCustom(inputEl, key, container, opts){
+      function addCustom(inputEl, key, container, opts, defaults){
         const add=()=>{
           const v=inputEl.value.trim(); if(!v) return; inputEl.value='';
           let data=list(getData()[key]); if(!data.includes(v)) data.push(v);
-          setData({[key]:data}); renderListChips(container, data, opts);
+          setData({[key]:data}); renderToggles(container, data, defaults||[], opts);
         };
         inputEl.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); add(); }});
         (opts.btn||null)?.addEventListener?.('click', add);
       }
 
-      function renderGenderSection(d){
-        const genderChoices=['Woman','Man','Non-binary','Self-describe'];
-        const openToChoices=['Women','Men','Non-binary','Everyone'];
-        const orChoices=['Heterosexual','Gay','Lesbian','Bisexual','Pansexual','Queer','Asexual','Questioning','Self-describe'];
-
-        // gender
-        ui.genderRow.innerHTML='';
-        const left=document.createElement('div'); const right=document.createElement('div');
-        ui.genderRow.append(left,right);
-        const gWrap=document.createElement('div'); gWrap.className='chips'; left.appendChild(gWrap);
-        genderChoices.forEach(lbl=>{
+      function renderGenderIdentity(d){
+        const choices=['Woman','Man','Non-binary','Prefer not to say','Self-describe'];
+        ui.genderIdChips.innerHTML='';
+        choices.forEach(lbl=>{
           const el=chip(lbl);
-          if(d.gender===lbl || (lbl==='Self-describe' && d.genderSelf)) el.classList.add('selected');
-          el.addEventListener('click',()=>{ if(lbl==='Self-describe'){ setData({gender:null}); selfInput('genderSelf', left, d.genderSelf); } else { setData({gender:lbl, genderSelf:null}); renderAll(); } });
-          gWrap.appendChild(el);
+          const isSelf = lbl==='Self-describe';
+          if((!isSelf && d.genderIdentity===lbl) || (isSelf && d.genderSelf)) el.classList.add('selected','primary');
+          el.addEventListener('click',()=>{
+            if(isSelf){ setData({genderIdentity:null}); selfInput('genderSelf', ui.genderSelfMount, d.genderSelf); }
+            else { setData({genderIdentity:lbl, genderSelf:null}); renderGenderIdentity(getData()); ui.genderSelfMount.innerHTML=''; }
+          });
+          ui.genderIdChips.appendChild(el);
         });
-        if(d.genderSelf) selfInput('genderSelf', left, d.genderSelf);
+        if(d.genderSelf) selfInput('genderSelf', ui.genderSelfMount, d.genderSelf);
+      }
 
-        // open to
-        const openWrap=document.createElement('div'); openWrap.className='chips'; right.appendChild(openWrap);
-        openToChoices.forEach(lbl=>{
+      function renderConnectWith(d){
+        const choices=['Open to all','Women','Men','Non-binary','Custom preference'];
+        ui.connectWithChips.innerHTML='';
+        choices.forEach(lbl=>{
           const el=chip(lbl);
-          if(d.openTo===lbl) el.classList.add('selected','primary');
-          el.addEventListener('click',()=>{ setData({openTo:lbl}); renderAll(); });
-          openWrap.appendChild(el);
+          const isCustom = lbl==='Custom preference';
+          if((!isCustom && d.connectWith===lbl) || (isCustom && d.connectWithCustom)) el.classList.add('selected','primary');
+          el.addEventListener('click',()=>{
+            if(isCustom){ setData({connectWith:null}); selfInput('connectWithCustom', ui.connectWithCustomMount, d.connectWithCustom); }
+            else { setData({connectWith:lbl, connectWithCustom:null}); renderConnectWith(getData()); ui.connectWithCustomMount.innerHTML=''; }
+          });
+          ui.connectWithChips.appendChild(el);
         });
-
-        // orientation row below
-        ui.orientationRow.innerHTML='';
-        const orWrap=document.createElement('div'); orWrap.className='chips'; ui.orientationRow.appendChild(orWrap);
-        orChoices.forEach(lbl=>{
-          const el=chip(lbl);
-          if(d.orientation===lbl || (lbl==='Self-describe' && d.orientationSelf)) el.classList.add('selected');
-          el.addEventListener('click',()=>{ if(lbl==='Self-describe'){ setData({orientation:null}); selfInput('orientationSelf', ui.orientationRow, d.orientationSelf); } else { setData({orientation:lbl, orientationSelf:null}); renderAll(); } });
-          orWrap.appendChild(el);
-        });
-        if(d.orientationSelf) selfInput('orientationSelf', ui.orientationRow, d.orientationSelf);
+        if(d.connectWithCustom) selfInput('connectWithCustom', ui.connectWithCustomMount, d.connectWithCustom);
       }
 
       function selfInput(key, mount, value=''){
@@ -472,7 +447,8 @@ function renderToggles(container, selectedArr, allOptions, {gem=false, icon=fals
       function bindBasics(){
         ui.name.addEventListener('input',()=> setData({name:ui.name.value.trim()}));
         ui.country.addEventListener('input',()=> setData({country:ui.country.value.trim()}));
-        ui.birthday.addEventListener('input',()=>{ formatBirthOnInput(); setData({birthday:ui.birthday.value}); });
+        ui.birthday.addEventListener('input', formatBirthOnInput);
+        ui.birthday.addEventListener('blur', validateBirthday);
         ui.height.addEventListener('input',()=> setData({height:ui.height.value.replace(/[^\d.]/g,'')}));
         ui.weight.addEventListener('input',()=> setData({weight:ui.weight.value.replace(/[^\d.]/g,'')}));
       }
@@ -482,10 +458,10 @@ function renderToggles(container, selectedArr, allOptions, {gem=false, icon=fals
         populateBasics(d);
         renderConnection(d.connectionType);
         renderLove(d.loveLanguages);
-        renderGenderSection(d);
+        renderGenderIdentity(d);
+        renderConnectWith(d);
         renderToggles(ui.hobbyChips, list(d.hobbies), DEFAULT_HOBBIES, {icon:true, key:'hobbies'});
         renderToggles(ui.valueChips, list(d.values), DEFAULT_VALUES, {gem:true, key:'values'});
-
         ui.boundaries.value=d.boundaries||'';
         ui.aboutMe.value=d.aboutMe||'';
         ui.boundariesCount.textContent=String((d.boundaries||'').length);
