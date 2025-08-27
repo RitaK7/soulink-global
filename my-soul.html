@@ -304,20 +304,30 @@
 
   /* ===== summary ===== */
   function buildSummary(d){
-    const n=d.name||'You'; const loves=list(d.loveLanguages||d.loveLanguage); const p=loves[0];
-    const ct=d.connectionType||'meaningful connections'; const about=(d.about||'').trim();
-    const blessing='Your soul is seeking resonance. Trust your path, and the right connections will find you.';
-    if(about){
-      const normalized=about.replaceAll('!','.').replaceAll('?','.').trim();
-      const count=normalized.split('.').filter(s=>s.trim()).length;
-      const ensured=normalized.endsWith('.')? normalized : (normalized+'.');
-      return count<2 ? (ensured+' '+blessing) : about;
+  const n=d.name||'You';
+  const loves=list(d.loveLanguages||d.loveLanguage); 
+  const p=loves[0];
+  const ct=d.connectionType||'meaningful connections';
+  const about=(d.about||'').trim();
+
+  const blessing = 'Your soul is seeking resonance. Trust your path, and the right connections will find you.';
+
+  if(about){
+    const normalized = about.replaceAll('!','.').replaceAll('?','.');
+    const count = normalized.split('.').filter(s=>s.trim()).length;
+    if(count < 2){
+      const ensured = normalized.trim().endsWith('.') ? normalized.trim() : normalized.trim()+'.';
+      return ensured + ' ' + blessing;
     }
-    const a=p? `${n} is ready for ${ct}. Your heart blossoms in ${p}—let it be seen.`
-             : `${n} is ready for ${ct}. Lead with your values and steady light.`;
-    const b=`Trust your pace. The right souls will recognize your glow.`;
-    return `${a} ${b} ${blessing}`;
+    return about;
   }
+
+  const a = p
+    ? `${n} is ready for ${ct}. Your heart blossoms in ${p}—let it be seen.`
+    : `${n} is ready for ${ct}. Lead with your values and steady light.`;
+  const b = `Trust your pace. The right souls will recognize your glow.`;
+  return `${a} ${b} ${blessing}`;
+}
 
   /* ===== render ===== */
   function render(){
