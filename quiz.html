@@ -103,6 +103,11 @@
      }
     .chip .del:hover{ color:var(--fg) }
     .chip .del:focus-visible{ outline:2px solid var(--accent); outline-offset:2px }
+    /* Relationship prefs */
+    .age-range{display:flex;flex-direction:column;gap:8px}
+    .age-range .age-lines{font-weight:600}
+    .age-range .sliders{display:flex;align-items:center;gap:12px}
+    .age-range input[type=range]{flex:1}
   </style>
 </head>
 <body>
@@ -221,6 +226,33 @@
         <div class="chips" id="friendConnectChips"></div>
         <p class="hint" id="friendConnectHint">For friendship, keeping it open is perfect.</p>
       </div>
+      <!-- RELATIONSHIP PREFERENCES (romantic/both only) -->
+  <section class="card collapsible" id="relationshipCard">
+  <h2>💞 Relationship Preferences</h2>
+  <p class="sub">Tell us more about your romantic preferences.</p>
+
+   <div class="field">
+    <label>Body Type Preference</label>
+    <div class="chips" id="bodyTypeChips"></div>
+   </div>
+
+   <div class="field" style="margin-top:12px">
+    <label for="minAge">Age Range</label>
+    <div class="age-range">
+      <div class="age-lines">
+        <span id="minAgeValue">20</span>–<span id="maxAgeValue">60</span>
+      </div>
+      <div class="sliders">
+        <input type="range" id="minAge" min="18" max="80" value="20" aria-label="Minimum age" />
+        <input type="range" id="maxAge" min="18" max="80" value="60" aria-label="Maximum age" />
+      </div>
+    </div>
+   </div>
+
+    <div class="field" style="margin-top:12px">
+    <label>Lifestyle Preferences</label>
+    <div class="chips" id="lifestyleChips"></div>
+    </div>
     </section>
 
     <!-- ORIENTATION -->
@@ -293,7 +325,14 @@
         backHome:$('#backHome'), nextEdit:$('#nextEdit'),
         openDrawer:$('#openDrawer'), closeDrawer:$('#closeDrawer'), drawer:$('#drawer'), drawerBackdrop:$('#drawerBackdrop'),
         logout:$('#logoutLink'), logoutM:$('#logoutLinkMobile'), navbar:document.querySelector('.navbar'),
-        announce:$('#announce')
+        announce:$('#announce'),
+        relationshipCard: $('#relationshipCard'),
+        bodyTypeChips: $('#bodyTypeChips'),
+        lifestyleChips: $('#lifestyleChips'),
+        minAge: $('#minAge'),
+        maxAge: $('#maxAge'),
+        minAgeValue: $('#minAgeValue'),
+        maxAgeValue: $('#maxAgeValue'),
       };
 
       // will be filled after DOM ready
@@ -378,27 +417,31 @@
       function hobbyIcon(text){ const s=(text||'').toLowerCase();
         const map=[["travel","✈️"],["yoga","🧘"],["music","🎵"],["reading","📚"],["books","📚"],["gym","🏋️"],["run","🏃"],["dance","💃"],["art","🎨"],["photo","📷"],["cook","🍳"],["bake","🧁"],["hike","🥾"],["garden","🌿"],["medit","🕯️"],["movie","🎬"],["game","🎮"]];
         for(const [k,ico] of map){ if(s.includes(k)) return ico; } return '✨'; }
-
+        
       // Default option pools (you can extend freely)
       const DEFAULT_HOBBIES=["Travel","Yoga","Music","Reading","Gym","Running","Dancing","Art","Photography","Cooking","Baking","Hiking","Gardening","Meditation","Movies","Gaming"];
       const DEFAULT_VALUES=["Honesty","Kindness","Loyalty","Freedom","Creativity","Growth","Family","Adventure","Compassion","Integrity","Humor","Respect","Balance","Spirituality","Curiosity"];
+      // Relationship prefs defaults
+      const BODY_TYPES = ["Slim","Athletic","Average","Curvy","No preference"];
+      const LIFESTYLE_PREFS = ["Smokes","Doesn\u2019t smoke","Drinks socially","Doesn\u2019t drink","Fitness-oriented","Spiritual","Family-oriented","No preference"];
+
 
       // Render a full, stable list of chips; selected = toggle style; custom chips get a small "×" delete
-function renderToggles(container, selectedArr, allOptions, {gem=false, icon=false, key}){
-  const data = getData();
-  const defaults = key==='hobbies' ? DEFAULT_HOBBIES : DEFAULT_VALUES;
-  const customKey = key==='hobbies' ? 'customHobbies' : 'customValues';
+    function renderToggles(container, selectedArr, allOptions, {gem=false, icon=false, key}){
+     const data = getData();
+     const defaults = key==='hobbies' ? DEFAULT_HOBBIES : DEFAULT_VALUES;
+     const customKey = key==='hobbies' ? 'customHobbies' : 'customValues';
 
-  const selected = Array.isArray(selectedArr)? [...selectedArr] : [];
-  const selLower = selected.map(v=>String(v).toLowerCase());
+     const selected = Array.isArray(selectedArr)? [...selectedArr] : [];
+     const selLower = selected.map(v=>String(v).toLowerCase());
 
   // customs from storage (array), remove dups vs defaults (case-insensitive)
-  const customsRaw = list(data[customKey]);
-  const lowerDef = defaults.map(v=>v.toLowerCase());
-  const customs = customsRaw.filter(v => !lowerDef.includes(String(v).toLowerCase()));
+    const customsRaw = list(data[customKey]);
+    const lowerDef = defaults.map(v=>v.toLowerCase());
+    const customs = customsRaw.filter(v => !lowerDef.includes(String(v).toLowerCase()));
 
   // full list = defaults first, then customs (stable)
-  const full = [...defaults, ...customs];
+    const full = [...defaults, ...customs];
 
   container.innerHTML = '';
   full.forEach(lbl => {
@@ -553,7 +596,85 @@ function renderToggles(container, selectedArr, allOptions, {gem=false, icon=fals
           el.addEventListener('click',()=>{ setData({orientation:lbl}); renderOrientation(getData()); });
           ui.orientationChips.appendChild(el);
         });
+
       }
+      // Relationship helpers (persist under soulQuiz.relationship)
+      function getRel(){ const d=getData(); return d.relationship || {}; }
+      function setRel(patch){
+      const d=getData(); const rel = { ...(d.relationship||{}), ...patch };
+      setData({ relationship: rel }); return rel;
+      }
+
+// Generic renderer for relationship chips (toggle; "No preference" exclusive if provided)
+     function renderRelChips(container, options, selectedArr, relKey, {exclusive=null}={}){
+     container.innerHTML='';
+     const selLower=(selectedArr||[]).map(v=>String(v).toLowerCase());
+     options.forEach(lbl=>{
+     const el = chip(lbl);
+     const on = selLower.includes(lbl.toLowerCase());
+     if(on) el.classList.add('selected');
+     el.setAttribute('aria-pressed', on?'true':'false');
+     el.addEventListener('click', ()=>{
+      const cur = getRel();
+      let arr = Array.isArray(cur[relKey]) ? [...cur[relKey]] : [];
+      const idx = arr.map(v=>v.toLowerCase()).indexOf(lbl.toLowerCase());
+      let nowOn;
+      if(idx>-1){ arr.splice(idx,1); nowOn=false; }
+      else {
+        if(exclusive && lbl===exclusive){ arr=[lbl]; }
+        else { if(exclusive){ arr = arr.filter(v=>v!==exclusive); } arr.push(lbl); }
+        nowOn=true;
+      }
+      setRel({ [relKey]: arr });
+      // re-render to reflect exclusivity
+      renderRelChips(container, options, arr, relKey, {exclusive});
+      if(ui.announce){ ui.announce.textContent = `${nowOn?'Added to':'Removed from'} ${relKey}`; }
+    });
+    container.appendChild(el);
+  });
+}
+
+// Age dual slider
+function bindAge(){
+  if(!ui.minAge || !ui.maxAge) return;
+  const rel = getRel();
+  let [min,max] = Array.isArray(rel.ageRange) ? rel.ageRange : [20,60];
+  min = Math.max(18, Math.min(80, Number(min)||20));
+  max = Math.max(18, Math.min(80, Number(max)||60));
+  if(min>max){ [min,max] = [max,min]; }
+  ui.minAge.value = String(min);
+  ui.maxAge.value = String(max);
+  ui.minAgeValue.textContent = min;
+  ui.maxAgeValue.textContent = max;
+
+  const update = ()=>{
+    let a = Number(ui.minAge.value)||20;
+    let b = Number(ui.maxAge.value)||60;
+    if(a>b){
+      if(document.activeElement===ui.minAge){ b=a; ui.maxAge.value=b; }
+      else { a=b; ui.minAge.value=a; }
+    }
+    a = Math.max(18, Math.min(80, a));
+    b = Math.max(18, Math.min(80, b));
+    ui.minAgeValue.textContent = a;
+    ui.maxAgeValue.textContent = b;
+    setRel({ ageRange: [a,b] });
+  };
+  ui.minAge.oninput = update;
+  ui.maxAge.oninput = update;
+}
+
+// Main renderer for the block
+function renderRelationship(){
+  const rel = getRel();
+  // Body type: multi-toggle, "No preference" is exclusive
+  renderRelChips(ui.bodyTypeChips, BODY_TYPES, Array.isArray(rel.bodyType)? rel.bodyType: [], 'bodyType', {exclusive:'No preference'});
+  // Lifestyle: multi-toggle, no exclusivity
+  renderRelChips(ui.lifestyleChips, LIFESTYLE_PREFS, Array.isArray(rel.lifestyle)? rel.lifestyle: [], 'lifestyle', {exclusive:null});
+  // Age range
+  bindAge();
+}
+
 
       function selfInput(key, mount, value=''){
         let holder = mount.querySelector(`[data-self="${key}"]`);
@@ -633,6 +754,8 @@ function renderToggles(container, selectedArr, allOptions, {gem=false, icon=fals
         renderConnectWith(d);
         renderFriendConnect(d);
         renderOrientation(d);
+        renderRelationship();
+
         renderToggles(ui.hobbyChips, list(d.hobbies), DEFAULT_HOBBIES, {icon:true, key:'hobbies'});
         renderToggles(ui.valueChips, list(d.values), DEFAULT_VALUES, {gem:true, key:'values'});
         ui.boundaries.value=d.boundaries||'';
