@@ -184,11 +184,20 @@
      </section>
 
     <!-- GENDER & ORIENTATION -->
-    <section class="card">
-      <h2>⚧︎ Gender & Orientation</h2>
-      <div class="row" id="genderRow"></div>
-      <div class="row" id="orientationRow" style="margin-top:12px"></div>
+    <section class="card" id="genderIdentityCard">
+    <h2>⚧︎ Your Gender Identity</h2>
+    <p class="sub">How you identify yourself.</p>
+    <div class="chips" id="genderIdChips"></div>
+    <div id="genderSelfMount"></div>
     </section>
+
+    <section class="card" id="connectWithCard">
+    <h2>🤝 Who you want to connect with</h2>
+    <p class="sub">Choose who you’d like to connect with. For friendship, you can keep it open.</p>
+    <div class="chips" id="connectWithChips"></div>
+    <div id="connectWithCustomMount"></div>
+    </section>
+
 
     <!-- HOBBIES -->
     <section class="card">
@@ -241,6 +250,10 @@
         name:$('#name'), country:$('#country'), birthday:$('#birthday'), height:$('#height'), weight:$('#weight'), birthdayHint:$('#birthdayHint'),
         connectionChips:$('#connectionChips'), loveChips:$('#loveChips'),
         genderRow:$('#genderRow'), orientationRow:$('#orientationRow'),
+        genderIdChips: $('#genderIdChips'),
+        genderSelfMount: $('#genderSelfMount'),
+        connectWithChips: $('#connectWithChips'),
+        connectWithCustomMount: $('#connectWithCustomMount'),
         hobbyChips:$('#hobbyChips'), valueChips:$('#valueChips'),
         hobbyInput:$('#hobbyInput'), addHobby:$('#addHobby'),
         valueInput:$('#valueInput'), addValue:$('#addValue'),
@@ -336,6 +349,52 @@
             renderListChips(container, data, {gem, icon, key});
           });
           container.appendChild(el);
+          // Default option pools (you can extend freely)
+const DEFAULT_HOBBIES = [
+  'Travel','Yoga','Music','Reading','Gym','Running','Dancing','Art','Photography',
+  'Cooking','Baking','Hiking','Gardening','Meditation','Movies','Gaming'
+];
+const DEFAULT_VALUES = [
+  'Honesty','Kindness','Loyalty','Freedom','Creativity','Growth','Family','Adventure',
+  'Compassion','Integrity','Humor','Respect','Balance','Spirituality','Curiosity'
+];
+
+// Render a full list of chips; keep selected visible with highlight; click toggles
+function renderToggles(container, selectedArr, allOptions, {gem=false, icon=false, key}){
+  const selected = Array.isArray(selectedArr) ? [...selectedArr] : [];
+  const extras = selected.filter(v => !allOptions.includes(v)); // custom added by user
+  const full = [...allOptions, ...extras];
+
+  container.innerHTML = '';
+  full.forEach(lbl => {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'chip' + (gem ? ' gem' : '');
+    if(icon){
+      const i = document.createElement('span');
+      i.className = 'ico';
+      i.textContent = hobbyIcon(lbl);
+      el.appendChild(i);
+    }
+    const t = document.createElement('span');
+    t.textContent = lbl;
+    el.appendChild(t);
+
+    const isSel = selected.includes(lbl);
+    if(isSel) el.classList.add('selected');
+
+    el.addEventListener('click', () => {
+      let data = list(getData()[key]);
+      const i = data.indexOf(lbl);
+      if(i > -1) data.splice(i,1); else data.push(lbl); // toggle
+      setData({ [key]: data });
+      renderToggles(container, data, allOptions, {gem, icon, key});
+    });
+
+    container.appendChild(el);
+  });
+}
+
         });
       }
 
@@ -424,8 +483,9 @@
         renderConnection(d.connectionType);
         renderLove(d.loveLanguages);
         renderGenderSection(d);
-        renderListChips(ui.hobbyChips, d.hobbies, {icon:true, key:'hobbies'});
-        renderListChips(ui.valueChips, d.values, {gem:true, key:'values'});
+        renderToggles(ui.hobbyChips, list(d.hobbies), DEFAULT_HOBBIES, {icon:true, key:'hobbies'});
+        renderToggles(ui.valueChips, list(d.values), DEFAULT_VALUES, {gem:true, key:'values'});
+
         ui.boundaries.value=d.boundaries||'';
         ui.aboutMe.value=d.aboutMe||'';
         ui.boundariesCount.textContent=String((d.boundaries||'').length);
@@ -433,8 +493,8 @@
       }
 
       // add custom inputs
-      addCustom(ui.hobbyInput, 'hobbies', ui.hobbyChips, {icon:true, key:'hobbies', btn:ui.addHobby});
-      addCustom(ui.valueInput, 'values', ui.valueChips, {gem:true, key:'values', btn:ui.addValue});
+      addCustom(ui.hobbyInput, 'hobbies', ui.hobbyChips, {icon:true, key:'hobbies', btn:ui.addHobby}, DEFAULT_HOBBIES);
+      addCustom(ui.valueInput, 'values', ui.valueChips, {gem:true, key:'values', btn:ui.addValue}, DEFAULT_VALUES);
 
       // actions
       ui.backHome.addEventListener('click',()=> location.href='index.html');
