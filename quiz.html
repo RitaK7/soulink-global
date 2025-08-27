@@ -88,6 +88,13 @@
       .left-actions,.right-actions{flex-direction:column}
       .btn{width:100%}
     }
+
+    /* collapsible transitions */
+    .collapsible{overflow:hidden; max-height:1000px; opacity:1; transition:max-height .2s ease, opacity .2s ease}
+    .hidey{max-height:0 !important; opacity:0 !important; pointer-events:none}
+
+    /* screen-reader only */
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   </style>
 </head>
 <body>
@@ -159,15 +166,17 @@
         <div>
           <label for="weight">Weight (kg)</label>
           <input id="weight" type="text" inputmode="numeric" placeholder="e.g., 60" />
+          <div class="hint" id="hwHint">Optional. Some people care about this in relationships.</div>
         </div>
       </div>
     </section>
 
     <!-- CONNECTION -->
-    <section class="card">
+    <section class="card" id="connectionCard">
       <h2>🧭 Connection</h2>
       <p class="sub">What kind of connections are you open to?</p>
       <div class="chips" id="connectionChips"></div>
+      <p class="hint" id="connHelper">Fields adjust to your choice. Friendship focuses on values & hobbies; Romantic adds identity and preferences. LGBTQ+ inclusive.</p>
     </section>
 
     <!-- LOVE LANGUAGES -->
@@ -196,8 +205,20 @@
     <section class="card" id="connectWithCard">
       <h2>🤝 Who you want to connect with</h2>
       <p class="sub">Choose who you’d like to connect with. For friendship, you can keep it open.</p>
-      <div class="chips" id="connectWithChips"></div>
-      <div id="connectWithCustomMount"></div>
+      <div class="collapsible" id="connectDetailedWrap">
+        <div class="chips" id="connectWithChips"></div>
+        <div id="connectWithCustomMount"></div>
+      </div>
+      <div class="collapsible" id="connectFriendWrap">
+        <div class="chips" id="friendConnectChips"></div>
+        <p class="hint" id="friendConnectHint">For friendship, keeping it open is perfect.</p>
+      </div>
+    </section>
+
+    <!-- ORIENTATION -->
+    <section class="card collapsible" id="orientationCard">
+      <h2>🌈 Orientation</h2>
+      <div class="chips" id="orientationChips"></div>
     </section>
 
     <!-- HOBBIES -->
@@ -241,6 +262,7 @@
     <footer>
       <span>© 2025 Soulink.global | Created with love by Soulink Team</span>
     </footer>
+    <div id="announce" class="sr-only" aria-live="polite"></div>
   </div>
 
   <script>
@@ -249,9 +271,12 @@
       const $$=s=>Array.from(document.querySelectorAll(s));
       const ui={
         name:$('#name'), country:$('#country'), birthday:$('#birthday'), height:$('#height'), weight:$('#weight'), birthdayHint:$('#birthdayHint'),
-        connectionChips:$('#connectionChips'), loveChips:$('#loveChips'),
+        connectionChips:$('#connectionChips'), connHelper:$('#connHelper'),
+        loveChips:$('#loveChips'),
         genderIdChips:$('#genderIdChips'), genderSelfMount:$('#genderSelfMount'),
         connectWithChips:$('#connectWithChips'), connectWithCustomMount:$('#connectWithCustomMount'),
+        friendConnectChips:$('#friendConnectChips'), friendConnectWrap:$('#connectFriendWrap'), connectDetailedWrap:$('#connectDetailedWrap'), friendConnectHint:$('#friendConnectHint'),
+        orientationChips:$('#orientationChips'), orientationCard:$('#orientationCard'),
         hobbyChips:$('#hobbyChips'), valueChips:$('#valueChips'),
         hobbyInput:$('#hobbyInput'), addHobby:$('#addHobby'),
         valueInput:$('#valueInput'), addValue:$('#addValue'),
@@ -259,8 +284,12 @@
         aboutMe:$('#aboutMe'), aboutCount:$('#aboutCount'),
         backHome:$('#backHome'), nextEdit:$('#nextEdit'),
         openDrawer:$('#openDrawer'), closeDrawer:$('#closeDrawer'), drawer:$('#drawer'), drawerBackdrop:$('#drawerBackdrop'),
-        logout:$('#logoutLink'), logoutM:$('#logoutLinkMobile'), navbar:document.querySelector('.navbar')
+        logout:$('#logoutLink'), logoutM:$('#logoutLinkMobile'), navbar:document.querySelector('.navbar'),
+        announce:$('#announce')
       };
+
+      // will be filled after DOM ready
+      ui.heightWrap = null; ui.weightWrap = null; ui.hwHint = $('#hwHint');
 
       /* ===== helpers ===== */
       function getData(){ try{ return JSON.parse(localStorage.getItem('soulQuiz'))||{}; }catch{ return {}; } }
@@ -307,12 +336,12 @@
       }
 
       function renderConnection(selected){
-        const choices=['romance','friendship','both'];
+        const choices=[{k:'friendship',lbl:'friendship'},{k:'romantic',lbl:'romance'},{k:'both',lbl:'both'}];
         ui.connectionChips.innerHTML='';
         choices.forEach(c=>{
-          const el=chip(c);
-          if(selected===c) el.classList.add('selected','primary');
-          el.addEventListener('click',()=>{ setData({connectionType:c}); renderAll(); });
+          const el=chip(c.lbl);
+          if(selected===c.k) el.classList.add('selected','primary');
+          el.addEventListener('click',()=>{ setData({connectionType:c.k}); updateVisibility(c.k); renderAll(); });
           ui.connectionChips.appendChild(el);
         });
       }
@@ -328,18 +357,9 @@
           el.addEventListener('click',()=>{
             let data=list(getData().loveLanguages);
             const i=data.indexOf(lbl);
-            if(i>-1){
-              // toggle off
-              data.splice(i,1);
-            }else{
-              data.push(lbl);
-              // first selected becomes primary automatically
-            }
-            // ensure primary first
-            if(data.length>1){
-              const j=data.indexOf(lbl);
-              if(j>0) { const v=data.splice(j,1)[0]; data.unshift(v); }
-            }
+            if(i>-1){ data.splice(i,1); }
+            else { data.push(lbl); }
+            if(data.length>1){ const j=data.indexOf(lbl); if(j>0){ const v=data.splice(j,1)[0]; data.unshift(v);} }
             setData({loveLanguages:data});
             renderLove(data);
           });
@@ -422,12 +442,72 @@
         if(d.connectWithCustom) selfInput('connectWithCustom', ui.connectWithCustomMount, d.connectWithCustom);
       }
 
+      function renderFriendConnect(d){
+        const choices=['Open to all','Same gender','No preference'];
+        ui.friendConnectChips.innerHTML='';
+        choices.forEach(lbl=>{
+          const el=chip(lbl);
+          if((d.connectWith||'Open to all')===lbl) el.classList.add('selected','primary');
+          el.addEventListener('click',()=>{ setData({connectWith:lbl}); renderFriendConnect(getData()); });
+          ui.friendConnectChips.appendChild(el);
+        });
+      }
+
+      function renderOrientation(d){
+        const listO = ['Heterosexual','Gay','Lesbian','Bisexual','Pansexual','Asexual','Queer','Questioning','Prefer not to say'];
+        ui.orientationChips.innerHTML='';
+        listO.forEach(lbl=>{
+          const el=chip(lbl);
+          if(d.orientation===lbl) el.classList.add('selected','primary');
+          el.addEventListener('click',()=>{ setData({orientation:lbl}); renderOrientation(getData()); });
+          ui.orientationChips.appendChild(el);
+        });
+      }
+
       function selfInput(key, mount, value=''){
         let holder = mount.querySelector(`[data-self="${key}"]`);
         if(!holder){ holder=document.createElement('div'); holder.dataset.self=key; holder.style.marginTop='10px'; mount.appendChild(holder); }
         holder.innerHTML=`<label style="font-weight:600">Self-describe</label><input type="text" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:rgba(0,253,216,.06);color:var(--fg)" value="${value||''}">`;
         const input=holder.querySelector('input');
         input.addEventListener('input',()=>{ setData({[key]: input.value.trim()||null}); });
+      }
+
+      function setVis(el, show){ if(!el) return; el.classList.toggle('hidey', !show); }
+      function announce(msg){ if(!ui.announce) return; ui.announce.textContent=''; setTimeout(()=> ui.announce.textContent=msg, 25); }
+
+      function updateVisibility(mode){
+        const m = mode || getData().connectionType || 'friendship';
+        const romantic = (m==='romantic'|| m==='both');
+        setData({useRomanticFilters: romantic});
+
+        // ensure defaults in friendship
+        const d=getData();
+        if(!romantic){
+          if(!d.genderIdentity && !d.genderSelf){ setData({genderIdentity:'Prefer not to say'}); }
+          if(!d.connectWith){ setData({connectWith:'Open to all'}); }
+        }
+
+        // toggle sections
+        setVis(ui.orientationCard, romantic);
+        setVis(ui.connectDetailedWrap, romantic);
+        setVis(ui.friendConnectWrap, !romantic);
+
+        // height/weight wrappers (found at runtime)
+        setVis(ui.heightWrap, romantic);
+        setVis(ui.weightWrap, romantic);
+        if(ui.hwHint){ setVis(ui.hwHint, romantic); }
+
+        // helper lines
+        ui.friendConnectHint && (ui.friendConnectHint.style.opacity = !romantic? 1 : 0.6);
+        ui.connHelper && (ui.connHelper.style.opacity = 1);
+
+        // announce & focus
+        if(romantic){ announce(m==='both' ? 'All options available.' : 'Romantic details revealed.');
+          // focus gender chips first
+          const f = ui.genderIdChips.querySelector('.chip'); f?.focus?.();
+        } else { announce('Friendship mode — romantic details hidden.');
+          const f = ui.friendConnectChips.querySelector('.chip'); f?.focus?.();
+        }
       }
 
       // counters
@@ -460,12 +540,15 @@
         renderLove(d.loveLanguages);
         renderGenderIdentity(d);
         renderConnectWith(d);
+        renderFriendConnect(d);
+        renderOrientation(d);
         renderToggles(ui.hobbyChips, list(d.hobbies), DEFAULT_HOBBIES, {icon:true, key:'hobbies'});
         renderToggles(ui.valueChips, list(d.values), DEFAULT_VALUES, {gem:true, key:'values'});
         ui.boundaries.value=d.boundaries||'';
         ui.aboutMe.value=d.aboutMe||'';
         ui.boundariesCount.textContent=String((d.boundaries||'').length);
         ui.aboutCount.textContent=String((d.aboutMe||'').length);
+        updateVisibility(d.connectionType);
       }
 
       // add custom inputs
@@ -490,8 +573,16 @@
       ui.logout?.addEventListener('click', (e)=>{ e.preventDefault(); localStorage.clear(); location.href='index.html'; });
       ui.logoutM?.addEventListener('click', (e)=>{ e.preventDefault(); localStorage.clear(); location.href='index.html'; });
 
-      // init
-      renderAll(); bindBasics(); bindCounters(); formatBirthOnInput();
+      // init after DOM
+      document.addEventListener('DOMContentLoaded', ()=>{
+        // find height/weight wrappers so we can collapse smoothly
+        ui.heightWrap = ui.height.closest('div');
+        ui.weightWrap = ui.weight.closest('div');
+        // ensure collapsible class for smooth transitions
+        ui.heightWrap?.classList.add('collapsible');
+        ui.weightWrap?.classList.add('collapsible');
+        renderAll(); bindBasics(); bindCounters(); formatBirthOnInput();
+      });
     })();
   </script>
 </body>
