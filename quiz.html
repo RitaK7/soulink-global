@@ -95,6 +95,14 @@
 
     /* screen-reader only */
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    /* custom chip delete button (for custom hobbies/values) */
+    .chip{position:relative}
+    .chip .del{
+     margin-left:6px; line-height:1; border:none; background:transparent;
+     color:var(--muted); cursor:pointer; font-size:14px; padding:4px; border-radius:8px
+     }
+    .chip .del:hover{ color:var(--fg) }
+    .chip .del:focus-visible{ outline:2px solid var(--accent); outline-offset:2px }
   </style>
 </head>
 <body>
@@ -375,40 +383,123 @@
       const DEFAULT_HOBBIES=["Travel","Yoga","Music","Reading","Gym","Running","Dancing","Art","Photography","Cooking","Baking","Hiking","Gardening","Meditation","Movies","Gaming"];
       const DEFAULT_VALUES=["Honesty","Kindness","Loyalty","Freedom","Creativity","Growth","Family","Adventure","Compassion","Integrity","Humor","Respect","Balance","Spirituality","Curiosity"];
 
-      // Toggle renderer that shows all options and highlights selections
-      function renderToggles(container, selectedArr, allOptions, {gem=false, icon=false, key}){
-        const selected = Array.isArray(selectedArr)? [...selectedArr]: [];
-        const extras = selected.filter(v=>!allOptions.includes(v));
-        const full = [...allOptions, ...extras];
-        container.innerHTML='';
-        full.forEach(lbl=>{
-          const el=document.createElement('button');
-          el.type='button';
-          el.className='chip'+(gem?' gem':'');
-          if(icon){ const i=document.createElement('span'); i.className='ico'; i.textContent=hobbyIcon(lbl); el.appendChild(i); }
-          const t=document.createElement('span'); t.textContent=lbl; el.appendChild(t);
-          const isSel = selected.includes(lbl);
-          if(isSel){ el.classList.add('selected'); }
-          el.addEventListener('click',()=>{
-            let data = list(getData()[key]);
-            const i=data.indexOf(lbl);
-            if(i>-1){ data.splice(i,1);} else { data.push(lbl);} // toggle
-            setData({[key]:data});
-            renderToggles(container, data, allOptions, {gem, icon, key});
-          });
-          container.appendChild(el);
-        });
-      }
+      // Render a full, stable list of chips; selected = toggle style; custom chips get a small "×" delete
+function renderToggles(container, selectedArr, allOptions, {gem=false, icon=false, key}){
+  const data = getData();
+  const defaults = key==='hobbies' ? DEFAULT_HOBBIES : DEFAULT_VALUES;
+  const customKey = key==='hobbies' ? 'customHobbies' : 'customValues';
 
-      function addCustom(inputEl, key, container, opts, defaults){
-        const add=()=>{
-          const v=inputEl.value.trim(); if(!v) return; inputEl.value='';
-          let data=list(getData()[key]); if(!data.includes(v)) data.push(v);
-          setData({[key]:data}); renderToggles(container, data, defaults||[], opts);
-        };
-        inputEl.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); add(); }});
+  const selected = Array.isArray(selectedArr)? [...selectedArr] : [];
+  const selLower = selected.map(v=>String(v).toLowerCase());
+
+  // customs from storage (array), remove dups vs defaults (case-insensitive)
+  const customsRaw = list(data[customKey]);
+  const lowerDef = defaults.map(v=>v.toLowerCase());
+  const customs = customsRaw.filter(v => !lowerDef.includes(String(v).toLowerCase()));
+
+  // full list = defaults first, then customs (stable)
+  const full = [...defaults, ...customs];
+
+  container.innerHTML = '';
+  full.forEach(lbl => {
+    const isCustom = customs.some(v => v.toLowerCase() === String(lbl).toLowerCase());
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'chip' + (gem ? ' gem' : '');
+    if(icon){
+      const i = document.createElement('span');
+      i.className = 'ico';
+      i.textContent = hobbyIcon(lbl);
+      el.appendChild(i);
+    }
+    const t = document.createElement('span');
+    t.textContent = lbl;
+    el.appendChild(t);
+
+    const isSel = selLower.includes(String(lbl).toLowerCase());
+    if(isSel) el.classList.add('selected');
+    el.setAttribute('aria-pressed', isSel ? 'true' : 'false');
+
+    // Toggle selection (chip STAYS visible, only style changes)
+    el.addEventListener('click', () => {
+      let sel = list(getData()[key]);
+      const lower = sel.map(v => v.toLowerCase());
+      const idx = lower.indexOf(String(lbl).toLowerCase());
+      let added = false;
+      if(idx > -1){ sel.splice(idx,1); }
+      else { sel.push(lbl); added = true; }
+      setData({ [key]: sel });
+
+      // update state without removing element
+      const nowOn = added || sel.map(v=>v.toLowerCase()).includes(String(lbl).toLowerCase());
+      el.classList.toggle('selected', nowOn);
+      el.setAttribute('aria-pressed', nowOn ? 'true' : 'false');
+
+      // aria-live announcement
+      if(ui.announce){ ui.announce.textContent = `${added? 'Added to':'Removed from'} ${key}`; }
+    });
+
+    // custom delete "×" (only for customs)
+    if(isCustom){
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'del';
+      del.textContent = '×';
+      del.setAttribute('aria-label', `Remove custom ${key.slice(0,-1)} ${lbl}`);
+      del.addEventListener('click', (e) => {
+        e.stopPropagation();
+        let d = getData();
+        let sel = list(d[key]);
+        let customsArr = list(d[customKey]);
+
+        // remove from customs (case-insensitive)
+        customsArr = customsArr.filter(v => v.toLowerCase() !== String(lbl).toLowerCase());
+        // also unselect if selected
+        sel = sel.filter(v => v.toLowerCase() !== String(lbl).toLowerCase());
+
+        setData({ [customKey]: customsArr, [key]: sel });
+        // re-render the whole group so the chip list is rebuilt
+        renderToggles(container, sel, defaults, {gem, icon, key});
+        if(ui.announce){ ui.announce.textContent = `Deleted custom ${key.slice(0,-1)}`; }
+      });
+      el.appendChild(del);
+    }
+
+    container.appendChild(el);
+  });
+}
+// "Add custom…" input: add as a first-class chip, pre-selected; persist custom* and selected arrays
+        function addCustom(inputEl, key, container, opts, defaults){
+        const customKey = key==='hobbies' ? 'customHobbies' : 'customValues';
+        const add = () => {
+        const raw = inputEl.value || '';
+        let v = raw.trim().replace(/\s+/g,' ');
+        if(!v) return;
+        inputEl.value = '';
+
+        const d = getData();
+        const def = key==='hobbies' ? DEFAULT_HOBBIES : DEFAULT_VALUES;
+        let customs = list(d[customKey]);
+
+    // dedupe against defaults and customs (case-insensitive)
+        const inDefaults = def.map(x=>x.toLowerCase()).includes(v.toLowerCase());
+        const inCustoms  = customs.map(x=>x.toLowerCase()).includes(v.toLowerCase());
+        if(!inDefaults && !inCustoms){ customs.push(v); }
+
+    // auto-select the new chip
+        let sel = list(d[key]);
+        if(!sel.map(x=>x.toLowerCase()).includes(v.toLowerCase())) sel.push(v);
+
+        setData({ [customKey]: customs, [key]: sel });
+        renderToggles(container, sel, def, opts);
+        if(ui.announce){ ui.announce.textContent = `Added custom ${key.slice(0,-1)}`; }
+    };
+
+        inputEl.addEventListener('keydown', e => {
+        if(e.key === 'Enter'){ e.preventDefault(); add(); }
+    });
         (opts.btn||null)?.addEventListener?.('click', add);
-      }
+    }
 
       function renderGenderIdentity(d){
         const choices=['Woman','Man','Non-binary','Prefer not to say','Self-describe'];
