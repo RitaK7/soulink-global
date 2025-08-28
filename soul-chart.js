@@ -1,261 +1,393 @@
-/* Soulink — Soul Chart polish (tooltips, intro, titles, toast, export naming) */
+/* soul-chart.js — full, clean build (Chart.js v4.x)
+   - Intro + titles + subtitles
+   - Tooltips (hover/tap), primary ★
+   - Refresh toast, Export PNG (combines 3 charts)
+   - Reads from localStorage.soulQuiz
+*/
 
-/* ===== utilities ===== */
-const $ = (s, r = document) => r.querySelector(s);
-const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-const getData = () => {
-  try { return JSON.parse(localStorage.getItem('soulQuiz') || '{}'); }
-  catch { return {}; }
-};
-const list = v => Array.isArray(v) ? v : (typeof v === 'string' ? v.split(/[\n,]/).map(s=>s.trim()).filter(Boolean) : []);
+(() => {
+  // ---------- helpers ----------
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
-const LOVE_LABELS = [
-  'Words of Affirmation','Acts of Service','Receiving Gifts','Quality Time','Physical Touch'
-];
-const VALUE_AXES = ['Heart','Mind','Spirit'];
-
-function hasAnyData(d){
-  return list(d.loveLanguages || d.loveLanguage).length ||
-         list(d.values).length || list(d.hobbies).length;
-}
-
-/* ===== intro + empty ===== */
-function ensureIntro(){
-  const d = getData();
-  const h1 = document.querySelector('h1, .page-title, .title') || document.body;
-  if (!h1) return;
-
-  // jei jau yra mūsų intro – nieko nedarom
-  if ($('#chartIntro')) return;
-
-  const p = document.createElement('p');
-  p.id = 'chartIntro';
-  p.style.marginTop = '.5rem';
-  p.style.color = 'var(--muted, #bde5df)';
-  p.style.maxWidth = '70ch';
-  p.innerText = hasAnyData(d)
-    ? 'Your Soul Chart reveals the harmony between your heart’s language, your values, and the ways you refuel your spirit. Explore the shapes—hover or tap to see what each facet means.'
-    : 'Add your profile details to unlock your Soul Chart ✨';
-
-  // bandome įdėti po h1, jei tokio nėra – virš grid’o
-  if (h1.insertAdjacentElement) {
-    h1.insertAdjacentElement('afterend', p);
-  } else {
-    const grid = $('.grid') || $('main') || document.body;
-    grid.prepend(p);
-  }
-}
-
-/* ===== per-kortą: antraštė + subtitras ===== */
-function setCardTitleForCanvas(canvas, title, subtitle){
-  const card = canvas.closest('.card') || canvas.parentElement;
-  if (!card) return;
-  const h3 = card.querySelector('h3, .card-title') || document.createElement('h3');
-  if (!h3.parentNode) card.prepend(h3);
-  h3.textContent = title;
-
-  let sub = card.querySelector('.muted-sub');
-  if (!sub) {
-    sub = document.createElement('p');
-    sub.className = 'muted-sub';
-    sub.style.margin = '6px 0 0';
-    sub.style.color = 'var(--muted, #bde5df)';
-    sub.style.fontSize = '.95rem';
-    h3.insertAdjacentElement('afterend', sub);
-  }
-  sub.textContent = subtitle;
-}
-
-/* ===== accessibility helpers ===== */
-function ensureAriaLive(){
-  let al = $('#chartAnnounce');
-  if (!al){
-    al = document.createElement('div');
-    al.id = 'chartAnnounce';
-    al.setAttribute('aria-live', 'polite');
-    al.style.position = 'absolute';
-    al.style.width = '1px';
-    al.style.height = '1px';
-    al.style.overflow = 'hidden';
-    al.style.clip = 'rect(1px, 1px, 1px, 1px)';
-    document.body.appendChild(al);
-  }
-  return al;
-}
-function announce(msg){
-  const al = ensureAriaLive();
-  al.textContent = '';
-  setTimeout(()=> al.textContent = msg, 30);
-}
-
-/* ===== toast ===== */
-function showToast(msg){
-  let t = $('#chartToast');
-  if(!t){
-    t = document.createElement('div');
-    t.id = 'chartToast';
-    t.style.position='fixed';
-    t.style.left='50%';
-    t.style.bottom='18px';
-    t.style.transform='translateX(-50%)';
-    t.style.background='rgba(0,253,216,.12)';
-    t.style.border='1px solid rgba(0,253,216,.35)';
-    t.style.color='var(--fg,#eaf8f6)';
-    t.style.padding='10px 14px';
-    t.style.borderRadius='12px';
-    t.style.boxShadow='0 10px 30px rgba(0,253,216,.08)';
-    t.style.zIndex='2000';
-    t.style.backdropFilter='blur(6px)';
-    document.body.appendChild(t);
-  }
-  t.textContent = msg;
-  t.style.opacity='1';
-  setTimeout(()=> t.style.opacity='0', 1400);
-}
-
-/* ===== tooltip + mobile tap-to-pin ===== */
-function wireTooltipAndTap(chart, type, ctx){
-  // tooltip callbacks
-  chart.options.plugins = chart.options.plugins || {};
-  chart.options.plugins.tooltip = chart.options.plugins.tooltip || {};
-  const original = chart.options.plugins.tooltip.callbacks || {};
-  chart.options.plugins.tooltip.callbacks = {
-    ...original,
-    label: (c) => {
-      try {
-        if (type === 'love') {
-          const label = c.label || (chart.data.labels[c.dataIndex] ?? '—');
-          const raw = c.raw ?? 0;
-          const max = (chart.options.scales?.r?.suggestedMax || chart.options.scales?.r?.max || 5);
-          const primary = (ctx.primaryLove || '').toLowerCase();
-          const star = (label || '').toLowerCase() === primary ? ' ★' : '';
-          return `${label}${star} — ${raw}/${max}`;
-        }
-        if (type === 'hobbies') {
-          const label = c.label || '—';
-          const val = Number(c.raw || 0);
-          const total = (chart.data.datasets?.[0]?.data || []).reduce((a,b)=>a+Number(b||0),0) || 1;
-          const pct = Math.round((val/total)*100);
-          return `${label} — ${pct}%`;
-        }
-        if (type === 'values') {
-          const label = c.label || VALUE_AXES[c.dataIndex] || '—';
-          const val = Math.round(Number(c.raw || 0));
-          return `${label} — ${val}%`;
-        }
-      } catch {}
-      // fallback
-      const l = c.label || chart.data.labels?.[c.dataIndex] || '';
-      const v = Array.isArray(c.raw) ? c.raw.join(', ') : c.raw;
-      return `${l}: ${v}`;
+  function getQuiz() {
+    try {
+      const raw = localStorage.getItem('soulQuiz');
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
     }
+  }
+  const list = (v) =>
+    Array.isArray(v) ? v.slice() : (typeof v === 'string' ? v.split(/[\n,]/).map(s => s.trim()).filter(Boolean) : []);
+
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- DOM refs ----------
+  const ui = {
+    intro: $('#chartIntro'),
+    ann: $('#chartAnn'),
+    toast: $('#chartToast'),
+
+    btnRefresh: $('#refreshCharts'),
+    btnExport: $('#exportPng'),
+
+    loveCanvas: $('#loveLangChart'),
+    hobbyCanvas: $('#hobbiesChart'),
+    valuesCanvas: $('#valuesChart'),
   };
 
-  // mobile tap-to-pin
-  const canvas = chart.canvas;
-  canvas.style.touchAction = 'manipulation';
-  canvas.addEventListener('click', (evt)=>{
-    const points = chart.getElementsAtEventForMode(evt, 'nearest', {intersect:true}, true);
-    if(points.length){
-      chart.setActiveElements(points);
-      chart.tooltip.setActiveElements(points);
-      chart.update();
-      announce('Detail shown.');
-    }else{
-      chart.setActiveElements([]);
-      chart.tooltip.setActiveElements([]);
-      chart.update();
-      announce('Tooltip hidden.');
+  // ---------- copy for titles & subtitles ----------
+  function setCardCopy() {
+    // Love languages
+    setTitleBlock(ui.loveCanvas, "Your Heart’s Language Balance",
+      "Primary love language is highlighted—how you most naturally give and receive love.");
+
+    // Hobbies
+    setTitleBlock(ui.hobbyCanvas, "How You Spend Your Soul’s Energy",
+      "Distribution of your favorite rituals and joys.");
+
+    // Values
+    setTitleBlock(ui.valuesCanvas, "Your Inner Compass of Values",
+      "A Heart–Mind–Spirit balance derived from chosen values.");
+  }
+  function setTitleBlock(canvas, title, subtitle) {
+    if (!canvas) return;
+    const card = canvas.closest('.card');
+    if (!card) return;
+    const h = card.querySelector('h3');
+    if (h) h.textContent = title;
+    // subtitle as muted small
+    let sub = card.querySelector('.muted-sub');
+    if (!sub) {
+      sub = document.createElement('p');
+      sub.className = 'muted-sub';
+      sub.style.cssText = 'color:var(--muted);margin:.5rem 0 0;font-size:.95rem;';
+      card.insertBefore(sub, canvas.parentElement ?? canvas);
     }
-  });
-}
+    sub.textContent = subtitle;
+  }
 
-/* ===== export naming ===== */
-function wireExportNaming(){
-  const d = getData();
-  const name = (d.name || 'soul').toLowerCase().replace(/[^a-z0-9\-]+/g,'-');
-  // ieškome mygtukų "Export PNG"
-  const btns = $$('button, a').filter(b => /export\s*png/i.test(b.textContent||'') || b.dataset.export === 'png');
-  if (!btns.length) return;
+  // ---------- intro / empty state ----------
+  function paintIntro(d) {
+    const hasAny =
+      (list(d.loveLanguages || d.loveLanguage).length) ||
+      (list(d.hobbies).length) ||
+      (list(d.values).length);
+    if (!hasAny) {
+      ui.intro.textContent = 'Add your profile details to unlock your Soul Chart ✨';
+      return;
+    }
+    ui.intro.innerHTML =
+      `Your Soul Chart reveals the harmony between your heart’s language, your values, and the ways you refuel your spirit.<br/>
+       Explore the shapes—hover or tap to see what each facet means.`;
+  }
 
-  btns.forEach(btn=>{
-    // jeigu jau yra mūsų handleris – neperrašom
-    if (btn.dataset._exportWired) return;
-    btn.dataset._exportWired = '1';
+  // ---------- data mappers ----------
+  const LOVE_LABELS = [
+    'Words of Affirmation',
+    'Acts of Service',
+    'Receiving Gifts',
+    'Quality Time',
+    'Physical Touch',
+  ];
 
-    btn.addEventListener('click', (e)=>{
-      // surandam arčiausią canvas (arba pirmą puslapyje)
-      const card = btn.closest('.card');
-      let cvs = card ? card.querySelector('canvas') : $('canvas');
-      if(!cvs) return;
-      const chart = Chart.getChart(cvs);
-      if(!chart) return;
-
-      // sugeneruojam PNG ir atsiunčiam vardiniu pavadinimu
-      const link = document.createElement('a');
-      link.download = `soul-chart-${name}.png`;
-      link.href = chart.toBase64Image();
-      link.click();
-      e.preventDefault();
+  function loveDataset(d) {
+    const loves = list(d.loveLanguages || d.loveLanguage);
+    const primary = loves[0];
+    // score: 5 for primary, 3 for other selected, 1 for non-selected
+    const arr = LOVE_LABELS.map(lbl => {
+      if (!loves.length) return 0;
+      if (lbl === primary) return 5;
+      return loves.includes(lbl) ? 3 : 1;
     });
-  });
-}
+    return { data: arr, primary };
+  }
 
-/* ===== rename sections + wire tooltips to existing charts ===== */
-function enhanceCharts(){
-  const d = getData();
-  const primaryLove = (list(d.loveLanguages || d.loveLanguage)[0] || '').trim();
-
-  // perbėgam per visus canvas ir atpažįstam, kas yra kas
-  $$('canvas').forEach(cvs=>{
-    const chart = Chart.getChart(cvs);
-    if(!chart) return;
-
-    // heuristika: love radar turi LOVE_LABELS etikečių daugumą
-    const labels = (chart.data?.labels || []).map(x=>String(x||''));
-    const set = new Set(labels.map(s=>s.toLowerCase()));
-    const hasLove = LOVE_LABELS.filter(l=> set.has(l.toLowerCase())).length >= 3;
-    const hasValues = VALUE_AXES.filter(l=> set.has(l.toLowerCase())).length >= 2;
-    const isDoughnut = (chart.config?.type === 'doughnut' || chart.config?.type === 'pie');
-
-    if (hasLove) {
-      setCardTitleForCanvas(cvs, 'Your Heart’s Language Balance',
-        'Primary love language is highlighted—how you most naturally give and receive love.');
-      wireTooltipAndTap(chart, 'love', {primaryLove});
-      chart.update();
-      return;
+  function hobbiesDataset(d) {
+    const h = list(d.hobbies);
+    if (!h.length) {
+      return { labels: ['No data'], data: [1], empty: true };
     }
-    if (isDoughnut) {
-      setCardTitleForCanvas(cvs, 'How You Spend Your Soul’s Energy',
-        'Distribution of your favorite rituals and joys.');
-      wireTooltipAndTap(chart, 'hobbies');
-      chart.update();
-      return;
-    }
-    if (hasValues) {
-      setCardTitleForCanvas(cvs, 'Your Inner Compass of Values',
-        'A Heart–Mind–Spirit balance derived from chosen values.');
-      wireTooltipAndTap(chart, 'values');
-      chart.update();
-      return;
-    }
-  });
-}
+    // simple equal slices for selected hobbies
+    return { labels: h, data: h.map(() => 1), empty: false };
+  }
 
-/* ===== refresh button (optional) ===== */
-function wireRefreshToast(){
-  const btn = $('[data-action="refresh"], #refreshBtn');
-  if(!btn) return;
-  btn.addEventListener('click', ()=>{
-    // tik lengvas pranešimas – grafikų perskaičiavimą daro esamas kodas
-    setTimeout(()=> showToast('Chart updated ✨'), 180);
-  });
-}
+  // Map values to three axes: Heart, Mind, Spirit
+  const HEART = new Set(['Compassion','Kindness','Love','Empathy','Family','Community','Loyalty','Respect','Generosity','Care']);
+  const MIND  = new Set(['Honesty','Integrity','Curiosity','Growth','Wisdom','Balance','Responsibility','Discipline','Learning']);
+  const SPIRIT= new Set(['Freedom','Creativity','Spirituality','Adventure','Gratitude','Presence','Faith','Wonder']);
 
-/* ===== init ===== */
-document.addEventListener('DOMContentLoaded', ()=>{
-  ensureIntro();
-  enhanceCharts();
-  wireExportNaming();
-  wireRefreshToast();
-});
+  function valuesDataset(d) {
+    const vals = list(d.values).map(v => String(v).trim());
+    if (!vals.length) return { labels: ['Heart','Mind','Spirit'], data: [0,0,0], empty: true };
+    let heart=0, mind=0, spirit=0;
+    for (const v of vals) {
+      const key = v.charAt(0).toUpperCase()+v.slice(1).toLowerCase();
+      if (HEART.has(key)) heart++;
+      else if (MIND.has(key)) mind++;
+      else if (SPIRIT.has(key)) spirit++;
+      else {
+        // unknown -> distribute softly
+        spirit += 0.4; heart += 0.3; mind += 0.3;
+      }
+    }
+    const sum = heart+mind+spirit || 1;
+    const pct = [heart, mind, spirit].map(n => Math.round((n/sum)*100));
+    return { labels: ['Heart','Mind','Spirit'], data: pct, empty: false };
+  }
+
+  // ---------- Chart.js instances ----------
+  let loveChart, hobbyChart, valuesChart;
+
+  function buildCharts() {
+    const d = getQuiz();
+    paintIntro(d);
+    setCardCopy();
+
+    // LOVE (radar)
+    const L = loveDataset(d);
+    loveChart = buildRadar(ui.loveCanvas, LOVE_LABELS, L.data, 'Love Languages', {
+      tooltip: (ctx) => {
+        const lbl = ctx.label;
+        const val = ctx.raw;
+        const star = (L.primary === lbl) ? ' ★' : '';
+        return `${lbl}${star} — ${val}/5`;
+      }
+    });
+
+    // HOBBIES (doughnut)
+    const H = hobbiesDataset(d);
+    hobbyChart = buildDoughnut(ui.hobbyCanvas, H.labels, H.data, 'Hobbies Mix', {
+      tooltip: (ctx) => {
+        if (H.empty) return 'No data yet';
+        const total = ctx.dataset.data.reduce((a,b)=>a+b,0) || 1;
+        const pct = Math.round((ctx.raw/total)*100);
+        return `${ctx.label} — ${pct}%`;
+      }
+    });
+
+    // VALUES (radar)
+    const V = valuesDataset(d);
+    valuesChart = buildRadar(ui.valuesCanvas, V.labels, V.data, 'Core Values', {
+      tooltip: (ctx) => {
+        if (V.empty) return 'No data yet';
+        return `${ctx.label} — ${ctx.raw}%`;
+      },
+      min: 0, max: 100, step: 20
+    });
+
+    enableTapToHide([loveChart, hobbyChart, valuesChart]);
+  }
+
+  function updateCharts() {
+    // re-read and update data, keep instances
+    const d = getQuiz();
+    paintIntro(d);
+
+    // Love
+    const L = loveDataset(d);
+    loveChart.data.labels = LOVE_LABELS;
+    loveChart.data.datasets[0].data = L.data;
+    loveChart.options.plugins.tooltip.callbacks.label = (ctx) => {
+      const lbl = ctx.label;
+      const star = (L.primary === lbl) ? ' ★' : '';
+      return `${lbl}${star} — ${ctx.raw}/5`;
+    };
+    loveChart.update();
+
+    // Hobbies
+    const H = hobbiesDataset(d);
+    hobbyChart.data.labels = H.labels;
+    hobbyChart.data.datasets[0].data = H.data;
+    hobbyChart.options.plugins.tooltip.callbacks.label = () => ' ';
+    hobbyChart.options.plugins.tooltip.callbacks.label = (ctx) => {
+      if (H.empty) return 'No data yet';
+      const total = ctx.dataset.data.reduce((a,b)=>a+b,0) || 1;
+      const pct = Math.round((ctx.raw/total)*100);
+      return `${ctx.label} — ${pct}%`;
+    };
+    hobbyChart.update();
+
+    // Values
+    const V = valuesDataset(d);
+    valuesChart.data.labels = V.labels;
+    valuesChart.data.datasets[0].data = V.data;
+    valuesChart.options.plugins.tooltip.callbacks.label = (ctx) => {
+      if (V.empty) return 'No data yet';
+      return `${ctx.label} — ${ctx.raw}%`;
+    };
+    valuesChart.update();
+
+    toast('Chart updated ✨');
+  }
+
+  // ---------- Chart builders ----------
+  function baseColors(alphaFill = .18, alphaLine = .9) {
+    const neon = 'rgba(0,253,216,';
+    return {
+      border: neon + alphaLine + ')',
+      fill: neon + alphaFill + ')',
+      point: neon + '1)',
+      grid: 'rgba(0,253,216,.2)'
+    };
+  }
+
+  function buildRadar(canvas, labels, data, label, extra = {}) {
+    const C = baseColors();
+    return new Chart(canvas, {
+      type: 'radar',
+      data: {
+        labels,
+        datasets: [{
+          label,
+          data,
+          borderColor: C.border,
+          backgroundColor: C.fill,
+          pointBackgroundColor: C.point,
+          pointRadius: 3,
+          pointHoverRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          r: {
+            beginAtZero: true,
+            min: extra.min ?? 0,
+            max: extra.max ?? undefined,
+            ticks: { display: false, stepSize: extra.step ?? 1 },
+            grid: { color: C.grid, circular: true },
+            angleLines: { color: 'rgba(0,253,216,.15)' },
+            pointLabels: { color: '#eaf8f6', font: { size: 12 } },
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: true,
+            intersect: false,
+            callbacks: {
+              label: extra.tooltip || ((ctx) => `${ctx.label}: ${ctx.raw}`)
+            }
+          }
+        },
+        animation: reduceMotion ? false : { duration: 400 }
+      }
+    });
+  }
+
+  function buildDoughnut(canvas, labels, data, label, extra = {}) {
+    return new Chart(canvas, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{
+          label,
+          data,
+          // let Chart.js generate default colors; we avoid specifying exact colors per constraints
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '55%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: true,
+            position: 'nearest',
+            callbacks: {
+              label: extra.tooltip || ((ctx) => `${ctx.label}: ${ctx.raw}`)
+            }
+          }
+        },
+        animation: reduceMotion ? false : { duration: 400 }
+      }
+    });
+  }
+
+  // ---------- Mobile: tap outside to hide tooltip ----------
+  function enableTapToHide(charts) {
+    document.addEventListener('click', (e) => {
+      // if click is not on a canvas, clear tooltips
+      if (!e.target.closest('canvas')) {
+        charts.forEach(ch => {
+          if (!ch) return;
+          ch.tooltip.setActiveElements([], { x: 0, y: 0 });
+          ch.update();
+        });
+        if (ui.ann) {
+          ui.ann.textContent = '';
+          setTimeout(() => { ui.ann.textContent = ' '; }, 0);
+        }
+      }
+    });
+  }
+
+  // ---------- toast ----------
+  function toast(msg) {
+    if (!ui.toast) return;
+    ui.toast.textContent = msg;
+    ui.toast.style.opacity = '1';
+    ui.toast.style.transform = 'translateY(0)';
+    setTimeout(() => {
+      ui.toast.style.opacity = '0';
+      ui.toast.style.transform = 'translateY(6px)';
+    }, 1200);
+  }
+
+  // ---------- export ----------
+  function exportPNG() {
+    const name = (getQuiz().name || 'soul').toLowerCase().replace(/\s+/g,'-');
+    const canvases = [ui.loveCanvas, ui.hobbyCanvas, ui.valuesCanvas].filter(Boolean);
+
+    // compute combined size (stacked vertically, same width)
+    const pad = 24;
+    const w = Math.max(...canvases.map(c => c.width));
+    const h = canvases.reduce((a,c) => a + c.height, 0) + pad*(canvases.length+1);
+
+    const out = document.createElement('canvas');
+    out.width = w;
+    out.height = h;
+    const ctx = out.getContext('2d');
+    ctx.fillStyle = '#003c43';
+    ctx.fillRect(0,0,w,h);
+
+    let y = pad;
+    canvases.forEach(cv => {
+      const x = (w - cv.width) / 2;
+      ctx.drawImage(cv, x, y);
+      y += cv.height + pad;
+    });
+
+    const a = document.createElement('a');
+    a.href = out.toDataURL('image/png');
+    a.download = `soul-chart-${name}.png`;
+    a.click();
+  }
+
+  // ---------- wire up ----------
+  function init() {
+    setCardCopy();
+    buildCharts();
+
+    ui.btnRefresh?.addEventListener('click', () => updateCharts());
+    ui.btnExport?.addEventListener('click', exportPNG);
+
+    // Accessibility live note on tap (mobile)
+    [ui.loveCanvas, ui.hobbyCanvas, ui.valuesCanvas].forEach(cv => {
+      cv?.addEventListener('pointerdown', () => {
+        if (ui.ann) { ui.ann.textContent = 'Value shown. Tap outside to close.'; }
+      });
+    });
+  }
+
+  // Start after DOM + Chart.js loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
