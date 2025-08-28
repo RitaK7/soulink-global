@@ -376,6 +376,43 @@ function generateLyricalSummary(d){
   const out = lines.filter(Boolean).slice(0,4).join(' ');
   return out || '';
 }
+// --- Soul Summary (plain, human-like) ---
+function oxfordJoin(arr){
+  const a = (arr||[]).filter(Boolean);
+  if(!a.length) return '';
+  if(a.length===1) return a[0];
+  if(a.length===2) return `${a[0]} and ${a[1]}`;
+  return `${a.slice(0,-1).join(', ')}, and ${a[a.length-1]}`;
+}
+
+function generateSoulSummary(d){
+  const name   = d.name || 'Your soul';
+  const loves  = Array.isArray(d.loveLanguages) ? d.loveLanguages : (d.loveLanguage ? [d.loveLanguage] : []);
+  const values = Array.isArray(d.values) ? d.values : [];
+  const hobbies= Array.isArray(d.hobbies)? d.hobbies: [];
+  const about  = String(d.aboutMe || d.about || '').trim();
+
+  const out = [];
+
+  if(loves.length){
+    const main = loves[0], second = loves[1];
+    out.push(second
+      ? `${name} is guided by ${main} and ${second}.`
+      : `${name} is guided by ${main}.`);
+  }
+  if(values.length){
+    const v = values.slice(0,3);
+    out.push(`Values ${oxfordJoin(v)} light the way.`);
+  }
+  if(hobbies.length){
+    const h = hobbies.slice(0,3);
+    out.push(`Enjoys ${oxfordJoin(h)}.`);
+  }
+  if(about){
+    out.push(/[.!?]$/.test(about) ? about : about + '.');
+  }
+    return out.join(' ');}
+
 
   /* ===== render ===== */
   function render(){
@@ -407,13 +444,13 @@ function generateLyricalSummary(d){
     renderChipGroup(list(d.values), ui.valuesList, ui.valuesEmpty, {type:'values'});
     renderChipGroup(list(d.hobbies), ui.hobbiesList, ui.hobbiesEmpty, {type:'hobby'});
 
-    // summary
-     const summary = generateSoulSummary(d);
-     if (summary) {
-    ui.summaryText.classList.remove('empty');
-     const lyrical = generateLyricalSummary(d);
-    ui.summaryText.classList.remove('empty');
-    ui.summaryText.textContent = lyrical || 'Complete your profile to see your Soul Summary ✨';}
+  // summary (lyrical -> fallback to plain -> placeholder)
+const lyrical = (typeof generateLyricalSummary==='function') ? generateLyricalSummary(d) : '';
+const plain   = generateSoulSummary(d);
+const final   = lyrical || plain;
+
+ui.summaryText.textContent = final || 'Complete your profile to see your Soul Summary ✨';
+ui.summaryText.classList.toggle('empty', !final);
 
   }
 
