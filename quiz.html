@@ -6,108 +6,77 @@
   <title>Soulink · Quiz</title>
   <style>
     :root{
-      --bg:#003c43; --fg:#eaf8f6; --muted:#bde5df; --accent:#00fdd8; --card:#014a52; --border:rgba(0,253,216,.35);
-      --shadow:0 0 0 1px var(--border), 0 10px 30px rgba(0,253,216,.06), 0 0 40px rgba(0,253,216,.04) inset; --maxw:1100px;
+      --bg:#003c43; --fg:#eaf8f6; --muted:#bde5df; --accent:#00fdd8;
+      --card:#014a52; --border:rgba(0,253,216,.35);
+      --shadow:0 0 0 1px var(--border), 0 10px 30px rgba(0,253,216,.06), 0 0 40px rgba(0,253,216,.04) inset;
+      --maxw:1100px;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Arial,sans-serif}
+    body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Arial,sans-serif}
     a{color:var(--accent);text-decoration:none}
-    img{max-width:100%;height:auto}
     .container{max-width:var(--maxw);margin:0 auto;padding:24px}
 
-    /* NAVBAR (same as My Soul) */
+    /* NAVBAR */
     .navbar{position:sticky;top:0;z-index:50;background:rgba(0,60,67,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
-    .navbar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transform:scaleX(.2);transform-origin:center;transition:opacity .25s ease, transform .25s ease}
-    .navbar.scrolled::after{opacity:.85;transform:scaleX(1)}
+    .navbar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transform:scaleX(.2);transition:opacity .25s,transform .25s}
+    .navbar.scrolled::after{opacity:.9;transform:scaleX(1)}
     .nav-inner{display:flex;justify-content:space-between;align-items:center;padding:10px 16px}
-    .brand{font-weight:800;color:var(--accent);letter-spacing:.4px}
+    .brand{font-weight:800;color:var(--accent)}
     .nav-links{display:flex;gap:14px;flex-wrap:wrap}
-    .nav-links a{padding:8px 10px;border-radius:10px;border:1px solid transparent;transition:box-shadow .15s ease, border-color .15s ease}
+    .nav-links a{padding:8px 10px;border-radius:10px;border:1px solid transparent;transition:box-shadow .15s,border-color .15s}
     .nav-links a:hover{border-color:var(--border);box-shadow:0 0 0 1px var(--border),0 0 16px rgba(0,253,216,.18)}
     .nav-links a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     .hamburger{display:none}
     .hamburger button{appearance:none;background:transparent;border:1px solid var(--border);color:var(--fg);padding:8px 10px;border-radius:10px;cursor:pointer}
     @media(max-width:800px){.nav-links{display:none}.hamburger{display:block}}
 
-    /* DRAWER overlay */
+    /* DRAWER */
     .drawer{position:fixed;inset:0;display:none;z-index:100}
     .drawer.open{display:block}
     .drawer .backdrop{position:absolute;inset:0;background:rgba(0,60,67,.96)}
-    .drawer .panel{position:absolute;top:0;right:0;width:min(82vw,360px);height:100%;background:#003c43;border-left:1px solid var(--border);padding:18px;transform:translateX(100%);transition:transform .25s ease}
+    .drawer .panel{position:absolute;top:0;right:0;width:min(82vw,360px);height:100%;background:#003c43;border-left:1px solid var(--border);padding:18px;transform:translateX(100%);transition:transform .25s}
     .drawer.open .panel{transform:translateX(0)}
     @media (prefers-reduced-motion: reduce){.drawer .panel{transition:none}}
     body.no-scroll{overflow:hidden}
-    .drawer .panel a{display:block;padding:14px 12px;border-radius:12px;min-height:44px;transition:box-shadow .15s ease, background .15s ease}
+    .drawer .panel a{display:block;padding:14px 12px;border-radius:12px;min-height:44px}
     .drawer .panel a:hover{background:rgba(0,253,216,.08);box-shadow:0 0 0 1px var(--border),0 0 14px rgba(0,253,216,.18)}
-    .drawer .panel a:active,.drawer .panel a:focus-visible{box-shadow:0 0 0 1px var(--border),0 0 16px rgba(0,253,216,.22);outline:none}
 
     /* CARDS */
     .card{background:linear-gradient(180deg,rgba(1,74,82,.74),rgba(1,74,82,.56));border:1px solid var(--border);box-shadow:var(--shadow);border-radius:18px;padding:18px;margin:22px 0}
     .card h2{margin:0 0 8px}
-    .sub{color:var(--muted);font-size:.95rem;margin:.25rem 0 .5rem}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .card small{color:var(--muted)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     @media(max-width:760px){.row{grid-template-columns:1fr}}
 
-    label{display:block;font-weight:600;margin-bottom:6px}
-    input[type=text], textarea, select{width:100%;padding:12px 12px;border-radius:12px;border:1px solid var(--border);background:rgba(0,253,216,.06);color:var(--fg)}
+    label{display:block;font-weight:600;margin:6px 0 6px}
+    input[type="text"], textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:rgba(0,253,216,.06);color:var(--fg)}
     textarea{min-height:120px;resize:vertical}
     .hint{color:var(--muted);font-size:.9rem;margin-top:6px}
+    .counter{color:var(--muted);font-size:.9rem;text-align:right;margin-top:6px}
 
-    /* chips */
+    /* Chips */
     .chips{display:flex;flex-wrap:wrap;gap:10px}
-    .chip{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid var(--border);background:rgba(0,253,216,.06);min-height:44px;cursor:pointer;user-select:none}
-    .chip input{display:none}
-    .chip.selected{background:rgba(0,253,216,.18);box-shadow:0 0 0 1px var(--border), inset 0 0 20px rgba(0,253,216,.1)}
-    .chip.selected::after{content:"✓";margin-left:6px;opacity:.9}
-    .chip.primary{transform:scale(1.06);box-shadow:0 0 0 1px var(--border),0 0 18px rgba(0,253,216,.16), inset 0 0 20px rgba(0,253,216,.1)}
-    .chip.gem{background:rgba(0,253,216,.1);box-shadow:inset 0 0 20px rgba(0,253,216,.08)}
-    .ico{width:1.1rem;text-align:center}
+    .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:rgba(0,253,216,.06);font-size:.95rem;min-height:44px;cursor:pointer}
+    .chip[aria-pressed="true"]{background:rgba(0,253,216,.16);box-shadow:inset 0 0 22px rgba(0,253,216,.12)}
+    .chip .check{font-size:1rem}
+    .chip.gem{background:rgba(0,253,216,.1);box-shadow:inset 0 0 18px rgba(0,253,216,.08)}
+    .ico{width:1.1rem;display:inline-block;text-align:center}
+    .muted{color:var(--muted)}
+    .collapsible{overflow:hidden;transition:max-height .2s ease,opacity .2s ease}
+    .hidey{max-height:0 !important;opacity:0 !important;margin:0 !important;padding-top:0 !important;padding-bottom:0 !important;border-width:0 !important}
+    @media (prefers-reduced-motion: reduce){.collapsible{transition:none}}
 
-    .addline{display:flex;gap:8px;margin-top:10px}
-    .addline input{flex:1}
-    .addline button{appearance:none;border:1px solid var(--border);background:transparent;color:var(--fg);padding:10px 14px;border-radius:12px;min-height:44px}
-
-    /* helper lines under Love Languages */
-    .help-lines{margin-top:8px;color:var(--muted);font-size:.92rem;line-height:1.5}
-    .help-lines .item{margin:4px 0}
-
-    /* actions */
-    .actions-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;margin:28px 0}
-    .left-actions,.right-actions{display:flex;flex-wrap:wrap;gap:12px}
+    /* Actions */
+    .actions{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;margin:28px 0}
     .btn{appearance:none;border:none;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700;min-height:44px}
     .btn.primary{background:var(--accent);color:#003136}
+    .btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--border)}
     .btn.outline{background:transparent;color:var(--fg);border:1px solid var(--border)}
     .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    @media(max-width:760px){.actions{flex-direction:column}.actions .btn{width:100%}}
 
-    footer{margin:40px 0 16px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:.95rem;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-
-    /* spacing mobile-first */
-    @media(max-width:760px){
-      .actions-row{flex-direction:column}
-      .left-actions,.right-actions{flex-direction:column}
-      .btn{width:100%}
-    }
-
-    /* collapsible transitions */
-    .collapsible{overflow:hidden; max-height:1000px; opacity:1; transition:max-height .2s ease, opacity .2s ease}
-    .hidey{max-height:0 !important; opacity:0 !important; pointer-events:none}
-
-    /* screen-reader only */
-    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-    /* custom chip delete button (for custom hobbies/values) */
-    .chip{position:relative}
-    .chip .del{
-     margin-left:6px; line-height:1; border:none; background:transparent;
-     color:var(--muted); cursor:pointer; font-size:14px; padding:4px; border-radius:8px
-     }
-    .chip .del:hover{ color:var(--fg) }
-    .chip .del:focus-visible{ outline:2px solid var(--accent); outline-offset:2px }
-    /* Relationship prefs */
-    .age-range{display:flex;flex-direction:column;gap:8px}
-    .age-range .age-lines{font-weight:600}
-    .age-range .sliders{display:flex;align-items:center;gap:12px}
-    .age-range input[type=range]{flex:1}
+    footer{margin:40px 0 16px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:.95rem}
   </style>
 </head>
 <body>
@@ -149,608 +118,606 @@
       <a href="login.html">Log In</a>
       <a href="signup.html">Sign Up</a>
       <a href="#" id="logoutLinkMobile">Log Out</a>
-      <button class="btn outline" id="closeDrawer" style="margin-top:8px">Close</button>
+      <button class="btn ghost" id="closeDrawer" style="margin-top:8px">Close</button>
     </aside>
   </div>
 
-  <div class="container">
-    <!-- BASIC INFO -->
-    <section class="card">
+  <div class="container" id="top">
+    <!-- Basic Info -->
+    <section class="card" id="card-basic">
       <h2>🎂 Basic Info</h2>
-      <p class="sub">Tell us a little about you. Simple and gentle.</p>
-      <div class="row">
+      <small>Tell us a little about you. Simple and gentle.</small>
+      <div class="row" style="margin-top:10px">
         <div>
           <label for="name">Name</label>
           <input id="name" type="text" placeholder="Your name" />
         </div>
         <div>
           <label for="country">Country</label>
-          <input id="country" type="text" placeholder="Where you live" />
+          <input id="country" type="text" placeholder="Country" />
         </div>
+      </div>
+      <div class="row" style="margin-top:10px">
         <div>
           <label for="birthday">Birth date</label>
-          <input id="birthday" type="text" inputmode="numeric" pattern="[0-9\-]*" aria-describedby="birthdayHint" placeholder="1972-11-22" />
-          <div class="hint" id="birthdayHint">Example: 1993-02-24 (or type 19930224)</div>
+          <input id="birthday" type="text" inputmode="numeric" pattern="[0-9\-]*" placeholder="1972-11-22" aria-describedby="birthdayHint" />
+          <div id="birthdayHint" class="hint">Example: 1993-02-24 (or type 19930224)</div>
         </div>
-        <div>
-          <label for="height">Height (cm)</label>
-          <input id="height" type="text" inputmode="numeric" placeholder="e.g., 170" />
-        </div>
-        <div>
-          <label for="weight">Weight (kg)</label>
-          <input id="weight" type="text" inputmode="numeric" placeholder="e.g., 60" />
-          <div class="hint" id="hwHint">Optional. Some people care about this in relationships.</div>
+        <div id="hwWrap" class="row" style="grid-template-columns:1fr 1fr;gap:14px;padding:0">
+          <div id="heightWrap" class="collapsible">
+            <label for="height">Height (cm)</label>
+            <input id="height" type="text" inputmode="numeric" placeholder="Optional" />
+          </div>
+          <div id="weightWrap" class="collapsible">
+            <label for="weight">Weight (kg)</label>
+            <input id="weight" type="text" inputmode="numeric" placeholder="Optional" />
+          </div>
+          <div id="hwHint" class="hint" style="grid-column:1/-1">Optional. Some people care about this in relationships.</div>
         </div>
       </div>
     </section>
 
-    <!-- CONNECTION -->
-    <section class="card" id="connectionCard">
-      <h2>🧭 Connection</h2>
-      <p class="sub">What kind of connections are you open to?</p>
-      <div class="chips" id="connectionChips"></div>
-      <p class="hint" id="connHelper">Fields adjust to your choice. Friendship focuses on values & hobbies; Romantic adds identity and preferences. LGBTQ+ inclusive.</p>
+    <!-- Connection -->
+    <section class="card" id="card-connection">
+      <h2>🤝 Connection</h2>
+      <small>What kind of connections are you open to?</small>
+      <div class="chips" id="connectionChips" style="margin-top:10px"></div>
+      <div id="connHelper" class="hint">Fields adjust to your choice. Friendship focuses on values & hobbies; Romantic adds identity and preferences. LGBTQ+ inclusive.</div>
     </section>
 
-    <!-- LOVE LANGUAGES -->
-    <section class="card">
+    <!-- Love Languages -->
+    <section class="card" id="card-love">
       <h2>💖 Love Languages</h2>
-      <p class="sub">Choose one or more. The first becomes your Primary.</p>
-      <div class="chips" id="loveChips"></div>
-      <div class="help-lines" aria-live="polite" aria-atomic="true">
-        <div class="item"><strong>Words of Affirmation</strong> — Kind, encouraging words that express love.</div>
-        <div class="item"><strong>Acts of Service</strong> — Helpful actions that ease your load and show care.</div>
-        <div class="item"><strong>Receiving Gifts</strong> — Thoughtful tokens that say “I remembered you.”</div>
-        <div class="item"><strong>Quality Time</strong> — Focused, undivided attention and deep conversations.</div>
-        <div class="item"><strong>Physical Touch</strong> — Hugs, hand-holding, and gentle physical closeness.</div>
+      <small>Choose one or more. The first becomes your Primary.</small>
+      <div class="chips" id="loveChips" style="margin-top:10px"></div>
+      <div class="muted" style="margin-top:8px">
+        <div><strong>Words of Affirmation</strong> — Kind, encouraging words that express love.</div>
+        <div><strong>Acts of Service</strong> — Helpful actions that ease your load and show care.</div>
+        <div><strong>Receiving Gifts</strong> — Thoughtful tokens that say “I remembered you.”</div>
+        <div><strong>Quality Time</strong> — Focused, undivided attention and deep conversations.</div>
+        <div><strong>Physical Touch</strong> — Hugs, hand-holding, and gentle physical closeness.</div>
       </div>
     </section>
 
-    <!-- GENDER IDENTITY -->
-    <section class="card" id="genderIdentityCard">
-      <h2>⚧︎ Your Gender Identity</h2>
-      <p class="sub">How you identify yourself.</p>
-      <div class="chips" id="genderIdChips"></div>
+    <!-- Gender Identity -->
+    <section class="card" id="card-gender">
+      <h2>💫 Your Gender Identity</h2>
+      <small>How you identify yourself.</small>
+      <div class="chips" id="genderIdChips" style="margin-top:10px"></div>
       <div id="genderSelfMount"></div>
     </section>
 
-    <!-- CONNECT WITH -->
-    <section class="card" id="connectWithCard">
-      <h2>🤝 Who you want to connect with</h2>
-      <p class="sub">Choose who you’d like to connect with. For friendship, you can keep it open.</p>
-      <div class="collapsible" id="connectDetailedWrap">
+    <!-- Who you want to connect with -->
+    <section class="card" id="card-connect">
+      <h2>💛 Who you want to connect with</h2>
+      <small>Choose who you’d like to connect with. For friendship, you can keep it open.</small>
+
+      <!-- Friendship simplified -->
+      <div id="connectFriendWrap" class="collapsible" style="margin-top:10px">
+        <div class="chips" id="friendConnectChips"></div>
+        <div class="chips" id="friendPairingChips" style="margin-top:10px;display:none"></div>
+        <div id="friendConnectHint" class="hint">For friendship, keeping it open is perfect.</div>
+      </div>
+
+      <!-- Romantic/Both detailed -->
+      <div id="connectDetailedWrap" class="collapsible" style="margin-top:10px">
         <div class="chips" id="connectWithChips"></div>
         <div id="connectWithCustomMount"></div>
+        <div class="hint" id="pairingQuickHint" style="margin-top:10px">Quick pairing suggestions:</div>
+        <div class="chips" id="pairingQuickChips" style="margin-top:8px"></div>
       </div>
-      <div class="collapsible" id="connectFriendWrap">
-        <div class="chips" id="friendConnectChips"></div>
-        <p class="hint" id="friendConnectHint">For friendship, keeping it open is perfect.</p>
-      </div>
-      <!-- RELATIONSHIP PREFERENCES (romantic/both only) -->
-  <section class="card collapsible" id="relationshipCard">
-  <h2>💞 Relationship Preferences</h2>
-  <p class="sub">Tell us more about your romantic preferences.</p>
-
-   <div class="field">
-    <label>Body Type Preference</label>
-    <div class="field">
-     <label>Body Type Preference</label>
-   <p class="hint">Optional. Helps us suggest partners more aligned with your preference.</p>
-   <div class="chips" id="bodyTypeChips"></div>
-   </div>
-
-    <div class="chips" id="bodyTypeChips"></div>
-   </div>
-
-   <div class="field" style="margin-top:12px">
-  <label for="minAge">Age Range</label>
-  <div class="age-range">
-    <div class="age-lines">
-      <span id="minAgeValue">20</span>–<span id="maxAgeValue">60</span>
-    </div>
-    <p class="hint">Preferred partner age range.</p>
-    <div class="sliders">
-      <input type="range" id="minAge" min="18" max="80" value="20" aria-label="Minimum age" />
-      <input type="range" id="maxAge" min="18" max="80" value="60" aria-label="Maximum age" />
-    </div>
-  </div>
-</div>
-
-
-      </div>
-      <div class="sliders">
-        <input type="range" id="minAge" min="18" max="80" value="20" aria-label="Minimum age" />
-        <input type="range" id="maxAge" min="18" max="80" value="60" aria-label="Maximum age" />
-      </div>
-    </div>
-   </div>
-
-    <div class="field" style="margin-top:12px">
-    <label>Lifestyle Preferences</label>
-    <div class="chips" id="lifestyleChips"></div>
-    </div>
     </section>
 
-    <!-- ORIENTATION -->
+    <!-- Relationship Preferences (Romantic/Both only) -->
+    <section class="card collapsible" id="relationshipCard">
+      <h2>💞 Relationship Preferences</h2>
+      <small>Tell us more about your romantic preferences.</small>
+
+      <div style="margin-top:12px">
+        <label>Body Type Preference</label>
+        <div class="chips" id="bodyTypeChips"></div>
+        <div class="hint">Optional. Helps us suggest partners more aligned with your preference.</div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>Age Range</label>
+        <div class="hint">Preferred partner age range.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:8px 0">
+          <div>
+            <div class="muted">Min: <span id="minAgeValue">20</span></div>
+            <input id="minAge" type="range" min="18" max="80" step="1" aria-label="Minimum age">
+          </div>
+          <div>
+            <div class="muted">Max: <span id="maxAgeValue">60</span></div>
+            <input id="maxAge" type="range" min="18" max="80" step="1" aria-label="Maximum age">
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>Lifestyle Preferences</label>
+        <div class="chips" id="lifestyleChips"></div>
+      </div>
+    </section>
+
+    <!-- Orientation (Romantic/Both) -->
     <section class="card collapsible" id="orientationCard">
       <h2>🌈 Orientation</h2>
-      <div class="chips" id="orientationChips"></div>
+      <div class="chips" id="orientationChips" style="margin-top:10px"></div>
     </section>
 
-    <!-- HOBBIES -->
-    <section class="card">
+    <!-- Hobbies -->
+    <section class="card" id="card-hobbies">
       <h2>🌿 Hobbies</h2>
-      <div class="chips" id="hobbyChips"></div>
-      <div class="addline"><input id="hobbyInput" type="text" placeholder="Add custom hobby…" /><button id="addHobby">Add</button></div>
+      <div class="chips" id="hobbyChips" style="margin-top:10px"></div>
+      <div class="row" style="margin-top:8px">
+        <div style="grid-column:1/-1">
+          <input id="hobbyInput" type="text" placeholder="Add custom hobby…" />
+        </div>
+      </div>
     </section>
 
-    <!-- VALUES -->
-    <section class="card">
+    <!-- Values -->
+    <section class="card" id="card-values">
       <h2>💎 Values</h2>
-      <div class="chips" id="valueChips"></div>
-      <div class="addline"><input id="valueInput" type="text" placeholder="Add custom value…" /><button id="addValue">Add</button></div>
+      <div class="chips" id="valueChips" style="margin-top:10px"></div>
+      <div class="row" style="margin-top:8px">
+        <div style="grid-column:1/-1">
+          <input id="valueInput" type="text" placeholder="Add custom value…" />
+        </div>
+      </div>
     </section>
 
-    <!-- BOUNDARIES -->
-    <section class="card">
+    <!-- Boundaries -->
+    <section class="card" id="card-boundaries">
       <h2>🕊️ Boundaries</h2>
       <textarea id="boundaries" placeholder="What behaviors are not aligned with your soul? 🌑"></textarea>
-      <div class="hint"><span id="boundariesCount">0</span>/300</div>
+      <div class="counter"><span id="boundariesCount">0</span>/300</div>
     </section>
 
-    <!-- ABOUT -->
-    <section class="card">
+    <!-- About Me -->
+    <section class="card" id="card-about">
       <h2>📜 About Me</h2>
       <textarea id="aboutMe" placeholder="Tell us about your soul journey… ✨"></textarea>
-      <div class="hint"><span id="aboutCount">0</span>/500</div>
+      <div class="counter"><span id="aboutCount">0</span>/500</div>
     </section>
 
-    <!-- ACTIONS -->
-    <section class="actions-row">
-      <div class="left-actions">
-        <button id="backHome" class="btn outline">Back ← Home</button>
-      </div>
-      <div class="right-actions">
-        <button id="nextEdit" class="btn primary">Next → Edit Profile</button>
-      </div>
+    <section class="actions">
+      <button id="backHome" class="btn ghost">Back ← Home</button>
+      <button id="nextEdit" class="btn primary">Next → My Soul</button>
     </section>
 
-    <footer>
-      <span>© 2025 Soulink.global | Created with love by Soulink Team</span>
-    </footer>
-    <div id="announce" class="sr-only" aria-live="polite"></div>
+    <footer>© 2025 Soulink.global | Created with love by Soulink Team</footer>
   </div>
 
   <script>
     (()=>{
+
+      /* ========== DOM refs ========== */
       const $=s=>document.querySelector(s);
-      const $$=s=>Array.from(document.querySelectorAll(s));
       const ui={
-        name:$('#name'), country:$('#country'), birthday:$('#birthday'), height:$('#height'), weight:$('#weight'), birthdayHint:$('#birthdayHint'),
+        // basics
+        name:$('#name'), country:$('#country'), birthday:$('#birthday'), birthdayHint:$('#birthdayHint'),
+        height:$('#height'), weight:$('#weight'), heightWrap:$('#heightWrap'), weightWrap:$('#weightWrap'), hwHint:$('#hwHint'),
+
+        // connection
         connectionChips:$('#connectionChips'), connHelper:$('#connHelper'),
+
+        // love languages
         loveChips:$('#loveChips'),
+
+        // gender/connect with
         genderIdChips:$('#genderIdChips'), genderSelfMount:$('#genderSelfMount'),
         connectWithChips:$('#connectWithChips'), connectWithCustomMount:$('#connectWithCustomMount'),
-        friendConnectChips:$('#friendConnectChips'), friendConnectWrap:$('#connectFriendWrap'), connectDetailedWrap:$('#connectDetailedWrap'), friendConnectHint:$('#friendConnectHint'),
-        orientationChips:$('#orientationChips'), orientationCard:$('#orientationCard'),
-        hobbyChips:$('#hobbyChips'), valueChips:$('#valueChips'),
-        hobbyInput:$('#hobbyInput'), addHobby:$('#addHobby'),
-        valueInput:$('#valueInput'), addValue:$('#addValue'),
-        boundaries:$('#boundaries'), boundariesCount:$('#boundariesCount'),
-        aboutMe:$('#aboutMe'), aboutCount:$('#aboutCount'),
-        backHome:$('#backHome'), nextEdit:$('#nextEdit'),
-        openDrawer:$('#openDrawer'), closeDrawer:$('#closeDrawer'), drawer:$('#drawer'), drawerBackdrop:$('#drawerBackdrop'),
-        logout:$('#logoutLink'), logoutM:$('#logoutLinkMobile'), navbar:document.querySelector('.navbar'),
-        announce:$('#announce'),
+        friendConnectChips:$('#friendConnectChips'), friendConnectWrap:$('#connectFriendWrap'),
+        friendPairingChips:$('#friendPairingChips'),
+        connectDetailedWrap:$('#connectDetailedWrap'), friendConnectHint:$('#friendConnectHint'),
+
+        // relationship pref
         relationshipCard: $('#relationshipCard'),
         bodyTypeChips: $('#bodyTypeChips'),
         lifestyleChips: $('#lifestyleChips'),
-        minAge: $('#minAge'),
-        maxAge: $('#maxAge'),
-        minAgeValue: $('#minAgeValue'),
-        maxAgeValue: $('#maxAgeValue'),
+        minAge: $('#minAge'), maxAge: $('#maxAge'),
+        minAgeValue: $('#minAgeValue'), maxAgeValue: $('#maxAgeValue'),
+        pairingQuickChips: $('#pairingQuickChips'), pairingQuickHint:$('#pairingQuickHint'),
+
+        // orientation
+        orientationChips:$('#orientationChips'), orientationCard:$('#orientationCard'),
+
+        // hobbies/values
+        hobbyChips:$('#hobbyChips'), valueChips:$('#valueChips'),
+        hobbyInput:$('#hobbyInput'), valueInput:$('#valueInput'),
+
+        // long text
+        boundaries:$('#boundaries'), boundariesCount:$('#boundariesCount'),
+        aboutMe:$('#aboutMe'), aboutCount:$('#aboutCount'),
+
+        // actions
+        backHome:$('#backHome'), nextEdit:$('#nextEdit'),
+
+        // nav
+        openDrawer:$('#openDrawer'), closeDrawer:$('#closeDrawer'),
+        drawer:$('#drawer'), drawerBackdrop:$('#drawerBackdrop'),
+        logout:$('#logoutLink'), logoutM:$('#logoutLinkMobile'),
+        navbar:document.querySelector('.navbar'),
+
+        // announcer
+        announce: (function(){ const s=document.createElement('div'); s.setAttribute('aria-live','polite'); s.className='muted'; s.style.height='1px'; s.style.overflow='hidden'; document.body.appendChild(s); return s; })()
       };
 
-      // will be filled after DOM ready
-      ui.heightWrap = null; ui.weightWrap = null; ui.hwHint = $('#hwHint');
+      /* ========== Data helpers ========== */
+      const getData = ()=>{ try{ const raw=localStorage.getItem('soulQuiz'); return raw? JSON.parse(raw): {}; } catch { return {}; } };
+      const setData = (patch)=>{ const cur=getData(); const merged={...cur, ...patch}; localStorage.setItem('soulQuiz', JSON.stringify(merged)); return merged; };
+      const list = v => Array.isArray(v) ? v : (typeof v==='string' ? v.split(/[\n,]/).map(s=>s.trim()).filter(Boolean) : []);
 
-      /* ===== helpers ===== */
-      function getData(){ try{ return JSON.parse(localStorage.getItem('soulQuiz'))||{}; }catch{ return {}; } }
-      function setData(patch){ const data={...getData(), ...patch}; localStorage.setItem('soulQuiz', JSON.stringify(data)); return data; }
-      function list(v){ if(Array.isArray(v)) return v; if(typeof v==='string') return v.split(/[\n,]/).map(s=>s.trim()).filter(Boolean); return []; }
+      /* ========== Defaults ========== */
+      const DEFAULT_HOBBIES = ['Travel','Yoga','Music','Reading','Gym','Running','Dancing','Art','Photography','Cooking','Baking','Hiking','Gardening','Meditation','Movies','Gaming'];
+      const DEFAULT_VALUES  = ['Honesty','Kindness','Loyalty','Freedom','Creativity','Growth','Family','Adventure','Compassion','Integrity','Humor','Respect','Balance','Spirituality','Curiosity'];
 
-      // birthdate auto-format YYYYMMDD -> YYYY-MM-DD (numbers only)
+      const BODY_TYPES = ['Slim','Athletic','Average','Curvy','No preference'];
+      const LIFESTYLE_PREFS = ['Open to all','Smokes','Doesn’t smoke','Drinks socially','Doesn’t drink','Fitness-oriented','Spiritual','Family-oriented','No preference'];
+
+      const LOVE_LIST = ['Words of Affirmation','Acts of Service','Receiving Gifts','Quality Time','Physical Touch'];
+
+      /* ========== Small utils ========== */
+      const hobbyIcon=(label)=>{ const s=(label||'').toLowerCase();
+        const map=[['travel','✈️'],['yoga','🧘'],['music','🎵'],['reading','📚'],['books','📚'],['gym','🏋️'],['running','🏃'],['dance','💃'],['art','🎨'],['photo','📷'],['cook','🍳'],['bake','🧁'],['hiking','🥾'],['garden','🌿'],['meditation','🕯️'],['movie','🎬'],['game','🎮']];
+        for(const [k,ico] of map){ if(s.includes(k)) return ico; } return '✨';
+      };
+      const chip = (label)=>{ const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=label; b.setAttribute('aria-pressed','false'); return b; };
+      const setVis = (el, show)=>{ if(!el) return; el.classList.toggle('hidey', !show); el.style.maxHeight = show? (el.scrollHeight+'px') : '0px'; if(show) el.style.opacity='1'; };
+      const announce = (msg)=>{ ui.announce.textContent=''; setTimeout(()=> ui.announce.textContent=msg, 25); };
+
+      /* ========== Birthday format & validate ========== */
       function formatBirthOnInput(){
-        const raw = ui.birthday.value;
-        const clean = raw.replace(/[^0-9-]/g,'');
-        const digits = clean.replace(/\D/g,'').slice(0,8);
-        let out = digits;
-        if(digits.length>4) out = digits.slice(0,4)+'-'+digits.slice(4,6);
-        if(digits.length>6) out = digits.slice(0,4)+'-'+digits.slice(4,6)+'-'+digits.slice(6,8);
-        ui.birthday.value = out;
-        const valid = /^\d{4}-\d{2}-\d{2}$/.test(out);
-        ui.birthdayHint.style.opacity = valid? .6 : 1;
+        const v=ui.birthday.value.replace(/[^\d-]/g,'');
+        const digits=v.replace(/\D/g,'');
+        if(digits.length>=5 && !v.includes('-')){
+          const y=digits.slice(0,4), m=digits.slice(4,6), d=digits.slice(6,8);
+          ui.birthday.value = [y,m,d].filter(Boolean).join('-');
+        }
       }
-
       function validateBirthday(){
-        const raw = ui.birthday.value.trim();
-        const digits = raw.replace(/\D/g,'');
-        const hintMsg = 'Example: 1993-02-24 (you can also type 19930224)';
-        if(digits.length !== 8){ ui.birthdayHint.textContent = hintMsg; ui.birthdayHint.style.opacity = 1; return false; }
-        const y = +digits.slice(0,4), m = +digits.slice(4,6), d = +digits.slice(6,8);
-        if(y < 1900 || y > 2035 || m < 1 || m > 12){ ui.birthdayHint.textContent = hintMsg; ui.birthdayHint.style.opacity = 1; return false; }
-        const dt = new Date(y, m-1, d);
-        if(dt.getFullYear() !== y || dt.getMonth() !== m-1 || dt.getDate() !== d){ ui.birthdayHint.textContent = hintMsg; ui.birthdayHint.style.opacity = 1; return false; }
-        const formatted = `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        ui.birthday.value = formatted;
-        ui.birthdayHint.textContent = hintMsg;
-        ui.birthdayHint.style.opacity = .6;
-        setData({birthday: formatted});
-        return true;
+        const raw=ui.birthday.value.trim();
+        const digits=raw.replace(/\D/g,'');
+        if(digits.length!==8){ return; } // hint already below
+        const y=+digits.slice(0,4), m=+digits.slice(4,6), d=+digits.slice(6,8);
+        const ok = y>=1900 && y<=2035 && m>=1 && m<=12 && d>=1 && d<=31;
+        if(ok){ setData({birthday: `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`}); }
       }
 
-      // chips helpers
-      function chip(label, opts={}){
-        const el=document.createElement('button');
-        el.type='button'; el.className='chip'+(opts.gem?' gem':'');
-        if(opts.icon){ const i=document.createElement('span'); i.className='ico'; i.textContent=opts.icon; el.appendChild(i); }
-        const t=document.createElement('span'); t.textContent=label; el.appendChild(t);
-        return el;
-      }
-
-      function renderConnection(selected){
-        const choices=[{k:'friendship',lbl:'friendship'},{k:'romantic',lbl:'romance'},{k:'both',lbl:'both'}];
+      /* ========== Connection ========== */
+      function renderConnection(type){
+        const opts=['friendship','romantic','both'];
         ui.connectionChips.innerHTML='';
-        choices.forEach(c=>{
-          const el=chip(c.lbl);
-          if(selected===c.k) el.classList.add('selected','primary');
-          el.addEventListener('click',()=>{ setData({connectionType:c.k}); updateVisibility(c.k); renderAll(); });
+        const cur=type||'friendship';
+        opts.forEach(lbl=>{
+          const el=chip(lbl);
+          if(cur===lbl){ el.setAttribute('aria-pressed','true'); el.classList.add('selected'); }
+          el.addEventListener('click', ()=>{
+            const d=setData({connectionType:lbl});
+            renderConnection(lbl);
+            updateVisibility(lbl);
+          });
           ui.connectionChips.appendChild(el);
         });
       }
 
-      function renderLove(loves){
-        const all=['Words of Affirmation','Quality Time','Acts of Service','Physical Touch','Receiving Gifts'];
-        const sel=list(loves);
+      /* ========== Love Languages (multi & primary) ========== */
+      function renderLove(arr){
+        const selected = Array.isArray(arr)? [...arr] : list(arr);
         ui.loveChips.innerHTML='';
-        all.forEach(lbl=>{
+        LOVE_LIST.forEach(lbl=>{
           const el=chip(lbl);
-          const idx=sel.indexOf(lbl);
-          if(idx>-1){ el.classList.add('selected'); if(idx===0) el.classList.add('primary'); }
-          el.addEventListener('click',()=>{
-            let data=list(getData().loveLanguages);
-            const i=data.indexOf(lbl);
-            if(i>-1){ data.splice(i,1); }
-            else { data.push(lbl); }
-            if(data.length>1){ const j=data.indexOf(lbl); if(j>0){ const v=data.splice(j,1)[0]; data.unshift(v);} }
-            setData({loveLanguages:data});
-            renderLove(data);
+          const on = selected.map(v=>v.toLowerCase()).includes(lbl.toLowerCase());
+          el.setAttribute('aria-pressed', on?'true':'false');
+          if(on && selected[0] && selected[0].toLowerCase()===lbl.toLowerCase()){
+            el.innerHTML = `<span class="check">✓</span> ${lbl} <small class="muted">· Primary</small>`;
+            el.classList.add('selected');
+          } else if(on){
+            el.innerHTML = `<span class="check">✓</span> ${lbl}`;
+            el.classList.add('selected');
+          }
+          el.addEventListener('click', ()=>{
+            let d = list(getData().loveLanguages||getData().loveLanguage);
+            const idx = d.map(v=>v.toLowerCase()).indexOf(lbl.toLowerCase());
+            if(idx>-1){ d.splice(idx,1); }
+            else{
+              if(d.length===0) d = [lbl]; else d.push(lbl);
+            }
+            setData({ loveLanguages: d });
+            renderLove(d);
           });
           ui.loveChips.appendChild(el);
         });
       }
 
-      function hobbyIcon(text){ const s=(text||'').toLowerCase();
-        const map=[["travel","✈️"],["yoga","🧘"],["music","🎵"],["reading","📚"],["books","📚"],["gym","🏋️"],["run","🏃"],["dance","💃"],["art","🎨"],["photo","📷"],["cook","🍳"],["bake","🧁"],["hike","🥾"],["garden","🌿"],["medit","🕯️"],["movie","🎬"],["game","🎮"]];
-        for(const [k,ico] of map){ if(s.includes(k)) return ico; } return '✨'; }
-        
-      // Default option pools (you can extend freely)
-      const DEFAULT_HOBBIES=["Travel","Yoga","Music","Reading","Gym","Running","Dancing","Art","Photography","Cooking","Baking","Hiking","Gardening","Meditation","Movies","Gaming"];
-      const DEFAULT_VALUES=["Honesty","Kindness","Loyalty","Freedom","Creativity","Growth","Family","Adventure","Compassion","Integrity","Humor","Respect","Balance","Spirituality","Curiosity"];
-      // Relationship prefs defaults
-      const BODY_TYPES = ["Slim","Athletic","Average","Curvy","No preference"];
-      const LIFESTYLE_PREFS = ["Open to all","Smokes","Doesn\u2019t smoke","Drinks socially","Doesn\u2019t drink","Fitness-oriented","Spiritual","Family-oriented","No preference"];
- 
-      // Render a full, stable list of chips; selected = toggle style; custom chips get a small "×" delete
-    function renderToggles(container, selectedArr, allOptions, {gem=false, icon=false, key}){
-     const data = getData();
-     const defaults = key==='hobbies' ? DEFAULT_HOBBIES : DEFAULT_VALUES;
-     const customKey = key==='hobbies' ? 'customHobbies' : 'customValues';
-
-     const selected = Array.isArray(selectedArr)? [...selectedArr] : [];
-     const selLower = selected.map(v=>String(v).toLowerCase());
-
-  // customs from storage (array), remove dups vs defaults (case-insensitive)
-    const customsRaw = list(data[customKey]);
-    const lowerDef = defaults.map(v=>v.toLowerCase());
-    const customs = customsRaw.filter(v => !lowerDef.includes(String(v).toLowerCase()));
-
-  // full list = defaults first, then customs (stable)
-    const full = [...defaults, ...customs];
-
-  container.innerHTML = '';
-  full.forEach(lbl => {
-    const isCustom = customs.some(v => v.toLowerCase() === String(lbl).toLowerCase());
-    const el = document.createElement('button');
-    el.type = 'button';
-    el.className = 'chip' + (gem ? ' gem' : '');
-    if(icon){
-      const i = document.createElement('span');
-      i.className = 'ico';
-      i.textContent = hobbyIcon(lbl);
-      el.appendChild(i);
-    }
-    const t = document.createElement('span');
-    t.textContent = lbl;
-    el.appendChild(t);
-
-    const isSel = selLower.includes(String(lbl).toLowerCase());
-    if(isSel) el.classList.add('selected');
-    el.setAttribute('aria-pressed', isSel ? 'true' : 'false');
-
-    // Toggle selection (chip STAYS visible, only style changes)
-    el.addEventListener('click', () => {
-      let sel = list(getData()[key]);
-      const lower = sel.map(v => v.toLowerCase());
-      const idx = lower.indexOf(String(lbl).toLowerCase());
-      let added = false;
-      if(idx > -1){ sel.splice(idx,1); }
-      else { sel.push(lbl); added = true; }
-      setData({ [key]: sel });
-
-      // update state without removing element
-      const nowOn = added || sel.map(v=>v.toLowerCase()).includes(String(lbl).toLowerCase());
-      el.classList.toggle('selected', nowOn);
-      el.setAttribute('aria-pressed', nowOn ? 'true' : 'false');
-
-      // aria-live announcement
-      if(ui.announce){ ui.announce.textContent = `${added? 'Added to':'Removed from'} ${key}`; }
-    });
-
-    // custom delete "×" (only for customs)
-    if(isCustom){
-      const del = document.createElement('button');
-      del.type = 'button';
-      del.className = 'del';
-      del.textContent = '×';
-      del.setAttribute('aria-label', `Remove custom ${key.slice(0,-1)} ${lbl}`);
-      del.addEventListener('click', (e) => {
-        e.stopPropagation();
-        let d = getData();
-        let sel = list(d[key]);
-        let customsArr = list(d[customKey]);
-
-        // remove from customs (case-insensitive)
-        customsArr = customsArr.filter(v => v.toLowerCase() !== String(lbl).toLowerCase());
-        // also unselect if selected
-        sel = sel.filter(v => v.toLowerCase() !== String(lbl).toLowerCase());
-
-        setData({ [customKey]: customsArr, [key]: sel });
-        // re-render the whole group so the chip list is rebuilt
-        renderToggles(container, sel, defaults, {gem, icon, key});
-        if(ui.announce){ ui.announce.textContent = `Deleted custom ${key.slice(0,-1)}`; }
-      });
-      el.appendChild(del);
-    }
-
-    container.appendChild(el);
-  });
-}
-// "Add custom…" input: add as a first-class chip, pre-selected; persist custom* and selected arrays
-        function addCustom(inputEl, key, container, opts, defaults){
-        const customKey = key==='hobbies' ? 'customHobbies' : 'customValues';
-        const add = () => {
-        const raw = inputEl.value || '';
-        let v = raw.trim().replace(/\s+/g,' ');
-        if(!v) return;
-        inputEl.value = '';
-
-        const d = getData();
-        const def = key==='hobbies' ? DEFAULT_HOBBIES : DEFAULT_VALUES;
-        let customs = list(d[customKey]);
-
-    // dedupe against defaults and customs (case-insensitive)
-        const inDefaults = def.map(x=>x.toLowerCase()).includes(v.toLowerCase());
-        const inCustoms  = customs.map(x=>x.toLowerCase()).includes(v.toLowerCase());
-        if(!inDefaults && !inCustoms){ customs.push(v); }
-
-    // auto-select the new chip
-        let sel = list(d[key]);
-        if(!sel.map(x=>x.toLowerCase()).includes(v.toLowerCase())) sel.push(v);
-
-        setData({ [customKey]: customs, [key]: sel });
-        renderToggles(container, sel, def, opts);
-        if(ui.announce){ ui.announce.textContent = `Added custom ${key.slice(0,-1)}`; }
-    };
-
-        inputEl.addEventListener('keydown', e => {
-        if(e.key === 'Enter'){ e.preventDefault(); add(); }
-    });
-        (opts.btn||null)?.addEventListener?.('click', add);
-    }
-
+      /* ========== Gender Identity ========== */
       function renderGenderIdentity(d){
-        const choices=['Woman','Man','Non-binary','Prefer not to say','Self-describe'];
+        const opts=['Woman','Man','Non-binary','Prefer not to say','Self-describe'];
+        const cur=d.genderIdentity||'';
         ui.genderIdChips.innerHTML='';
-        choices.forEach(lbl=>{
+        opts.forEach(lbl=>{
           const el=chip(lbl);
-          const isSelf = lbl==='Self-describe';
-          if((!isSelf && d.genderIdentity===lbl) || (isSelf && d.genderSelf)) el.classList.add('selected','primary');
-          el.addEventListener('click',()=>{
-            if(isSelf){ setData({genderIdentity:null}); selfInput('genderSelf', ui.genderSelfMount, d.genderSelf); }
-            else { setData({genderIdentity:lbl, genderSelf:null}); renderGenderIdentity(getData()); ui.genderSelfMount.innerHTML=''; }
+          const on = (cur===lbl);
+          if(on){ el.classList.add('selected'); el.setAttribute('aria-pressed','true'); }
+          el.addEventListener('click', ()=>{
+            const nd = setData({ genderIdentity: lbl==='Self-describe'? null : lbl });
+            renderGenderIdentity(getData());
           });
           ui.genderIdChips.appendChild(el);
         });
-        if(d.genderSelf) selfInput('genderSelf', ui.genderSelfMount, d.genderSelf);
+        // self-describe input
+        const isSelf = (d.genderIdentity==null) && (d.genderSelf||'')!=='' || (cur==='Self-describe');
+        ui.genderSelfMount.innerHTML='';
+        if((cur==='Self-describe') || d.genderSelf){
+          const wrap=document.createElement('div');
+          wrap.innerHTML = `<label>Self-describe</label><input id="genderSelf" type="text" placeholder="Type here…" />`;
+          ui.genderSelfMount.appendChild(wrap);
+          const input=wrap.querySelector('#genderSelf');
+          input.value = d.genderSelf||'';
+          input.addEventListener('input',()=> setData({genderSelf: input.value.trim()}));
+        }
       }
 
+      /* ========== Connect With (Romantic/Both) ========== */
       function renderConnectWith(d){
-        const choices=['Open to all','Women','Men','Non-binary','Custom preference'];
+        const opts=['Women','Men','Non-binary','Open to all','Custom preference'];
+        const cur = d.connectWith||'Open to all';
         ui.connectWithChips.innerHTML='';
-        choices.forEach(lbl=>{
+        opts.forEach(lbl=>{
           const el=chip(lbl);
-          const isCustom = lbl==='Custom preference';
-          if((!isCustom && d.connectWith===lbl) || (isCustom && d.connectWithCustom)) el.classList.add('selected','primary');
-          el.addEventListener('click',()=>{
-            if(isCustom){ setData({connectWith:null}); selfInput('connectWithCustom', ui.connectWithCustomMount, d.connectWithCustom); }
-            else { setData({connectWith:lbl, connectWithCustom:null}); renderConnectWith(getData()); ui.connectWithCustomMount.innerHTML=''; }
+          const on = (cur===lbl);
+          if(on){ el.classList.add('selected'); el.setAttribute('aria-pressed','true'); }
+          el.addEventListener('click', ()=>{
+            const patch = { connectWith: lbl };
+            if(lbl!=='Custom preference') patch.connectWithCustom = null;
+            setData(patch);
+            renderConnectWith(getData());
           });
           ui.connectWithChips.appendChild(el);
         });
-        if(d.connectWithCustom) selfInput('connectWithCustom', ui.connectWithCustomMount, d.connectWithCustom);
+        // custom
+        ui.connectWithCustomMount.innerHTML='';
+        if(cur==='Custom preference'){
+          const wrap=document.createElement('div');
+          wrap.innerHTML = `<label>Custom preference</label><input id="connectWithCustom" type="text" placeholder="e.g., Women & Non-binary" />`;
+          ui.connectWithCustomMount.appendChild(wrap);
+          const input=wrap.querySelector('#connectWithCustom');
+          input.value = d.connectWithCustom||'';
+          input.addEventListener('input',()=> setData({connectWithCustom: input.value.trim()}));
+        }
       }
 
+      /* ========== Friend Connect (Friendship) ========== */
       function renderFriendConnect(d){
         const choices=['Open to all','Same gender','No preference'];
         ui.friendConnectChips.innerHTML='';
+        const current=(d.connectWith||'Open to all');
+
         choices.forEach(lbl=>{
           const el=chip(lbl);
-          if((d.connectWith||'Open to all')===lbl) el.classList.add('selected','primary');
-          el.addEventListener('click',()=>{ setData({connectWith:lbl}); renderFriendConnect(getData()); });
+          const on = (current===lbl);
+          if(on){ el.classList.add('selected','primary'); el.setAttribute('aria-pressed','true'); }
+          el.addEventListener('click',()=>{
+            setData({connectWith:lbl});
+            renderFriendConnect(getData());
+          });
           ui.friendConnectChips.appendChild(el);
+        });
+
+        // detailed pairing when "Same gender"
+        renderFriendPairing(getData());
+      }
+
+      function renderFriendPairing(d){
+        const show = ((d.connectWith||'Open to all')==='Same gender');
+        ui.friendPairingChips.style.display = show ? '' : 'none';
+        if(!show){ ui.friendPairingChips.innerHTML=''; return; }
+
+        const options = ['Women ↔ Women','Men ↔ Men','Non-binary ↔ Non-binary'];
+        const cur = d.connectWithDetail || '';
+        ui.friendPairingChips.innerHTML='';
+
+        options.forEach(lbl=>{
+          const el = chip(lbl);
+          const on = (cur===lbl);
+          if(on){ el.classList.add('selected','primary'); el.setAttribute('aria-pressed','true'); }
+          el.addEventListener('click', ()=>{
+            setData({ connectWithDetail: lbl });
+            renderFriendPairing(getData());
+          });
+          ui.friendPairingChips.appendChild(el);
         });
       }
 
+      /* ========== Orientation (Romantic/Both) ========== */
       function renderOrientation(d){
         const listO = ['Heterosexual','Gay','Lesbian','Bisexual','Pansexual','Asexual','Queer','Questioning','Prefer not to say'];
         ui.orientationChips.innerHTML='';
         listO.forEach(lbl=>{
           const el=chip(lbl);
-          if(d.orientation===lbl) el.classList.add('selected','primary');
+          const on = (d.orientation===lbl);
+          if(on){ el.classList.add('selected','primary'); el.setAttribute('aria-pressed','true'); }
           el.addEventListener('click',()=>{ setData({orientation:lbl}); renderOrientation(getData()); });
           ui.orientationChips.appendChild(el);
         });
-
       }
-      // Relationship helpers (persist under soulQuiz.relationship)
+
+      /* ========== Relationship preferences ========== */
       function getRel(){ const d=getData(); return d.relationship || {}; }
-      function setRel(patch){
-      const d=getData(); const rel = { ...(d.relationship||{}), ...patch };
-      setData({ relationship: rel }); return rel;
+      function setRel(patch){ const d=getData(); const rel={...(d.relationship||{}), ...patch}; setData({relationship:rel}); return rel; }
+
+      function renderRelChips(container, options, selectedArr, relKey, {exclusive=null}={}){
+        container.innerHTML='';
+        const selLower=(selectedArr||[]).map(v=>String(v).toLowerCase());
+        options.forEach(lbl=>{
+          const el=chip(lbl);
+          const on=selLower.includes(lbl.toLowerCase());
+          el.setAttribute('aria-pressed', on?'true':'false');
+          if(on){ el.classList.add('selected'); el.innerHTML=`<span class="check">✓</span> ${lbl}`; } else { el.textContent=lbl; }
+          el.addEventListener('click', ()=>{
+            const cur = getRel();
+            let arr = Array.isArray(cur[relKey])? [...cur[relKey]] : [];
+            const idx = arr.map(v=>String(v).toLowerCase()).indexOf(lbl.toLowerCase());
+            let nowOn=false;
+            if(idx>-1){ arr.splice(idx,1); nowOn=false; }
+            else{
+              if(exclusive && lbl===exclusive){ arr=[lbl]; }
+              else{
+                if(exclusive){ arr = arr.filter(v=>v!==exclusive); }
+                arr.push(lbl);
+              }
+              nowOn=true;
+            }
+            setRel({ [relKey]: arr });
+            renderRelChips(container, options, arr, relKey, {exclusive});
+            announce(`${nowOn?'Added to':'Removed from'} ${relKey}`);
+          });
+          container.appendChild(el);
+        });
       }
 
-// Generic renderer for relationship chips (toggle; "No preference" exclusive if provided)
-     function renderRelChips(container, options, selectedArr, relKey, {exclusive=null}={}){
-     container.innerHTML='';
-     const selLower=(selectedArr||[]).map(v=>String(v).toLowerCase());
-     options.forEach(lbl=>{
-     const el = chip(lbl);
-     const on = selLower.includes(lbl.toLowerCase());
-     if(on) el.classList.add('selected');
-     el.setAttribute('aria-pressed', on?'true':'false');
-     el.addEventListener('click', ()=>{
-      const cur = getRel();
-      let arr = Array.isArray(cur[relKey]) ? [...cur[relKey]] : [];
-      const idx = arr.map(v=>v.toLowerCase()).indexOf(lbl.toLowerCase());
-      let nowOn;
-      if(idx>-1){ arr.splice(idx,1); nowOn=false; }
-      else {
-        if(exclusive && lbl===exclusive){ arr=[lbl]; }
-        else { if(exclusive){ arr = arr.filter(v=>v!==exclusive); } arr.push(lbl); }
-        nowOn=true;
-      }
-      setRel({ [relKey]: arr });
-      // re-render to reflect exclusivity
-      renderRelChips(container, options, arr, relKey, {exclusive});
-      if(ui.announce){ ui.announce.textContent = `${nowOn?'Added to':'Removed from'} ${relKey}`; }
-    });
-    container.appendChild(el);
-  });
-}
+      function bindAge(){
+        if(!ui.minAge || !ui.maxAge) return;
+        const rel = getRel();
+        let [min,max] = Array.isArray(rel.ageRange) ? rel.ageRange : [20,60];
+        min = Math.max(18, Math.min(80, Number(min)||20));
+        max = Math.max(18, Math.min(80, Number(max)||60));
+        if(min>max){ [min,max] = [max,min]; }
+        ui.minAge.value = String(min); ui.maxAge.value = String(max);
+        ui.minAgeValue.textContent = min; ui.maxAgeValue.textContent = max;
 
-// Age dual slider
-function bindAge(){
-  if(!ui.minAge || !ui.maxAge) return;
-  const rel = getRel();
-  let [min,max] = Array.isArray(rel.ageRange) ? rel.ageRange : [20,60];
-  min = Math.max(18, Math.min(80, Number(min)||20));
-  max = Math.max(18, Math.min(80, Number(max)||60));
-  if(min>max){ [min,max] = [max,min]; }
-  ui.minAge.value = String(min);
-  ui.maxAge.value = String(max);
-  ui.minAgeValue.textContent = min;
-  ui.maxAgeValue.textContent = max;
-
-  const update = ()=>{
-    let a = Number(ui.minAge.value)||20;
-    let b = Number(ui.maxAge.value)||60;
-    if(a>b){
-      if(document.activeElement===ui.minAge){ b=a; ui.maxAge.value=b; }
-      else { a=b; ui.minAge.value=a; }
-    }
-    a = Math.max(18, Math.min(80, a));
-    b = Math.max(18, Math.min(80, b));
-    ui.minAgeValue.textContent = a;
-    ui.maxAgeValue.textContent = b;
-    setRel({ ageRange: [a,b] });
-  };
-  ui.minAge.oninput = update;
-  ui.maxAge.oninput = update;
-}
-
-// Main renderer for the block
-function renderRelationship(){
-  const rel = getRel();
-  // Body type: multi-toggle, "No preference" is exclusive
-  renderRelChips(ui.bodyTypeChips, BODY_TYPES, Array.isArray(rel.bodyType)? rel.bodyType: [], 'bodyType', {exclusive:'No preference'});
-  // Lifestyle: multi-toggle, no exclusivity
-  renderRelChips(ui.lifestyleChips, LIFESTYLE_PREFS, Array.isArray(rel.lifestyle)? rel.lifestyle: [], 'lifestyle', {exclusive: 'Open to all'});
-  // Age range
-  bindAge();
-}
-
-
-      function selfInput(key, mount, value=''){
-        let holder = mount.querySelector(`[data-self="${key}"]`);
-        if(!holder){ holder=document.createElement('div'); holder.dataset.self=key; holder.style.marginTop='10px'; mount.appendChild(holder); }
-        holder.innerHTML=`<label style="font-weight:600">Self-describe</label><input type="text" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:rgba(0,253,216,.06);color:var(--fg)" value="${value||''}">`;
-        const input=holder.querySelector('input');
-        input.addEventListener('input',()=>{ setData({[key]: input.value.trim()||null}); });
+        const update = ()=>{
+          let a = Number(ui.minAge.value)||20;
+          let b = Number(ui.maxAge.value)||60;
+          if(a>b){
+            if(document.activeElement===ui.minAge){ b=a; ui.maxAge.value=b; }
+            else { a=b; ui.minAge.value=a; }
+          }
+          a = Math.max(18, Math.min(80, a));
+          b = Math.max(18, Math.min(80, b));
+          ui.minAgeValue.textContent = a; ui.maxAgeValue.textContent = b;
+          setRel({ ageRange: [a,b] });
+        };
+        ui.minAge.oninput = update;
+        ui.maxAge.oninput = update;
       }
 
-      function setVis(el, show){ if(!el) return; el.classList.toggle('hidey', !show); }
-      function announce(msg){ if(!ui.announce) return; ui.announce.textContent=''; setTimeout(()=> ui.announce.textContent=msg, 25); }
+      function renderRelationship(){
+        const rel = getRel();
+        renderRelChips(ui.bodyTypeChips, BODY_TYPES, Array.isArray(rel.bodyType)? rel.bodyType: [], 'bodyType', {exclusive:'No preference'});
+        renderRelChips(ui.lifestyleChips, LIFESTYLE_PREFS, Array.isArray(rel.lifestyle)? rel.lifestyle: [], 'lifestyle', {exclusive:'Open to all'});
+        bindAge();
+      }
 
+      /* ========== Hobbies & Values (toggle + custom) ========== */
+      function getOptions(defaults, keyCustom){
+        const d=getData();
+        const customs = list(d[keyCustom]);
+        const merged = [...defaults];
+        customs.forEach(v=>{ if(!merged.map(x=>x.toLowerCase()).includes(v.toLowerCase())) merged.push(v); });
+        return {merged, customs};
+      }
+
+      function renderToggles(container, selectedArr, defaults, {gem=false, icon=false, key}){
+        const {merged} = getOptions(defaults, key==='hobbies'?'customHobbies':'customValues');
+        const selected = Array.isArray(selectedArr) ? [...selectedArr] : list(selectedArr);
+
+        container.innerHTML='';
+        merged.forEach(lbl=>{
+          const btn=document.createElement('button');
+          btn.type='button'; btn.className='chip' + (gem?' gem':''); btn.setAttribute('aria-pressed','false');
+          if(icon){ btn.innerHTML = `<span class="ico">${hobbyIcon(lbl)}</span><span>${lbl}</span>`; } else { btn.textContent=lbl; }
+
+          const on = selected.map(v=>v.toLowerCase()).includes(lbl.toLowerCase());
+          if(on){ btn.classList.add('selected'); btn.setAttribute('aria-pressed','true'); if(!icon) btn.innerHTML = `<span class="check">✓</span> ${lbl}`; }
+
+          btn.addEventListener('click', ()=>{
+            let data = list(getData()[key]);
+            const i = data.map(v=>v.toLowerCase()).indexOf(lbl.toLowerCase());
+            if(i>-1) data.splice(i,1); else data.push(lbl);
+            setData({ [key]: data });
+            renderToggles(container, data, defaults, {gem, icon, key});
+            announce(`${i>-1?'Removed from':'Added to'} ${key}`);
+          });
+
+          container.appendChild(btn);
+        });
+      }
+
+      function addCustom(inputEl, key, container, opts, defaults){
+        inputEl.addEventListener('keydown', (e)=>{
+          if(e.key==='Enter'){
+            const raw=inputEl.value.trim().replace(/\s+/g,' ');
+            if(!raw) return;
+            const d=getData();
+            const listCustom = list(d[key==='hobbies'?'customHobbies':'customValues']);
+            const all = new Set([...defaults.map(x=>x.toLowerCase()), ...listCustom.map(x=>x.toLowerCase())]);
+            if(!all.has(raw.toLowerCase())){
+              const field = key==='hobbies'?'customHobbies':'customValues';
+              const updated = [...listCustom, raw];
+              setData({ [field]: updated, [key]: [...list(d[key]||[]), raw] });
+            } else {
+              setData({ [key]: [...list(d[key]||[]), raw] });
+            }
+            inputEl.value='';
+            renderToggles(container, list(getData()[key]), defaults, opts);
+          }
+        });
+      }
+
+      /* ========== Visibility by mode ========== */
       function updateVisibility(mode){
-        const m = mode || getData().connectionType || 'friendship';
+        const d=getData();
+        const m = mode || d.connectionType || 'friendship';
         const romantic = (m==='romantic'|| m==='both');
         setData({useRomanticFilters: romantic});
 
-        // ensure defaults in friendship
-        const d=getData();
+        // defaults for friendship
         if(!romantic){
           if(!d.genderIdentity && !d.genderSelf){ setData({genderIdentity:'Prefer not to say'}); }
           if(!d.connectWith){ setData({connectWith:'Open to all'}); }
         }
 
-        // toggle sections
         setVis(ui.orientationCard, romantic);
         setVis(ui.connectDetailedWrap, romantic);
         setVis(ui.friendConnectWrap, !romantic);
+        setVis(ui.relationshipCard, romantic);
 
-        // height/weight wrappers (found at runtime)
+        // height/weight shown only in romantic/both
         setVis(ui.heightWrap, romantic);
         setVis(ui.weightWrap, romantic);
-        if(ui.hwHint){ setVis(ui.hwHint, romantic); }
+        setVis(ui.hwHint, romantic);
 
-        // helper lines
         ui.friendConnectHint && (ui.friendConnectHint.style.opacity = !romantic? 1 : 0.6);
-        ui.connHelper && (ui.connHelper.style.opacity = 1);
 
-        // announce & focus
-        if(romantic){ announce(m==='both' ? 'All options available.' : 'Romantic details revealed.');
-          // focus gender chips first
-          const f = ui.genderIdChips.querySelector('.chip'); f?.focus?.();
-        } else { announce('Friendship mode — romantic details hidden.');
-          const f = ui.friendConnectChips.querySelector('.chip'); f?.focus?.();
-        }
+        if(romantic){ announce(m==='both' ? 'All options available.' : 'Romantic details revealed.'); }
+        else { announce('Friendship mode — romantic details hidden.'); }
       }
 
-      // counters
+      /* ========== Counters & Basics binding ========== */
       function bindCounters(){
         const maxB=300, maxA=500;
-        const upd=()=>{ ui.boundariesCount.textContent = Math.min(maxB, ui.boundaries.value.length); ui.aboutCount.textContent = Math.min(maxA, ui.aboutMe.value.length); };
-        ui.boundaries.addEventListener('input',()=>{ if(ui.boundaries.value.length>maxB) ui.boundaries.value=ui.boundaries.value.slice(0,maxB); setData({boundaries:ui.boundaries.value}); upd(); });
-        ui.aboutMe.addEventListener('input',()=>{ if(ui.aboutMe.value.length>maxA) ui.aboutMe.value=ui.aboutMe.value.slice(0,maxA); setData({aboutMe:ui.aboutMe.value}); upd(); });
+        const upd=()=>{
+          ui.boundariesCount.textContent = Math.min(maxB, ui.boundaries.value.length);
+          ui.aboutCount.textContent = Math.min(maxA, ui.aboutMe.value.length);
+        };
+        ui.boundaries.addEventListener('input',()=>{
+          if(ui.boundaries.value.length>maxB) ui.boundaries.value=ui.boundaries.value.slice(0,maxB);
+          setData({boundaries:ui.boundaries.value}); upd();
+        });
+        ui.aboutMe.addEventListener('input',()=>{
+          if(ui.aboutMe.value.length>maxA) ui.aboutMe.value=ui.aboutMe.value.slice(0,maxA);
+          setData({aboutMe:ui.aboutMe.value}); upd();
+        });
         upd();
       }
 
-      // load & render
       function populateBasics(d){
-        ui.name.value=d.name||''; ui.country.value=d.country||''; ui.birthday.value=d.birthday||''; ui.height.value=d.height||''; ui.weight.value=d.weight||'';
+        ui.name.value=d.name||''; ui.country.value=d.country||''; ui.birthday.value=d.birthday||'';
+        ui.height.value=d.height||''; ui.weight.value=d.weight||'';
       }
-
       function bindBasics(){
         ui.name.addEventListener('input',()=> setData({name:ui.name.value.trim()}));
         ui.country.addEventListener('input',()=> setData({country:ui.country.value.trim()}));
@@ -760,6 +727,37 @@ function renderRelationship(){
         ui.weight.addEventListener('input',()=> setData({weight:ui.weight.value.replace(/[^\d.]/g,'')}));
       }
 
+      /* ========== Pairing quick suggestions (Romantic/Both) ========== */
+      function renderPairingQuick(d){
+        const mode = d.connectionType || 'friendship';
+        const romantic = (mode==='romantic'||mode==='both');
+        if(ui.pairingQuickHint) ui.pairingQuickHint.style.display = romantic ? '' : 'none';
+        ui.pairingQuickChips.style.display = romantic ? '' : 'none';
+        if(!romantic){ ui.pairingQuickChips.innerHTML=''; return; }
+
+        const gi = d.genderIdentity || null;
+        const combos = gi==='Woman'      ? [['Woman','Women'],['Woman','Men'],['Woman','Non-binary']]
+                     : gi==='Man'        ? [['Man','Women'],['Man','Men'],['Man','Non-binary']]
+                     : gi==='Non-binary' ? [['Non-binary','Women'],['Non-binary','Men'],['Non-binary','Non-binary']]
+                     : [['Woman','Men'],['Woman','Women'],['Man','Men'],['Non-binary','Non-binary']];
+
+        ui.pairingQuickChips.innerHTML='';
+        combos.forEach(([me, seek])=>{
+          const label = `${me} ↔ ${seek}`;
+          const el = chip(label);
+          const selected = (d.genderIdentity===me) && (d.connectWith===seek);
+          if(selected) el.classList.add('selected','primary');
+          el.addEventListener('click', ()=>{
+            setData({ genderIdentity: me, connectWith: seek, connectWithCustom: null });
+            renderGenderIdentity(getData());
+            renderConnectWith(getData());
+            renderPairingQuick(getData());
+          });
+          ui.pairingQuickChips.appendChild(el);
+        });
+      }
+
+      /* ========== Render all ========== */
       function renderAll(){
         const d=getData();
         populateBasics(d);
@@ -768,46 +766,40 @@ function renderRelationship(){
         renderGenderIdentity(d);
         renderConnectWith(d);
         renderFriendConnect(d);
+        renderPairingQuick(d);
         renderOrientation(d);
         renderRelationship();
 
         renderToggles(ui.hobbyChips, list(d.hobbies), DEFAULT_HOBBIES, {icon:true, key:'hobbies'});
         renderToggles(ui.valueChips, list(d.values), DEFAULT_VALUES, {gem:true, key:'values'});
+
         ui.boundaries.value=d.boundaries||'';
         ui.aboutMe.value=d.aboutMe||'';
         ui.boundariesCount.textContent=String((d.boundaries||'').length);
         ui.aboutCount.textContent=String((d.aboutMe||'').length);
+
         updateVisibility(d.connectionType);
+        updateNextLabel();
       }
 
-      // add custom inputs
-      addCustom(ui.hobbyInput, 'hobbies', ui.hobbyChips, {icon:true, key:'hobbies', btn:ui.addHobby}, DEFAULT_HOBBIES);
-      addCustom(ui.valueInput, 'values', ui.valueChips, {gem:true, key:'values', btn:ui.addValue}, DEFAULT_VALUES);
+      /* ========== Add custom inputs ========== */
+      addCustom(ui.hobbyInput, 'hobbies', ui.hobbyChips, {icon:true, key:'hobbies'}, DEFAULT_HOBBIES);
+      addCustom(ui.valueInput, 'values', ui.valueChips, {gem:true, key:'values'}, DEFAULT_VALUES);
 
-      // actions
-      ui.nextEdit?.addEventListener('click', (e)=>{
-      e.preventDefault();
-      (function updateNextLabel(){
-       const d = getData ? getData() : (JSON.parse(localStorage.getItem('soulQuiz')||'{}'));
-       if (d && d.completed === true) ui.nextEdit.textContent = 'Next → Edit Profile';
-       else ui.nextEdit.textContent = 'Next → My Soul';
-   })();
+      /* ========== Next button flow ========== */
+      function updateNextLabel(){
+        const d = getData();
+        ui.nextEdit.textContent = d && d.completed===true ? 'Next → Edit Profile' : 'Next → My Soul';
+      }
+      ui.nextEdit.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const d = getData();
+        const firstTime = !(d && d.completed===true);
+        if(firstTime){ setData({completed:true}); location.href='my-soul.html'; }
+        else { location.href='edit-profile.html'; }
+      });
 
-
-  // pažymim kaip užpildytą pirmą kartą
-       if(firstTime){
-       if (typeof setData === 'function') setData({ completed: true });
-       else {
-       const merged = { ...(d||{}), completed: true };
-      localStorage.setItem('soulQuiz', JSON.stringify(merged));
-       }
-       location.href = 'my-soul.html';       // pirmą kartą → My Soul
-       } else {
-       location.href = 'edit-profile.html';  // vėliau → Edit Profile
-       }
-     });
-
-      // drawer + navbar scroll
+      /* ========== Nav, drawer, logout ========== */
       const onScroll=()=>{ if(window.scrollY>6) ui.navbar.classList.add('scrolled'); else ui.navbar.classList.remove('scrolled'); };
       onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
       const openDrawer=()=>{ ui.drawer.classList.add('open'); document.body.classList.add('no-scroll'); };
@@ -817,20 +809,19 @@ function renderRelationship(){
       ui.drawerBackdrop?.addEventListener('click', closeDrawer);
       document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeDrawer(); });
 
-      // logout
+      ui.backHome.addEventListener('click', ()=> location.href='index.html');
       ui.logout?.addEventListener('click', (e)=>{ e.preventDefault(); localStorage.clear(); location.href='index.html'; });
       ui.logoutM?.addEventListener('click', (e)=>{ e.preventDefault(); localStorage.clear(); location.href='index.html'; });
 
-      // init after DOM
+      /* ========== Init ========== */
       document.addEventListener('DOMContentLoaded', ()=>{
-        // find height/weight wrappers so we can collapse smoothly
-        ui.heightWrap = ui.height.closest('div');
-        ui.weightWrap = ui.weight.closest('div');
-        // ensure collapsible class for smooth transitions
-        ui.heightWrap?.classList.add('collapsible');
-        ui.weightWrap?.classList.add('collapsible');
+        // prepare collapsible heights for smooth show/hide
+        [ui.heightWrap, ui.weightWrap, ui.friendConnectWrap, ui.connectDetailedWrap, ui.relationshipCard, ui.orientationCard].forEach(el=>{
+          if(el){ el.classList.add('collapsible'); el.style.maxHeight = el.scrollHeight+'px'; }
+        });
         renderAll(); bindBasics(); bindCounters(); formatBirthOnInput();
       });
+
     })();
   </script>
 </body>
