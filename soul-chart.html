@@ -9,6 +9,14 @@
    <script src="nav.js?v=3" defer></script>
   <link rel="stylesheet" href="style.css" />
   <style>
+    .intro{margin:10px 0 18px;color:var(--muted)}
+    .subtitle{margin:6px 0 0;color:var(--muted);font-size:.95rem}
+    .sr-only{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+    .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) scale(.98);
+         background:rgba(0,253,216,.12);border:1px solid var(--border);
+         color:var(--fg);padding:10px 14px;border-radius:12px;opacity:0;
+         transition:opacity .18s ease, transform .18s ease;z-index:9999}
+    .toast.show{opacity:1;transform:translateX(-50%) scale(1)}
     .container { max-width: 980px; margin: 0 auto; padding: 2rem 1rem; }
     .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
     @media (max-width: 960px){ .grid { grid-template-columns: 1fr; } }
@@ -60,6 +68,10 @@
     </div>
 
     <div class="grid">
+      <p id="chartIntro" class="intro"></p>
+    <div id="chartAnn" class="sr-only" aria-live="polite"></div>
+    <div id="chartToast" class="toast" role="status" aria-live="polite"></div>
+
       <!-- Love Language focus -->
       <div class="card">
         <h3 class="section-title">💌 Love Language Focus</h3>
