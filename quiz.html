@@ -233,6 +233,12 @@
 
    <div class="field">
     <label>Body Type Preference</label>
+    <div class="field">
+     <label>Body Type Preference</label>
+   <p class="hint">Optional. Helps us suggest partners more aligned with your preference.</p>
+   <div class="chips" id="bodyTypeChips"></div>
+   </div>
+
     <div class="chips" id="bodyTypeChips"></div>
    </div>
 
@@ -241,6 +247,20 @@
     <div class="age-range">
       <div class="age-lines">
         <span id="minAgeValue">20</span>–<span id="maxAgeValue">60</span>
+        <div class="field" style="margin-top:12px">
+    <label for="minAge">Age Range</label>
+    <div class="age-range">
+    <div class="age-lines">
+      <span id="minAgeValue">20</span>–<span id="maxAgeValue">60</span>
+    </div>
+    <p class="hint">Preferred partner age range.</p>
+    <div class="sliders">
+      <input type="range" id="minAge" min="18" max="80" value="20" aria-label="Minimum age" />
+      <input type="range" id="maxAge" min="18" max="80" value="60" aria-label="Maximum age" />
+    </div>
+  </div>
+   </div>
+
       </div>
       <div class="sliders">
         <input type="range" id="minAge" min="18" max="80" value="20" aria-label="Minimum age" />
@@ -424,8 +444,7 @@
       // Relationship prefs defaults
       const BODY_TYPES = ["Slim","Athletic","Average","Curvy","No preference"];
       const LIFESTYLE_PREFS = ["Smokes","Doesn\u2019t smoke","Drinks socially","Doesn\u2019t drink","Fitness-oriented","Spiritual","Family-oriented","No preference"];
-
-
+ 
       // Render a full, stable list of chips; selected = toggle style; custom chips get a small "×" delete
     function renderToggles(container, selectedArr, allOptions, {gem=false, icon=false, key}){
      const data = getData();
@@ -770,8 +789,27 @@ function renderRelationship(){
       addCustom(ui.valueInput, 'values', ui.valueChips, {gem:true, key:'values', btn:ui.addValue}, DEFAULT_VALUES);
 
       // actions
-      ui.backHome.addEventListener('click',()=> location.href='index.html');
-      ui.nextEdit.addEventListener('click',()=> location.href='edit-profile.html');
+      ui.nextEdit?.addEventListener('click', (e)=>{
+      e.preventDefault();
+      (function updateNextLabel(){
+       const d = getData ? getData() : (JSON.parse(localStorage.getItem('soulQuiz')||'{}'));
+       if (d && d.completed === true) ui.nextEdit.textContent = 'Next → Edit Profile';
+       else ui.nextEdit.textContent = 'Next → My Soul';
+   })();
+
+
+  // pažymim kaip užpildytą pirmą kartą
+       if(firstTime){
+       if (typeof setData === 'function') setData({ completed: true });
+       else {
+       const merged = { ...(d||{}), completed: true };
+      localStorage.setItem('soulQuiz', JSON.stringify(merged));
+       }
+       location.href = 'my-soul.html';       // pirmą kartą → My Soul
+       } else {
+       location.href = 'edit-profile.html';  // vėliau → Edit Profile
+       }
+     });
 
       // drawer + navbar scroll
       const onScroll=()=>{ if(window.scrollY>6) ui.navbar.classList.add('scrolled'); else ui.navbar.classList.remove('scrolled'); };
