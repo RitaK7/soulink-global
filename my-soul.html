@@ -303,24 +303,52 @@
   }
 
   /* ===== summary ===== */
-  function buildSummary(d){
-  const n=d.name||'You';
-  const loves=list(d.loveLanguages||d.loveLanguage); 
-  const p=loves[0];
-  const ct=d.connectionType||'meaningful connections';
-  const about=(d.about||'').trim();
+// --- Soul Summary generator (love → values → hobbies → optional aboutMe) ---
+function generateSoulSummary(d){
+  const name = d.name || 'You';
 
-  const blessing = 'Your soul is seeking resonance. Trust your path, and the right connections will find you.';
+  // helpers
+  const loves   = list(d.loveLanguages || d.loveLanguage).filter(Boolean);
+  const values  = list(d.values).filter(Boolean).slice(0,3);
+  const hobbies = list(d.hobbies).filter(Boolean).slice(0,3);
+  const about   = (d.aboutMe || d.about || '').trim();
 
-  if(about){
-    const normalized = about.replaceAll('!','.').replaceAll('?','.');
-    const count = normalized.split('.').filter(s=>s.trim()).length;
-    if(count < 2){
-      const ensured = normalized.trim().endsWith('.') ? normalized.trim() : normalized.trim()+'.';
-      return ensured + ' ' + blessing;
-    }
-    return about;
+  const join = (arr)=>{
+    if(!arr.length) return '';
+    if(arr.length===1) return arr[0];
+    if(arr.length===2) return `${arr[0]} and ${arr[1]}`;
+    return `${arr.slice(0,-1).join(', ')}, and ${arr[arr.length-1]}`;
+  };
+  const endDot = (s)=> s ? (/[.!?]$/.test(s) ? s : s + '.') : '';
+
+  const lines = [];
+
+  // Sentence 1: main + one more love language (jei yra)
+  if(loves.length){
+    const main = loves[0];
+    const second = loves[1];
+    lines.push(second
+      ? `${name} is guided by ${main} and ${second}.`
+      : `${name} is guided by ${main}.`);
   }
+
+  // Sentence 2: top 2–3 values
+  if(values.length){
+    lines.push(`${name} values ${join(values)}.`);
+  }
+
+  // Sentence 3: top 2–3 hobbies
+  if(hobbies.length){
+    lines.push(`${name} enjoys ${join(hobbies)}.`);
+  }
+
+  // Optional: aboutMe kaip paskutinė eilutė
+  if(about){
+    lines.push(endDot(about));
+  }
+
+  // Jeigu visai nėra duomenų – grąžinam tuščią, kad parodytume placeholder'į
+  return lines.join(' ');
 }
 
   /* ===== render ===== */
@@ -354,7 +382,15 @@
     renderChipGroup(list(d.hobbies), ui.hobbiesList, ui.hobbiesEmpty, {type:'hobby'});
 
     // summary
-    ui.summaryText.textContent=buildSummary(d);
+     const summary = generateSoulSummary(d);
+     if (summary) {
+    ui.summaryText.classList.remove('empty');
+  ui.summaryText.textContent = summary;
+  } else {
+  ui.summaryText.classList.add('empty');
+  ui.summaryText.textContent = 'Complete your profile to see your Soul Summary ✨';
+  }
+
   }
 
   /* ===== sparkle + nav + actions ===== */
