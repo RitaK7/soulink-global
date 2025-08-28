@@ -18,7 +18,7 @@
   img{max-width:100%;height:auto}
   .container{max-width:var(--maxw);margin:0 auto;padding:24px}
 
-  /* NAVBAR (identical vibe) */
+  /* NAVBAR (same vibe) */
   .navbar{position:sticky;top:0;z-index:50;background:rgba(0,60,67,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
   .navbar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transform:scaleX(.2);transition:opacity .25s,transform .25s}
   .navbar.scrolled::after{opacity:.9;transform:scaleX(1)}
@@ -74,8 +74,11 @@
   /* PHOTO grid */
   .photos{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
   @media(max-width:760px){.photos{grid-template-columns:1fr}}
-  .ph{border:1px dashed var(--border);border-radius:14px;padding:10px;display:grid;gap:8px}
+  .ph{position:relative;border:1px dashed var(--border);border-radius:14px;padding:10px;display:grid;gap:8px}
+  .ph.main{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset, 0 0 20px rgba(0,253,216,.25)}
   .thumb{width:100%;aspect-ratio:1/1;border-radius:12px;object-fit:cover;background:rgba(0,253,216,.06);border:1px solid var(--border)}
+  .star{position:absolute;top:8px;right:8px;appearance:none;border:1px solid var(--border);background:rgba(0,253,216,.08);color:var(--fg);border-radius:999px;padding:4px 8px;cursor:pointer;font-size:.9rem}
+  .star:hover{box-shadow:0 0 0 1px var(--border),0 0 14px rgba(0,253,216,.18)}
 
   /* PREVIEW */
   .preview .avatar{position:relative;width:96px;height:96px}
@@ -86,8 +89,17 @@
   .tag{font-size:.85rem;padding:6px 10px;border-radius:999px;background:rgba(0,253,216,.08);border:1px solid var(--border);display:inline-block;margin-right:6px;margin-top:6px}
   .list-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
   .empty{color:var(--muted)}
+  .about-quote{margin-top:12px;background:rgba(0,253,216,.05);border:1px solid var(--border);border-radius:12px;padding:12px 14px;position:relative}
+  .about-quote::before{content:"❝";position:absolute;left:10px;top:6px;opacity:.9}
+  .about-quote::after{content:"❞";position:absolute;right:10px;bottom:6px;opacity:.9}
 
   footer{margin:40px 0 16px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:.95rem}
+
+  /* Mobile tweak: preview under form full width */
+  @media(max-width:768px){
+    .grid{grid-template-columns:1fr}
+    .preview{margin-top:6px}
+  }
 </style>
 </head>
 <body>
@@ -211,21 +223,24 @@
         <div style="margin-top:10px">
           <label>Profile Photos</label>
           <div class="photos">
-            <div class="ph">
+            <div class="ph" id="ph1">
+              <button class="star" id="main1" aria-label="Set as Main">⭐</button>
               <img id="thumb1" class="thumb" alt="Photo 1 preview">
               <input id="file1" type="file" accept="image/*">
               <div class="actions">
                 <button class="btn ghost" id="remove1">Remove</button>
               </div>
             </div>
-            <div class="ph">
+            <div class="ph" id="ph2">
+              <button class="star" id="main2" aria-label="Set as Main">⭐</button>
               <img id="thumb2" class="thumb" alt="Photo 2 preview">
               <input id="file2" type="file" accept="image/*">
               <div class="actions">
                 <button class="btn ghost" id="remove2">Remove</button>
               </div>
             </div>
-            <div class="ph">
+            <div class="ph" id="ph3">
+              <button class="star" id="main3" aria-label="Set as Main">⭐</button>
               <img id="thumb3" class="thumb" alt="Photo 3 preview">
               <input id="file3" type="file" accept="image/*">
               <div class="actions">
@@ -273,6 +288,10 @@
           <div class="hint">Hobbies</div>
           <div id="prevHobbies" class="list-chips"></div>
         </div>
+        <div style="margin-top:12px">
+          <div class="hint">About Me</div>
+          <div id="prevAbout" class="about-quote empty">—</div>
+        </div>
       </aside>
     </div>
 
@@ -308,6 +327,8 @@
     file1:$('#file1'), file2:$('#file2'), file3:$('#file3'),
     thumb1:$('#thumb1'), thumb2:$('#thumb2'), thumb3:$('#thumb3'),
     remove1:$('#remove1'), remove2:$('#remove2'), remove3:$('#remove3'),
+    ph1:$('#ph1'), ph2:$('#ph2'), ph3:$('#ph3'),
+    main1:$('#main1'), main2:$('#main2'), main3:$('#main3'),
 
     // actions
     backQuiz:$('#backQuiz'), saveBtn:$('#saveBtn'), nextSoul:$('#nextSoul'), resetForm:$('#resetForm'),
@@ -315,7 +336,7 @@
     // preview
     prevAvatar:$('#prevAvatar'), prevName:$('#prevName'), prevAge:$('#prevAge'),
     tagZodiac:$('#tagZodiac'), tagChinese:$('#tagChinese'), tagLife:$('#tagLife'), tagConn:$('#tagConn'),
-    prevLove:$('#prevLove'), prevValues:$('#prevValues'), prevHobbies:$('#prevHobbies'),
+    prevLove:$('#prevLove'), prevValues:$('#prevValues'), prevHobbies:$('#prevHobbies'), prevAbout:$('#prevAbout'),
 
     // nav
     openDrawer:$('#openDrawer'), closeDrawer:$('#closeDrawer'),
@@ -349,7 +370,7 @@
   function chinese(y){ if(!y) return null; const animals=['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig']; const i=(y-1900)%12; return animals[(i+12)%12]; }
   function life(iso){ if(!iso) return null; const digits=String(iso).replace(/\D/g,''); if(!digits) return null; const master=n=>[11,22,33].includes(n); const sum=n=>String(n).split('').reduce((a,b)=>a+ +b,0); let n=digits.split('').reduce((a,b)=>a+ +b,0); while(n>9&&!master(n)) n=sum(n); return n; }
 
-  /* ===== Birthday input helpers (numeric keypad + auto-dashes) ===== */
+  /* ===== Birthday input helpers ===== */
   function formatBirthOnInput(){
     const el=ui.birthday; if(!el) return;
     const v=el.value.replace(/[^\d-]/g,''); const digits=v.replace(/\D/g,'');
@@ -402,7 +423,7 @@
   function renderGender(d){
     ui.genderIdChips.innerHTML='';
     const cur=d.genderIdentity||'';
-    GENDER_OPTS.forEach(lbl=>{
+    ['Woman','Man','Non-binary','Prefer not to say','Self-describe'].forEach(lbl=>{
       const el=chip(lbl); if(cur===lbl){ el.classList.add('selected'); el.setAttribute('aria-pressed','true'); }
       el.addEventListener('click', ()=>{
         const patch = { genderIdentity: lbl==='Self-describe'? null : lbl };
@@ -425,7 +446,7 @@
   function renderConnectWith(d){
     ui.connectWithChips.innerHTML='';
     const cur=d.connectWith||'Open to all';
-    CONNECT_OPTS.forEach(lbl=>{
+    ['Women','Men','Non-binary','Open to all','Custom preference'].forEach(lbl=>{
       const el=chip(lbl); if(cur===lbl){ el.classList.add('selected'); el.setAttribute('aria-pressed','true'); }
       el.addEventListener('click', ()=>{
         const patch = { connectWith: lbl };
@@ -447,7 +468,7 @@
 
   function renderOrientation(d){
     ui.orientationChips.innerHTML='';
-    ORIENTATIONS.forEach(lbl=>{
+    ['Heterosexual','Gay','Lesbian','Bisexual','Pansexual','Asexual','Queer','Questioning','Prefer not to say'].forEach(lbl=>{
       const el=chip(lbl); if(d.orientation===lbl){ el.classList.add('selected'); el.setAttribute('aria-pressed','true'); }
       el.addEventListener('click',()=>{ setKey('orientation', lbl); renderOrientation(getData()); paintPreview(); });
       ui.orientationChips.appendChild(el);
@@ -495,33 +516,65 @@
     });
   }
 
-  /* ===== Photos ===== */
+  /* ===== Photos + main selection ===== */
   const phSvg='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><defs><radialGradient id="g" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00fdd8" stop-opacity=".35"/><stop offset="100%" stop-color="#00fdd8" stop-opacity=".05"/></radialGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><circle cx="48" cy="38" r="18" fill="#0a6a6f"/><rect x="20" y="58" width="56" height="22" rx="11" fill="#0a6a6f"/></svg>');
+
+  function getMainIndex(){
+    const d=getData(); const m = Number(d.mainPhoto)||1;
+    return Math.min(3, Math.max(1, m));
+  }
+
+  function setMain(i){
+    setKey('mainPhoto', i);
+    [ui.ph1,ui.ph2,ui.ph3].forEach((ph,idx)=>{ ph.classList.toggle('main', idx+1===i); });
+    const d=getData();
+    const src = d[`profilePhoto${i}`] || phSvg;
+    ui.prevAvatar.src = src;
+    ui.announce.textContent='Main photo updated';
+  }
 
   function loadPhotos(){
     const d=getData();
     ui.thumb1.src=d.profilePhoto1||phSvg;
     ui.thumb2.src=d.profilePhoto2||phSvg;
     ui.thumb3.src=d.profilePhoto3||phSvg;
-    ui.prevAvatar.src=d.profilePhoto1||phSvg;
+
+    const currentMain = getMainIndex();
+    setMain(currentMain);
+
+    // if main has no image but another has – switch
+    const has = [d.profilePhoto1, d.profilePhoto2, d.profilePhoto3];
+    if(!has[currentMain-1]){
+      const fallback = (has.findIndex(Boolean)+1)||1;
+      setMain(fallback);
+    }
   }
-  function bindPhoto(input, key, thumb){
+
+  function bindPhoto(input, key, thumb, idx){
     input.addEventListener('change',()=>{
       const f=input.files && input.files[0]; if(!f) return;
       const reader=new FileReader();
-      reader.onload=()=>{ setKey(key, reader.result); thumb.src=reader.result; ui.prevAvatar.src=reader.result; ui.announce.textContent='Photo updated'; };
+      reader.onload=()=>{ setKey(key, reader.result); thumb.src=reader.result; if(getMainIndex()===idx) ui.prevAvatar.src=reader.result; ui.announce.textContent='Photo updated'; };
       reader.readAsDataURL(f);
     });
   }
-  function bindRemove(btn,key,thumb){
-    btn.addEventListener('click',(e)=>{ e.preventDefault(); setKey(key,null); thumb.src=phSvg; if(key==='profilePhoto1') ui.prevAvatar.src=phSvg; });
+  function bindRemove(btn,key,thumb,idx){
+    btn.addEventListener('click',(e)=>{ e.preventDefault(); setKey(key,null); thumb.src=phSvg;
+      if(getMainIndex()===idx){ // choose another as main
+        const d=getData(); const has=[d.profilePhoto1,d.profilePhoto2,d.profilePhoto3];
+        const next=(has.findIndex(Boolean)+1)||1;
+        setMain(next);
+      }
+    });
   }
 
   /* ===== Preview ===== */
   function paintPreview(){
     const d=getData();
     ui.prevName.textContent=d.name||'Your Name';
-    const a=ageFrom(d.birthday); ui.prevAge.textContent='Age: '+(a??'–');
+    const a=ageFrom(d.birthday);
+    ui.prevAge.textContent = (a==null)? 'Age: –' : `Age: ${a} years`;
+
     const yr=(d.birthday? new Date(d.birthday).getFullYear(): null);
     const z=zodiac(d.birthday); const cz=chinese(yr); const lp=life(d.birthday);
     if(z){ ui.tagZodiac.hidden=false; ui.tagZodiac.textContent=z; } else ui.tagZodiac.hidden=true;
@@ -546,6 +599,21 @@
     const h=list(d.hobbies);
     h.slice(0,12).forEach(v=>{ const s=document.createElement('span'); s.className='tag'; s.textContent=hobbyIcon(v)+' '+v; ui.prevHobbies.appendChild(s); });
     if(!h.length) ui.prevHobbies.innerHTML='<span class="empty">—</span>';
+
+    // about
+    const about=(d.aboutMe||'').trim();
+    if(about){
+      ui.prevAbout.classList.remove('empty');
+      ui.prevAbout.textContent = ` ${about} `;
+    }else{
+      ui.prevAbout.classList.add('empty');
+      ui.prevAbout.textContent = '—';
+    }
+
+    // avatar according to mainPhoto
+    const mainIdx=getMainIndex();
+    const src=d[`profilePhoto${mainIdx}`] || phSvg;
+    ui.prevAvatar.src=src;
   }
 
   /* ===== Populate form from localStorage ===== */
@@ -571,32 +639,33 @@
     ui.birthday.addEventListener('input', formatBirthOnInput);
     ui.birthday.addEventListener('blur', validateBirthday);
     ui.boundaries.addEventListener('input',()=> setKey('boundaries', ui.boundaries.value));
-    ui.aboutMe.addEventListener('input',()=> setKey('aboutMe', ui.aboutMe.value));
+    ui.aboutMe.addEventListener('input',()=> { setKey('aboutMe', ui.aboutMe.value); paintPreview(); });
   }
 
   /* ===== Actions ===== */
   ui.backQuiz.addEventListener('click', ()=> location.href='quiz.html');
   ui.nextSoul.addEventListener('click', ()=> location.href='my-soul.html');
   ui.saveBtn.addEventListener('click', ()=>{
-    // jau autosave vyksta; čia – tik nedidelis „toast“
     ui.announce.textContent='Profile updated successfully ✨';
     alert('Profile updated successfully ✨');
   });
   ui.resetForm.addEventListener('click', ()=>{
     if(!confirm('Clear visible form fields? This will NOT erase your saved profile.')) return;
-    // tik formos išvalymas – localStorage nekeičiame
     ['name','country','birthday','boundaries','aboutMe'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-    // nuimame pasirinkimus UI (nepersistinam)
     document.querySelectorAll('.chips .chip[aria-pressed="true"]').forEach(el=>{ el.setAttribute('aria-pressed','false'); el.classList.remove('selected'); });
+    paintPreview();
   });
 
   /* ===== Photos bind ===== */
-  bindPhoto(ui.file1,'profilePhoto1',ui.thumb1);
-  bindPhoto(ui.file2,'profilePhoto2',ui.thumb2);
-  bindPhoto(ui.file3,'profilePhoto3',ui.thumb3);
-  bindRemove(ui.remove1,'profilePhoto1',ui.thumb1);
-  bindRemove(ui.remove2,'profilePhoto2',ui.thumb2);
-  bindRemove(ui.remove3,'profilePhoto3',ui.thumb3);
+  bindPhoto(ui.file1,'profilePhoto1',ui.thumb1,1);
+  bindPhoto(ui.file2,'profilePhoto2',ui.thumb2,2);
+  bindPhoto(ui.file3,'profilePhoto3',ui.thumb3,3);
+  bindRemove(ui.remove1,'profilePhoto1',ui.thumb1,1);
+  bindRemove(ui.remove2,'profilePhoto2',ui.thumb2,2);
+  bindRemove(ui.remove3,'profilePhoto3',ui.thumb3,3);
+  ui.main1.addEventListener('click',()=> setMain(1));
+  ui.main2.addEventListener('click',()=> setMain(2));
+  ui.main3.addEventListener('click',()=> setMain(3));
 
   /* ===== H/V custom inputs ===== */
   addCustom(ui.hobbyInput,'hobbies',ui.hobbyChips,{icon:true,key:'hobbies'},DEFAULT_HOBBIES);
