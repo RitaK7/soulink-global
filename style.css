@@ -882,6 +882,51 @@ button:hover,
 /* laukai per visą plotį */
 #feedback-card input[type="email"], #feedback-card textarea{ width:100%; }
 
+  /* Soulink glow around charts */
+  canvas.chart-glow{
+    border-radius:16px;
+    box-shadow:
+      0 0 0 1px rgba(0,253,216,.28),
+      0 14px 40px rgba(0,253,216,.06),
+      inset 0 0 40px rgba(0,253,216,.04);
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+  @media (hover:hover){
+    canvas.chart-glow:hover{
+      transform: translateY(-1px);
+      box-shadow:
+        0 0 0 1px rgba(0,253,216,.36),
+        0 18px 48px rgba(0,253,216,.10),
+        inset 0 0 54px rgba(0,253,216,.06);
+    }
+  }
+
+  /* Magical subtitles */
+  .subtitle{ margin:6px 0 0; font-size:.95rem; color:#bde5df }
+
+  /* Insights under charts */
+  .insight{ margin-top:10px; color:#bde5df; font-size:.98rem }
+
+  /* Avatar orb above charts */
+  #chartOrb{
+    width:76px;height:76px;border-radius:999px;margin:10px 0 8px;
+    background-size:cover;background-position:center;
+    border:1px solid rgba(0,253,216,.35);
+    box-shadow:
+      0 0 0 3px rgba(0,253,216,.08),
+      0 0 36px rgba(0,253,216,.24),
+      0 0 16px rgba(0,253,216,.18) inset;
+  }
+  @media (min-width:768px){
+    #chartOrb{ margin-top:14px }
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce){
+    canvas.chart-glow{ transition:none }
+  }
+
+
 
 
 
