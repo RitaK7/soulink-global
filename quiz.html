@@ -243,13 +243,8 @@
    </div>
 
    <div class="field" style="margin-top:12px">
-    <label for="minAge">Age Range</label>
-    <div class="age-range">
-      <div class="age-lines">
-        <span id="minAgeValue">20</span>–<span id="maxAgeValue">60</span>
-        <div class="field" style="margin-top:12px">
-    <label for="minAge">Age Range</label>
-    <div class="age-range">
+  <label for="minAge">Age Range</label>
+  <div class="age-range">
     <div class="age-lines">
       <span id="minAgeValue">20</span>–<span id="maxAgeValue">60</span>
     </div>
@@ -259,7 +254,8 @@
       <input type="range" id="maxAge" min="18" max="80" value="60" aria-label="Maximum age" />
     </div>
   </div>
-   </div>
+</div>
+
 
       </div>
       <div class="sliders">
@@ -443,7 +439,7 @@
       const DEFAULT_VALUES=["Honesty","Kindness","Loyalty","Freedom","Creativity","Growth","Family","Adventure","Compassion","Integrity","Humor","Respect","Balance","Spirituality","Curiosity"];
       // Relationship prefs defaults
       const BODY_TYPES = ["Slim","Athletic","Average","Curvy","No preference"];
-      const LIFESTYLE_PREFS = ["Smokes","Doesn\u2019t smoke","Drinks socially","Doesn\u2019t drink","Fitness-oriented","Spiritual","Family-oriented","No preference"];
+      const LIFESTYLE_PREFS = ["Open to all","Smokes","Doesn\u2019t smoke","Drinks socially","Doesn\u2019t drink","Fitness-oriented","Spiritual","Family-oriented","No preference"];
  
       // Render a full, stable list of chips; selected = toggle style; custom chips get a small "×" delete
     function renderToggles(container, selectedArr, allOptions, {gem=false, icon=false, key}){
@@ -689,7 +685,7 @@ function renderRelationship(){
   // Body type: multi-toggle, "No preference" is exclusive
   renderRelChips(ui.bodyTypeChips, BODY_TYPES, Array.isArray(rel.bodyType)? rel.bodyType: [], 'bodyType', {exclusive:'No preference'});
   // Lifestyle: multi-toggle, no exclusivity
-  renderRelChips(ui.lifestyleChips, LIFESTYLE_PREFS, Array.isArray(rel.lifestyle)? rel.lifestyle: [], 'lifestyle', {exclusive:null});
+  renderRelChips(ui.lifestyleChips, LIFESTYLE_PREFS, Array.isArray(rel.lifestyle)? rel.lifestyle: [], 'lifestyle', {exclusive: 'Open to all'});
   // Age range
   bindAge();
 }
