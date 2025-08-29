@@ -1,131 +1,217 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Soulink – Soul Coach</title>
-  <!-- auth guard: turi būti prieš kitus skriptus -->
-  <script src="auth.js"></script>
-   <script src="nav.js?v=3" defer></script>
-  <link rel="stylesheet" href="style.css" />
-  <style>
-    .container { max-width: 980px; margin: 0 auto; padding: 2rem 1rem; }
-    .grid { display:grid; grid-template-columns: 1.6fr 1.4fr; gap: 1.2rem; }
-    @media (max-width: 960px){ .grid { grid-template-columns: 1fr; } }
-    .card { background: rgba(0, 90, 90, 0.35); border-radius: 14px; padding: 1.2rem; }
-    .section-title { color:#dff; margin:.2rem 0 .6rem; font-weight:700; }
-    .task { display:flex; align-items:center; gap:.6rem; padding:.45rem .55rem; border-radius:10px; margin:.25rem 0; background: rgba(0,0,0,.15); }
-    .task input { transform: translateY(1px); }
-    .row { display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; }
-    .btn { cursor:pointer; border:1px solid rgba(0,253,216,.45); border-radius:999px; padding:.6rem .95rem; font-weight:600; }
-    .btn:hover { box-shadow: 0 0 12px rgba(0,253,216,.35); }
-    .hint { opacity:.85; font-size:.9rem; }
-    .growth-footer { position: sticky; bottom: 0; padding: .5rem; background: rgba(0,0,0,.25); backdrop-filter: blur(6px); border-top: 1px solid rgba(255,255,255,.08); border-radius: 0 0 14px 14px; }
-    .task-row { display:flex; align-items:center; justify-content:space-between; gap:.75rem; padding:.4rem .2rem; }
-    .task-row .task { display:flex; align-items:center; gap:.6rem; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Soulink · Soul Coach</title>
+<style>
+  :root{ --bg:#003c43; --fg:#eaf8f6; --muted:#bde5df; --accent:#00fdd8; --card:#014a52;
+         --border:rgba(0,253,216,.35); --shadow:0 0 0 1px var(--border), 0 10px 30px rgba(0,253,216,.06), 0 0 40px rgba(0,253,216,.04) inset; --maxw:1100px; }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Arial,sans-serif}
+  a{color:var(--accent);text-decoration:none}
+  .container{max-width:var(--maxw);margin:0 auto;padding:24px}
+
+  /* NAVBAR (kaip kituose puslapiuose) */
+  .navbar{position:sticky;top:0;z-index:50;background:rgba(0,60,67,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+  .navbar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transform:scaleX(.2);transition:opacity .25s, transform .25s}
+  .navbar.scrolled::after{opacity:.85;transform:scaleX(1)}
+  .nav-inner{display:flex;justify-content:space-between;align-items:center;padding:10px 16px}
+  .brand{font-weight:800;color:var(--accent)}
+  .nav-links{display:flex;gap:14px;flex-wrap:wrap}
+  .nav-links a{padding:8px 10px;border-radius:10px;border:1px solid transparent}
+  .nav-links a:hover{border-color:var(--border);box-shadow:0 0 0 1px var(--border),0 0 16px rgba(0,253,216,.18)}
+  .hamburger{display:none} .hamburger button{appearance:none;background:transparent;border:1px solid var(--border);color:var(--fg);padding:8px 10px;border-radius:10px;cursor:pointer}
+  @media(max-width:800px){.nav-links{display:none}.hamburger{display:block}}
+  .drawer{position:fixed;inset:0;display:none;z-index:100}
+  .drawer.open{display:block}
+  .drawer .backdrop{position:absolute;inset:0;background:rgba(0,60,67,.96)}
+  .drawer .panel{position:absolute;top:0;right:0;width:min(82vw,360px);height:100%;background:#003c43;border-left:1px solid var(--border);padding:18px;transform:translateX(100%);transition:transform .25s}
+  .drawer.open .panel{transform:translateX(0)}
+  body.no-scroll{overflow:hidden}
+
+  /* Background stars */
+  .bg-stars{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.75}
+
+  /* Cards + glow */
+  .card{position:relative;background:linear-gradient(180deg,rgba(1,74,82,.74),rgba(1,74,82,.56));border:1px solid var(--border);box-shadow:var(--shadow);border-radius:18px;padding:18px;margin:24px 0;overflow:hidden}
+  .glow-card::after{content:"";position:absolute;inset:-1px;border-radius:16px;box-shadow:0 0 24px rgba(0,253,216,.25),0 0 48px rgba(0,253,216,.15);pointer-events:none;opacity:0;transition:opacity .6s}
+  .glow-card:hover::after{opacity:.9}
+  .grid{display:grid;grid-template-columns:2fr 1.2fr;gap:18px} @media(max-width:900px){.grid{grid-template-columns:1fr}}
+  .h{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:6px}
+  .muted{color:var(--muted);font-size:.95rem}
+  .btn{appearance:none;border:1px solid var(--border);background:transparent;color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700;min-height:40px;transition:box-shadow .2s, transform .1s}
+  .btn.primary{background:var(--accent);color:#003136;border:none}
+  .btn:hover{box-shadow:0 0 0 1px var(--border),0 0 16px rgba(0,253,216,.18)}
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px} @media(max-width:640px){.row{grid-template-columns:1fr}}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;margin:4px 6px 0 0}
+  .list{display:flex;flex-wrap:wrap}
+
+  /* Tooltips */
+  .info{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--border);font-size:12px;color:var(--muted);margin-left:6px;cursor:help}
+  .tooltip{position:absolute;z-index:20;max-width:280px;background:#00333a;border:1px solid var(--border);color:var(--fg);padding:8px 10px;border-radius:10px;box-shadow:var(--shadow);font-size:.92rem;opacity:0;transform:translateY(6px);transition:.15s}
+  .tooltip.show{opacity:1;transform:none}
+
+  /* Streak badge + ring */
+  .streak-wrap{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .streak-badge{position:relative;width:64px;height:64px;display:grid;place-items:center;border-radius:50%;background:rgba(0,0,0,.25);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+  .streak-badge::after{content:"";position:absolute;inset:-2px;border-radius:inherit;box-shadow:0 0 18px rgba(0,253,216,.35), 0 0 36px rgba(0,253,216,.18);opacity:.0;transition:opacity .6s}
+  .streak-badge:hover::after{opacity:1}
+  .ring{position:absolute;inset:0;transform:rotate(-90deg)}
+  .ring .track{fill:none;stroke:rgba(255,255,255,.12);stroke-width:4}
+  .ring .prog{fill:none;stroke:#00fdd8;stroke-width:4;filter:drop-shadow(0 0 6px rgba(0,253,216,.6));stroke-dasharray:125.66;stroke-dashoffset:125.66;transition:stroke-dashoffset .9s ease}
+  .flame{font-size:18px;transform:translateY(-2px);opacity:.9}
+  .streak-count{position:absolute;inset:0;display:grid;place-items:center;font-weight:700}
+  .streak-count span{font-size:16px}
+  .streak-count small{font-size:10px;opacity:.8;margin-left:2px}
+  @keyframes burst{0%{transform:scale(1);filter:drop-shadow(0 0 0 rgba(255,140,0,0))}40%{transform:scale(1.18);filter:drop-shadow(0 0 8px rgba(255,140,0,.9))}100%{transform:scale(1);filter:drop-shadow(0 0 0 rgba(255,140,0,0))}}
+  .streak-badge.burst .flame{animation:burst .35s ease}
+  @media (prefers-reduced-motion:reduce){.ring .prog{transition:none}.streak-badge.burst .flame{animation:none}}
+
+  /* Typewriter + glowing underline for Today’s Action */
+  .typewrite{min-height:22px}
+  .glow-underline{position:relative}
+  .glow-underline::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);box-shadow:0 0 12px rgba(0,253,216,.6);opacity:0;transform:scaleX(.6);transition:.45s}
+  .glow-underline.show::after{opacity:1;transform:scaleX(1)}
+
+  /* Tasks: flash + float away */
+  .task-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid rgba(255,255,255,.06)}
+  .task-row.flash{box-shadow:0 0 0 1px var(--border), 0 0 22px rgba(0,253,216,.35) inset}
+  @keyframes floatOut{to{opacity:0;transform:translateY(-10px);height:0;margin:0;padding:0}}
+  .task-row.float{animation:floatOut .5s ease forwards}
+
+  /* Insights list */
+  #coach-insights{list-style:none;padding:0;margin:8px 0 0}
+  #coach-insights li{opacity:0;transform:translateY(6px);transition:.35s}
+  #coach-insights li.show{opacity:1;transform:none}
+
+  /* Stars canvases in cards */
+  .stars{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.8}
+  .card > *:not(canvas){position:relative;z-index:1}
+
+  footer{margin:40px 0 16px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:.95rem;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+</style>
 </head>
 <body>
-  <!-- Soulink Global Navbar -->
-<nav class="navbar" style="background:#002e30; box-shadow:0 0 12px rgba(0,253,216,0.25);">
-  <div class="container" style="max-width:980px; margin:0 auto; padding:.8rem 1rem; display:flex; align-items:center; justify-content:space-between; gap:1rem;">
-    <!-- brand -->
-    <a href="index.html" class="brand" style="font-weight:700; text-decoration:none; color:#00fdd8;">Soulink</a>
+  <!-- background stars -->
+  <canvas class="bg-stars" id="bgStars" aria-hidden="true"></canvas>
 
-    <!-- mobile toggle -->
-    <button id="navToggle" aria-label="Toggle navigation"
-            style="background:transparent; border:1px solid #00fdd8; border-radius:10px; padding:.4rem .6rem; color:#00fdd8; display:none;">
-      ☰
-    </button>
-
-    <!-- menu -->
-    <ul id="navMenu" style="list-style:none; display:flex; flex-wrap:wrap; gap:.6rem; margin:0; padding:0;">
-      <li><a href="quiz.html">Quiz</a></li>
-      <li><a href="edit-profile.html">Edit Profile</a></li>
-      <li><a href="my-soul.html">My Soul</a></li>
-      <li><a href="soul-chart.html">Soul Chart</a></li>
-      <li><a href="soul-coach.html">Soul Coach</a></li>
-      <li><a href="friends.html">Friends</a></li>
-      <li><a href="match.html">Match</a></li>
-      <li><a href="result.html">Results</a></li>
-    </ul>
+  <!-- NAV -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="brand">Soulink</div>
+      <div class="nav-links">
+        <a href="index.html">Home</a><a href="quiz.html">Quiz</a><a href="edit-profile.html">Edit Profile</a>
+        <a href="my-soul.html">My Soul</a><a href="soul-chart.html">Soul Chart</a>
+        <a href="soul-coach.html" aria-current="page">Soul Coach</a>
+        <a href="match.html">Match</a><a href="friends.html">Friends</a><a href="result.html">Results</a>
+        <a href="login.html">Log In</a><a href="signup.html">Sign Up</a><a href="#" id="logoutLink">Log Out</a>
+      </div>
+      <div class="hamburger"><button id="openDrawer">☰ Menu</button></div>
+    </div>
+  </nav>
+  <div class="drawer" id="drawer" aria-hidden="true">
+    <div class="backdrop" id="drawerBackdrop"></div>
+    <aside class="panel" role="dialog" aria-modal="true">
+      <a href="index.html">Home</a><a href="quiz.html">Quiz</a><a href="edit-profile.html">Edit Profile</a>
+      <a href="my-soul.html">My Soul</a><a href="soul-chart.html">Soul Chart</a><a href="soul-coach.html" aria-current="page">Soul Coach</a>
+      <a href="match.html">Match</a><a href="friends.html">Friends</a><a href="result.html">Results</a>
+      <a href="login.html">Log In</a><a href="signup.html">Sign Up</a><a href="#" id="logoutLinkMobile">Log Out</a>
+      <button class="btn" id="closeDrawer" style="margin-top:8px">Close</button>
+    </aside>
   </div>
-</nav>
-  <script>
-    (function(){const b=document.getElementById('navToggle'),m=document.getElementById('navMenu');function r(){if(innerWidth<800){b.style.display='block';m.style.display='none';}else{b.style.display='none';m.style.display='flex';}}if(b&&m){b.onclick=()=>{m.style.display=(m.style.display==='none'||!m.style.display)?'flex':'none';};addEventListener('resize',r);r();}})();
-  </script>
 
-  <main class="container">
-    <h1 style="color:#dff; margin:0 0 1rem;">🧭 Soul Coach</h1>
+  <div class="container">
+    <header class="h" style="margin-bottom:4px">
+      <h1>🧭 Soul Coach</h1>
+      <div class="actions">
+        <button class="btn" id="newAction">New suggestion</button>
+        <button class="btn" id="btnDoneToday">Mark done today</button>
+        <button class="btn" id="exportCoach">Export PNG</button>
+      </div>
+    </header>
+    <p class="muted">Your plan adapts to your profile (saved in <code>localStorage.soulQuiz</code>).</p>
 
     <div class="grid">
-      <!-- LEFT: insights -->
-      <div>
-        <div class="card">
-          <h3 class="section-title">Your Essentials</h3>
-          <p><strong>Name:</strong> <span id="c-name">–</span></p>
-          <p><strong>Connection:</strong> <span id="c-ct">–</span></p>
-          <p><strong>Love Language:</strong> <span id="c-ll">–</span></p>
-          <p><strong>Birth Date:</strong> <span id="c-bd">–</span></p>
-          <p><strong>Western Zodiac:</strong> <span id="c-west">–</span></p>
-          <p><strong>Life Path:</strong> <span id="c-life">–</span></p>
-        </div>
-
-        <div class="card">
-          <h3 class="section-title">Today’s Action</h3>
-          <span id="streak" class="streak-badge">🔥 Streak: 0</span>
-          <p id="coach-action">–</p>
-          <p class="hint">Tiny, doable step aligned with your profile.</p>
-          <div class="row" style="margin-top:.6rem;">
-            <button id="newAction" class="btn">New Suggestion</button>
-            <button id="btnDoneToday" class="btn btn-ghost">Done today</button>
+      <main>
+        <!-- Essentials -->
+        <section class="card glow-card" id="essentials">
+          <div class="h">
+            <h3>Essentials</h3>
+            <div class="streak-wrap">
+              <div class="streak-badge glow-card" id="streakBadge" aria-live="polite">
+                <svg class="ring" viewBox="0 0 44 44" aria-hidden="true">
+                  <circle class="track" cx="22" cy="22" r="20"></circle>
+                  <circle class="prog"  cx="22" cy="22" r="20" stroke-linecap="round"></circle>
+                </svg>
+                <div class="flame" aria-hidden="true">🔥</div>
+                <div class="streak-count"><span id="streakCount">0</span><small>d</small></div>
+              </div>
+            </div>
           </div>
-        </div>
+          <div class="row">
+            <div>
+              <div class="pill"><strong>Name:</strong> <span id="c-name">–</span>
+                <span class="info" data-tip="Your profile name." tabindex="0">i</span></div>
+              <div class="pill"><strong>Connection:</strong> <span id="c-ct">–</span>
+                <span class="info" data-tip="Selected: Friendship / Romantic / Both." tabindex="0">i</span></div>
+              <div class="pill"><strong>Love language (Primary):</strong> <span id="c-ll">–</span>
+                <span class="info" data-tip="How you most naturally give/receive love." tabindex="0">i</span></div>
+            </div>
+            <div>
+              <div class="pill"><strong>Birth date:</strong> <span id="c-bd">–</span>
+                <span class="info" data-tip="Stored as YYYY-MM-DD." tabindex="0">i</span></div>
+              <div class="pill"><strong>Western zodiac:</strong> <span id="c-west">–</span>
+                <span class="info" data-tip="E.g., Sagittarius — sees horizons, values honesty." tabindex="0">i</span></div>
+              <div class="pill"><strong>Life Path:</strong> <span id="c-life">–</span>
+                <span class="info" data-tip="E.g., Life Path 7 — The Seeker (depth & truth)." tabindex="0">i</span></div>
+            </div>
+          </div>
+        </section>
 
-        <div class="card">
-          <h3 class="section-title">Insights</h3>
-          <ul id="coach-insights" style="margin:0; padding-left:1.2rem;"></ul>
-        </div>
-      </div>
+        <!-- Today’s Action -->
+        <section class="card glow-card" id="actionCard">
+          <canvas class="stars" aria-hidden="true"></canvas>
+          <div class="h"><h3>Today’s Action</h3></div>
+          <p id="coach-action" class="typewrite"><span id="actionGlow" class="glow-underline"></span></p>
+          <p class="muted" style="margin-top:6px">Tip adapts to your love language, values, and hobbies.</p>
+        </section>
 
-      <!-- RIGHT: tasks -->
-      <div class="card">
-        <h3 class="section-title">Growth Tasks</h3>
-        <div id="tasks"></div>
- 
-     <form id="add-task" class="row" style="margin-top:.8rem;">
-      <input id="task-input" type="text" placeholder="Add a task…" />
-      <button class="btn" type="submit">Add</button>
-     <button id="resetTasks" class="btn" type="button">Reset</button>
-     <button id="exportCoach" class="btn btn-ghost" type="button">Export Coach Plan</button>
-     <button id="learnMore" class="btn btn-ghost" type="button">About my signs</button>
-    </form>
-<!-- Modal geriau dėti čia, už formos -->
-    <div id="metaModal" hidden class="modal">
-     <div class="modal-dialog">
-     <button id="metaClose" class="modal-close" aria-label="Close">×</button>
-     <div id="metaBody"></div>
-     </div>
-   </div>
+        <!-- Growth Tasks -->
+        <section class="card glow-card" id="tasksCard">
+          <div class="h"><h3>Growth Tasks</h3><button class="btn" id="resetTasks">Reset</button></div>
+          <div id="tasks"></div>
+          <form id="add-task" class="row" style="margin-top:12px">
+            <input id="task-input" class="btn" style="text-align:left" placeholder="Add custom task…" />
+            <button class="btn primary" type="submit">Add</button>
+          </form>
+        </section>
+      </main>
 
-        <p class="hint" style="margin-top:.4rem;">Your tasks are saved to your device.</p>
-      </div>
+      <!-- RIGHT -->
+      <aside>
+        <section class="card glow-card" id="insightsCard">
+          <canvas class="stars" aria-hidden="true"></canvas>
+          <div class="h"><h3>Insights</h3></div>
+          <p id="insightText" class="typewrite" aria-live="polite"></p>
+          <ul id="coach-insights" class="muted" style="margin-top:10px"></ul>
+        </section>
+      </aside>
     </div>
 
-    <div class="row" style="justify-content:center; margin-top:1rem;">
-      <a class="btn" href="my-soul.html">← Back to My Soul</a>
-      <a class="btn" href="result.html">Results & Feedback →</a>
-    </div>
-  </main>
-  <nav class="pager">
-  <a class="btn btn-ghost" href="soul-chart.html">← Back: Soul Chart</a>
-  <a class="btn" href="friends.html">Next: Friends →</a>
-</nav>
+    <nav class="h" style="margin-top:22px">
+      <a class="btn" href="soul-chart.html">← Back: Soul Chart</a>
+      <a class="btn primary" href="match.html">Next → Match</a>
+    </nav>
 
-  <footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
-    © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
-  </footer>
+    <footer>
+      <span>© 2025 Soulink.global | Created with love by Soulink Team</span>
+    </footer>
+  </div>
 
-  <script src="soul-coach.js"></script>
+  <div id="ann" aria-live="polite" class="muted" style="position:fixed;left:-9999px;top:auto"></div>
+  <script src="soul-coach.js" defer></script>
 </body>
 </html>
