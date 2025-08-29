@@ -5,19 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Soulink · Soul Coach</title>
 <style>
-  :root{
-    --bg:#003c43; --fg:#eaf8f6; --muted:#bde5df; --accent:#00fdd8;
-    --card:#014a52; --border:rgba(0,253,216,.35);
-    --shadow:0 0 0 1px var(--border), 0 10px 30px rgba(0,253,216,.06), 0 0 40px rgba(0,253,216,.04) inset;
-    --maxw:1100px;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
+  :root{ --bg:#003c43; --fg:#eaf8f6; --muted:#bde5df; --accent:#00fdd8; --card:#014a52;
+         --border:rgba(0,253,216,.35); --shadow:0 0 0 1px var(--border), 0 10px 30px rgba(0,253,216,.06), 0 0 40px rgba(0,253,216,.04) inset; --maxw:1100px; }
+  *{box-sizing:border-box} html,body{height:100%}
   body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Arial,sans-serif}
   a{color:var(--accent);text-decoration:none}
   .container{max-width:var(--maxw);margin:0 auto;padding:24px}
 
-  /* navbar (tas pats, kaip kituose puslapiuose) */
+  /* navbar (vienoda kaip kituose puslapiuose) */
   .navbar{position:sticky;top:0;z-index:50;background:rgba(0,60,67,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
   .navbar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transform:scaleX(.2);transition:.25s}
   .navbar.scrolled::after{opacity:.85;transform:scaleX(1)}
@@ -26,10 +21,8 @@
   .nav-links{display:flex;gap:14px;flex-wrap:wrap}
   .nav-links a{padding:8px 10px;border-radius:10px;border:1px solid transparent}
   .nav-links a:hover{border-color:var(--border);box-shadow:0 0 0 1px var(--border),0 0 16px rgba(0,253,216,.18)}
-  .hamburger{display:none}
-  .hamburger button{appearance:none;background:transparent;border:1px solid var(--border);color:var(--fg);padding:8px 10px;border-radius:10px;cursor:pointer}
+  .hamburger{display:none} .hamburger button{appearance:none;background:transparent;border:1px solid var(--border);color:var(--fg);padding:8px 10px;border-radius:10px;cursor:pointer}
   @media(max-width:800px){.nav-links{display:none}.hamburger{display:block}}
-  /* drawer */
   .drawer{position:fixed;inset:0;display:none;z-index:100}
   .drawer.open{display:block}
   .drawer .backdrop{position:absolute;inset:0;background:rgba(0,60,67,.96)}
@@ -37,36 +30,35 @@
   .drawer.open .panel{transform:translateX(0)}
   body.no-scroll{overflow:hidden}
 
-  /* cards + glow */
-  .card{position:relative;background:linear-gradient(180deg,rgba(1,74,82,.74),rgba(1,74,82,.56));border:1px solid var(--border);
-        box-shadow:var(--shadow);border-radius:18px;padding:18px;margin:22px 0}
-  .glow-card{box-shadow:0 0 0 transparent;position:relative}
-  .glow-card::after{content:"";position:absolute;inset:-1px;border-radius:16px;
-    box-shadow:0 0 24px rgba(0,253,216,.25), 0 0 48px rgba(0,253,216,.15);
-    pointer-events:none;opacity:0;transition:opacity .6s ease}
+  /* Cards + glow */
+  .card{position:relative;background:linear-gradient(180deg,rgba(1,74,82,.74),rgba(1,74,82,.56));border:1px solid var(--border);box-shadow:var(--shadow);border-radius:18px;padding:18px;margin:24px 0;overflow:hidden}
+  .glow-card::after{content:"";position:absolute;inset:-1px;border-radius:16px;box-shadow:0 0 24px rgba(0,253,216,.25),0 0 48px rgba(0,253,216,.15);pointer-events:none;opacity:0;transition:opacity .6s}
   .glow-card:hover::after{opacity:.9}
-
-  .grid{display:grid;grid-template-columns:2fr 1.2fr;gap:18px}
-  @media(max-width:900px){.grid{grid-template-columns:1fr}}
-
+  .grid{display:grid;grid-template-columns:2fr 1.2fr;gap:18px} @media(max-width:900px){.grid{grid-template-columns:1fr}}
   .h{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:6px}
   .muted{color:var(--muted);font-size:.95rem}
-  .btn{appearance:none;border:1px solid var(--border);background:transparent;color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700;min-height:40px}
+  .btn{appearance:none;border:1px solid var(--border);background:transparent;color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700;min-height:40px;transition:box-shadow .2s}
   .btn.primary{background:var(--accent);color:#003136;border:none}
-  .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .actions{display:flex;gap:8px;flex-wrap:wrap}
-
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  @media(max-width:640px){.row{grid-template-columns:1fr}}
-
-  .pill{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px;margin:4px 6px 0 0}
+  .btn:hover{box-shadow:0 0 0 1px var(--border),0 0 16px rgba(0,253,216,.18)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px} @media(max-width:640px){.row{grid-template-columns:1fr}}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;margin:4px 6px 0 0}
   .list{display:flex;flex-wrap:wrap}
-
-  /* typewriter for insight */
   .typewrite{min-height:22px}
-  .typewrite.show{animation:tw .9s steps(22) forwards}
-  @keyframes tw{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
-  @media (prefers-reduced-motion: reduce){.typewrite.show{animation:none}}
+
+  /* Tooltips */
+  .info{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--border);font-size:12px;color:var(--muted);margin-left:6px;cursor:help}
+  .tooltip{position:absolute;z-index:20;max-width:280px;background:#00333a;border:1px solid var(--border);color:var(--fg);padding:8px 10px;border-radius:10px;box-shadow:var(--shadow);font-size:.92rem;opacity:0;transform:translateY(6px);transition:.15s}
+  .tooltip.show{opacity:1;transform:none}
+
+  /* Animations */
+  @keyframes bump{0%{transform:scale(1)}30%{transform:scale(1.08)}60%{transform:scale(.98)}100%{transform:scale(1)}}
+  .bump{animation:bump .32s ease}
+  @media (prefers-reduced-motion: reduce){.glow-card::after{display:none}.bump{animation:none}}
+
+  /* Star particles canvas */
+  .stars{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.8}
+  .card > *:not(canvas){position:relative;z-index:1}
 
   footer{margin:40px 0 16px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:.95rem;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 </style>
@@ -77,18 +69,11 @@
     <div class="nav-inner">
       <div class="brand">Soulink</div>
       <div class="nav-links">
-        <a href="index.html">Home</a>
-        <a href="quiz.html">Quiz</a>
-        <a href="edit-profile.html">Edit Profile</a>
-        <a href="my-soul.html">My Soul</a>
-        <a href="soul-chart.html">Soul Chart</a>
+        <a href="index.html">Home</a><a href="quiz.html">Quiz</a><a href="edit-profile.html">Edit Profile</a>
+        <a href="my-soul.html">My Soul</a><a href="soul-chart.html">Soul Chart</a>
         <a href="soul-coach.html" aria-current="page">Soul Coach</a>
-        <a href="match.html">Match</a>
-        <a href="friends.html">Friends</a>
-        <a href="result.html">Results</a>
-        <a href="login.html">Log In</a>
-        <a href="signup.html">Sign Up</a>
-        <a href="#" id="logoutLink">Log Out</a>
+        <a href="match.html">Match</a><a href="friends.html">Friends</a><a href="result.html">Results</a>
+        <a href="login.html">Log In</a><a href="signup.html">Sign Up</a><a href="#" id="logoutLink">Log Out</a>
       </div>
       <div class="hamburger"><button id="openDrawer">☰ Menu</button></div>
     </div>
@@ -96,18 +81,10 @@
   <div class="drawer" id="drawer" aria-hidden="true">
     <div class="backdrop" id="drawerBackdrop"></div>
     <aside class="panel" role="dialog" aria-modal="true">
-      <a href="index.html">Home</a>
-      <a href="quiz.html">Quiz</a>
-      <a href="edit-profile.html">Edit Profile</a>
-      <a href="my-soul.html">My Soul</a>
-      <a href="soul-chart.html">Soul Chart</a>
-      <a href="soul-coach.html" aria-current="page">Soul Coach</a>
-      <a href="match.html">Match</a>
-      <a href="friends.html">Friends</a>
-      <a href="result.html">Results</a>
-      <a href="login.html">Log In</a>
-      <a href="signup.html">Sign Up</a>
-      <a href="#" id="logoutLinkMobile">Log Out</a>
+      <a href="index.html">Home</a><a href="quiz.html">Quiz</a><a href="edit-profile.html">Edit Profile</a>
+      <a href="my-soul.html">My Soul</a><a href="soul-chart.html">Soul Chart</a><a href="soul-coach.html" aria-current="page">Soul Coach</a>
+      <a href="match.html">Match</a><a href="friends.html">Friends</a><a href="result.html">Results</a>
+      <a href="login.html">Log In</a><a href="signup.html">Sign Up</a><a href="#" id="logoutLinkMobile">Log Out</a>
       <button class="btn" id="closeDrawer" style="margin-top:8px">Close</button>
     </aside>
   </div>
@@ -124,34 +101,40 @@
     <p class="muted">Your plan adapts to your profile (saved in <code>localStorage.soulQuiz</code>).</p>
 
     <div class="grid">
-      <!-- LEFT -->
       <main>
         <!-- Essentials -->
-        <section class="card glow-card">
+        <section class="card glow-card" id="essentials">
           <div class="h"><h3>Essentials</h3><span id="streak" class="muted">🔥 Streak: 0 days</span></div>
           <div class="row">
             <div>
-              <div><strong>Name:</strong> <span id="c-name">–</span></div>
-              <div><strong>Connection:</strong> <span id="c-ct">–</span></div>
-              <div><strong>Love language:</strong> <span id="c-ll">–</span></div>
+              <div class="pill"><strong>Name:</strong> <span id="c-name">–</span>
+                <span class="info" data-tip="Your profile name." aria-label="info" tabindex="0">i</span></div>
+              <div class="pill"><strong>Connection:</strong> <span id="c-ct">–</span>
+                <span class="info" data-tip="Selected: Friendship / Romantic / Both." tabindex="0">i</span></div>
+              <div class="pill"><strong>Love language (Primary):</strong> <span id="c-ll">–</span>
+                <span class="info" data-tip="How you most naturally give/receive love." tabindex="0">i</span></div>
             </div>
             <div>
-              <div><strong>Birth date:</strong> <span id="c-bd">–</span></div>
-              <div><strong>Western zodiac:</strong> <span id="c-west">–</span></div>
-              <div><strong>Life Path:</strong> <span id="c-life">–</span></div>
+              <div class="pill"><strong>Birth date:</strong> <span id="c-bd">–</span>
+                <span class="info" data-tip="Stored as YYYY-MM-DD." tabindex="0">i</span></div>
+              <div class="pill"><strong>Western zodiac:</strong> <span id="c-west">–</span>
+                <span class="info" data-tip="E.g., Sagittarius — sees horizons, values honesty." tabindex="0">i</span></div>
+              <div class="pill"><strong>Life Path:</strong> <span id="c-life">–</span>
+                <span class="info" data-tip="E.g., Life Path 7 — The Seeker (depth & truth)." tabindex="0">i</span></div>
             </div>
           </div>
         </section>
 
-        <!-- Today's Action -->
-        <section class="card glow-card">
+        <!-- Today’s Action -->
+        <section class="card glow-card" id="actionCard">
+          <canvas class="stars" aria-hidden="true"></canvas>
           <div class="h"><h3>Today’s Action</h3></div>
-          <p id="coach-action" style="font-size:1.05rem"></p>
+          <p id="coach-action" class="typewrite" aria-live="polite"></p>
           <p class="muted" style="margin-top:6px">Tip adapts to your love language, values, and hobbies.</p>
         </section>
 
         <!-- Growth Tasks -->
-        <section class="card glow-card">
+        <section class="card glow-card" id="tasksCard">
           <div class="h"><h3>Growth Tasks</h3><button class="btn" id="resetTasks">Reset</button></div>
           <div id="tasks"></div>
           <form id="add-task" class="row" style="margin-top:12px">
@@ -161,9 +144,10 @@
         </section>
       </main>
 
-      <!-- RIGHT: Insights -->
+      <!-- RIGHT -->
       <aside>
-        <section class="card glow-card">
+        <section class="card glow-card" id="insightsCard">
+          <canvas class="stars" aria-hidden="true"></canvas>
           <div class="h"><h3>Insights</h3></div>
           <p id="insightText" class="typewrite" aria-live="polite"></p>
           <ul id="coach-insights" class="muted" style="margin-top:10px"></ul>
@@ -181,7 +165,7 @@
     </footer>
   </div>
 
-  <!-- Script -->
+  <div id="ann" aria-live="polite" class="muted" style="position:fixed;left:-9999px;top:auto"></div>
   <script src="soul-coach.js" defer></script>
 </body>
 </html>
