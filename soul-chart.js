@@ -1,4 +1,4 @@
-// soul-coach.js — magical polish edition
+// soul-coach.js — magical polish v9
 (() => {
   const KEY = 'soulQuiz';
   const COACH = 'soulCoach';
@@ -7,16 +7,13 @@
   const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
   const reduceMotion = matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-  // ---------- data helpers ----------
+  // ---------- storage ----------
   const getProfile = () => { try{ return JSON.parse(localStorage.getItem(KEY)||'{}'); }catch{ return {}; } };
-  const setCoach = v => localStorage.setItem(COACH, JSON.stringify(v));
   const getCoach = () => { try{ return JSON.parse(localStorage.getItem(COACH)||'{}'); }catch{ return {}; } };
-  const todayISO = ()=>{
-    const d=new Date(); const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
-    return `${y}-${m}-${dd}`;
-  };
+  const setCoach = v => localStorage.setItem(COACH, JSON.stringify(v));
+  const todayISO = ()=>{ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 
-  // ---------- numerology & zodiac (fallbacks) ----------
+  // ---------- helpers ----------
   const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
   const sumDigits = s => String(s).replace(/\D/g,'').split('').reduce((a,b)=>a+ +b,0);
   const reduceNum = n => { while(![11,22,33].includes(n) && n>9) n = sumDigits(String(n)); return n; };
@@ -30,7 +27,7 @@
     if(R(11,22,12,21))return'Sagittarius'; if(m===12&&d>=22||m===1&&d<=19)return'Capricorn'; if(R(1,20,2,18))return'Aquarius'; return'Pisces';
   };
 
-  // ---------- NAV ----------
+  // ---------- nav ----------
   function wireNav(){
     const nav=$('.navbar');
     const onScroll=()=> nav?.classList[scrollY>6?'add':'remove']('scrolled');
@@ -65,20 +62,20 @@
     });
   }
 
-  // ---------- particles (bg + cards) ----------
+  // ---------- particles ----------
   function makeStars(canvas){
     if(!canvas || reduceMotion) return;
     const DPR = devicePixelRatio||1, ctx=canvas.getContext('2d');
     function resize(){ canvas.width=canvas.clientWidth*DPR; canvas.height=canvas.clientHeight*DPR; }
     resize(); addEventListener('resize', resize);
-    const N = canvas.classList.contains('bg-stars') ? (innerWidth<560? 22: 44) : (canvas.clientWidth<560? 18: 36);
+    const N = canvas.classList.contains('bg-stars') ? (innerWidth<560? 20: 40) : (canvas.clientWidth<560? 16: 30);
     const stars = Array.from({length:N},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:(Math.random()*1.2+0.6)*DPR,a:Math.random()*1}));
     (function tick(){
       ctx.clearRect(0,0,canvas.width,canvas.height);
       for(const s of stars){
         s.a += 0.02 + Math.random()*0.015;
         const f=(Math.sin(s.a)+1)/2;
-        ctx.beginPath(); ctx.fillStyle=`rgba(0,253,216,${0.1+0.3*f})`;
+        ctx.beginPath(); ctx.fillStyle=`rgba(0,253,216,${0.08+0.28*f})`;
         ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
       }
       if(!reduceMotion) requestAnimationFrame(tick);
@@ -103,12 +100,12 @@
     }, Math.max(12, Math.floor(ms/steps)));
   }
 
-  // ---------- micro-copy ----------
+  // ---------- copy lib ----------
   const LL_ACTION = {
     "Acts of Service": "Offer a tiny act of help to someone today.",
     "Quality Time": "Give someone your undivided 10 minutes—no phone, just presence.",
-    "Receiving Gifts": "Leave a small note or token for someone you care about.",
-    "Physical Touch": "Give a warm hug (or a gentle hand on the shoulder) with consent.",
+    "Receiving Gifts": "Leave a small note or token of appreciation.",
+    "Physical Touch": "Give a warm hug (with consent) or a gentle hand on the shoulder.",
     "Words of Affirmation": "Send one sincere message of appreciation."
   };
   const HOBBY_HOOKS = [
@@ -121,7 +118,9 @@
     "You refuel through simple rituals. Keep them small, keep them daily—consistency becomes glow.",
     "When you act from honesty, the right people feel safe near you. That’s your magnet.",
     "Your courage whispers, not shouts. Follow the whisper; it knows the way.",
-    "Balance Heart and Spirit, and the mind relaxes into clarity."
+    "Balance Heart and Spirit, and the mind relaxes into clarity.",
+    "Your presence is medicine—offer it gently to yourself first.",
+    "Tiny, loving actions compound into a radiant life."
   ];
   const ICONS = ["🌱","💫","🌍","🕊️","✨","🌞","🌙"];
 
@@ -132,10 +131,9 @@
     for(const hook of HOBBY_HOOKS){ if(hook.k.test(h)){ base = base.replace(/\.*$/,'') + hook.add; break; } }
     const v = (Array.isArray(p.values)? p.values : []).map(s=>s.toLowerCase());
     if(v.includes('compassion')) base += " Let compassion guide your tone.";
-    if(v.includes('honesty')) base += " Speak gently—and honestly.";
+    if(v.includes('honesty'))    base += " Speak gently—and honestly.";
     return base;
   }
-
   function buildInsights(p){
     const name = p.name || 'You';
     const vals = Array.isArray(p.values)? p.values.slice(0,3) : [];
@@ -148,7 +146,7 @@
     return [one, two, three].filter(Boolean).join(' ') + ' ' + pick;
   }
 
-  // ---------- Essentials fill ----------
+  // ---------- Essentials ----------
   function fillEssentials(p){
     const set=(id,val)=>{ const el=$(id.startsWith('#')?id:'#'+id); if(el) el.textContent = val ?? '–'; };
     set('c-name', p.name||'–');
@@ -159,37 +157,60 @@
     set('c-life', p.lifePath||lifePathFrom(p.birthday));
   }
 
-  // ---------- Streak with ring ----------
-  const CIRC = 2*Math.PI*20; // r=20 => 125.66
+  // ---------- Streak + ring + intensity ----------
+  const CIRC = 2*Math.PI*20;
   function ensureCoach(){
     const c=getCoach();
     if(!c.streak) c.streak={count:0,lastDoneDate:null};
     setCoach(c); return c;
   }
+  function streakTier(count){
+    if(count>=21) return 3;
+    if(count>=7)  return 2;
+    if(count>=1)  return 1;
+    return 0;
+  }
   function updateStreakUI(){
     const {streak}=ensureCoach();
     $('#streakCount').textContent = streak.count||0;
+    // progress over 7
     const frac = Math.max(0, Math.min(1, (streak.count % 7)/7));
-    $('.ring .prog').style.strokeDasharray = CIRC;
-    $('.ring .prog').style.strokeDashoffset = CIRC * (1 - frac);
+    const prog = $('.ring .prog');
+    prog.style.strokeDasharray = CIRC;
+    prog.style.strokeDashoffset = CIRC * (1 - frac);
+    // intensity tiers
+    const badge = $('#streakBadge');
+    badge.dataset.tier = String(streakTier(streak.count||0));
+    // button state
     $('#btnDoneToday').disabled = (streak.lastDoneDate === todayISO());
     $('#btnDoneToday').textContent = $('#btnDoneToday').disabled ? 'Already logged today' : 'Mark done today';
   }
   function markDone(){
-    const today=todayISO();
-    const s=ensureCoach().streak;
+    const today=todayISO(); const state=ensureCoach(); const s=state.streak;
     if(s.lastDoneDate===today) return;
     const y=new Date(); y.setDate(y.getDate()-1);
     const yISO=`${y.getFullYear()}-${String(y.getMonth()+1).padStart(2,'0')}-${String(y.getDate()).padStart(2,'0')}`;
     if(s.lastDoneDate && s.lastDoneDate!==today && s.lastDoneDate!==yISO) s.count=0;
     s.count=(s.count||0)+1; s.lastDoneDate=today;
-    setCoach({...getCoach(), streak:s});
-    const badge=$('#streakBadge'); badge.classList.remove('burst'); void badge.offsetWidth; badge.classList.add('burst');
-    updateStreakUI();
-    toast('Logged today 🔥');
+    setCoach({...state, streak:s});
+    const badge=$('#streakBadge'); // flame burst
+    badge.classList.remove('burst'); void badge.offsetWidth; badge.classList.add('burst');
+    updateStreakUI(); toast('Logged today 🔥');
   }
 
-  // ---------- Tasks ----------
+  // ---------- Tasks with icons ----------
+  function taskIcon(text=''){
+    const t=text.toLowerCase();
+    if(/meditat|breath|still/i.test(t)) return '🧘';
+    if(/gratitude|thank/i.test(t))     return '💌';
+    if(/walk|run|gym|workout/i.test(t))return '🏃';
+    if(/read|book/i.test(t))           return '📚';
+    if(/journal|reflect|write/i.test(t))return '🖊️';
+    if(/service|help/i.test(t))        return '🤝';
+    if(/connect|friend|message/i.test(t))return '💬';
+    if(/nature|garden|hike|sun/i.test(t))return '🌿';
+    return '✨';
+  }
   function ensureTasks(profile){
     const state = getCoach();
     if(!Array.isArray(state.tasks) || !state.tasks.length){
@@ -211,6 +232,7 @@
       const row=document.createElement('div');
       row.className='task-row';
       row.innerHTML=`<input type="checkbox" ${t.done?'checked':''} data-id="${t.id}" />
+        <span class="task-ico">${taskIcon(t.text)}</span>
         <span style="flex:1">${t.text}</span>
         <button class="btn" data-del="${t.id}">Remove</button>`;
       box.appendChild(row);
@@ -221,7 +243,7 @@
         const arr=getCoach().tasks||[]; const it=arr.find(x=>x.id===t.id);
         if(it){ it.done=cb.checked; saveTasks(arr); }
         if(cb.checked){
-          if(!reduceMotion){ row.classList.add('flash'); setTimeout(()=>{ row.classList.add('float'); }, 160); }
+          if(!reduceMotion){ row.classList.add('flash'); setTimeout(()=>{ row.classList.add('float'); }, 140); }
           setTimeout(()=>{ row.remove(); }, reduceMotion?0:520);
         }
       });
@@ -249,7 +271,7 @@
     const act = buildAction(p);
     typeInto($('#coach-action'), act, [800,1200], $('#actionGlow'));
 
-    // insights list with icons + fade
+    // „Daily Insight“: 3 kulkos su ikonėlėmis
     const ul = $('#coach-insights'); ul.innerHTML='';
     const picks = [...INSIGHT_POOL].sort(()=>Math.random()-0.5).slice(0,3);
     picks.forEach((txt,i)=>{
@@ -257,7 +279,7 @@
       ul.appendChild(li); setTimeout(()=> li.classList.add('show'), 60+ i*90);
     });
 
-    // main insight paragraph (daily unless force)
+    // pagrindinis (tiperiuojamas) įkvėpimo tekstas
     const st=getCoach(); const last=st.lastInsightAt? new Date(st.lastInsightAt):null; const now=new Date();
     const shouldNew=forceNew || !last || (now-last)>=24*3600*1000;
     const insight = shouldNew ? buildInsights(p) : ($('#insightText')?.textContent || buildInsights(p));
@@ -265,7 +287,7 @@
     if(shouldNew) setCoach({...st, lastInsightAt:new Date().toISOString()});
   }
 
-  // ---------- Export PNG (glowing design) ----------
+  // ---------- Export PNG (glowing „My Growth Path“) ----------
   function exportPNG(){
     const p=getProfile(); const s=getCoach();
     const action=($('#coach-action')?.textContent||'').trim() || '—';
@@ -275,72 +297,58 @@
     const cvs=document.createElement('canvas'); cvs.width=W*DPR; cvs.height=H*DPR;
     const ctx=cvs.getContext('2d'); ctx.scale(DPR,DPR);
 
-    // bg gradient
+    // bg gradient + žvaigždutės
     const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#022e33'); g.addColorStop(1,'#053c42'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    for(let i=0;i<90;i++){ const x=Math.random()*W, y=Math.random()*H, r=Math.random()*1.3+0.4, a=0.12+Math.random()*0.25;
+      ctx.beginPath(); ctx.fillStyle=`rgba(0,253,216,${a})`; ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); }
 
-    // subtle stars
-    for(let i=0;i<80;i++){
-      const x=Math.random()*W, y=Math.random()*H, r=Math.random()*1.3+0.4, a=0.12+Math.random()*0.25;
-      ctx.beginPath(); ctx.fillStyle=`rgba(0,253,216,${a})`; ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
-    }
+    // header
+    ctx.fillStyle='#00fdd8'; ctx.font='800 40px system-ui'; ctx.fillText('Soulink · My Growth Path 🌟', pad, 70);
+    ctx.strokeStyle='rgba(0,253,216,.6)'; ctx.lineWidth=2; ctx.shadowColor='rgba(0,253,216,.7)'; ctx.shadowBlur=12;
+    line(pad,88,W-pad,88); ctx.shadowBlur=0;
 
-    // header logo + glow line
-    ctx.fillStyle='#00fdd8'; ctx.font='800 40px system-ui'; ctx.fillText('Soulink', pad, 70);
-    ctx.font='600 22px system-ui'; ctx.fillText('Coach Plan', pad+190, 70);
-    ctx.strokeStyle='rgba(0,253,216,.5)'; ctx.lineWidth=2; ctx.shadowColor='rgba(0,253,216,.6)'; ctx.shadowBlur=12;
-    ctx.beginPath(); ctx.moveTo(pad, 88); ctx.lineTo(W-pad, 88); ctx.stroke(); ctx.shadowBlur=0;
-
-    // essentials
+    // Essentials
     ctx.fillStyle='#00fdd8'; ctx.font='700 20px system-ui'; ctx.fillText('Essentials', pad, 130);
     ctx.fillStyle='#eaf8f6'; ctx.font='16px system-ui';
     const wes=p.zodiac||p.westernZodiac||westZodiacFrom(p.birthday);
     const lp=p.lifePath||lifePathFrom(p.birthday);
     const ll=Array.isArray(p.loveLanguages)?p.loveLanguages[0]:(p.loveLanguage||'-');
-    const rows=[
-      `Name: ${p.name||'-'}`, `Connection: ${p.connectionType||'-'}`, `Love Language: ${ll}`,
-      `Birth Date: ${p.birthday||'-'}`, `Western Zodiac: ${wes||'-'}`, `Life Path: ${lp||'-'}`
-    ];
+    const rows=[`Name: ${p.name||'-'}`, `Connection: ${p.connectionType||'-'}`, `Love Language: ${ll}`, `Birth Date: ${p.birthday||'-'}`, `Western Zodiac: ${wes||'-'}`, `Life Path: ${lp||'-'}`];
     let y=156; rows.forEach(t=>{ ctx.fillText(t,pad,y); y+=24; });
 
-    // action box with glow
-    const boxX=pad, boxY= y+18, boxW= W - pad*2, boxH=150;
-    ctx.strokeStyle='rgba(0,253,216,.55)'; ctx.fillStyle='rgba(0,253,216,.09)';
-    roundRect(ctx, boxX, boxY, boxW, boxH, 16, true, true);
+    // divider
+    ctx.strokeStyle='rgba(0,253,216,.35)'; ctx.shadowColor='rgba(0,253,216,.55)'; ctx.shadowBlur=10; line(pad,y+6,W-pad,y+6); ctx.shadowBlur=0;
+
+    // Action box
+    const boxX=pad, boxY=y+24, boxW=W-pad*2, boxH=150;
+    ctx.strokeStyle='rgba(0,253,216,.55)'; ctx.fillStyle='rgba(0,253,216,.09)'; roundRect(ctx, boxX, boxY, boxW, boxH, 16, true, true);
     ctx.fillStyle='#00fdd8'; ctx.font='700 20px system-ui'; ctx.fillText("Today's Action", boxX+16, boxY+32);
     ctx.fillStyle='#eaf8f6'; ctx.font='18px system-ui'; wrap(ctx, action, boxX+16, boxY+60, boxW-32, 26);
 
-    // tasks
+    // Tasks
     let tx=pad, ty= boxY+boxH+36;
     ctx.fillStyle='#00fdd8'; ctx.font='700 20px system-ui'; ctx.fillText('Top Tasks', tx, ty); ty+=10;
     ctx.fillStyle='#eaf8f6'; ctx.font='18px system-ui';
-    tasks.forEach((t,i)=>{ ty+=28; drawCheckbox(ctx, tx, ty-16); wrap(ctx, t, tx+28, ty, 600, 26); });
+    tasks.forEach((t,i)=>{ ty+=28; checkbox(ctx, tx, ty-16); wrap(ctx, `${taskIcon(t)} ${t}`, tx+32, ty, 620, 26); });
 
-    // AI insight footer
+    // divider
+    ctx.strokeStyle='rgba(0,253,216,.35)'; ctx.shadowColor='rgba(0,253,216,.55)'; ctx.shadowBlur=10; line(pad,ty+12,W-pad,ty+12); ctx.shadowBlur=0;
+
+    // Insight footer
     const insight = ($('#insightText')?.textContent||'').trim() || "Your week's energy: Balance between Heart and Spirit.";
-    ctx.fillStyle='#bde5df'; ctx.font='18px system-ui';
-    wrap(ctx, insight, pad, H-80, W-pad*2, 26);
+    ctx.fillStyle='#bde5df'; ctx.font='18px system-ui'; wrap(ctx, insight, pad, H-80, W-pad*2, 26);
 
     // save
     const a=document.createElement('a'); a.href=cvs.toDataURL('image/png',1.0);
     a.download=`coach-plan-${String(name).replace(/\s+/g,'-').toLowerCase()}.png`; a.click();
 
-    function wrap(ctx,text,x,y,maxW,lh){
-      const words=(text||'').split(' '); let line='', yy=y;
-      for(let i=0;i<words.length;i++){
-        const test=line+words[i]+' ';
-        if(ctx.measureText(test).width>maxW && i>0){ ctx.fillText(line,x,yy); line=words[i]+' '; yy+=lh; }
-        else line=test;
-      }
-      ctx.fillText(line,x,yy); return yy+lh;
-    }
-    function roundRect(ctx,x,y,w,h,r,fill,stroke){
-      ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
-      ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); if(fill) ctx.fill(); if(stroke) ctx.stroke();
-    }
-    function drawCheckbox(ctx,x,y){ ctx.strokeStyle='#00fdd8'; ctx.lineWidth=2; ctx.strokeRect(x,y,18,18); }
+    function line(x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+    function roundRect(ctx,x,y,w,h,r,fill,stroke){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); if(fill) ctx.fill(); if(stroke) ctx.stroke(); }
+    function wrap(ctx,text,x,y,maxW,lh){ const words=(text||'').split(' '); let line='', yy=y; for(let i=0;i<words.length;i++){ const test=line+words[i]+' '; if(ctx.measureText(test).width>maxW && i>0){ ctx.fillText(line,x,yy); line=words[i]+' '; yy+=lh; } else line=test; } ctx.fillText(line,x,yy); return yy+lh; }
+    function checkbox(ctx,x,y){ ctx.strokeStyle='#00fdd8'; ctx.lineWidth=2; ctx.strokeRect(x,y,18,18); }
   }
 
-  // ---------- helpers ----------
+  // ---------- toast ----------
   function toast(msg){
     let n=$('#toast'); if(!n){ n=document.createElement('div'); n.id='toast';
       n.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);padding:10px 14px;border-radius:10px;background:#0a3;box-shadow:0 8px 30px rgba(0,0,0,.25);color:#fff;z-index:9999;opacity:0;transition:.2s'; document.body.appendChild(n); }
@@ -348,7 +356,7 @@
     const ann=$('#ann'); if(ann) ann.textContent=msg;
   }
 
-  // ---------- page init ----------
+  // ---------- init ----------
   document.addEventListener('DOMContentLoaded', ()=>{
     wireNav(); wireTooltips();
     // stars

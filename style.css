@@ -956,6 +956,39 @@ button:hover,
   .chart-enter{ animation:none; opacity:1; transform:none }
 }
 
+/* --- Streak: nuolatinė švelni liepsnos animacija + ryškumas pagal streak tier --- */
+@keyframes flameFlicker {
+  0% { transform: translateY(-2px) scale(1); filter: drop-shadow(0 0 2px rgba(255,160,64,.4)); }
+  50% { transform: translateY(-3px) scale(1.06); filter: drop-shadow(0 0 7px rgba(255,140,0,.8)); }
+  100% { transform: translateY(-2px) scale(1); filter: drop-shadow(0 0 2px rgba(255,160,64,.4)); }
+}
+.flame{ animation: flameFlicker 2.8s ease-in-out infinite; }
+@media (prefers-reduced-motion:reduce){ .flame{ animation:none } }
+
+/* streak intensyvumo pakopos (automatiškai priskirs JS) */
+.streak-badge[data-tier="0"]::after{ opacity:.35 }
+.streak-badge[data-tier="1"]::after{ opacity:.65 }
+.streak-badge[data-tier="2"]::after{ opacity:.85 }
+.streak-badge[data-tier="3"]::after{ opacity:1 }
+.streak-badge[data-tier="1"] .flame{ filter: drop-shadow(0 0 6px rgba(255,160,64,.65)) }
+.streak-badge[data-tier="2"] .flame{ filter: drop-shadow(0 0 9px rgba(255,140,0,.85)) }
+.streak-badge[data-tier="3"] .flame{ filter: drop-shadow(0 0 12px rgba(255,120,0,1)) }
+.streak-badge[data-tier="1"] .ring .prog{ filter: drop-shadow(0 0 7px rgba(0,253,216,.75)) }
+.streak-badge[data-tier="2"] .ring .prog{ filter: drop-shadow(0 0 10px rgba(0,253,216,.9)) }
+.streak-badge[data-tier="3"] .ring .prog{ filter: drop-shadow(0 0 12px rgba(0,253,216,1)) }
+
+/* Growth Tasks: piktogramos + švelnus glow rėmelis */
+.task-row{
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 12px;
+  margin:10px 0;
+  background:rgba(0,253,216,.04);
+  box-shadow: 0 0 0 1px rgba(0,253,216,.06) inset;
+}
+.task-row:hover{ box-shadow: 0 0 0 1px var(--border), 0 0 16px rgba(0,253,216,.15) }
+.task-ico{ width:1.4rem; display:inline-grid; place-items:center; margin-right:6px }
+
 
 
 
