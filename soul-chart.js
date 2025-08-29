@@ -1,364 +1,248 @@
+// soul-coach.js — clean finisher build
 (() => {
-  /* ========== helpers ========== */
-  const $  = s => document.querySelector(s);
-  const $$ = s => Array.from(document.querySelectorAll(s));
-  const reduceMotion = matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const KEY = 'soulQuiz';
+  const KEY_TASKS = 'soulinkCoach';     // tasks storage
+  const COACH_KEY = 'soulCoach';        // streak/export helper
 
-  const data = () => {
-    try { return JSON.parse(localStorage.getItem('soulQuiz')||'{}'); }
-    catch{ return {}; }
+  const $ = (s, r=document) => r.querySelector(s);
+  const profile = (()=>{ try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch{return{}} })();
+
+  // ===== helpers =====
+  const DATE_RE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+  const sumDigits = s => String(s).replace(/\D/g,'').split('').reduce((a,b)=>a+ +b,0);
+  const reduce = n => { while(![11,22,33].includes(n) && n>9) n = sumDigits(String(n)); return n; };
+  const lifePathFromDate = iso => (DATE_RE.test(iso||'') ? String(reduce(sumDigits(iso))) : '–');
+  const westernZodiacFromDate = iso => {
+    if(!DATE_RE.test(iso||'')) return '–';
+    const [,m,d] = iso.split('-').map(Number);
+    const R = (fm,fd,tm,td)=> (m>fm||m===fm&&d>=fd)&&(m<tm||m===tm&&d<=td);
+    if (R(3,21,4,19)) return 'Aries';
+    if (R(4,20,5,20)) return 'Taurus';
+    if (R(5,21,6,20)) return 'Gemini';
+    if (R(6,21,7,22)) return 'Cancer';
+    if (R(7,23,8,22)) return 'Leo';
+    if (R(8,23,9,22)) return 'Virgo';
+    if (R(9,23,10,22))return 'Libra';
+    if (R(10,23,11,21))return 'Scorpio';
+    if (R(11,22,12,21))return 'Sagittarius';
+    if (m===12&&d>=22||m===1&&d<=19) return 'Capricorn';
+    if (R(1,20,2,18)) return 'Aquarius';
+    return 'Pisces';
   };
 
-  /* canvases */
-  const el = {
-    love   : $('#loveChart')    || $('#loveLangChart')    || $('canvas[data-chart="love"]'),
-    hobbies: $('#hobbyChart')   || $('#hobbiesChart')     || $('#donutChart') || $('canvas[data-chart="hobbies"]'),
-    values : $('#valuesChart')  || $('#compassChart')     || $('canvas[data-chart="values"]')
-  };
-
-  /* --------- Chart titles + subtitles (magical) --------- */
-  function setTitle(canvas, title, subtitle){
-    if(!canvas) return;
-    const card = canvas.closest('.card') || canvas.parentElement;
-    if(!card) return;
-    card.classList.add('glow-card');                    // <- glow kortai
-    let h = card.querySelector('h2, h3');
-    if(h) h.textContent = title;
-    let sub = card.querySelector('.subtitle');
-    if(!sub){ sub = document.createElement('p'); sub.className='subtitle muted'; card.appendChild(sub); }
-    sub.textContent = subtitle;
+  // ===== Navbar drawer small wiring (same as other pages)
+  function wireNav(){
+    const nav = $('.navbar');
+    const onScroll = ()=> nav?.classList[window.scrollY>6?'add':'remove']('scrolled');
+    onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+    $('#openDrawer')?.addEventListener('click', ()=>{$('#drawer').classList.add('open'); document.body.classList.add('no-scroll');});
+    $('#closeDrawer')?.addEventListener('click', ()=>{$('#drawer').classList.remove('open'); document.body.classList.remove('no-scroll');});
+    $('#drawerBackdrop')?.addEventListener('click', ()=>{$('#drawer').classList.remove('open'); document.body.classList.remove('no-scroll');});
+    $('#logoutLink')?.addEventListener('click', e=>{e.preventDefault(); localStorage.clear(); location.href='index.html';});
+    $('#logoutLinkMobile')?.addEventListener('click', e=>{e.preventDefault(); localStorage.clear(); location.href='index.html';});
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape') $('#closeDrawer')?.click(); });
   }
 
-  /* --------- Glow plugin (švyti aktyvus elementas) --------- */
-  const GlowPlugin = {
-    id:'soulinkGlow',
-    afterDatasetDraw(chart, args){
-      const {ctx} = chart;
-      ctx.save();
-      ctx.shadowColor = 'rgba(0,253,216,.45)';
-      ctx.shadowBlur  = 18;
-      // „piešimosi“ efektas su glow
-      args.meta.dataset?.draw?.(ctx);
-      ctx.restore();
-    }
-  };
-  if (window.Chart && !Chart.registry.plugins.get('soulinkGlow')) {
-    Chart.register(GlowPlugin);
+  // ===== Essentials autofill
+  function fillEssentials(p){
+    const set = (id, val) => { const el=$(id.startsWith('#')?id:'#'+id); if(el) el.textContent = val || '–'; };
+    set('c-name', p.name);
+    set('c-ct', p.connectionType);
+    set('c-ll', Array.isArray(p.loveLanguages)? p.loveLanguages[0] : (p.loveLanguage||''));
+    set('c-bd', p.birthday);
+
+    const wes = p.zodiac || p.westernZodiac || westernZodiacFromDate(p.birthday);
+    const lp  = p.lifePath || lifePathFromDate(p.birthday);
+    set('c-west', wes);
+    set('c-life', lp);
   }
 
-  /* --------- Love data (radar) --------- */
-  const LOVE = ['Words of Affirmation','Acts of Service','Receiving Gifts','Quality Time','Physical Touch'];
-  function loveData(){
-    const d = data();
-    const chosen = Array.isArray(d.loveLanguages) ? d.loveLanguages : (d.loveLanguage ? [d.loveLanguage] : []);
-    const primary = chosen[0];
-    const scores = LOVE.map(lbl=>{
-      const i = chosen.findIndex(v=>v && v.toLowerCase()===lbl.toLowerCase());
-      return i===-1 ? 0 : Math.max(1, 5 - i); // primary=5
+  // ===== Insights (typewriter)
+  function buildReflection(p){
+    const name = p.name || 'You';
+    const lls = Array.isArray(p.loveLanguages) ? p.loveLanguages : (p.loveLanguage?[p.loveLanguage]:[]);
+    const vals = Array.isArray(p.values)? p.values.slice(0,3) : [];
+    const hobs = Array.isArray(p.hobbies)? p.hobbies.slice(0,3) : [];
+
+    const first = lls[0] ? `${name} is nourished by ${lls[0]}${lls[1]?` and ${lls[1]}`:''}, a gentle way the heart speaks.` :
+                           `${name} is learning the language of care, one mindful act at a time.`;
+    const second = vals.length ? `She carries ${vals.join(', ')} as her quiet compass.` : '';
+    const third = hobs.length ? `Daily rituals like ${hobs.join(', ')} refill her spirit.` : '';
+    return [first, second, third].filter(Boolean).join(' ');
+  }
+  function typeInto(el, text){
+    if (!el) return;
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) { el.textContent = text; return; }
+    el.textContent=''; el.classList.remove('show');
+    let i=0; const id=setInterval(()=>{ el.textContent = text.slice(0, ++i); if(i>=text.length){clearInterval(id); el.classList.add('show');}}, 18);
+  }
+
+  // ===== Today’s Action (LL-driven)
+  function makeAction(p){
+    const base = [
+      "Message someone and ask one sincere question.",
+      "Take a 10-minute walk without your phone.",
+      "Write three lines about how you want to love & be loved.",
+      "Declutter one tiny area (service to future-you).",
+      "Invite someone to share a quiet 10-minute check-in."
+    ];
+    const map = {
+      "Words of Affirmation": "Send a heartfelt text with one specific appreciation.",
+      "Acts of Service": "Do one task they dislike without being asked.",
+      "Receiving Gifts": "Prepare a tiny surprise (note, song link, photo).",
+      "Quality Time": "Schedule a 20-minute, no-distraction catch-up.",
+      "Physical Touch": "Offer a warm hug or mindful touch (with consent)."
+    };
+    const ll = Array.isArray(p.loveLanguages)? p.loveLanguages[0] : (p.loveLanguage||'');
+    return map[ll] || base[Math.floor(Math.random()*base.length)];
+  }
+  function setAction(p){ const el = $('#coach-action'); if(el) el.textContent = makeAction(p); }
+
+  // ===== Streak
+  const loadCoach = ()=>{ try{return JSON.parse(localStorage.getItem(COACH_KEY)||'{}')}catch{return{}}};
+  const saveCoach = s => localStorage.setItem(COACH_KEY, JSON.stringify(s));
+  const iso = t => new Date(t).toISOString().slice(0,10);
+  function renderStreak(){ const s=loadCoach(); $('#streak').textContent = `🔥 Streak: ${s.streak||0} day${(s.streak||0)==1?'':'s'}`; }
+  function markDoneToday(){
+    const s=loadCoach(); const t=iso(Date.now()), y=iso(Date.now()-86400000);
+    if(s.lastDone===t) return toast('Already checked ✓');
+    s.streak = (s.lastDone===y ? (s.streak||0)+1 : 1); s.lastDone=t; saveCoach(s);
+    renderStreak(); toast('Nice! Streak +1 ✨');
+  }
+
+  // ===== Tasks (merge defaults + custom)
+  function loadTasks(){ try{return JSON.parse(localStorage.getItem(KEY_TASKS)||'{}')}catch{return{}} }
+  function saveTasks(o){ localStorage.setItem(KEY_TASKS, JSON.stringify(o)); }
+  const tasksState = loadTasks();
+  if(!Array.isArray(tasksState.tasks)){
+    const seed = [];
+    const ll = Array.isArray(profile.loveLanguages)? profile.loveLanguages[0] : (profile.loveLanguage||'');
+    if(ll) seed.push(`Practice your love language: ${ll}`);
+    if(profile.connectionType) seed.push(`Nurture a ${String(profile.connectionType).toLowerCase()} connection`);
+    seed.push("Reflect for 5 minutes: what felt good today?");
+    tasksState.tasks = seed.map((t,i)=>({id:String(i+1), text:t, done:false}));
+    saveTasks(tasksState);
+  }
+  function renderTasks(){
+    const wrap = $('#tasks'); wrap.innerHTML='';
+    tasksState.tasks.forEach(t=>{
+      const row = document.createElement('div');
+      row.className='task'; row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.04)';
+      row.innerHTML = `
+        <input type="checkbox" ${t.done?'checked':''} data-id="${t.id}" />
+        <span style="flex:1">${t.text}</span>
+        <button class="btn" data-del="${t.id}">Remove</button>`;
+      wrap.appendChild(row);
     });
-    return {scores, primary, chosen};
-  }
-
-  /* --------- Hobbies data (doughnut) --------- */
-  function hobbyData(){
-    const d = data();
-    const arr = Array.isArray(d.hobbies) ? d.hobbies.filter(Boolean) : [];
-    const labels = arr.slice(0,12);
-    const values = labels.map(()=>1);
-    return {labels, values};
-  }
-
-  /* --------- Values data (Heart/Mind/Spirit radar) --------- */
-  const HEART=['compassion','kindness','empathy','love','generosity','patience','community','care','forgiveness'];
-  const MIND =['honesty','integrity','wisdom','logic','curiosity','discipline','learning','responsibility','respect','balance'];
-  const SPIRIT=['spirituality','freedom','growth','purpose','gratitude','mindfulness','adventure','faith','presence'];
-  function valuesData(){
-    const vals = (Array.isArray(data().values) ? data().values : []).map(v=> String(v).toLowerCase());
-    const score = bag => vals.reduce((a,v)=> a + (bag.some(k=> v.includes(k)) ? 1 : 0), 0);
-    let h=score(HEART), m=score(MIND), s=score(SPIRIT);
-    const total=h+m+s;
-    if(!total) return {labels:['Heart','Mind','Spirit'], values:[0,0,0]};
-    const pct = x=> Math.round((x/total)*100);
-    return {labels:['Heart','Mind','Spirit'], values:[pct(h),pct(m),pct(s)]};
-  }
-
-  /* --------- Charts builders --------- */
-  let cLove=null, cHobby=null, cValues=null;
-
-  const commonAnim = reduceMotion ? false : {
-    duration: 1400,
-    easing  : 'easeOutQuad'
-  };
-
-  function makeLove(){
-    if(!el.love) return;
-    const {scores, primary} = loveData();
-    cLove?.destroy();
-    cLove = new Chart(el.love, {
-      type:'radar',
-      data:{ labels:LOVE, datasets:[{ label:'Love Languages', data:scores, fill:true }]},
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        animation: commonAnim,
-        animations: { tension:{ from:0.4, to:0.0001, duration:1400 } },
-        scales:{ r:{ suggestedMin:0, suggestedMax:5, ticks:{display:false} } },
-        plugins:{
-          legend:{display:false},
-          tooltip:{
-            displayColors:false,
-            callbacks:{ label:(ctx)=>{
-              const star = (primary && ctx.label.toLowerCase()===primary.toLowerCase()) ? ' ★' : '';
-              return `${ctx.label} — ${ctx.parsed.r||0}/5${star}`;
-            }}
-          },
-          soulinkGlow:{}
-        },
-        elements:{ point:{ radius:3, hoverRadius:5 } }
-      }
+    wrap.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+      cb.addEventListener('change', ()=>{
+        const id = cb.getAttribute('data-id'); const it = tasksState.tasks.find(x=>x.id===id);
+        if(it){ it.done = cb.checked; saveTasks(tasksState); }
+      });
     });
-  }
-
-  function makeHobbies(){
-    if(!el.hobbies) return;
-    const {labels, values} = hobbyData();
-    cHobby?.destroy();
-    cHobby = new Chart(el.hobbies, {
-      type:'doughnut',
-      data:{ labels, datasets:[{ data:values, hoverOffset:6 }]},
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        animation: commonAnim,
-        cutout:'55%',
-        plugins:{
-          legend:{display:false},
-          tooltip:{
-            displayColors:false,
-            callbacks:{ label:(ctx)=>{
-              const total = ctx.dataset.data.reduce((a,b)=>a+b,0)||1;
-              const pct = Math.round((ctx.parsed/total)*100);
-              return `${ctx.label||'—'} — ${pct}%`;
-            }}
-          },
-          soulinkGlow:{}
-        }
-      }
+    wrap.querySelectorAll('[data-del]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const id=b.getAttribute('data-del'); const i=tasksState.tasks.findIndex(x=>x.id===id);
+        if(i>-1){ tasksState.tasks.splice(i,1); saveTasks(tasksState); renderTasks(); }
+      });
     });
   }
 
-  function makeValues(){
-    if(!el.values) return;
-    const {labels, values} = valuesData();
-    cValues?.destroy();
-    cValues = new Chart(el.values, {
-      type:'radar',
-      data:{ labels, datasets:[{ label:'Inner Balance', data:values, fill:true }]},
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        animation: commonAnim,
-        animations:{ tension:{ from:0.4, to:0.0001, duration:1400 } },
-        scales:{ r:{ suggestedMin:0, suggestedMax:100, ticks:{display:false} } },
-        plugins:{
-          legend:{display:false},
-          tooltip:{ displayColors:false, callbacks:{ label:(c)=> `${c.label} — ${c.parsed.r||0}%` } },
-          soulinkGlow:{}
-        }
-      }
+  // Add task form
+  function bindAddTask(){
+    $('#add-task')?.addEventListener('submit', e=>{
+      e.preventDefault();
+      const inp = $('#task-input'); const v = (inp?.value||'').trim();
+      if(!v) return;
+      tasksState.tasks.push({id:String(Date.now()), text:v, done:false});
+      saveTasks(tasksState); inp.value=''; renderTasks();
+    });
+    $('#resetTasks')?.addEventListener('click', ()=>{
+      if(!confirm('Reset tasks?')) return;
+      localStorage.removeItem(KEY_TASKS); location.reload();
     });
   }
 
-  /* --------- Poetic insights under charts --------- */
-  function ensureInsight(canvas, id){
-    if(!canvas) return null;
-    let p = canvas.parentElement.querySelector(`#${id}`);
-    if(!p){ p=document.createElement('p'); p.id=id; p.className='insight'; canvas.parentElement.appendChild(p); }
-    return p;
-  }
-  function writeInsights(){
-    // Love
-    const L = loveData();
-    const pairs = LOVE.map((lbl,i)=>({lbl,score:L.scores[i]}))
-      .filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
-    const loveP = ensureInsight(el.love,'loveInsight');
-    loveP.textContent = pairs.length
-      ? `Your love leads with ${pairs[0].lbl}${pairs[1]?`, harmonized with ${pairs[1].lbl}`:''}${pairs[2]?` and ${pairs[2].lbl}`:''}.`
-      : 'No data yet.';
-    // Hobbies
-    const H = hobbyData();
-    const hobP = ensureInsight(el.hobbies,'hobbyInsight');
-    if(H.labels.length>=2) hobP.textContent='Your soul balances between mindful rituals and joyful adventures.';
-    else if(H.labels.length===1) hobP.textContent=`A gentle focus on ${H.labels[0]} nourishes your days.`;
-    else hobP.textContent='No data yet.';
-    // Values
-    const V = valuesData();
-    const maxIdx = V.values.indexOf(Math.max(...V.values));
-    const axis = V.labels[maxIdx] || 'Heart';
-    const valP = ensureInsight(el.values,'valuesInsight');
-    valP.textContent = V.values.some(x=>x>0)
-      ? `Your strongest compass leans to ${axis}.`
-      : 'No data yet.';
-  }
-
-  /* --------- Stars background (lightweight) --------- */
-  function makeStars(canvas){
-    const ctx = canvas.getContext('2d');
-    const DPR = devicePixelRatio || 1;
-    function resize(){
-      const w = canvas.clientWidth, h = canvas.clientHeight;
-      canvas.width = Math.max(1, Math.floor(w*DPR));
-      canvas.height= Math.max(1, Math.floor(h*DPR));
-    }
-    resize();
-    addEventListener('resize', resize);
-
-    const N = canvas.clientWidth < 560 ? 18 : 36;
-    const stars = Array.from({length:N}, ()=>({
-      x: Math.random()*canvas.width,
-      y: Math.random()*canvas.height,
-      r: (Math.random()*1.2+0.6)*DPR,
-      a: Math.random()*Math.PI*2
-    }));
-
-    let running = true;
-    function stop(){ running=false; }
-    function start(){ if(running) return; running=true; tick(); }
-
-    function tick(){
-      if(!running) return;
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      for(const s of stars){
-        s.a += 0.02 + Math.random()*0.015;
-        const flick = (Math.sin(s.a)+1)/2;
-        ctx.beginPath();
-        ctx.fillStyle = `rgba(0,253,216,${0.15+0.35*flick})`;
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-        ctx.fill();
-      }
-      if(!reduceMotion) requestAnimationFrame(tick);
-    }
-    tick();
-    return { stop, start, resize };
-  }
-
-  function ensureStars(card){
-    let cvs = card.querySelector('canvas.stars');
-    if(!cvs){
-      cvs = document.createElement('canvas');
-      cvs.className = 'stars';
-      cvs.setAttribute('aria-hidden','true');
-      card.prepend(cvs);
-    }
-    return cvs;
-  }
-
-  /* --------- Build on view (IntersectionObserver) --------- */
-  function onEnterOnce(card, buildFn){
-    if(!card) return;
-    card.classList.add('chart-enter'); // CSS fade-in
-
-    const observer = new IntersectionObserver(entries=>{
-      const e = entries[0];
-      if(e.isIntersecting && e.intersectionRatio>=0.3){
-        buildFn();           // su animacijomis
-        writeInsights();     // įžvalga po grafiku
-        observer.disconnect();
-      }
-    }, {threshold:[0,0.3,1]});
-    observer.observe(card);
-  }
-
-  /* --------- Titles + cards init + stars + actions --------- */
-  function applyTitles(){
-    setTitle(el.love,   '✨ The Voice of Your Heart',  'Primary love language is highlighted—how you most naturally give and receive love.');
-    setTitle(el.hobbies,'🌿 Where Your Spirit Flows',  'Distribution of your favorite rituals and joys.');
-    setTitle(el.values, '🌌 The Compass of Your Soul', 'A Heart–Mind–Spirit balance derived from chosen values.');
-  }
-
-  function decorateCards(){
-    [el.love, el.hobbies, el.values].forEach(cv=>{
-      if(!cv) return;
-      const card = cv.closest('.card');
-      card?.classList.add('glow-card');
-      // žvaigždžių fonas
-      const starCanvas = ensureStars(card);
-      const stars = makeStars(starCanvas);
-      if(reduceMotion){
-        stars.stop();
-      }else{
-        // stop/start pagal matomumą
-        const io = new IntersectionObserver(es=>{
-          if(es[0].isIntersecting) stars.start(); else stars.stop();
-        }, {threshold:[0,0.01]});
-        io.observe(card);
-      }
-      // švelni box shadow grafiko canvas'ui
-      cv.classList.add('chart-glow');
-    });
-  }
-
+  // ===== Toast
   function toast(msg){
-    let t = $('#chartToast');
-    if(!t){
-      t=document.createElement('div');
-      t.id='chartToast';
-      t.style.cssText='position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#014a52;border:1px solid rgba(0,253,216,.35);color:#eaf8f6;padding:10px 12px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:9999;opacity:0;transition:opacity .2s';
-      document.body.appendChild(t);
+    let n = $('#toast');
+    if(!n){ n=document.createElement('div'); n.id='toast';
+      n.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);padding:10px 14px;border-radius:10px;background:#0a3;box-shadow:0 8px 30px rgba(0,0,0,.25);color:#fff;z-index:9999;opacity:0;transition:.2s';
+      document.body.appendChild(n);
     }
-    t.textContent=msg; requestAnimationFrame(()=>t.style.opacity='1'); setTimeout(()=>t.style.opacity='0',1400);
+    n.textContent=msg; n.style.opacity='1'; setTimeout(()=> n.style.opacity='0', 1200);
   }
 
-  function bindButtons(){
-    const refresh = $$('button, a').find(el=>/refresh/i.test(el.textContent));
-    if(refresh) refresh.addEventListener('click',e=>{
-      e.preventDefault();
-      // rebuild viską dabar (be IO), tada vėl paleidžiam IO kad pieštų įeinant
-      makeLove(); makeHobbies(); makeValues(); writeInsights();
-      toast('Chart updated ✨');
-    });
+  // ===== Export PNG (coach snapshot)
+  function exportCoach(){
+    const s = loadCoach();
+    const action = ($('#coach-action')?.textContent||'').trim();
+    const topTasks = (tasksState.tasks||[]).filter(t=>!t.done).map(t=>t.text).slice(0,6);
+    const wes = profile.zodiac || profile.westernZodiac || westernZodiacFromDate(profile.birthday);
+    const lp  = profile.lifePath || lifePathFromDate(profile.birthday);
 
-    const edit = $$('button, a').find(el=>/edit\s*profile/i.test(el.textContent));
-    if(edit) edit.addEventListener('click',e=>{e.preventDefault(); location.href='edit-profile.html';});
+    const W=1400, H=900, pad=44, scale=Math.max(2, Math.floor(devicePixelRatio||2));
+    const cvs=document.createElement('canvas'); cvs.width=W*scale; cvs.height=H*scale;
+    const ctx=cvs.getContext('2d'); ctx.scale(scale,scale);
 
-    const exportBtn = $$('button, a').find(el=>/export\s*png/i.test(el.textContent));
-    if(exportBtn) exportBtn.addEventListener('click', e=>{
-      e.preventDefault();
-      const canvas = el.love || el.hobbies || el.values;
-      if(!canvas) return;
-      const a = document.createElement('a');
-      const nm = (data().name||'you').toLowerCase().replace(/\s+/g,'-');
-      a.href = canvas.toDataURL('image/png');
-      a.download = `soul-chart-${nm}.png`;
-      a.click();
-    });
+    ctx.fillStyle='#083b3c'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#00fdd8'; ctx.font='700 40px system-ui'; ctx.fillText('Soulink · Coach Plan', pad, 70);
+
+    ctx.font='700 22px system-ui'; ctx.fillText('Essentials', pad, 120);
+    ctx.font='16px system-ui'; ctx.fillStyle='#dff';
+    const L=[
+      `Name: ${profile.name||'-'}`,
+      `Connection: ${profile.connectionType||'-'}`,
+      `Love Language: ${Array.isArray(profile.loveLanguages)?profile.loveLanguages[0]:(profile.loveLanguage||'-')}`,
+      `Birth Date: ${profile.birthday||'-'}`,
+      `Western Zodiac: ${wes||'-'}`,
+      `Life Path: ${lp||'-'}`
+    ];
+    let y=150; L.forEach(t=>{ ctx.fillText(t,pad,y); y+=26; });
+
+    // action
+    ctx.fillStyle='#00fdd8'; ctx.font='700 22px system-ui'; ctx.fillText("Today's Action", 600, 120);
+    ctx.fillStyle='#dff'; ctx.font='18px system-ui';
+    y = wrap(ctx, action||'—', 600, 150, 760, 26);
+
+    // tasks
+    ctx.fillStyle='#00fdd8'; ctx.font='700 22px system-ui'; ctx.fillText('Top Tasks', 600, y+30);
+    ctx.fillStyle='#dff'; ctx.font='18px system-ui';
+    let yy=y+60; topTasks.forEach(t=> yy = wrap(ctx, '• '+t, 600, yy, 760, 26));
+
+    // footer
+    ctx.fillStyle='#bff'; ctx.font='16px system-ui';
+    ctx.fillText(`Streak: ${s.streak||0} · ${new Date().toLocaleDateString()}`, pad, H-30);
+
+    const a=document.createElement('a'); a.href=cvs.toDataURL('image/png',1.0);
+    a.download='soulink-coach-plan.png'; a.click();
+
+    function wrap(ctx,text,x,y,maxW,lh){
+      const words=(text||'').split(' '); let line='', yy=y;
+      for(let i=0;i<words.length;i++){
+        const test=line+words[i]+' ';
+        if(ctx.measureText(test).width>maxW && i>0){ ctx.fillText(line,x,yy); line=words[i]+' '; yy+=lh; }
+        else line=test;
+      }
+      ctx.fillText(line, x, yy); return yy+lh;
+    }
   }
 
-  /* --------- Intro copy & avatar orb (jei jau turėjai – palik) --------- */
-  function setIntro(){
-    const h1 = $('h1');
-    if(!h1) return;
-    let intro = h1.nextElementSibling instanceof HTMLParagraphElement ? h1.nextElementSibling : null;
-    if(!intro){ intro = document.createElement('p'); h1.parentNode.insertBefore(intro, h1.nextSibling); }
-    intro.className = 'muted';
-    const has = !!localStorage.getItem('soulQuiz') && Object.keys(data()).length>0;
-    intro.textContent = has
-      ? 'Your Soul Chart reveals the harmony between your heart’s language, your values, and the ways you refuel your spirit. Explore the shapes—hover or tap to see what each facet means.'
-      : 'Add your profile details to unlock your Soul Chart ✨';
-  }
-
-  /* --------- Boot --------- */
+  // ===== Wire up
   document.addEventListener('DOMContentLoaded', ()=>{
-    setIntro();
-    applyTitles();
-    decorateCards();
-    bindButtons();
+    wireNav();
+    fillEssentials(profile);
+    setAction(profile);
+    renderStreak();
+    renderTasks();
+    bindAddTask();
 
-    // „piešimosi“ triggerei – korta pasirodo ekrane
-    if(!reduceMotion){
-      el.love   && onEnterOnce(el.love.closest('.card'),   makeLove);
-      el.hobbies&& onEnterOnce(el.hobbies.closest('.card'),makeHobbies);
-      el.values && onEnterOnce(el.values.closest('.card'), makeValues);
-    } else {
-      // be animacijų
-      makeLove(); makeHobbies(); makeValues(); writeInsights();
-    }
+    // insight text
+    typeInto($('#insightText'), buildReflection(profile));
+
+    $('#newAction')?.addEventListener('click', ()=>{ setAction(profile); toast('New suggestion ready 💡'); });
+    $('#btnDoneToday')?.addEventListener('click', markDoneToday);
+    $('#exportCoach')?.addEventListener('click', e=>{ e.preventDefault(); exportCoach(); });
   });
 })();
