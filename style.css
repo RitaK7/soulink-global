@@ -926,6 +926,37 @@ button:hover,
     canvas.chart-glow{ transition:none }
   }
 
+  /* --- Soulink glow kortoms (be layout pokyčių) --- */
+.glow-card{ position:relative; box-shadow:0 0 0 transparent; }
+.glow-card::after{
+  content:""; position:absolute; inset:-1px; border-radius:16px;
+  box-shadow:0 0 24px rgba(0,253,216,.25), 0 0 48px rgba(0,253,216,.15);
+  pointer-events:none; opacity:0; transition:opacity .6s ease;
+}
+.glow-card:hover::after{ opacity:.9; }
+
+/* žvaigždučių canvas fonui už grafiko */
+.glow-card .stars{
+  position:absolute; inset:0; z-index:0; pointer-events:none; border-radius:16px;
+  filter: drop-shadow(0 0 10px rgba(0,253,216,.08));
+}
+/* pats grafikas viršuje */
+.glow-card canvas.chart-glow{ position:relative; z-index:1 }
+
+/* --- Įėjimo animacija kortoms/grafikams --- */
+@keyframes chartFadeIn { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none} }
+.chart-enter{ opacity:0; animation:chartFadeIn .9s ease forwards; }
+
+/* mažos poetiškos įžvalgos */
+.insight{ margin-top:10px; color:#bde5df; font-size:.98rem }
+
+/* gerbk reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .glow-card::after{ display:none }
+  .chart-enter{ animation:none; opacity:1; transform:none }
+}
+
+
 
 
 
