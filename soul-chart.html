@@ -12,9 +12,9 @@
   a{color:var(--accent);text-decoration:none}
   .container{max-width:var(--maxw);margin:0 auto;padding:24px}
 
-  /* navbar (vienoda kaip kituose puslapiuose) */
+  /* NAVBAR (kaip kituose puslapiuose) */
   .navbar{position:sticky;top:0;z-index:50;background:rgba(0,60,67,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
-  .navbar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transform:scaleX(.2);transition:.25s}
+  .navbar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transform:scaleX(.2);transition:opacity .25s, transform .25s}
   .navbar.scrolled::after{opacity:.85;transform:scaleX(1)}
   .nav-inner{display:flex;justify-content:space-between;align-items:center;padding:10px 16px}
   .brand{font-weight:800;color:var(--accent)}
@@ -30,6 +30,9 @@
   .drawer.open .panel{transform:translateX(0)}
   body.no-scroll{overflow:hidden}
 
+  /* Background stars */
+  .bg-stars{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.75}
+
   /* Cards + glow */
   .card{position:relative;background:linear-gradient(180deg,rgba(1,74,82,.74),rgba(1,74,82,.56));border:1px solid var(--border);box-shadow:var(--shadow);border-radius:18px;padding:18px;margin:24px 0;overflow:hidden}
   .glow-card::after{content:"";position:absolute;inset:-1px;border-radius:16px;box-shadow:0 0 24px rgba(0,253,216,.25),0 0 48px rgba(0,253,216,.15);pointer-events:none;opacity:0;transition:opacity .6s}
@@ -37,26 +40,54 @@
   .grid{display:grid;grid-template-columns:2fr 1.2fr;gap:18px} @media(max-width:900px){.grid{grid-template-columns:1fr}}
   .h{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:6px}
   .muted{color:var(--muted);font-size:.95rem}
-  .btn{appearance:none;border:1px solid var(--border);background:transparent;color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700;min-height:40px;transition:box-shadow .2s}
+  .btn{appearance:none;border:1px solid var(--border);background:transparent;color:var(--fg);padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700;min-height:40px;transition:box-shadow .2s, transform .1s}
   .btn.primary{background:var(--accent);color:#003136;border:none}
   .btn:hover{box-shadow:0 0 0 1px var(--border),0 0 16px rgba(0,253,216,.18)}
+  .btn:active{transform:translateY(1px)}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .row{display:grid;grid-template-columns:1fr 1fr;gap:10px} @media(max-width:640px){.row{grid-template-columns:1fr}}
   .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;margin:4px 6px 0 0}
   .list{display:flex;flex-wrap:wrap}
-  .typewrite{min-height:22px}
 
   /* Tooltips */
   .info{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--border);font-size:12px;color:var(--muted);margin-left:6px;cursor:help}
   .tooltip{position:absolute;z-index:20;max-width:280px;background:#00333a;border:1px solid var(--border);color:var(--fg);padding:8px 10px;border-radius:10px;box-shadow:var(--shadow);font-size:.92rem;opacity:0;transform:translateY(6px);transition:.15s}
   .tooltip.show{opacity:1;transform:none}
 
-  /* Animations */
-  @keyframes bump{0%{transform:scale(1)}30%{transform:scale(1.08)}60%{transform:scale(.98)}100%{transform:scale(1)}}
-  .bump{animation:bump .32s ease}
-  @media (prefers-reduced-motion: reduce){.glow-card::after{display:none}.bump{animation:none}}
+  /* Streak badge + ring */
+  .streak-wrap{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .streak-badge{position:relative;width:64px;height:64px;display:grid;place-items:center;border-radius:50%;background:rgba(0,0,0,.25);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+  .streak-badge::after{content:"";position:absolute;inset:-2px;border-radius:inherit;box-shadow:0 0 18px rgba(0,253,216,.35), 0 0 36px rgba(0,253,216,.18);opacity:.0;transition:opacity .6s}
+  .streak-badge:hover::after{opacity:1}
+  .ring{position:absolute;inset:0;transform:rotate(-90deg)}
+  .ring .track{fill:none;stroke:rgba(255,255,255,.12);stroke-width:4}
+  .ring .prog{fill:none;stroke:#00fdd8;stroke-width:4;filter:drop-shadow(0 0 6px rgba(0,253,216,.6));stroke-dasharray:125.66;stroke-dashoffset:125.66;transition:stroke-dashoffset .9s ease}
+  .flame{font-size:18px;transform:translateY(-2px);opacity:.9}
+  .streak-count{position:absolute;inset:0;display:grid;place-items:center;font-weight:700}
+  .streak-count span{font-size:16px}
+  .streak-count small{font-size:10px;opacity:.8;margin-left:2px}
+  @keyframes burst{0%{transform:scale(1);filter:drop-shadow(0 0 0 rgba(255,140,0,0))}40%{transform:scale(1.18);filter:drop-shadow(0 0 8px rgba(255,140,0,.9))}100%{transform:scale(1);filter:drop-shadow(0 0 0 rgba(255,140,0,0))}}
+  .streak-badge.burst .flame{animation:burst .35s ease}
+  @media (prefers-reduced-motion:reduce){.ring .prog{transition:none}.streak-badge.burst .flame{animation:none}}
 
-  /* Star particles canvas */
+  /* Typewriter + glowing underline for Today’s Action */
+  .typewrite{min-height:22px}
+  .glow-underline{position:relative}
+  .glow-underline::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);box-shadow:0 0 12px rgba(0,253,216,.6);opacity:0;transform:scaleX(.6);transition:.45s}
+  .glow-underline.show::after{opacity:1;transform:scaleX(1)}
+
+  /* Tasks: flash + float away */
+  .task-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid rgba(255,255,255,.06)}
+  .task-row.flash{box-shadow:0 0 0 1px var(--border), 0 0 22px rgba(0,253,216,.35) inset}
+  @keyframes floatOut{to{opacity:0;transform:translateY(-10px);height:0;margin:0;padding:0}}
+  .task-row.float{animation:floatOut .5s ease forwards}
+
+  /* Insights list */
+  #coach-insights{list-style:none;padding:0;margin:8px 0 0}
+  #coach-insights li{opacity:0;transform:translateY(6px);transition:.35s}
+  #coach-insights li.show{opacity:1;transform:none}
+
+  /* Stars canvases in cards */
   .stars{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.8}
   .card > *:not(canvas){position:relative;z-index:1}
 
@@ -64,6 +95,9 @@
 </style>
 </head>
 <body>
+  <!-- background stars -->
+  <canvas class="bg-stars" id="bgStars" aria-hidden="true"></canvas>
+
   <!-- NAV -->
   <nav class="navbar">
     <div class="nav-inner">
@@ -104,11 +138,23 @@
       <main>
         <!-- Essentials -->
         <section class="card glow-card" id="essentials">
-          <div class="h"><h3>Essentials</h3><span id="streak" class="muted">🔥 Streak: 0 days</span></div>
+          <div class="h">
+            <h3>Essentials</h3>
+            <div class="streak-wrap">
+              <div class="streak-badge glow-card" id="streakBadge" aria-live="polite">
+                <svg class="ring" viewBox="0 0 44 44" aria-hidden="true">
+                  <circle class="track" cx="22" cy="22" r="20"></circle>
+                  <circle class="prog"  cx="22" cy="22" r="20" stroke-linecap="round"></circle>
+                </svg>
+                <div class="flame" aria-hidden="true">🔥</div>
+                <div class="streak-count"><span id="streakCount">0</span><small>d</small></div>
+              </div>
+            </div>
+          </div>
           <div class="row">
             <div>
               <div class="pill"><strong>Name:</strong> <span id="c-name">–</span>
-                <span class="info" data-tip="Your profile name." aria-label="info" tabindex="0">i</span></div>
+                <span class="info" data-tip="Your profile name." tabindex="0">i</span></div>
               <div class="pill"><strong>Connection:</strong> <span id="c-ct">–</span>
                 <span class="info" data-tip="Selected: Friendship / Romantic / Both." tabindex="0">i</span></div>
               <div class="pill"><strong>Love language (Primary):</strong> <span id="c-ll">–</span>
@@ -129,7 +175,7 @@
         <section class="card glow-card" id="actionCard">
           <canvas class="stars" aria-hidden="true"></canvas>
           <div class="h"><h3>Today’s Action</h3></div>
-          <p id="coach-action" class="typewrite" aria-live="polite"></p>
+          <p id="coach-action" class="typewrite"><span id="actionGlow" class="glow-underline"></span></p>
           <p class="muted" style="margin-top:6px">Tip adapts to your love language, values, and hobbies.</p>
         </section>
 
@@ -157,7 +203,7 @@
 
     <nav class="h" style="margin-top:22px">
       <a class="btn" href="soul-chart.html">← Back: Soul Chart</a>
-      <a class="btn primary" href="my-soul.html">Next → My Soul</a>
+      <a class="btn primary" href="match.html">Next → Match</a>
     </nav>
 
     <footer>

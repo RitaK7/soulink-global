@@ -1,4 +1,4 @@
-// soul-coach.js — spec-complete finisher
+// soul-coach.js — magical polish edition
 (() => {
   const KEY = 'soulQuiz';
   const COACH = 'soulCoach';
@@ -11,26 +11,26 @@
   const getProfile = () => { try{ return JSON.parse(localStorage.getItem(KEY)||'{}'); }catch{ return {}; } };
   const setCoach = v => localStorage.setItem(COACH, JSON.stringify(v));
   const getCoach = () => { try{ return JSON.parse(localStorage.getItem(COACH)||'{}'); }catch{ return {}; } };
-  const toISODateLocal = (d=new Date())=>{
-    const t = new Date(d.getFullYear(), d.getMonth(), d.getDate()); // local midnight
-    return new Date(t.getTime()-t.getTimezoneOffset()*60000).toISOString().slice(0,10);
+  const todayISO = ()=>{
+    const d=new Date(); const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${dd}`;
   };
 
-  // ---------- numerology & zodiac (for Essentials if missing) ----------
+  // ---------- numerology & zodiac (fallbacks) ----------
   const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
   const sumDigits = s => String(s).replace(/\D/g,'').split('').reduce((a,b)=>a+ +b,0);
   const reduceNum = n => { while(![11,22,33].includes(n) && n>9) n = sumDigits(String(n)); return n; };
   const lifePathFrom = iso => (DATE_RE.test(iso||'') ? String(reduceNum(sumDigits(iso))) : '–');
   const westZodiacFrom = iso => {
-    if(!DATE_RE.test(iso||'')) return '–';
-    const [,m,d] = iso.split('-').map(Number);
-    const R=(fm,fd,tm,td)=> (m>fm||m===fm&&d>=fd)&&(m<tm||m===tm&&d<=td);
-    if(R(3,21,4,19))return 'Aries'; if(R(4,20,5,20))return 'Taurus'; if(R(5,21,6,20))return 'Gemini'; if(R(6,21,7,22))return 'Cancer';
-    if(R(7,23,8,22))return 'Leo'; if(R(8,23,9,22))return 'Virgo'; if(R(9,23,10,22))return 'Libra'; if(R(10,23,11,21))return 'Scorpio';
-    if(R(11,22,12,21))return 'Sagittarius'; if(m===12&&d>=22||m===1&&d<=19)return 'Capricorn'; if(R(1,20,2,18))return 'Aquarius'; return 'Pisces';
+    if(!DATE_RE.test(iso||''))return '–';
+    const [,m,d]=iso.split('-').map(Number);
+    const R=(fm,fd,tm,td)=>(m>fm||m===fm&&d>=fd)&&(m<tm||m===tm&&d<=td);
+    if(R(3,21,4,19))return'Aries'; if(R(4,20,5,20))return'Taurus'; if(R(5,21,6,20))return'Gemini'; if(R(6,21,7,22))return'Cancer';
+    if(R(7,23,8,22))return'Leo'; if(R(8,23,9,22))return'Virgo'; if(R(9,23,10,22))return'Libra'; if(R(10,23,11,21))return'Scorpio';
+    if(R(11,22,12,21))return'Sagittarius'; if(m===12&&d>=22||m===1&&d<=19)return'Capricorn'; if(R(1,20,2,18))return'Aquarius'; return'Pisces';
   };
 
-  // ---------- UI wiring ----------
+  // ---------- NAV ----------
   function wireNav(){
     const nav=$('.navbar');
     const onScroll=()=> nav?.classList[scrollY>6?'add':'remove']('scrolled');
@@ -45,17 +45,15 @@
 
   // ---------- tooltips ----------
   function wireTooltips(){
-    const root = document.body;
-    let balloon=null, anchor=null;
+    const root = document.body; let balloon=null, anchor=null;
     function show(a){
-      const tip = a.getAttribute('data-tip'); if(!tip) return;
+      const tip=a.getAttribute('data-tip'); if(!tip)return;
       if(!balloon){ balloon=document.createElement('div'); balloon.className='tooltip'; root.appendChild(balloon); }
-      balloon.textContent = tip; anchor=a;
-      const r = a.getBoundingClientRect();
-      balloon.style.left = (r.left + window.scrollX + 10) + 'px';
-      balloon.style.top  = (r.top + window.scrollY + 24) + 'px';
-      balloon.classList.add('show');
-      a.setAttribute('aria-describedby','tooltip');
+      balloon.textContent=tip; anchor=a;
+      const r=a.getBoundingClientRect();
+      balloon.style.left=(r.left+scrollX+10)+'px';
+      balloon.style.top=(r.top+scrollY+24)+'px';
+      balloon.classList.add('show'); a.setAttribute('aria-describedby','tooltip');
     }
     function hide(){ balloon?.classList.remove('show'); anchor?.removeAttribute('aria-describedby'); anchor=null; }
     $$('[data-tip]').forEach(a=>{
@@ -63,43 +61,49 @@
       a.addEventListener('focus', ()=>show(a));
       a.addEventListener('mouseleave', hide);
       a.addEventListener('blur', hide);
-      a.addEventListener('click', e=>{ e.preventDefault(); show(a); setTimeout(hide, 1300); });
+      a.addEventListener('click', e=>{ e.preventDefault(); show(a); setTimeout(hide, 1200); });
     });
   }
 
-  // ---------- typewriter ----------
-  function typeInto(el, text, dur=[800,1200]){
-    if(!el) return;
-    if(reduceMotion){ el.textContent=text; return; }
-    const ms = Math.floor(dur[0] + Math.random()*(dur[1]-dur[0]));
-    const steps = Math.max(16, Math.ceil(text.length/2));
-    const chunk = Math.ceil(text.length/steps);
-    let i=0; el.textContent='';
-    const id=setInterval(()=>{ i+=chunk; el.textContent = text.slice(0, Math.min(i,text.length)); if(i>=text.length) clearInterval(id); }, Math.max(12, Math.floor(ms/steps)));
-  }
-
-  // ---------- particles (Today’s Action + Insights) ----------
+  // ---------- particles (bg + cards) ----------
   function makeStars(canvas){
     if(!canvas || reduceMotion) return;
-    const DPR = devicePixelRatio||1, ctx = canvas.getContext('2d');
-    function resize(){ canvas.width = canvas.clientWidth*DPR; canvas.height = canvas.clientHeight*DPR; }
+    const DPR = devicePixelRatio||1, ctx=canvas.getContext('2d');
+    function resize(){ canvas.width=canvas.clientWidth*DPR; canvas.height=canvas.clientHeight*DPR; }
     resize(); addEventListener('resize', resize);
-    const N = canvas.clientWidth<560 ? 18 : 36;
-    const stars = Array.from({length:N}, ()=>({ x:Math.random()*canvas.width, y:Math.random()*canvas.height,
-      r:(Math.random()*1.2+0.6)*DPR, a:Math.random()*1 }));
+    const N = canvas.classList.contains('bg-stars') ? (innerWidth<560? 22: 44) : (canvas.clientWidth<560? 18: 36);
+    const stars = Array.from({length:N},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:(Math.random()*1.2+0.6)*DPR,a:Math.random()*1}));
     (function tick(){
       ctx.clearRect(0,0,canvas.width,canvas.height);
       for(const s of stars){
         s.a += 0.02 + Math.random()*0.015;
-        const f = (Math.sin(s.a)+1)/2;
-        ctx.beginPath(); ctx.fillStyle=`rgba(0,253,216,${0.12+0.32*f})`;
+        const f=(Math.sin(s.a)+1)/2;
+        ctx.beginPath(); ctx.fillStyle=`rgba(0,253,216,${0.1+0.3*f})`;
         ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
       }
       if(!reduceMotion) requestAnimationFrame(tick);
     })();
   }
 
-  // ---------- micro-copy library ----------
+  // ---------- typewriter ----------
+  function typeInto(el, text, dur=[800,1200], underlineEl=null){
+    if(!el) return;
+    if(reduceMotion){ el.textContent=text; if(underlineEl){ underlineEl.classList.add('show'); underlineEl.textContent=text; } return; }
+    const ms = Math.floor(dur[0] + Math.random()*(dur[1]-dur[0]));
+    const steps = Math.max(16, Math.ceil(text.length/2));
+    const chunk = Math.ceil(text.length/steps);
+    let i=0;
+    if(underlineEl){ underlineEl.classList.remove('show'); underlineEl.textContent=''; }
+    el.textContent='';
+    const id=setInterval(()=>{
+      i+=chunk; const out=text.slice(0, Math.min(i,text.length));
+      el.textContent = out;
+      if(underlineEl) underlineEl.textContent = out;
+      if(i>=text.length){ clearInterval(id); underlineEl && underlineEl.classList.add('show'); }
+    }, Math.max(12, Math.floor(ms/steps)));
+  }
+
+  // ---------- micro-copy ----------
   const LL_ACTION = {
     "Acts of Service": "Offer a tiny act of help to someone today.",
     "Quality Time": "Give someone your undivided 10 minutes—no phone, just presence.",
@@ -108,23 +112,27 @@
     "Words of Affirmation": "Send one sincere message of appreciation."
   };
   const HOBBY_HOOKS = [
-    {k:/meditat/i, add:"…then 10 mindful breaths."},
-    {k:/travel/i, add:"…and plan a micro-adventure for this week."},
-    {k:/read/i, add:"…and read 5 pages before bed."}
+    {k:/meditat/i, add:" Then gift yourself 10 calm breaths."},
+    {k:/travel/i,  add:" Plan a micro-adventure for this week."},
+    {k:/read/i,    add:" End the day with 5 pages of reading."}
   ];
   const INSIGHT_POOL = [
     "Your compassion is your quiet power. Today, let it soften how you speak to yourself.",
     "You refuel through simple rituals. Keep them small, keep them daily—consistency becomes glow.",
-    "When you act from honesty, the right people feel safe near you. That’s your magnet."
+    "When you act from honesty, the right people feel safe near you. That’s your magnet.",
+    "Your courage whispers, not shouts. Follow the whisper; it knows the way.",
+    "Balance Heart and Spirit, and the mind relaxes into clarity."
   ];
+  const ICONS = ["🌱","💫","🌍","🕊️","✨","🌞","🌙"];
 
-  // ---------- generators ----------
   function buildAction(p){
     const ll = Array.isArray(p.loveLanguages)? p.loveLanguages[0] : (p.loveLanguage||'');
-    let base = LL_ACTION[ll] || "Complete your profile to unlock daily actions ✨";
-    if(!ll && !p.values && !p.hobbies) return base;
+    let base = LL_ACTION[ll] || "Take a mindful pause and breathe slowly.";
     const h = (Array.isArray(p.hobbies)? p.hobbies : []).join(' ').toLowerCase();
-    for(const hook of HOBBY_HOOKS){ if(hook.k.test(h)){ base = base.replace(/\.*$/, '') + " " + hook.add; break; } }
+    for(const hook of HOBBY_HOOKS){ if(hook.k.test(h)){ base = base.replace(/\.*$/,'') + hook.add; break; } }
+    const v = (Array.isArray(p.values)? p.values : []).map(s=>s.toLowerCase());
+    if(v.includes('compassion')) base += " Let compassion guide your tone.";
+    if(v.includes('honesty')) base += " Speak gently—and honestly.";
     return base;
   }
 
@@ -140,28 +148,48 @@
     return [one, two, three].filter(Boolean).join(' ') + ' ' + pick;
   }
 
-  // ---------- streak ----------
-  function renderStreak(){
-    const s=getCoach().streak||{count:0,lastDoneDate:null};
-    $('#streak').textContent = `🔥 Streak: ${s.count||0} day${(s.count||0)==1?'':'s'}`;
-  }
-  function markDone(){
-    const today = toISODateLocal();
-    const st = getCoach().streak || {count:0,lastDoneDate:null};
-    if(st.lastDoneDate === today){ toast('Already checked ✓'); return; }
-    if(st.lastDoneDate){
-      const prev = new Date(st.lastDoneDate); const now = new Date(today);
-      const diff = Math.round((now - prev)/86400000); // local midnights
-      if(diff === 1) st.count = (st.count||0)+1;
-      else st.count = 1, toast('Start fresh 🌱');
-    } else st.count = 1;
-    st.lastDoneDate = today;
-    const cur = getCoach(); setCoach({...cur, streak:st});
-    const el = $('#streak'); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); // bounce
-    renderStreak();
+  // ---------- Essentials fill ----------
+  function fillEssentials(p){
+    const set=(id,val)=>{ const el=$(id.startsWith('#')?id:'#'+id); if(el) el.textContent = val ?? '–'; };
+    set('c-name', p.name||'–');
+    set('c-ct', p.connectionType||'–');
+    set('c-ll', Array.isArray(p.loveLanguages)? p.loveLanguages[0] : (p.loveLanguage||'–'));
+    set('c-bd', p.birthday||'–');
+    set('c-west', p.zodiac||p.westernZodiac||westZodiacFrom(p.birthday));
+    set('c-life', p.lifePath||lifePathFrom(p.birthday));
   }
 
-  // ---------- tasks ----------
+  // ---------- Streak with ring ----------
+  const CIRC = 2*Math.PI*20; // r=20 => 125.66
+  function ensureCoach(){
+    const c=getCoach();
+    if(!c.streak) c.streak={count:0,lastDoneDate:null};
+    setCoach(c); return c;
+  }
+  function updateStreakUI(){
+    const {streak}=ensureCoach();
+    $('#streakCount').textContent = streak.count||0;
+    const frac = Math.max(0, Math.min(1, (streak.count % 7)/7));
+    $('.ring .prog').style.strokeDasharray = CIRC;
+    $('.ring .prog').style.strokeDashoffset = CIRC * (1 - frac);
+    $('#btnDoneToday').disabled = (streak.lastDoneDate === todayISO());
+    $('#btnDoneToday').textContent = $('#btnDoneToday').disabled ? 'Already logged today' : 'Mark done today';
+  }
+  function markDone(){
+    const today=todayISO();
+    const s=ensureCoach().streak;
+    if(s.lastDoneDate===today) return;
+    const y=new Date(); y.setDate(y.getDate()-1);
+    const yISO=`${y.getFullYear()}-${String(y.getMonth()+1).padStart(2,'0')}-${String(y.getDate()).padStart(2,'0')}`;
+    if(s.lastDoneDate && s.lastDoneDate!==today && s.lastDoneDate!==yISO) s.count=0;
+    s.count=(s.count||0)+1; s.lastDoneDate=today;
+    setCoach({...getCoach(), streak:s});
+    const badge=$('#streakBadge'); badge.classList.remove('burst'); void badge.offsetWidth; badge.classList.add('burst');
+    updateStreakUI();
+    toast('Logged today 🔥');
+  }
+
+  // ---------- Tasks ----------
   function ensureTasks(profile){
     const state = getCoach();
     if(!Array.isArray(state.tasks) || !state.tasks.length){
@@ -170,47 +198,39 @@
       if(ll) seed.push(`Practice your love language: ${ll}`);
       if(profile.connectionType) seed.push(`Nurture a ${String(profile.connectionType).toLowerCase()} connection`);
       seed.push("Reflect for 5 minutes: what felt good today?");
-      // extra suggestions (aim 3–6)
-      const vals = (profile.values||[]).slice(0,3);
-      vals.forEach(v=> seed.push(`Small act aligned with ${v}`));
+      const vals=(profile.values||[]).slice(0,3); vals.forEach(v=> seed.push(`Small act aligned with ${v}`));
       const out = seed.slice(0,6).map((t,i)=>({id:String(Date.now()+i), text:t, done:false, createdAt:Date.now()}));
       setCoach({...state, tasks: out});
     }
   }
   function saveTasks(arr){ const s=getCoach(); setCoach({...s, tasks:[...arr]}); }
   function renderTasks(){
-    const box = $('#tasks'); box.innerHTML='';
-    const list = getCoach().tasks||[];
+    const box=$('#tasks'); box.innerHTML='';
+    const list=getCoach().tasks||[];
     list.forEach(t=>{
       const row=document.createElement('div');
-      row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.05)';
+      row.className='task-row';
       row.innerHTML=`<input type="checkbox" ${t.done?'checked':''} data-id="${t.id}" />
         <span style="flex:1">${t.text}</span>
         <button class="btn" data-del="${t.id}">Remove</button>`;
       box.appendChild(row);
-    });
-    // toggle
-    box.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+
+      // toggle done -> flash + float away
+      const cb=row.querySelector('input[type="checkbox"]');
       cb.addEventListener('change', ()=>{
-        const id=cb.getAttribute('data-id'); const arr=getCoach().tasks||[]; const it=arr.find(x=>x.id===id);
-        if(it){ it.done=cb.checked; saveTasks(arr); if(cb.checked) starBurst(cb); }
+        const arr=getCoach().tasks||[]; const it=arr.find(x=>x.id===t.id);
+        if(it){ it.done=cb.checked; saveTasks(arr); }
+        if(cb.checked){
+          if(!reduceMotion){ row.classList.add('flash'); setTimeout(()=>{ row.classList.add('float'); }, 160); }
+          setTimeout(()=>{ row.remove(); }, reduceMotion?0:520);
+        }
+      });
+      // delete
+      row.querySelector('[data-del]').addEventListener('click', ()=>{
+        const arr=getCoach().tasks||[]; const i=arr.findIndex(x=>x.id===t.id);
+        if(i>-1){ arr.splice(i,1); saveTasks(arr); row.remove(); }
       });
     });
-    // delete
-    box.querySelectorAll('[data-del]').forEach(b=>{
-      b.addEventListener('click', ()=>{
-        const id=b.getAttribute('data-del'); const arr=getCoach().tasks||[]; const i=arr.findIndex(x=>x.id===id);
-        if(i>-1){ arr.splice(i,1); saveTasks(arr); renderTasks(); }
-      });
-    });
-  }
-  function starBurst(anchor){
-    if(reduceMotion) return;
-    const s=document.createElement('span');
-    s.textContent='⭐'; s.style.cssText='position:absolute;transform:translate(-50%,-50%);pointer-events:none';
-    const r=anchor.getBoundingClientRect(); s.style.left=(r.left+window.scrollX+6)+'px'; s.style.top=(r.top+window.scrollY-6)+'px';
-    document.body.appendChild(s);
-    s.animate([{opacity:1, transform:'translate(-50%,-50%) scale(1)'},{opacity:0, transform:'translate(-50%,-90%) scale(.7)'}],{duration:450,easing:'ease-out'}).onfinish=()=>s.remove();
   }
   function bindAddTask(){
     $('#add-task')?.addEventListener('submit', e=>{
@@ -224,38 +244,85 @@
     });
   }
 
-  // ---------- export canvas ----------
+  // ---------- Action + Insights ----------
+  function renderActionAndInsight(p, forceNew=false){
+    const act = buildAction(p);
+    typeInto($('#coach-action'), act, [800,1200], $('#actionGlow'));
+
+    // insights list with icons + fade
+    const ul = $('#coach-insights'); ul.innerHTML='';
+    const picks = [...INSIGHT_POOL].sort(()=>Math.random()-0.5).slice(0,3);
+    picks.forEach((txt,i)=>{
+      const li=document.createElement('li'); li.innerHTML=`<span>${ICONS[i%ICONS.length]}</span> ${txt}`;
+      ul.appendChild(li); setTimeout(()=> li.classList.add('show'), 60+ i*90);
+    });
+
+    // main insight paragraph (daily unless force)
+    const st=getCoach(); const last=st.lastInsightAt? new Date(st.lastInsightAt):null; const now=new Date();
+    const shouldNew=forceNew || !last || (now-last)>=24*3600*1000;
+    const insight = shouldNew ? buildInsights(p) : ($('#insightText')?.textContent || buildInsights(p));
+    typeInto($('#insightText'), insight, [1400,1800]);
+    if(shouldNew) setCoach({...st, lastInsightAt:new Date().toISOString()});
+  }
+
+  // ---------- Export PNG (glowing design) ----------
   function exportPNG(){
     const p=getProfile(); const s=getCoach();
-    const action=($('#coach-action')?.textContent||'').trim();
-    const tasks=(s.tasks||[]).slice(0,7).map(t=> (t.done?'[✓] ':'[ ] ')+t.text);
-    const W=1200,H=900, pad=44, DPR=Math.max(2,Math.floor(devicePixelRatio||2));
+    const action=($('#coach-action')?.textContent||'').trim() || '—';
+    const tasks=(s.tasks||[]).filter(t=>!t.done).slice(0,3).map(t=> t.text);
+    const name=p.name||'My';
+    const W=1400,H=900, pad=52, DPR=Math.max(2,Math.floor(devicePixelRatio||2));
     const cvs=document.createElement('canvas'); cvs.width=W*DPR; cvs.height=H*DPR;
     const ctx=cvs.getContext('2d'); ctx.scale(DPR,DPR);
-    ctx.fillStyle='#083b3c'; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#00fdd8'; ctx.font='700 38px system-ui'; ctx.fillText('Soulink · Coach Plan', pad, 70);
-    ctx.font='700 20px system-ui'; ctx.fillText('Essentials', pad, 120);
-    ctx.font='16px system-ui'; ctx.fillStyle='#eaf8f6';
+
+    // bg gradient
+    const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#022e33'); g.addColorStop(1,'#053c42'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+    // subtle stars
+    for(let i=0;i<80;i++){
+      const x=Math.random()*W, y=Math.random()*H, r=Math.random()*1.3+0.4, a=0.12+Math.random()*0.25;
+      ctx.beginPath(); ctx.fillStyle=`rgba(0,253,216,${a})`; ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    }
+
+    // header logo + glow line
+    ctx.fillStyle='#00fdd8'; ctx.font='800 40px system-ui'; ctx.fillText('Soulink', pad, 70);
+    ctx.font='600 22px system-ui'; ctx.fillText('Coach Plan', pad+190, 70);
+    ctx.strokeStyle='rgba(0,253,216,.5)'; ctx.lineWidth=2; ctx.shadowColor='rgba(0,253,216,.6)'; ctx.shadowBlur=12;
+    ctx.beginPath(); ctx.moveTo(pad, 88); ctx.lineTo(W-pad, 88); ctx.stroke(); ctx.shadowBlur=0;
+
+    // essentials
+    ctx.fillStyle='#00fdd8'; ctx.font='700 20px system-ui'; ctx.fillText('Essentials', pad, 130);
+    ctx.fillStyle='#eaf8f6'; ctx.font='16px system-ui';
     const wes=p.zodiac||p.westernZodiac||westZodiacFrom(p.birthday);
     const lp=p.lifePath||lifePathFrom(p.birthday);
     const ll=Array.isArray(p.loveLanguages)?p.loveLanguages[0]:(p.loveLanguage||'-');
-    const lines=[
+    const rows=[
       `Name: ${p.name||'-'}`, `Connection: ${p.connectionType||'-'}`, `Love Language: ${ll}`,
       `Birth Date: ${p.birthday||'-'}`, `Western Zodiac: ${wes||'-'}`, `Life Path: ${lp||'-'}`
     ];
-    let y=146; lines.forEach(t=>{ ctx.fillText(t,pad,y); y+=24; });
-    // Action
-    ctx.fillStyle='#00fdd8'; ctx.font='700 20px system-ui'; ctx.fillText("Today's Action", 620, 120);
-    ctx.fillStyle='#eaf8f6'; ctx.font='18px system-ui'; y = wrap(ctx, action||'—', 620, 146, 540, 26);
-    // Tasks
-    ctx.fillStyle='#00fdd8'; ctx.font='700 20px system-ui'; ctx.fillText('Tasks', 620, y+28);
+    let y=156; rows.forEach(t=>{ ctx.fillText(t,pad,y); y+=24; });
+
+    // action box with glow
+    const boxX=pad, boxY= y+18, boxW= W - pad*2, boxH=150;
+    ctx.strokeStyle='rgba(0,253,216,.55)'; ctx.fillStyle='rgba(0,253,216,.09)';
+    roundRect(ctx, boxX, boxY, boxW, boxH, 16, true, true);
+    ctx.fillStyle='#00fdd8'; ctx.font='700 20px system-ui'; ctx.fillText("Today's Action", boxX+16, boxY+32);
+    ctx.fillStyle='#eaf8f6'; ctx.font='18px system-ui'; wrap(ctx, action, boxX+16, boxY+60, boxW-32, 26);
+
+    // tasks
+    let tx=pad, ty= boxY+boxH+36;
+    ctx.fillStyle='#00fdd8'; ctx.font='700 20px system-ui'; ctx.fillText('Top Tasks', tx, ty); ty+=10;
     ctx.fillStyle='#eaf8f6'; ctx.font='18px system-ui';
-    let yy = y+56; tasks.forEach(t=> yy = wrap(ctx, '• '+t, 620, yy, 540, 26));
-    // Footer
-    ctx.fillStyle='#bde5df'; ctx.font='16px system-ui';
-    const sc=s.streak?.count||0; ctx.fillText(`Streak: ${sc}  ·  ${new Date().toLocaleDateString()}`, pad, H-30);
+    tasks.forEach((t,i)=>{ ty+=28; drawCheckbox(ctx, tx, ty-16); wrap(ctx, t, tx+28, ty, 600, 26); });
+
+    // AI insight footer
+    const insight = ($('#insightText')?.textContent||'').trim() || "Your week's energy: Balance between Heart and Spirit.";
+    ctx.fillStyle='#bde5df'; ctx.font='18px system-ui';
+    wrap(ctx, insight, pad, H-80, W-pad*2, 26);
+
+    // save
     const a=document.createElement('a'); a.href=cvs.toDataURL('image/png',1.0);
-    const n=(p.name||'my'); a.download=`coach-plan-${n.replace(/\s+/g,'-').toLowerCase()}.png`; a.click();
+    a.download=`coach-plan-${String(name).replace(/\s+/g,'-').toLowerCase()}.png`; a.click();
 
     function wrap(ctx,text,x,y,maxW,lh){
       const words=(text||'').split(' '); let line='', yy=y;
@@ -266,34 +333,14 @@
       }
       ctx.fillText(line,x,yy); return yy+lh;
     }
+    function roundRect(ctx,x,y,w,h,r,fill,stroke){
+      ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+      ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); if(fill) ctx.fill(); if(stroke) ctx.stroke();
+    }
+    function drawCheckbox(ctx,x,y){ ctx.strokeStyle='#00fdd8'; ctx.lineWidth=2; ctx.strokeRect(x,y,18,18); }
   }
 
-  // ---------- page render ----------
-  function fillEssentials(p){
-    const set=(id,val)=>{ const el=$(id.startsWith('#')?id:'#'+id); if(el) el.textContent = val ?? '–'; };
-    set('c-name', p.name||'–');
-    set('c-ct', p.connectionType||'–');
-    set('c-ll', Array.isArray(p.loveLanguages)? p.loveLanguages[0] : (p.loveLanguage||'–'));
-    set('c-bd', p.birthday||'–');
-    set('c-west', p.zodiac||p.westernZodiac||westZodiacFrom(p.birthday));
-    set('c-life', p.lifePath||lifePathFrom(p.birthday));
-  }
-
-  function renderActionAndInsight(p, forceNew=false){
-    // action
-    const act = buildAction(p);
-    typeInto($('#coach-action'), act, [800,1200]);
-
-    // insight — daily, unless force
-    const st=getCoach();
-    const last = st.lastInsightAt ? new Date(st.lastInsightAt) : null;
-    const now = new Date();
-    const shouldNew = forceNew || !last || (now - last) >= 24*3600*1000;
-    const insight = shouldNew ? buildInsights(p) : ($('#insightText')?.textContent || buildInsights(p));
-    typeInto($('#insightText'), insight, [1400,1800]);
-    if(shouldNew) setCoach({...st, lastInsightAt: new Date().toISOString()});
-  }
-
+  // ---------- helpers ----------
   function toast(msg){
     let n=$('#toast'); if(!n){ n=document.createElement('div'); n.id='toast';
       n.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);padding:10px 14px;border-radius:10px;background:#0a3;box-shadow:0 8px 30px rgba(0,0,0,.25);color:#fff;z-index:9999;opacity:0;transition:.2s'; document.body.appendChild(n); }
@@ -301,25 +348,20 @@
     const ann=$('#ann'); if(ann) ann.textContent=msg;
   }
 
+  // ---------- page init ----------
   document.addEventListener('DOMContentLoaded', ()=>{
-    wireNav();
-    wireTooltips();
+    wireNav(); wireTooltips();
+    // stars
+    makeStars($('#bgStars')); makeStars($('#actionCard .stars')); makeStars($('#insightsCard .stars'));
 
-    // particles
-    makeStars($('#actionCard .stars'));
-    makeStars($('#insightsCard .stars'));
+    const p=getProfile(); fillEssentials(p);
 
-    const p=getProfile();
-    fillEssentials(p);
-
-    // streak init
-    renderStreak();
-    $('#btnDoneToday')?.addEventListener('click', ()=>{ markDone(); });
+    // streak
+    updateStreakUI();
+    $('#btnDoneToday')?.addEventListener('click', markDone);
 
     // tasks
-    ensureTasks(p);
-    renderTasks();
-    bindAddTask();
+    ensureTasks(p); renderTasks(); bindAddTask();
 
     // action + insight
     renderActionAndInsight(p, true);
