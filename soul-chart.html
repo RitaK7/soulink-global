@@ -77,6 +77,38 @@
   footer{margin:36px 0 16px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:.95rem;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 
   @media (max-width:760px){ .actions{justify-content:flex-start} }
+
+  /* Chart sizing */
+.chart-card canvas,
+.chart-canvas {
+  width: 100% !important;
+  height: clamp(260px, 48vh, 520px) !important; /* nedideli, bet erdvūs */
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .chart-card canvas,
+  .chart-canvas {
+    height: clamp(220px, 42vh, 420px) !important;
+  }
+}
+
+/* Pager at the bottom */
+.pager {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin:24px 0 8px;
+}
+.pager .btn {
+  appearance:none;border:1px solid var(--border);
+  background:transparent;color:var(--fg);
+  padding:10px 14px;border-radius:12px;min-height:44px;font-weight:700;
+}
+.pager .btn.primary {
+  background:var(--accent); color:#003136; border-color:transparent;
+}
 </style>
 </head>
 <body>
@@ -169,6 +201,11 @@
       <button class="btn ghost" id="refreshBtn">Refresh</button>
       <button class="btn primary" id="exportBtn">Export PNG</button>
     </div>
+
+    <nav class="pager">
+     <a class="btn" href="my-soul.html">← Back: My Soul</a>
+     <a class="btn primary" href="soul-coach.html">Next → Soul Coach</a>
+    </nav>
 
     <footer>
       <span>© 2025 Soulink.global | Created with love by Soulink Team</span>
@@ -303,6 +340,7 @@
         },
         options:{
           responsive:true,
+          maintainAspectRatio: false,
           animation: reduce ? false : {duration:1400, easing:'easeOutQuad'},
           scales:{ r:{
             angleLines:{ color:'rgba(255,255,255,.15)' },
@@ -347,6 +385,7 @@
         },
         options:{
           responsive:true,
+          maintainAspectRatio: false,
           cutout:'55%',
           animation: reduce ? false : {duration:1400,easing:'easeOutQuad'},
           plugins:{
@@ -389,6 +428,7 @@
         },
         options:{
           responsive:true,
+          maintainAspectRatio: false,
           animation: reduce ? false : {duration:1400, easing:'easeOutQuad'},
           scales:{ r:{
             angleLines:{ color:'rgba(255,255,255,.15)' },
