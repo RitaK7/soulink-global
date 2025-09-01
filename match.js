@@ -1,5 +1,4 @@
 (() => {
-
 // ------------ helpers ------------
 const $  = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -15,13 +14,22 @@ function normList(v){
 }
 const digits = s => (s||'').toString().replace(/\D+/g,'');
 function escapeHTML(str=''){
-  return String(str).replace(/[&<>"']/g, ch => ({
-    '&':'&amp;',
-    '<':'&lt;',
-    '>':'&gt;',
-    '"':'&quot;',
-    "'":'&#39;'
-  })[ch]);
+  return String(str).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+// Emoji maps
+function hobbyIco(lbl=''){ const s=lbl.toLowerCase();
+  if(s.includes('music'))return'🎵'; if(s.includes('read'))return'📚'; if(s.includes('medit'))return'🧘';
+  if(s.includes('travel'))return'✈️'; if(s.includes('cook'))return'🍳'; if(s.includes('bake'))return'🧁';
+  if(s.includes('art'))return'🎨'; if(s.includes('photo'))return'📷'; if(s.includes('gym'))return'🏋️';
+  if(s.includes('run'))return'🏃'; if(s.includes('hike'))return'🥾'; if(s.includes('garden'))return'🌿';
+  if(s.includes('movie'))return'🎬'; if(s.includes('game'))return'🎮'; return '✨';
+}
+function valueIco(lbl=''){ const s=lbl.toLowerCase();
+  if(s.includes('honest'))return'💎'; if(s.includes('kind'))return'❤️'; if(s.includes('growth'))return'🌱';
+  if(s.includes('freedom'))return'🌞'; if(s.includes('family'))return'👨‍👩‍👧'; if(s.includes('humor'))return'😂';
+  if(s.includes('respect'))return'🤝'; if(s.includes('spirit'))return'🕊️'; if(s.includes('curios'))return'🔭';
+  return '✨';
 }
 
 // Avatar
@@ -37,7 +45,6 @@ function avatarFor(name, photo){
      </svg>`;
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
-
 
 // Social icons html
 function socialIconsHTML(f){
@@ -61,7 +68,7 @@ function socialIconsHTML(f){
   return `<div class="social-icons">${items.join('')}</div>`;
 }
 
-// Jaccard similarity
+// Similarity
 function jaccard(a,b){
   const A = new Set(normList(a)), B = new Set(normList(b));
   if (A.size === 0 && B.size === 0) return 0;
@@ -76,7 +83,7 @@ function me(){
   return {
     name: m.name || '',
     ct: m.connectionType || '',
-    ll: m.loveLanguage || '',
+    ll: m.loveLanguage || m.loveLanguages?.[0] || '',
     hobbies: m.hobbies || [],
     values: m.values || [],
   };
@@ -92,12 +99,11 @@ function llMatch(a, b){
   return a.trim().toLowerCase() === b.trim().toLowerCase() ? 1 : 0;
 }
 function ctMatch(desired, candidate){
-  if (!desired || desired === 'Any') return 1;               // no filter
+  if (!desired || desired === 'Any') return 1;
   if (!candidate) return 0;
   if (candidate === 'Both') return 1;
   return desired.toLowerCase() === candidate.toLowerCase() ? 1 : 0;
 }
-
 /*
  Final score (0..100):
    25 * LL_match * weightLL
@@ -111,13 +117,28 @@ function score(me, f, weightLL=1){
   const sH  = 30 * jaccard(me.hobbies, f.hobbies);
   const sV  = 30 * jaccard(me.values,  f.values);
   let total = sLL + sCT + sH + sV;
-
-  // If candidate is missing most data, soften extreme highs
-  const infoPieces =
-    (f.ll?1:0) + (normList(f.hobbies).length?1:0) + (normList(f.values).length?1:0);
+  const infoPieces = (f.ll?1:0) + (normList(f.hobbies).length?1:0) + (normList(f.values).length?1:0);
   if (infoPieces <= 1) total *= 0.8;
-
   return Math.max(0, Math.min(100, Math.round(total)));
+}
+
+// ------------ UI helpers ------------
+function ringSVG(pct=0){
+  const CIRC = 2*Math.PI*32; // r=32, svg viewBox 0..76
+  const off  = CIRC * (1 - Math.max(0, Math.min(1, pct/100)));
+  return `
+  <div class="score-ring" title="Compatibility">
+    <svg viewBox="0 0 76 76" aria-hidden="true">
+      <circle class="ring-track" cx="38" cy="38" r="32"></circle>
+      <circle class="ring-prog"  cx="38" cy="38" r="32" stroke-dasharray="${CIRC}" stroke-dashoffset="${off}"></circle>
+    </svg>
+    <div class="score-num">${pct}<small>%</small></div>
+  </div>`;
+}
+function listChips(title, list, iconFn){
+  if(!list || !list.length) return '';
+  const chips = list.slice(0,8).map(v=>`<span class="chip"><span class="ico">${iconFn(v)}</span><span>${escapeHTML(v)}</span></span>`).join('');
+  return `<div style="margin-top:.3rem"><b>${title}:</b> ${chips}</div>`;
 }
 
 // ------------ rendering ------------
@@ -125,7 +146,6 @@ const resultsEl = $('#results'), emptyEl = $('#empty');
 
 function render(){
   const m = me();
-  $('#me-name')?.replaceChildren(document.createTextNode(m.name || '–'));
   $('#me-ct')?.replaceChildren(document.createTextNode(m.ct || '–'));
   $('#me-ll')?.replaceChildren(document.createTextNode(m.ll || '–'));
   $('#me-hobbies')?.replaceChildren(document.createTextNode(normList(m.hobbies).join(', ') || '–'));
@@ -143,101 +163,83 @@ function render(){
   const minScore = parseInt($('#f-min')?.value || '0', 10) || 0;
   const weightLL = parseFloat($('#f-llw')?.value || '1') || 1;
 
-  let rows = list.map(f => {
-    const s = score(m, f, weightLL);
-    return {f, s};
-  });
+  let rows = list.map(f => ({ f, s: score(m, f, weightLL) }));
 
-  // filter by search
   if (q){
-    const passes = ({f}) => {
+    rows = rows.filter(({f}) => {
       const hay = [
         f.name, f.ct, f.ll, f.contact, f.notes, f.whatsapp, f.instagram, f.facebook, f.email,
         ...(Array.isArray(f.hobbies)?f.hobbies:[String(f.hobbies||'')]),
         ...(Array.isArray(f.values)?f.values:[String(f.values||'')]),
       ].join(' ').toLowerCase();
       return hay.includes(q);
-    };
-    rows = rows.filter(passes);
+    });
   }
 
-  // filter by ct + min score
   rows = rows.filter(({f,s}) => ctMatch(desiredCT||'Any', f.ct) && s >= minScore);
 
-  // sort desc by score, then name
   rows.sort((a,b) => b.s - a.s || String(a.f.name||'').localeCompare(String(b.f.name||'')));
 
   resultsEl.innerHTML = '';
-  if (!rows.length){
-    emptyEl.style.display = 'block';
-    return;
-  }
+  if (!rows.length){ emptyEl.style.display = 'block'; return; }
   emptyEl.style.display = 'none';
 
-    rows.forEach(({f, s}) => {
-    const card = document.createElement('div');
-    card.className = 'match-card';
-
+  rows.forEach(({f, s}) => {
+    const hobbies = normList(f.hobbies);
+    const values  = normList(f.values);
     const cls = s >= 75 ? 'good' : s >= 55 ? 'ok' : 'low';
-    const hobbies = normList(f.hobbies).join(', ');
-    const values  = normList(f.values).join(', ');
 
+    const card = document.createElement('div');
+    card.className = 'match-card glow-card';
     card.innerHTML = `
       <div class="head">
         <div class="meta">
           <img class="avatar" src="${avatarFor(f.name, f.photo)}" alt="">
           <div style="min-width:0;">
             <div class="name">${escapeHTML(f.name||'—')}</div>
-            <div class="hint" style="font-size:.9rem;">
-              ${escapeHTML(f.ct || '—')} · ${escapeHTML(f.ll || '—')}
-            </div>
+            <div class="hint">${escapeHTML(f.ct || '—')} · ${escapeHTML(f.ll || '—')}</div>
           </div>
         </div>
-        <span class="score ${cls}" title="Compatibility">${s}%</span>
+        ${ringSVG(s)}
       </div>
-      
 
       ${socialIconsHTML(f)}
 
+      ${listChips('Hobbies', hobbies, hobbyIco)}
+      ${listChips('Values', values, valueIco)}
 
-      <div style="margin-top:.2rem;">
-        ${hobbies ? `<div><b>Hobbies:</b> ${escapeHTML(hobbies)}</div>` : ''}
-        ${values  ? `<div><b>Values:</b> ${escapeHTML(values)}</div>`   : ''}
-        ${f.contact ? `<div><b>Contact:</b> ${escapeHTML(f.contact)}</div>` : ''}
-        ${f.notes ? `<div><i>${escapeHTML(f.notes)}</i></div>` : ''}
-      </div>
+      ${f.contact ? `<div style="margin-top:.4rem"><b>Contact:</b> ${escapeHTML(f.contact)}</div>` : ''}
+      ${f.notes ? `<div style="margin-top:.2rem"><i>${escapeHTML(f.notes)}</i></div>` : ''}
 
-      <div class="row" style="margin-top:.6rem;">
+      <div class="row" style="margin-top:.6rem">
         <a class="btn" href="friends.html">Edit in Friends</a>
         ${messageLinkHTML(f)}
         ${compareLinkHTML(f)}
       </div>
     `;
+
+    // classify score color on number
+    const num = card.querySelector('.score-num');
+    num.classList.add(cls);
+
     resultsEl.appendChild(card);
   });
-} // ← uždarom render()
+}
 
 // ====== helper buttons ======
 function messageLinkHTML(f){
-  // WhatsApp → Instagram → Facebook → Email → contact (best effort)
-  if (f.whatsapp && digits(f.whatsapp)) {
+  if (f.whatsapp && digits(f.whatsapp))
     return `<a class="btn" href="https://wa.me/${digits(f.whatsapp)}" target="_blank" rel="noopener">Message</a>`;
-  }
-  if (f.instagram) {
-    const u = /^https?:\/\//i.test(f.instagram)
-      ? f.instagram
-      : `https://instagram.com/${f.instagram.replace(/^@/, '')}`;
+  if (f.instagram){
+    const u = /^https?:\/\//i.test(f.instagram) ? f.instagram : `https://instagram.com/${f.instagram.replace(/^@/,'')}`;
     return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
   }
-  if (f.facebook) {
-    const u = /^https?:\/\//i.test(f.facebook)
-      ? f.facebook
-      : `https://facebook.com/${f.facebook.replace(/^@/, '')}`;
+  if (f.facebook){
+    const u = /^https?:\/\//i.test(f.facebook) ? f.facebook : `https://facebook.com/${f.facebook.replace(/^@/,'')}`;
     return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
   }
-  if (f.email && /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(f.email)) {
+  if (f.email && /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(f.email))
     return `<a class="btn" href="mailto:${f.email}">Message</a>`;
-  }
   if (f.contact){
     const v = String(f.contact).trim();
     if (/^https?:\/\//i.test(v)) return `<a class="btn" href="${v}" target="_blank" rel="noopener">Message</a>`;
@@ -247,10 +249,8 @@ function messageLinkHTML(f){
   }
   return '';
 }
-
 function compareLinkHTML(f){
-  const name = (f.name || '').trim();
-  if (!name) return '';
+  const name=(f.name||'').trim(); if(!name) return '';
   return `<a class="btn" href="compare.html?a=me&b=${encodeURIComponent(name)}">Compare →</a>`;
 }
 
@@ -269,4 +269,4 @@ $('#btn-reset')?.addEventListener('click', ()=>{
 // ====== init ======
 render();
 
-})();
+})(); 
