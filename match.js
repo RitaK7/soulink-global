@@ -1,12 +1,27 @@
 (() => {
-// ------------ helpers ------------
-const $  = s => document.querySelector(s);
-const $$ = s => Array.from(document.querySelectorAll(s));
+/* =========================
+   Soulink · Match Lab
+   ========================= */
+const $ = s => document.querySelector(s);
 const READ = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
 
-const LS_FRIENDS = 'soulFriends';
-const LS_ME = 'soulQuiz';
+/* --------- snapshot (me) ---------- */
+function me(){
+  const m = READ('soulQuiz') || {};
+  return {
+    name: m.name || '',
+    ct: m.connectionType || '',
+    ll: m.loveLanguage || (Array.isArray(m.loveLanguages) ? m.loveLanguages[0] : ''),
+    hobbies: m.hobbies || [],
+    values:  m.values  || [],
+  };
+}
+function friends(){
+  const list = READ('soulFriends');
+  return Array.isArray(list) ? list : [];
+}
 
+/* --------- utils ---------- */
 function normList(v){
   if (!v) return [];
   if (Array.isArray(v)) return v.map(x=>String(x).trim().toLowerCase()).filter(Boolean);
@@ -16,8 +31,6 @@ const digits = s => (s||'').toString().replace(/\D+/g,'');
 function escapeHTML(str=''){
   return String(str).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
-
-// Emoji maps
 function hobbyIco(lbl=''){ const s=lbl.toLowerCase();
   if(s.includes('music'))return'🎵'; if(s.includes('read'))return'📚'; if(s.includes('medit'))return'🧘';
   if(s.includes('travel'))return'✈️'; if(s.includes('cook'))return'🍳'; if(s.includes('bake'))return'🧁';
@@ -31,44 +44,17 @@ function valueIco(lbl=''){ const s=lbl.toLowerCase();
   if(s.includes('respect'))return'🤝'; if(s.includes('spirit'))return'🕊️'; if(s.includes('curios'))return'🔭';
   return '✨';
 }
-
-// Avatar
 function avatarFor(name, photo){
-  const url = (photo||'').trim();
-  if (/^https?:\/\//i.test(url) || url.startsWith('data:image')) return url;
-  const ch = (name||'?').trim().charAt(0).toUpperCase() || 'S';
-  const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
-       <rect width="100%" height="100%" fill="#064a4a"/>
-       <text x="50%" y="58%" font-size="42" font-family="system-ui"
-             text-anchor="middle" fill="#00fdd8">${ch}</text>
-     </svg>`;
-  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  const url=(photo||'').trim();
+  if(/^https?:\/\//i.test(url)||url.startsWith('data:image')) return url;
+  const ch=(name||'?').trim().charAt(0).toUpperCase()||'S';
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+    <rect width="100%" height="100%" fill="#064a4a"/><text x="50%" y="58%" font-size="42" font-family="system-ui"
+    text-anchor="middle" fill="#00fdd8">${ch}</text></svg>`;
+  return 'data:image/svg+xml;utf8,'+encodeURIComponent(svg);
 }
 
-// Social icons html
-function socialIconsHTML(f){
-  const items = [];
-  if (f.whatsapp){
-    const n = digits(f.whatsapp);
-    if (n) items.push(`<a class="icon" href="https://wa.me/${n}" target="_blank" rel="noopener" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>`);
-  }
-  if (f.instagram){
-    const h = /^https?:\/\//i.test(f.instagram) ? f.instagram : `https://instagram.com/${f.instagram.replace(/^@/,'')}`;
-    items.push(`<a class="icon" href="${h}" target="_blank" rel="noopener" title="Instagram"><i class="bi bi-instagram"></i></a>`);
-  }
-  if (f.facebook){
-    const h = /^https?:\/\//i.test(f.facebook) ? f.facebook : `https://facebook.com/${f.facebook.replace(/^@/,'')}`;
-    items.push(`<a class="icon" href="${h}" target="_blank" rel="noopener" title="Facebook"><i class="bi bi-facebook"></i></a>`);
-  }
-  if (f.email && /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(f.email)){
-    items.push(`<a class="icon" href="mailto:${f.email}" title="Email"><i class="bi bi-envelope"></i></a>`);
-  }
-  if (!items.length) return '';
-  return `<div class="social-icons">${items.join('')}</div>`;
-}
-
-// Similarity
+/* --------- scoring ---------- */
 function jaccard(a,b){
   const A = new Set(normList(a)), B = new Set(normList(b));
   if (A.size === 0 && B.size === 0) return 0;
@@ -76,24 +62,6 @@ function jaccard(a,b){
   const union = A.size + B.size - inter;
   return union ? inter / union : 0;
 }
-
-// ------------ data ------------
-function me(){
-  const m = READ(LS_ME) || {};
-  return {
-    name: m.name || '',
-    ct: m.connectionType || '',
-    ll: m.loveLanguage || m.loveLanguages?.[0] || '',
-    hobbies: m.hobbies || [],
-    values: m.values || [],
-  };
-}
-function friends(){
-  const list = READ(LS_FRIENDS);
-  return Array.isArray(list) ? list : [];
-}
-
-// ------------ scoring ------------
 function llMatch(a, b){
   if (!a || !b) return 0;
   return a.trim().toLowerCase() === b.trim().toLowerCase() ? 1 : 0;
@@ -104,8 +72,7 @@ function ctMatch(desired, candidate){
   if (candidate === 'Both') return 1;
   return desired.toLowerCase() === candidate.toLowerCase() ? 1 : 0;
 }
-/*
- Final score (0..100):
+/* score (0..100)
    25 * LL_match * weightLL
  + 15 * CT_match
  + 30 * Jaccard(hobbies)
@@ -122,34 +89,64 @@ function score(me, f, weightLL=1){
   return Math.max(0, Math.min(100, Math.round(total)));
 }
 
-// ------------ UI helpers ------------
-function ringSVG(pct=0){
-  const CIRC = 2*Math.PI*32; // r=32, svg viewBox 0..76
-  const off  = CIRC * (1 - Math.max(0, Math.min(1, pct/100)));
+/* --------- ring progress ---------- */
+function ring(pct){
+  const C = 2*Math.PI*32; // r=32 (svg viewBox 76)
+  const off = C * (1 - Math.max(0, Math.min(1, pct/100)));
   return `
-  <div class="score-ring" title="Compatibility">
-    <svg viewBox="0 0 76 76" aria-hidden="true">
-      <circle class="ring-track" cx="38" cy="38" r="32"></circle>
-      <circle class="ring-prog"  cx="38" cy="38" r="32" stroke-dasharray="${CIRC}" stroke-dashoffset="${off}"></circle>
-    </svg>
-    <div class="score-num">${pct}<small>%</small></div>
-  </div>`;
+    <div class="mlab-ring" title="Compatibility">
+      <svg viewBox="0 0 76 76" aria-hidden="true">
+        <circle class="track" cx="38" cy="38" r="32"></circle>
+        <circle class="prog"  cx="38" cy="38" r="32" stroke-dasharray="${C}" stroke-dashoffset="${C}"></circle>
+      </svg>
+      <div class="num">${pct}<small>%</small></div>
+    </div>
+  `;
 }
+function animateRings(scope=document){
+  const els = Array.from(scope.querySelectorAll('.mlab-ring .prog'));
+  els.forEach(el=>{
+    const C = parseFloat(el.getAttribute('stroke-dasharray'))||201.06;
+    // target from sibling num
+    const pct = Number(el.closest('.mlab-ring').querySelector('.num').textContent.replace(/[^0-9.]/g,''))||0;
+    const target = C * (1 - Math.max(0, Math.min(1, pct/100)));
+    // kick animation
+    requestAnimationFrame(()=>{ el.style.strokeDashoffset = target; });
+  });
+}
+
+/* --------- UI helpers ---------- */
+const resultsEl = $('#results'), emptyEl = $('#empty');
+
 function listChips(title, list, iconFn){
   if(!list || !list.length) return '';
   const chips = list.slice(0,8).map(v=>`<span class="chip"><span class="ico">${iconFn(v)}</span><span>${escapeHTML(v)}</span></span>`).join('');
   return `<div style="margin-top:.3rem"><b>${title}:</b> ${chips}</div>`;
 }
+function socialIconsHTML(f){
+  const items=[];
+  if (f.whatsapp && digits(f.whatsapp)) items.push(`<a class="btn ghost" href="https://wa.me/${digits(f.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>`);
+  if (f.instagram){
+    const u = /^https?:\/\//i.test(f.instagram) ? f.instagram : `https://instagram.com/${String(f.instagram).replace(/^@/,'')}`;
+    items.push(`<a class="btn ghost" href="${u}" target="_blank" rel="noopener">Instagram</a>`);
+  }
+  if (f.facebook){
+    const u = /^https?:\/\//i.test(f.facebook) ? f.facebook : `https://facebook.com/${String(f.facebook).replace(/^@/,'')}`;
+    items.push(`<a class="btn ghost" href="${u}" target="_blank" rel="noopener">Facebook</a>`);
+  }
+  if (f.email && /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(f.email)){
+    items.push(`<a class="btn ghost" href="mailto:${f.email}">Email</a>`);
+  }
+  return items.join(' ');
+}
 
-// ------------ rendering ------------
-const resultsEl = $('#results'), emptyEl = $('#empty');
-
+/* --------- render ---------- */
 function render(){
   const m = me();
-  $('#me-ct')?.replaceChildren(document.createTextNode(m.ct || '–'));
-  $('#me-ll')?.replaceChildren(document.createTextNode(m.ll || '–'));
-  $('#me-hobbies')?.replaceChildren(document.createTextNode(normList(m.hobbies).join(', ') || '–'));
-  $('#me-values')?.replaceChildren(document.createTextNode(normList(m.values).join(', ') || '–'));
+  $('#me-ct').textContent = m.ct || '–';
+  $('#me-ll').textContent = m.ll || '–';
+  $('#me-hobbies').textContent = (m.hobbies||[]).join(', ') || '–';
+  $('#me-values').textContent  = (m.values ||[]).join(', ') || '–';
 
   const list = friends();
   if (!list.length){
@@ -158,15 +155,16 @@ function render(){
     return;
   }
 
-  const q = ($('#f-search')?.value || '').trim().toLowerCase();
-  const desiredCT = $('#f-ct')?.value || '';
-  const minScore = parseInt($('#f-min')?.value || '0', 10) || 0;
-  const weightLL = parseFloat($('#f-llw')?.value || '1') || 1;
+  // collect filters (desktop or mobile drawer values)
+  const q  = ($('#f-search')?.value || $('#m-search')?.value || '').trim().toLowerCase();
+  const ct = ($('#f-ct')?.value || $('#m-ct')?.value || '') || '';
+  const min= parseInt(($('#f-min')?.value || $('#m-min')?.value || '0'), 10) || 0;
+  const w  = parseFloat(($('#f-llw')?.value || $('#m-llw')?.value || '1')) || 1;
 
-  let rows = list.map(f => ({ f, s: score(m, f, weightLL) }));
+  let rows = list.map(f => ({ f, s: score(m, f, w) }));
 
   if (q){
-    rows = rows.filter(({f}) => {
+    rows = rows.filter(({f})=>{
       const hay = [
         f.name, f.ct, f.ll, f.contact, f.notes, f.whatsapp, f.instagram, f.facebook, f.email,
         ...(Array.isArray(f.hobbies)?f.hobbies:[String(f.hobbies||'')]),
@@ -175,19 +173,17 @@ function render(){
       return hay.includes(q);
     });
   }
-
-  rows = rows.filter(({f,s}) => ctMatch(desiredCT||'Any', f.ct) && s >= minScore);
-
-  rows.sort((a,b) => b.s - a.s || String(a.f.name||'').localeCompare(String(b.f.name||'')));
+  rows = rows.filter(({f,s}) => (!ct || f.ct?.toLowerCase()===ct.toLowerCase() || ct==='Both' || f.ct==='Both') && s>=min);
+  rows.sort((a,b)=> b.s - a.s || String(a.f.name||'').localeCompare(String(b.f.name||'')));
 
   resultsEl.innerHTML = '';
   if (!rows.length){ emptyEl.style.display = 'block'; return; }
   emptyEl.style.display = 'none';
 
-  rows.forEach(({f, s}) => {
+  rows.forEach(({f,s})=>{
     const hobbies = normList(f.hobbies);
     const values  = normList(f.values);
-    const cls = s >= 75 ? 'good' : s >= 55 ? 'ok' : 'low';
+    const cls = s>=75 ? 'good' : s>=55 ? 'ok' : 'low';
 
     const card = document.createElement('div');
     card.className = 'match-card glow-card';
@@ -195,78 +191,110 @@ function render(){
       <div class="head">
         <div class="meta">
           <img class="avatar" src="${avatarFor(f.name, f.photo)}" alt="">
-          <div style="min-width:0;">
+          <div style="min-width:0">
             <div class="name">${escapeHTML(f.name||'—')}</div>
-            <div class="hint">${escapeHTML(f.ct || '—')} · ${escapeHTML(f.ll || '—')}</div>
+            <div class="hint">${escapeHTML(f.ct||'—')} · ${escapeHTML(f.ll||'—')}</div>
           </div>
         </div>
-        ${ringSVG(s)}
+        ${ring(s)}
       </div>
 
-      ${socialIconsHTML(f)}
+      <div class="row" style="margin:.45rem 0 .25rem;gap:.5rem">
+        ${socialIconsHTML(f)}
+      </div>
 
       ${listChips('Hobbies', hobbies, hobbyIco)}
       ${listChips('Values', values, valueIco)}
 
       ${f.contact ? `<div style="margin-top:.4rem"><b>Contact:</b> ${escapeHTML(f.contact)}</div>` : ''}
       ${f.notes ? `<div style="margin-top:.2rem"><i>${escapeHTML(f.notes)}</i></div>` : ''}
-
-      <div class="row" style="margin-top:.6rem">
-        <a class="btn" href="friends.html">Edit in Friends</a>
-        ${messageLinkHTML(f)}
-        ${compareLinkHTML(f)}
-      </div>
     `;
-
-    // classify score color on number
-    const num = card.querySelector('.score-num');
+    // score color
+    const num = card.querySelector('.mlab-ring .num');
     num.classList.add(cls);
 
     resultsEl.appendChild(card);
   });
+
+  animateRings(resultsEl);
 }
 
-// ====== helper buttons ======
-function messageLinkHTML(f){
-  if (f.whatsapp && digits(f.whatsapp))
-    return `<a class="btn" href="https://wa.me/${digits(f.whatsapp)}" target="_blank" rel="noopener">Message</a>`;
-  if (f.instagram){
-    const u = /^https?:\/\//i.test(f.instagram) ? f.instagram : `https://instagram.com/${f.instagram.replace(/^@/,'')}`;
-    return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
-  }
-  if (f.facebook){
-    const u = /^https?:\/\//i.test(f.facebook) ? f.facebook : `https://facebook.com/${f.facebook.replace(/^@/,'')}`;
-    return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
-  }
-  if (f.email && /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(f.email))
-    return `<a class="btn" href="mailto:${f.email}">Message</a>`;
-  if (f.contact){
-    const v = String(f.contact).trim();
-    if (/^https?:\/\//i.test(v)) return `<a class="btn" href="${v}" target="_blank" rel="noopener">Message</a>`;
-    if (/^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(v)) return `<a class="btn" href="mailto:${v}">Message</a>`;
-    if (/^\+?\d[\d\s-]{6,}$/.test(v)) return `<a class="btn" href="https://wa.me/${digits(v)}" target="_blank" rel="noopener">Message</a>`;
-    if (/^@?[\w.]{2,}$/i.test(v)) return `<a class="btn" href="https://instagram.com/${v.replace(/^@/,'')}" target="_blank" rel="noopener">Message</a>`;
-  }
-  return '';
+/* --------- filters wiring ---------- */
+function syncDesktopFromMobile(){
+  if ($('#m-search')) $('#f-search').value = $('#m-search').value;
+  if ($('#m-ct'))     $('#f-ct').value     = $('#m-ct').value;
+  if ($('#m-min'))    $('#f-min').value    = $('#m-min').value;
+  if ($('#m-llw'))    $('#f-llw').value    = $('#m-llw').value;
+  $('#llw-label').textContent = (parseFloat($('#f-llw').value)||1).toFixed(1)+'×';
 }
-function compareLinkHTML(f){
-  const name=(f.name||'').trim(); if(!name) return '';
-  return `<a class="btn" href="compare.html?a=me&b=${encodeURIComponent(name)}">Compare →</a>`;
+function syncMobileFromDesktop(){
+  if ($('#m-search')) $('#m-search').value = $('#f-search').value;
+  if ($('#m-ct'))     $('#m-ct').value     = $('#f-ct').value;
+  if ($('#m-min'))    $('#m-min').value    = $('#f-min').value;
+  if ($('#m-llw'))    $('#m-llw').value    = $('#f-llw').value;
+  $('#m-llw-label').textContent = (parseFloat($('#m-llw').value)||1).toFixed(1)+'×';
 }
-
-// ====== events ======
 ['#f-search','#f-ct','#f-min','#f-llw'].forEach(sel=>{
   $(sel)?.addEventListener('input', ()=>{
-    if (sel==='#f-llw') { $('#llw-label').textContent = (parseFloat($('#f-llw').value)||1).toFixed(1)+'×'; }
+    if (sel==='#f-llw') $('#llw-label').textContent=(parseFloat($('#f-llw').value)||1).toFixed(1)+'×';
     render();
+    syncMobileFromDesktop();
   });
 });
 $('#btn-reset')?.addEventListener('click', ()=>{
-  $('#f-search').value=''; $('#f-ct').value=''; $('#f-min').value='0'; $('#f-llw').value='1';
-  $('#llw-label').textContent='1.0×'; render();
+  $('#f-search').value=''; $('#f-ct').value=''; $('#f-min').value='0'; $('#f-llw').value='1'; $('#llw-label').textContent='1.0×';
+  syncMobileFromDesktop();
+  render();
 });
 
-// ====== init ======
+/* --------- mobile filter drawer ---------- */
+const fd = $('#filtersDrawer');
+$('#btn-open-filters')?.addEventListener('click',()=>{ fd.classList.add('open'); document.body.classList.add('no-scroll'); syncMobileFromDesktop(); });
+$('#filtersBackdrop')?.addEventListener('click',()=>{ fd.classList.remove('open'); document.body.classList.remove('no-scroll'); });
+$('#m-close')?.addEventListener('click',()=>{ fd.classList.remove('open'); document.body.classList.remove('no-scroll'); });
+$('#m-llw')?.addEventListener('input',()=> $('#m-llw-label').textContent=(parseFloat($('#m-llw').value)||1).toFixed(1)+'×' );
+$('#m-apply')?.addEventListener('click',()=>{
+  syncDesktopFromMobile();
+  fd.classList.remove('open'); document.body.classList.remove('no-scroll');
+  render();
+});
+
+/* --------- nav drawer + stars ---------- */
+(function navbarDrawer(){
+  const navbar=document.querySelector('.navbar');
+  const onScroll=()=>{ if(window.scrollY>6) navbar.classList.add('scrolled'); else navbar.classList.remove('scrolled'); };
+  onScroll(); addEventListener('scroll', onScroll, {passive:true});
+  const drawer=$('#drawer');
+  $('#openDrawer')?.addEventListener('click',()=>{ drawer.classList.add('open'); document.body.classList.add('no-scroll'); });
+  $('#closeDrawer')?.addEventListener('click',()=>{ drawer.classList.remove('open'); document.body.classList.remove('no-scroll'); });
+  $('#drawerBackdrop')?.addEventListener('click',()=>{ drawer.classList.remove('open'); document.body.classList.remove('no-scroll'); });
+  $('#logoutLink')?.addEventListener('click', e=>{e.preventDefault();localStorage.clear();location.href='index.html';});
+  $('#logoutLinkMobile')?.addEventListener('click', e=>{e.preventDefault();localStorage.clear();location.href='index.html';});
+})();
+
+/* --------- background stars (light) ---------- */
+(function stars(){
+  const cvs=$('#mlabStars'); if(!cvs) return;
+  const ctx=cvs.getContext('2d');
+  const DPR=window.devicePixelRatio||1; const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function size(){ cvs.width=innerWidth*DPR; cvs.height=innerHeight*DPR; }
+  size(); addEventListener('resize', size);
+  const N = innerWidth<560 ? 24 : 42;
+  const stars = Array.from({length:N}, ()=>({ x:Math.random()*cvs.width, y:Math.random()*cvs.height, r:(Math.random()*1.2+0.6)*DPR, a:Math.random()*Math.PI*2 }));
+  function tick(){
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+    for(const s of stars){
+      s.a += 0.02 + Math.random()*0.015;
+      const f=(Math.sin(s.a)+1)/2;
+      ctx.beginPath(); ctx.fillStyle=`rgba(0,253,216,${0.12+0.28*f})`;
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
+    }
+    if(!reduce) requestAnimationFrame(tick);
+  }
+  tick();
+})();
+
+/* --------- init ---------- */
 render();
 
 })(); 
