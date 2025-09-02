@@ -1,166 +1,116 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Soulink · Match Lab</title>
-<link rel="stylesheet" href="style.css"/>
-<style>
-  /* CSS additions (jei nenaudoji bendro style.css, gali palikti čia) */
-  /* ==== Topnav & Filters Drawer additions pasted from section B above ==== */
-  .topnav{position:sticky;top:0;z-index:50;background:rgba(0,60,67,.85);backdrop-filter:blur(8px);border-bottom:1px solid rgba(0,253,216,.35)}
-  .topnav::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,#00fdd8,transparent);opacity:0;transform:scaleX(.2);transform-origin:center;transition:opacity .25s,transform .25s}
-  .topnav.scrolled::after{opacity:.9;transform:scaleX(1)}
-  .tn-inner{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;justify-content:space-between}
-  .tn-left,.tn-right{display:flex;gap:12px;flex-wrap:wrap}
-  .topnav a{color:#eaf8f6;text-decoration:none;padding:8px 10px;border-radius:10px;border:1px solid transparent;transition:border-color .15s,box-shadow .15s}
-  .topnav a:hover{border-color:rgba(0,253,216,.35);box-shadow:0 0 0 1px rgba(0,253,216,.35),0 0 14px rgba(0,253,216,.18)}
-  .topnav a[data-active="1"]{background:rgba(0,253,216,.14);box-shadow:inset 0 0 24px rgba(0,253,216,.12)}
-  .topnav a:focus-visible{outline:2px solid #00fdd8;outline-offset:2px}
-  @media (max-width:760px){.tn-inner{padding:10px 12px}}
-
-  #filtersToggle{display:none}
-  @media (max-width:900px){
-    #filtersToggle{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:10px 14px;border:1px solid rgba(0,253,216,.35);border-radius:12px;background:transparent;color:#eaf8f6}
-    #filtersPanel{position:fixed;inset:0;display:grid;grid-template-columns:1fr min(82vw,360px);z-index:110;transform:translateX(100%);transition:transform .25s ease}
-    #filtersPanel.open{transform:translateX(0)}
-    #filtersPanel .backdrop{background:rgba(0,60,67,.96)}
-    #filtersPanel .sheet{background:#003c43;border-left:1px solid rgba(0,253,216,.35);padding:18px;overflow:auto}
-    body.no-scroll{overflow:hidden}
-  }
-  @media (prefers-reduced-motion:reduce){ #filtersPanel{transition:none} }
-
-  /* page container helpers */
-  .container{max-width:1100px;margin:0 auto;padding:24px}
-  .page-cta{display:flex;gap:12px;justify-content:space-between;margin:28px 0}
-  .btn{appearance:none;border:none;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700;min-height:44px}
-  .btn.primary{background:#00fdd8;color:#003136}
-  .btn.ghost{background:transparent;color:#eaf8f6;border:1px solid rgba(0,253,216,.35)}
-  .btn:focus-visible{outline:2px solid #00fdd8;outline-offset:2px}
-  @media (max-width:760px){ .page-cta{flex-direction:column} .page-cta .btn{width:100%} }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Soulink · Match Lab</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
+
+<!-- IMPORTANT: page id -->
 <body data-page="match">
-  <!-- Unified Top Navigation -->
-  <nav class="topnav" role="navigation" aria-label="Primary">
-    <div class="tn-inner">
-      <div class="tn-left">
-        <a href="soul-coach.html" data-nav="coach">Soul Coach</a>
-        <a href="match.html" data-nav="match">Match</a>
-        <a href="friends.html" data-nav="friends">Friends</a>
-        <a href="result.html" data-nav="results">Results</a>
+  <!-- Unified top navigation -->
+  <nav class="topnav" role="navigation" aria-label="Main">
+    <div class="topnav__inner">
+      <div class="brand">Soulink</div>
+      <div class="topnav__links">
+        <a data-nav="coach"   href="soul-coach.html">Soul Coach</a>
+        <a data-nav="match"   href="match.html">Match</a>
+        <a data-nav="friends" href="friends.html">Friends</a>
+        <a data-nav="results" href="result.html">Results</a>
       </div>
-      <div class="tn-right">
+      <div class="topnav__auth">
         <a href="login.html">Log In</a>
         <a href="signup.html">Sign Up</a>
         <a href="#" id="logoutLink">Log Out</a>
       </div>
+
+      <!-- mobile filters toggle lives here on small screens -->
+      <button id="filtersToggle" class="btn ghost topnav__filtersBtn" aria-controls="filtersPanel" aria-expanded="false">
+        ☰ Filters
+      </button>
     </div>
   </nav>
 
-  <div class="container">
-    <!-- Page header / snapshot / controls (palik savo turinį) -->
-    <header class="page-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-      <h1 style="margin:0">Match Lab</h1>
-      <!-- Mobile Filters Toggle -->
-      <button id="filtersToggle" aria-controls="filtersPanel" aria-expanded="false">Filters</button>
+  <main class="container">
+    <header class="pagehead">
+      <h1>Match Lab</h1>
+      <p class="muted">Tune your filters and discover glowing matches.</p>
     </header>
 
-    <!-- Filters Panel (desktop: palik savo sidebar; mobile: drawer su unikaliais ID) -->
-    <div id="filtersPanel" aria-hidden="true">
-      <div class="backdrop" data-close="#filtersPanel"></div>
-      <aside class="sheet" role="dialog" aria-modal="true" aria-label="Filters">
-        <!-- Čia įdėk savo esamą filtrų formą/elementus  -->
-        <h3 style="margin-top:0">Filters</h3>
-        <div id="filtersContent">
-          <!-- your existing filters markup goes here (inputs, sliders, chips, etc.) -->
+    <!-- Filters drawer / panel -->
+    <aside id="filtersPanel" class="filtersPanel" aria-hidden="true">
+      <div class="filtersPanel__inner">
+        <h2>Filters</h2>
+        <!-- keep your existing filter controls here -->
+        <div class="filters__row">
+          <button id="applyFilters" class="btn primary">Apply</button>
+          <button id="closeFilters" class="btn ghost">Close</button>
         </div>
-        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn primary" id="applyFiltersBtn">Apply</button>
-          <button class="btn ghost" id="closeFiltersBtn">Close</button>
-        </div>
-      </aside>
-    </div>
+      </div>
+    </aside>
 
-    <!-- Your Snapshot + Filters (desktop layout area) -->
-    <section id="snapshotAndFilters" style="margin-top:18px">
-      <!-- Palik savo „User Snapshot“ / „Filters“ blokų markup'ą, jeigu turi atskirai nuo drawer -->
-    </section>
-
-    <!-- Matches Grid -->
-    <section id="matchesArea" style="margin-top:18px">
-      <div id="matchesGrid">
-        <!-- Tavo kortelės čia generuojamos per match.js -->
+    <!-- Match grid (your cards rendering stays the same) -->
+    <section class="matches">
+      <div id="matchGrid" class="matchGrid" aria-live="polite">
+        <!-- your JS (match.js) fills cards here -->
       </div>
     </section>
 
-    <!-- Bottom CTAs -->
-    <div class="page-cta">
+    <!-- Pager -->
+    <nav class="pager">
       <a class="btn ghost" href="soul-coach.html">← Back</a>
       <a class="btn primary" href="friends.html">Next → Friends</a>
-    </div>
+    </nav>
+  </main>
 
-    <footer style="margin:40px 0 16px;padding-top:16px;border-top:1px solid rgba(0,253,216,.35);color:#bde5df">
-      © 2025 Soulink.global | Created with love by Soulink Team
-    </footer>
-  </div>
+  <footer class="sitefooter">
+    © 2025 Soulink.global | Created with love by Soulink Team
+  </footer>
 
-  <!-- Minimal JS for topnav + filters drawer -->
+  <script src="match.js" defer></script>
+
+  <!-- Minimal nav + drawer activator -->
   <script>
-    // underline when scrolled
-    (function(){
-      const topnav=document.querySelector('.topnav');
-      const onScroll=()=>{ if(!topnav) return; if(window.scrollY>6) topnav.classList.add('scrolled'); else topnav.classList.remove('scrolled'); };
-      onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
-    })();
-
-    // highlight current nav
-    (function(){
-      const page = document.body.getAttribute('data-page');
-      document.querySelectorAll('.topnav a[data-nav]').forEach(a=>{
-        if(a.dataset.nav===page){ a.setAttribute('data-active','1'); a.setAttribute('aria-current','page'); }
-        else { a.removeAttribute('data-active'); a.removeAttribute('aria-current'); }
+    (function () {
+      // set active nav via data-page/data-nav
+      const page = document.body.dataset.page;
+      document.querySelectorAll('.topnav a[data-nav]').forEach(a => {
+        if (a.dataset.nav === page) a.setAttribute('data-active', '1');
       });
-    })();
 
-    // logout clears storage
-    document.getElementById('logoutLink')?.addEventListener('click', (e)=>{
-      e.preventDefault(); localStorage.clear(); location.href='index.html';
-    });
+      // filters drawer (unique IDs)
+      const toggleBtn = document.getElementById('filtersToggle');
+      const panel     = document.getElementById('filtersPanel');
+      const closeBtn  = document.getElementById('closeFilters');
 
-    // Mobile Filters Drawer logic with UNIQUE IDs
-    (function(){
-      const toggle = document.getElementById('filtersToggle');
-      const panel  = document.getElementById('filtersPanel');
-      const closeBtn = document.getElementById('closeFiltersBtn');
-      const applyBtn = document.getElementById('applyFiltersBtn');
-      const backdrop = panel?.querySelector('.backdrop');
-
-      function open(){
-        panel?.classList.add('open');
-        panel?.setAttribute('aria-hidden','false');
-        toggle?.setAttribute('aria-expanded','true');
+      const openPanel = () => {
+        panel.classList.add('open');
+        panel.setAttribute('aria-hidden', 'false');
+        toggleBtn.setAttribute('aria-expanded', 'true');
         document.body.classList.add('no-scroll');
-      }
-      function close(){
-        panel?.classList.remove('open');
-        panel?.setAttribute('aria-hidden','true');
-        toggle?.setAttribute('aria-expanded','false');
+      };
+      const closePanel = () => {
+        panel.classList.remove('open');
+        panel.setAttribute('aria-hidden', 'true');
+        toggleBtn.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('no-scroll');
-      }
+      };
 
-      toggle?.addEventListener('click', ()=> panel?.classList.contains('open') ? close() : open());
-      backdrop?.addEventListener('click', close);
-      closeBtn?.addEventListener('click', close);
-      applyBtn?.addEventListener('click', ()=>{ 
-        // jei turi filtrų pritaikymo logiką — iškviesk ją čia
-        close(); 
+      toggleBtn?.addEventListener('click', () => {
+        panel.classList.contains('open') ? closePanel() : openPanel();
       });
-      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') close(); });
+      closeBtn?.addEventListener('click', closePanel);
+      panel?.addEventListener('click', (e) => {
+        if (e.target === panel) closePanel(); // click on backdrop
+      });
+      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closePanel(); });
+
+      // optional: logout clears storage (kept from other pages)
+      document.getElementById('logoutLink')?.addEventListener('click',(e)=>{
+        e.preventDefault(); localStorage.clear(); location.href='index.html';
+      });
     })();
   </script>
-
-  <!-- Tavo esamas match.js (palik kaip yra) -->
-  <script src="match.js"></script>
 </body>
 </html>

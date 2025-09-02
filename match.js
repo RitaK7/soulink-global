@@ -114,6 +114,14 @@ function animateRings(scope=document){
     requestAnimationFrame(()=>{ el.style.strokeDashoffset = target; });
   });
 }
+// --- nav active (safe to keep even if exists elsewhere)
+(() => {
+  const page = document.body.dataset.page;
+  document.querySelectorAll('.topnav a[data-nav]').forEach(a => {
+    if (a.dataset.nav === page) a.setAttribute('data-active', '1');
+  });
+})();
+
 
 /* --------- UI helpers ---------- */
 const resultsEl = $('#results'), emptyEl = $('#empty');
@@ -296,5 +304,6 @@ $('#m-apply')?.addEventListener('click',()=>{
 
 /* --------- init ---------- */
 render();
+
 
 })(); 
