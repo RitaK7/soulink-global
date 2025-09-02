@@ -1,140 +1,272 @@
-// match.js — tik Match puslapiui. Jokio ryšio su kitų puslapių header skriptais.
 (() => {
-  const $  = (s, r=document) => r.querySelector(s);
-  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
-  const reduce = matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+// ------------ helpers ------------
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const READ = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
 
-  /* 1) Aktyvus linkas pagal data-page (naudojam tą pačią .is-active klasę) */
-  (function setActive(){
-    const page = (document.body.getAttribute('data-page')||'').trim();
-    if(!page) return;
-    const a = document.querySelector(`[data-nav="${page}"]`);
-    if(a) a.classList.add('is-active');
-  })();
+const LS_FRIENDS = 'soulFriends';
+const LS_ME = 'soulQuiz';
 
-  /* 2) Mobile filters drawer (unikalūs ID, be konfliktų su header) */
-  function initFiltersDrawer(){
-    const btn = $('#filtersToggle');
-    const panel = $('#filtersPanel');
-    if(!panel) return;
-    const closeBtns = $$('[data-close="filters"]', panel);
-    const toggle = () => panel.classList.toggle('open');
-    btn?.addEventListener('click', toggle);
-    closeBtns.forEach(b => b.addEventListener('click', () => panel.classList.remove('open')));
-    document.addEventListener('keydown', (e) => { if(e.key==='Escape') panel.classList.remove('open'); });
+function normList(v){
+  if (!v) return [];
+  if (Array.isArray(v)) return v.map(x=>String(x).trim().toLowerCase()).filter(Boolean);
+  return String(v).split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
+}
+const digits = s => (s||'').toString().replace(/\D+/g,'');
+function escapeHTML(str=''){
+  return String(str).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+// Emoji maps
+function hobbyIco(lbl=''){ const s=lbl.toLowerCase();
+  if(s.includes('music'))return'🎵'; if(s.includes('read'))return'📚'; if(s.includes('medit'))return'🧘';
+  if(s.includes('travel'))return'✈️'; if(s.includes('cook'))return'🍳'; if(s.includes('bake'))return'🧁';
+  if(s.includes('art'))return'🎨'; if(s.includes('photo'))return'📷'; if(s.includes('gym'))return'🏋️';
+  if(s.includes('run'))return'🏃'; if(s.includes('hike'))return'🥾'; if(s.includes('garden'))return'🌿';
+  if(s.includes('movie'))return'🎬'; if(s.includes('game'))return'🎮'; return '✨';
+}
+function valueIco(lbl=''){ const s=lbl.toLowerCase();
+  if(s.includes('honest'))return'💎'; if(s.includes('kind'))return'❤️'; if(s.includes('growth'))return'🌱';
+  if(s.includes('freedom'))return'🌞'; if(s.includes('family'))return'👨‍👩‍👧'; if(s.includes('humor'))return'😂';
+  if(s.includes('respect'))return'🤝'; if(s.includes('spirit'))return'🕊️'; if(s.includes('curios'))return'🔭';
+  return '✨';
+}
+
+// Avatar
+function avatarFor(name, photo){
+  const url = (photo||'').trim();
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:image')) return url;
+  const ch = (name||'?').trim().charAt(0).toUpperCase() || 'S';
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+       <rect width="100%" height="100%" fill="#064a4a"/>
+       <text x="50%" y="58%" font-size="42" font-family="system-ui"
+             text-anchor="middle" fill="#00fdd8">${ch}</text>
+     </svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+// Social icons html
+function socialIconsHTML(f){
+  const items = [];
+  if (f.whatsapp){
+    const n = digits(f.whatsapp);
+    if (n) items.push(`<a class="icon" href="https://wa.me/${n}" target="_blank" rel="noopener" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>`);
+  }
+  if (f.instagram){
+    const h = /^https?:\/\//i.test(f.instagram) ? f.instagram : `https://instagram.com/${f.instagram.replace(/^@/,'')}`;
+    items.push(`<a class="icon" href="${h}" target="_blank" rel="noopener" title="Instagram"><i class="bi bi-instagram"></i></a>`);
+  }
+  if (f.facebook){
+    const h = /^https?:\/\//i.test(f.facebook) ? f.facebook : `https://facebook.com/${f.facebook.replace(/^@/,'')}`;
+    items.push(`<a class="icon" href="${h}" target="_blank" rel="noopener" title="Facebook"><i class="bi bi-facebook"></i></a>`);
+  }
+  if (f.email && /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(f.email)){
+    items.push(`<a class="icon" href="mailto:${f.email}" title="Email"><i class="bi bi-envelope"></i></a>`);
+  }
+  if (!items.length) return '';
+  return `<div class="social-icons">${items.join('')}</div>`;
+}
+
+// Similarity
+function jaccard(a,b){
+  const A = new Set(normList(a)), B = new Set(normList(b));
+  if (A.size === 0 && B.size === 0) return 0;
+  let inter = 0; A.forEach(v => { if (B.has(v)) inter++; });
+  const union = A.size + B.size - inter;
+  return union ? inter / union : 0;
+}
+
+// ------------ data ------------
+function me(){
+  const m = READ(LS_ME) || {};
+  return {
+    name: m.name || '',
+    ct: m.connectionType || '',
+    ll: m.loveLanguage || m.loveLanguages?.[0] || '',
+    hobbies: m.hobbies || [],
+    values: m.values || [],
+  };
+}
+function friends(){
+  const list = READ(LS_FRIENDS);
+  return Array.isArray(list) ? list : [];
+}
+
+// ------------ scoring ------------
+function llMatch(a, b){
+  if (!a || !b) return 0;
+  return a.trim().toLowerCase() === b.trim().toLowerCase() ? 1 : 0;
+}
+function ctMatch(desired, candidate){
+  if (!desired || desired === 'Any') return 1;
+  if (!candidate) return 0;
+  if (candidate === 'Both') return 1;
+  return desired.toLowerCase() === candidate.toLowerCase() ? 1 : 0;
+}
+/*
+ Final score (0..100):
+   25 * LL_match * weightLL
+ + 15 * CT_match
+ + 30 * Jaccard(hobbies)
+ + 30 * Jaccard(values)
+*/
+function score(me, f, weightLL=1){
+  const sLL = 25 * llMatch(me.ll, f.ll) * weightLL;
+  const sCT = 15 * ctMatch(me.ct, f.ct);
+  const sH  = 30 * jaccard(me.hobbies, f.hobbies);
+  const sV  = 30 * jaccard(me.values,  f.values);
+  let total = sLL + sCT + sH + sV;
+  const infoPieces = (f.ll?1:0) + (normList(f.hobbies).length?1:0) + (normList(f.values).length?1:0);
+  if (infoPieces <= 1) total *= 0.8;
+  return Math.max(0, Math.min(100, Math.round(total)));
+}
+
+// ------------ UI helpers ------------
+function ringSVG(pct=0){
+  const CIRC = 2*Math.PI*32; // r=32, svg viewBox 0..76
+  const off  = CIRC * (1 - Math.max(0, Math.min(1, pct/100)));
+  return `
+  <div class="score-ring" title="Compatibility">
+    <svg viewBox="0 0 76 76" aria-hidden="true">
+      <circle class="ring-track" cx="38" cy="38" r="32"></circle>
+      <circle class="ring-prog"  cx="38" cy="38" r="32" stroke-dasharray="${CIRC}" stroke-dashoffset="${off}"></circle>
+    </svg>
+    <div class="score-num">${pct}<small>%</small></div>
+  </div>`;
+}
+function listChips(title, list, iconFn){
+  if(!list || !list.length) return '';
+  const chips = list.slice(0,8).map(v=>`<span class="chip"><span class="ico">${iconFn(v)}</span><span>${escapeHTML(v)}</span></span>`).join('');
+  return `<div style="margin-top:.3rem"><b>${title}:</b> ${chips}</div>`;
+}
+
+// ------------ rendering ------------
+const resultsEl = $('#results'), emptyEl = $('#empty');
+
+function render(){
+  const m = me();
+  $('#me-ct')?.replaceChildren(document.createTextNode(m.ct || '–'));
+  $('#me-ll')?.replaceChildren(document.createTextNode(m.ll || '–'));
+  $('#me-hobbies')?.replaceChildren(document.createTextNode(normList(m.hobbies).join(', ') || '–'));
+  $('#me-values')?.replaceChildren(document.createTextNode(normList(m.values).join(', ') || '–'));
+
+  const list = friends();
+  if (!list.length){
+    resultsEl.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
   }
 
-  /* 3) Score ring (canvas) */
-  function drawRing(el){
-    const pct = Math.max(0, Math.min(100, Number(el.dataset.score)||0));
-    // jei jau nupiešta, perpiešiam pagal dabartinį dydį
-    el.querySelector('canvas')?.remove();
+  const q = ($('#f-search')?.value || '').trim().toLowerCase();
+  const desiredCT = $('#f-ct')?.value || '';
+  const minScore = parseInt($('#f-min')?.value || '0', 10) || 0;
+  const weightLL = parseFloat($('#f-llw')?.value || '1') || 1;
 
-    const size = Math.min(el.clientWidth||52, el.clientHeight||52);
-    const dpr  = window.devicePixelRatio || 1;
-    const c = document.createElement('canvas');
-    c.width = size * dpr; c.height = size * dpr; c.style.width=size+'px'; c.style.height=size+'px';
-    const ctx = c.getContext('2d');
-    const cx = (size*dpr)/2, cy=cx, r=cx-5*dpr;
+  let rows = list.map(f => ({ f, s: score(m, f, weightLL) }));
 
-    // track
-    ctx.lineWidth = 6*dpr; ctx.strokeStyle = 'rgba(255,255,255,.15)';
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
-
-    // progress
-    const end = (Math.PI*2) * (pct/100);
-    ctx.lineCap='round'; ctx.strokeStyle='#00fdd8';
-    ctx.shadowColor='rgba(0,253,216,.65)'; ctx.shadowBlur=10*dpr;
-
-    if(reduce){
-      ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI/2, -Math.PI/2+end); ctx.stroke();
-    } else {
-      const dur=850; const start=performance.now();
-      function tick(t){
-        const k=Math.min(1,(t-start)/dur), e=1-Math.pow(1-k,3);
-        ctx.clearRect(0,0,c.width,c.height);
-        // redraw track
-        ctx.lineWidth=6*dpr; ctx.strokeStyle='rgba(255,255,255,.15)';
-        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
-        // arc
-        ctx.lineWidth=6*dpr; ctx.strokeStyle='#00fdd8';
-        ctx.shadowColor='rgba(0,253,216,.65)'; ctx.shadowBlur=10*dpr;
-        ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI/2, -Math.PI/2 + end*e); ctx.stroke();
-        if(k<1) requestAnimationFrame(tick);
-      }
-      requestAnimationFrame(tick);
-    }
-
-    el.prepend(c);
-    // atnaujinam skaičių viduje, jei yra
-    el.querySelector('.num')?.textContent = `${Math.round(pct)}%`;
-  }
-  function initRings(){
-    $$('.score[data-score]').forEach(drawRing);
-    let t; window.addEventListener('resize', () => {
-      clearTimeout(t); t=setTimeout(() => $$('.score[data-score]').forEach(drawRing), 120);
-    }, {passive:true});
-  }
-
-  /* 4) Snapshot iš localStorage.soulQuiz (kompaktiškai) */
-  function fillSnapshot(){
-    let q={}; try{ q=JSON.parse(localStorage.getItem('soulQuiz')||'{}'); }catch{}
-    $('#youName').textContent = q.name || 'You';
-    const avatar = $('#youAvatar');
-    if(q.name) avatar.textContent = (q.name.trim()[0]||'Y').toUpperCase();
-    const badges = $('#youBadges'); badges.innerHTML='';
-    const items=[];
-    if(q.connectionType) items.push('🎭 '+q.connectionType);
-    const ll = Array.isArray(q.loveLanguages)? q.loveLanguages[0] : (q.loveLanguage||'');
-    if(ll) items.push('💌 '+ll);
-    (q.hobbies||[]).slice(0,3).forEach(h=>items.push('🎵 '+h));
-    (q.values||[]).slice(0,3).forEach(v=>items.push('💎 '+v));
-    items.forEach(t=>{ const b=document.createElement('span'); b.className='badge'; b.textContent=t; badges.appendChild(b); });
-  }
-
-  /* 5) Paprastas filtravimas demonstracijai (jei turi savo – šitas netrukdo) */
-  function applyFilters(){
-    const q = ($('#q')?.value || '').toLowerCase();
-    const min = Number($('#minScore')?.value || 0);
-    const activeConn = document.querySelector('[data-filter-conn].is-on')?.getAttribute('data-filter-conn') || '';
-
-    $$('#cards .match-card').forEach(card=>{
-      const name = (card.getAttribute('data-name')||'').toLowerCase();
-      const scoreEl= card.querySelector('.score'); const score = Number(scoreEl?.dataset.score||0);
-      const conn  = (card.getAttribute('data-conn')||'').toLowerCase();
-
-      let show = true;
-      if(q && !name.includes(q)) show=false;
-      if(score < min) show=false;
-      if(activeConn && conn !== activeConn && conn !== 'both') show=false;
-
-      card.style.display = show ? '' : 'none';
+  if (q){
+    rows = rows.filter(({f}) => {
+      const hay = [
+        f.name, f.ct, f.ll, f.contact, f.notes, f.whatsapp, f.instagram, f.facebook, f.email,
+        ...(Array.isArray(f.hobbies)?f.hobbies:[String(f.hobbies||'')]),
+        ...(Array.isArray(f.values)?f.values:[String(f.values||'')]),
+      ].join(' ').toLowerCase();
+      return hay.includes(q);
     });
   }
-  function bindFilters(){
-    // toggle conn chips
-    $$('.filters-panel [data-filter-conn]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        $$('.filters-panel [data-filter-conn]').forEach(x=>x.classList.remove('is-on'));
-        btn.classList.add('is-on');
-        applyFilters();
-      });
-    });
-    // auto-apply
-    $('#q')?.addEventListener('input', applyFilters);
-    $('#minScore')?.addEventListener('input', applyFilters);
-    $('#applyFilters')?.addEventListener('click', applyFilters);
-  }
 
-  /* 6) Logout (jei yra) */
-  $('#logoutLink')?.addEventListener('click',(e)=>{ e.preventDefault(); localStorage.clear(); location.href='index.html'; });
+  rows = rows.filter(({f,s}) => ctMatch(desiredCT||'Any', f.ct) && s >= minScore);
 
-  /* Init */
-  document.addEventListener('DOMContentLoaded', () => {
-    initFiltersDrawer();
-    initRings();
-    fillSnapshot();
-    bindFilters();
-    applyFilters();
+  rows.sort((a,b) => b.s - a.s || String(a.f.name||'').localeCompare(String(b.f.name||'')));
+
+  resultsEl.innerHTML = '';
+  if (!rows.length){ emptyEl.style.display = 'block'; return; }
+  emptyEl.style.display = 'none';
+
+  rows.forEach(({f, s}) => {
+    const hobbies = normList(f.hobbies);
+    const values  = normList(f.values);
+    const cls = s >= 75 ? 'good' : s >= 55 ? 'ok' : 'low';
+
+    const card = document.createElement('div');
+    card.className = 'match-card glow-card';
+    card.innerHTML = `
+      <div class="head">
+        <div class="meta">
+          <img class="avatar" src="${avatarFor(f.name, f.photo)}" alt="">
+          <div style="min-width:0;">
+            <div class="name">${escapeHTML(f.name||'—')}</div>
+            <div class="hint">${escapeHTML(f.ct || '—')} · ${escapeHTML(f.ll || '—')}</div>
+          </div>
+        </div>
+        ${ringSVG(s)}
+      </div>
+
+      ${socialIconsHTML(f)}
+
+      ${listChips('Hobbies', hobbies, hobbyIco)}
+      ${listChips('Values', values, valueIco)}
+
+      ${f.contact ? `<div style="margin-top:.4rem"><b>Contact:</b> ${escapeHTML(f.contact)}</div>` : ''}
+      ${f.notes ? `<div style="margin-top:.2rem"><i>${escapeHTML(f.notes)}</i></div>` : ''}
+
+      <div class="row" style="margin-top:.6rem">
+        <a class="btn" href="friends.html">Edit in Friends</a>
+        ${messageLinkHTML(f)}
+        ${compareLinkHTML(f)}
+      </div>
+    `;
+
+    // classify score color on number
+    const num = card.querySelector('.score-num');
+    num.classList.add(cls);
+
+    resultsEl.appendChild(card);
   });
-})();
+}
+
+// ====== helper buttons ======
+function messageLinkHTML(f){
+  if (f.whatsapp && digits(f.whatsapp))
+    return `<a class="btn" href="https://wa.me/${digits(f.whatsapp)}" target="_blank" rel="noopener">Message</a>`;
+  if (f.instagram){
+    const u = /^https?:\/\//i.test(f.instagram) ? f.instagram : `https://instagram.com/${f.instagram.replace(/^@/,'')}`;
+    return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
+  }
+  if (f.facebook){
+    const u = /^https?:\/\//i.test(f.facebook) ? f.facebook : `https://facebook.com/${f.facebook.replace(/^@/,'')}`;
+    return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
+  }
+  if (f.email && /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(f.email))
+    return `<a class="btn" href="mailto:${f.email}">Message</a>`;
+  if (f.contact){
+    const v = String(f.contact).trim();
+    if (/^https?:\/\//i.test(v)) return `<a class="btn" href="${v}" target="_blank" rel="noopener">Message</a>`;
+    if (/^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(v)) return `<a class="btn" href="mailto:${v}">Message</a>`;
+    if (/^\+?\d[\d\s-]{6,}$/.test(v)) return `<a class="btn" href="https://wa.me/${digits(v)}" target="_blank" rel="noopener">Message</a>`;
+    if (/^@?[\w.]{2,}$/i.test(v)) return `<a class="btn" href="https://instagram.com/${v.replace(/^@/,'')}" target="_blank" rel="noopener">Message</a>`;
+  }
+  return '';
+}
+function compareLinkHTML(f){
+  const name=(f.name||'').trim(); if(!name) return '';
+  return `<a class="btn" href="compare.html?a=me&b=${encodeURIComponent(name)}">Compare →</a>`;
+}
+
+// ====== events ======
+['#f-search','#f-ct','#f-min','#f-llw'].forEach(sel=>{
+  $(sel)?.addEventListener('input', ()=>{
+    if (sel==='#f-llw') { $('#llw-label').textContent = (parseFloat($('#f-llw').value)||1).toFixed(1)+'×'; }
+    render();
+  });
+});
+$('#btn-reset')?.addEventListener('click', ()=>{
+  $('#f-search').value=''; $('#f-ct').value=''; $('#f-min').value='0'; $('#f-llw').value='1';
+  $('#llw-label').textContent='1.0×'; render();
+});
+
+// ====== init ======
+render();
+
+})(); 

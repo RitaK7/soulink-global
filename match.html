@@ -1,230 +1,249 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Soulink · Match</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Soulink · Match Lab</title>
+<style>
+  :root{
+    --bg:#003c43; --fg:#eaf8f6; --muted:#bde5df; --accent:#00fdd8; --card:#014a52;
+    --border:rgba(0,253,216,.35);
+    --shadow:0 0 0 1px var(--border), 0 10px 30px rgba(0,253,216,.06), 0 0 40px rgba(0,253,216,.04) inset;
+    --maxw:1100px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Arial,sans-serif}
+  a{color:var(--accent);text-decoration:none}
+  .container{max-width:var(--maxw);margin:0 auto;padding:22px}
 
-  <!-- Page-local CSS (tik Match). Nekeičia kitų puslapių. -->
-  <style>
-    :root{
-      --bg:#003c43; --fg:#eaf8f6; --accent:#00fdd8; --border:rgba(0,253,216,.35);
-    }
-    html,body{background:var(--bg);color:var(--fg);margin:0}
-    .container{max-width:1100px;margin:0 auto;padding:24px}
+  /* NAV */
+  .navbar{position:sticky;top:0;z-index:50;background:rgba(0,60,67,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+  .navbar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transform:scaleX(.2);transition:opacity .25s, transform .25s}
+  .navbar.scrolled::after{opacity:.85;transform:scaleX(1)}
+  .nav-inner{display:flex;justify-content:space-between;align-items:center;padding:10px 16px}
+  .brand{font-weight:800;color:var(--accent)}
+  .nav-links{display:flex;gap:12px;flex-wrap:wrap}
+  .nav-links a{padding:8px 10px;border-radius:10px;border:1px solid transparent;transition:box-shadow .15s ease, border-color .15s ease}
+  .nav-links a:hover{border-color:var(--border);box-shadow:0 0 0 1px var(--border),0 0 16px rgba(0,253,216,.18)}
+  .hamburger{display:none}
+  .hamburger button{appearance:none;background:transparent;border:1px solid var(--border);color:var(--fg);padding:8px 10px;border-radius:10px;cursor:pointer}
+  @media(max-width:820px){.nav-links{display:none}.hamburger{display:block}}
 
-    /* Title row — kompaktinis */
-    .page-title{font-size:clamp(20px,2.2vw,28px);margin:0 0 8px}
-    .page-sub{opacity:.9;margin:0 0 16px}
+  /* Drawer */
+  .drawer{position:fixed;inset:0;display:none;z-index:100}
+  .drawer.open{display:block}
+  .drawer .backdrop{position:absolute;inset:0;background:rgba(0,60,67,.96)}
+  .drawer .panel{position:absolute;top:0;right:0;width:min(82vw,360px);height:100%;background:#003c43;border-left:1px solid var(--border);padding:18px;transform:translateX(100%);transition:transform .25s ease}
+  .drawer.open .panel{transform:translateX(0)}
+  @media (prefers-reduced-motion: reduce){.drawer .panel{transition:none}}
+  body.no-scroll{overflow:hidden}
+  .drawer .panel a{display:block;padding:14px 12px;border-radius:12px;min-height:44px;transition:box-shadow .15s ease, background .15s ease}
+  .drawer .panel a:hover{background:rgba(0,253,216,.08);box-shadow:0 0 0 1px var(--border),0 0 14px rgba(0,253,216,.18)}
 
-    /* Snapshot + Filters dviejų stulpelių išdėstymas */
-    .top-row{display:grid;gap:16px;align-items:start}
-    @media(min-width:1024px){ .top-row{grid-template-columns:1fr minmax(280px,340px)} }
+  h1{margin:.2rem 0 1rem}
+  .muted{color:var(--muted);font-size:.95rem}
 
-    /* Kortos (naudojam tą patį vibe) */
-    .card{background:linear-gradient(180deg,rgba(1,74,82,.74),rgba(1,74,82,.56));
-      border:1px solid var(--border);border-radius:16px;padding:16px;
-      box-shadow:0 0 0 1px var(--border),0 10px 30px rgba(0,253,216,.06)}
-    .glow-card{position:relative}
-    .glow-card::after{content:"";position:absolute;inset:-1px;border-radius:16px;
-      box-shadow:0 0 24px rgba(0,253,216,.25),0 0 48px rgba(0,253,216,.15);
-      pointer-events:none;opacity:0;transition:opacity .6s ease}
-    .glow-card:hover::after{opacity:.9}
+  /* Cards + glow */
+  .card{position:relative;border:1px solid var(--border);border-radius:18px;background:linear-gradient(180deg,rgba(1,74,82,.74),rgba(1,74,82,.56));box-shadow:var(--shadow);padding:16px}
+  .glow-card{box-shadow:var(--shadow)}
+  .glow-card::after{content:"";position:absolute;inset:-1px;border-radius:16px;box-shadow:0 0 24px rgba(0,253,216,.25), 0 0 48px rgba(0,253,216,.15);pointer-events:none;opacity:.0;transition:opacity .6s ease}
+  .glow-card:hover::after{opacity:.9}
 
-    .avatar{width:40px;height:40px;border-radius:999px;border:1px solid var(--border);
-      display:grid;place-items:center;background:rgba(0,253,216,.08);font-weight:700}
-    .name{font-weight:700}
-    .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-    .badge{padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(0,253,216,.06);font-size:.92rem}
+  @keyframes chartFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .enter{opacity:0;animation:chartFadeIn .9s ease forwards}
+  @media (prefers-reduced-motion:reduce){.glow-card::after{display:none}.enter{animation:none;opacity:1}}
 
-    /* Mobile filters drawer (unikalūs ID) */
-    .only-mobile{display:none}
-    @media(max-width:767px){
-      .only-mobile{display:inline-flex}
-      #filtersPanel{position:fixed;inset:0 0 0 auto;width:min(88vw,360px);
-        transform:translateX(100%);transition:transform .25s ease;background:#082e33;
-        z-index:60;padding:16px;box-shadow:-16px 0 40px rgba(0,0,0,.35)}
-      #filtersPanel.open{transform:translateX(0)}
-    }
-    @media(min-width:768px){ .only-mobile{display:none} }
+  /* Grid */
+  .grid{display:grid;grid-template-columns:1.1fr 2fr;gap:16px}
+  @media (max-width:980px){.grid{grid-template-columns:1fr;gap:14px}}
 
-    /* Kortelių tinklelis 3/2/1 */
-    .cards{display:grid;gap:14px;margin-top:16px}
-    @media(min-width:1280px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
-    @media(min-width:768px) and (max-width:1279px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:767px){.cards{grid-template-columns:1fr}}
+  /* Snapshot */
+  .snapshot .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width:540px){.snapshot .row{grid-template-columns:1fr}}
+  .pill{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:rgba(0,253,216,.06);font-size:.95rem;margin:4px 6px 0 0;white-space:nowrap}
 
-    /* Match card */
-    .match-card{position:relative;background:linear-gradient(180deg,rgba(1,74,82,.78),rgba(1,74,82,.58));
-      border:1px solid var(--border);border-radius:16px;padding:14px;transition:transform .15s ease, box-shadow .2s ease}
-    .match-card:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--border),0 14px 28px rgba(0,253,216,.10)}
-    .match-card .header{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  /* Filters */
+  .filters .row{display:grid;grid-template-columns:1.1fr .9fr .9fr auto;gap:10px;align-items:end}
+  .filters label{font-weight:600;font-size:.9rem}
+  .filters input,.filters select{width:100%;padding:10px;border-radius:12px;border:1px solid var(--border);background:rgba(0,253,216,.06);color:var(--fg)}
+  .filters .slider{display:flex;align-items:center;gap:10px}
+  #llw-label{min-width:3ch;text-align:right}
+  @media (max-width:820px){.filters .row{grid-template-columns:1fr}}
 
-    /* Score ring (canvas) */
-    .score{position:relative;width:52px;height:52px}
-    .score canvas{position:absolute;inset:0}
-    .score .num{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:.9rem}
+  /* Results */
+  #results{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:14px}
+  @media(max-width:1100px){#results{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:720px){#results{grid-template-columns:1fr}}
+  .match-card{position:relative;border:1px solid var(--border);border-radius:18px;background:rgba(1,74,82,.6);padding:12px;box-shadow:var(--shadow);overflow:hidden}
+  .match-card:hover{transform:translateY(-1px)}
+  .head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .meta{display:flex;align-items:center;gap:10px;min-width:0}
+  .avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
+  .name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hint{color:var(--muted)}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{appearance:none;border:1px solid var(--border);background:transparent;color:var(--fg);padding:8px 12px;border-radius:10px;cursor:pointer;min-height:40px}
+  .btn:hover{box-shadow:0 0 16px rgba(0,253,216,.18)}
+  .score-ring{position:relative;width:64px;height:64px}
+  .score-ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+  .ring-track{fill:none;stroke:rgba(255,255,255,.12);stroke-width:6}
+  .ring-prog{fill:none;stroke:#00fdd8;stroke-width:6;filter:drop-shadow(0 0 6px rgba(0,253,216,.6));stroke-dasharray:201.06;stroke-dashoffset:201.06;transition:stroke-dashoffset .9s ease}
+  .score-num{position:absolute;inset:0;display:grid;place-items:center;font-weight:800}
+  .score.good{color:#00fdd8}
+  .score.ok{color:#9debc6}
+  .score.low{color:#9ac0bd}
+  .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:rgba(0,253,216,.06);margin:4px 6px 0 0;font-size:.93rem}
+  .chip .ico{width:1.05rem;display:inline-block;text-align:center}
 
-    /* Bottom CTA */
-    .page-cta{display:flex;gap:12px;justify-content:space-between;margin:24px 0}
-    @media(max-width:767px){.page-cta{flex-direction:column}.page-cta .btn{width:100%}}
+  .social-icons{display:flex;gap:8px;margin-top:.4rem}
+  .social-icons .icon{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:999px;border:1px solid var(--border)}
+  .empty{display:none;border:1px dashed var(--border);border-radius:16px;padding:14px;color:var(--muted);text-align:center}
 
-    footer{margin:20px 0 16px;padding-top:12px;border-top:1px solid var(--border);opacity:.9;font-size:.95rem}
-  </style>
+  /* Background Stars (page) */
+  .stars-bg{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.6}
+  main{position:relative;z-index:1}
+
+  footer{margin:34px 0 18px;padding-top:14px;border-top:1px solid var(--border);color:var(--muted);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+</style>
 </head>
-
-<!-- svarbu: data-page="match" -->
-<body data-page="match">
-  <!-- Header / Nav: naudok tą patį komponentą kaip kituose puslapiuose.
-       Čia minimalus variantas su klasėmis, kurias jau turi projekte (.topnav/.btn ir pan.). -->
-  <nav class="topnav" role="navigation" aria-label="Main">
-    <div class="container" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+<body>
+  <!-- NAV -->
+  <nav class="navbar" role="navigation" aria-label="Main">
+    <div class="nav-inner">
       <div class="brand">Soulink</div>
-      <div class="nav-group" style="display:flex;gap:12px;flex-wrap:wrap">
-        <a data-nav="coach"   href="soul-coach.html">Soul Coach</a>
-        <a data-nav="match"   href="match.html" class="is-active">Match</a>
-        <a data-nav="friends" href="friends.html">Friends</a>
-        <a data-nav="results" href="result.html">Results</a>
-      </div>
-      <div class="nav-auth" style="display:flex;gap:12px;flex-wrap:wrap">
+      <div class="nav-links">
+        <a href="soul-coach.html">Soul Coach</a>
+        <a href="match.html" aria-current="page">Match</a>
+        <a href="friends.html">Friends</a>
+        <a href="result.html">Results</a>
         <a href="login.html">Log In</a>
         <a href="signup.html">Sign Up</a>
         <a href="#" id="logoutLink">Log Out</a>
       </div>
+      <div class="hamburger"><button id="openDrawer" aria-label="Open menu">☰ Menu</button></div>
     </div>
   </nav>
 
+  <!-- MOBILE DRAWER -->
+  <div class="drawer" id="drawer" aria-hidden="true">
+    <div class="backdrop" id="drawerBackdrop" tabindex="-1" aria-label="Close"></div>
+    <aside class="panel" role="dialog" aria-modal="true" aria-label="Navigation">
+      <a href="soul-coach.html">Soul Coach</a>
+      <a href="match.html" aria-current="page">Match</a>
+      <a href="friends.html">Friends</a>
+      <a href="result.html">Results</a>
+      <a href="login.html">Log In</a>
+      <a href="signup.html">Sign Up</a>
+      <a href="#" id="logoutLinkMobile">Log Out</a>
+      <button class="btn" id="closeDrawer" style="margin-top:8px">Close</button>
+    </aside>
+  </div>
+
+  <!-- Stars -->
+  <canvas class="stars-bg" id="stars" aria-hidden="true"></canvas>
+
   <main class="container">
-    <!-- Kompaktiškas title + subline -->
-    <h1 class="page-title">Match Lab ✨</h1>
-    <p class="page-sub">See who resonates with your Connection, Love Language, Hobbies and Values. Hover or tap each card for details.</p>
+    <header class="enter">
+      <h1>Match Lab ✨</h1>
+      <p class="muted">See who resonates with your *Connection*, *Love Language*, *Hobbies* and *Values*. Hover or tap each card for details.</p>
+    </header>
 
-    <!-- Snapshot + Filters -->
-    <div class="top-row">
+    <section class="grid">
       <!-- Snapshot -->
-      <section id="yourSnapshot" class="card glow-card" style="position:relative">
+      <aside class="card glow-card snapshot enter">
         <h3 style="margin:0 0 8px">Your Snapshot</h3>
-        <div style="display:flex;align-items:center;gap:12px">
-          <div class="avatar" id="youAvatar">Y</div>
+        <div class="row">
           <div>
-            <div id="youName" class="name">You</div>
-            <div id="youMeta" style="opacity:.9;font-size:.95rem">🎭 • 💌 • 🎵 • 💎</div>
+            <div class="pill">🎭 <span id="me-ct">–</span></div>
+            <div class="pill">💌 <span id="me-ll">–</span></div>
           </div>
-        </div>
-        <div class="badges" id="youBadges" aria-live="polite" style="margin-top:10px"></div>
-
-        <!-- Mobile drawer toggle -->
-        <button id="filtersToggle" class="btn ghost only-mobile" style="margin-top:12px">Filters</button>
-      </section>
-
-      <!-- Filters (desktop dešinėje; mobile – drawer) -->
-      <aside id="filtersPanel" class="card glow-card filters-panel" aria-label="Filters">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-          <h3 style="margin:0">Filters</h3>
-          <button class="btn ghost only-mobile" data-close="filters">Close</button>
-        </div>
-
-        <div style="display:grid;gap:12px;margin-top:12px">
-          <label style="display:grid;gap:6px">
-            <span>Search</span>
-            <input id="q" type="text" placeholder="Name or keyword"
-                   style="padding:10px;border-radius:10px;border:1px solid var(--border);background:rgba(0,253,216,.06);color:var(--fg)">
-          </label>
-
-          <label style="display:grid;gap:6px">
-            <span>Min score</span>
-            <input id="minScore" type="range" value="0" min="0" max="100">
-          </label>
-
           <div>
-            <span style="display:block;margin:0 0 6px">Connection</span>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn ghost" data-filter-conn="friendship">Friendship</button>
-              <button class="btn ghost" data-filter-conn="romantic">Romantic</button>
-              <button class="btn ghost" data-filter-conn="both">Both</button>
-            </div>
-          </div>
-
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
-            <button id="applyFilters" class="btn primary">Apply</button>
-            <button class="btn ghost" data-close="filters">Close</button>
+            <div class="pill">🎵 <span id="me-hobbies">–</span></div>
+            <div class="pill">💎 <span id="me-values">–</span></div>
           </div>
         </div>
       </aside>
-    </div>
 
-    <!-- Cards grid -->
-    <section class="cards" id="cards">
-      <!-- Pavyzdžiai (jei turi savo generavimą – šie tik placeholderiai) -->
-      <article class="match-card" data-name="Aila" data-conn="both">
-        <div class="header">
-          <div style="display:flex;gap:10px;align-items:center">
-            <div class="avatar">A</div>
-            <div class="name">Aila</div>
+      <!-- Filters -->
+      <section class="card glow-card filters enter">
+        <h3 style="margin:0 0 8px">Filters</h3>
+        <div class="row">
+          <div>
+            <label for="f-search">🔍 Search</label>
+            <input id="f-search" type="text" placeholder="Name, hobby, value, note…" />
           </div>
-          <div class="score" data-score="86"><div class="num">86%</div></div>
-        </div>
-        <div class="badges">
-          <span class="badge">🎵 Music</span><span class="badge">📚 Reading</span>
-          <span class="badge">💎 Honesty</span><span class="badge">❤️ Kindness</span>
-        </div>
-        <div class="actions">
-          <a class="btn" href="friends.html">Edit in Friends</a>
-          <button class="btn ghost">Message</button>
-          <button class="btn ghost">Compare →</button>
-        </div>
-      </article>
-
-      <article class="match-card" data-name="Milo" data-conn="romantic">
-        <div class="header">
-          <div style="display:flex;gap:10px;align-items:center">
-            <div class="avatar">M</div>
-            <div class="name">Milo</div>
+          <div>
+            <label for="f-ct">Connection Type</label>
+            <select id="f-ct">
+              <option value="">Any</option>
+              <option>Friendship</option><option>Romantic</option><option>Both</option>
+            </select>
           </div>
-          <div class="score" data-score="74"><div class="num">74%</div></div>
-        </div>
-        <div class="badges">
-          <span class="badge">🧘 Meditation</span><span class="badge">✈️ Travel</span>
-          <span class="badge">🌱 Growth</span><span class="badge">🌞 Freedom</span>
-        </div>
-        <div class="actions">
-          <a class="btn" href="friends.html">Edit in Friends</a>
-          <button class="btn ghost">Message</button>
-          <button class="btn ghost">Compare →</button>
-        </div>
-      </article>
-
-      <article class="match-card" data-name="Nova" data-conn="friendship">
-        <div class="header">
-          <div style="display:flex;gap:10px;align-items:center">
-            <div class="avatar">N</div>
-            <div class="name">Nova</div>
+          <div>
+            <label for="f-min">Min score</label>
+            <input id="f-min" type="number" min="0" max="100" step="5" value="0" />
           </div>
-          <div class="score" data-score="68"><div class="num">68%</div></div>
+          <div class="slider">
+            <div>
+              <label for="f-llw">Love Language weight</label>
+              <input id="f-llw" type="range" min="0" max="2" step=".1" value="1" style="width:180px" />
+            </div>
+            <div id="llw-label">1.0×</div>
+            <button class="btn" id="btn-reset" style="margin-left:8px">Reset</button>
+          </div>
         </div>
-        <div class="badges">
-          <span class="badge">🎨 Art</span><span class="badge">🍳 Cooking</span>
-          <span class="badge">💎 Honesty</span><span class="badge">🌱 Growth</span>
-        </div>
-        <div class="actions">
-          <a class="btn" href="friends.html">Edit in Friends</a>
-          <button class="btn ghost">Message</button>
-          <button class="btn ghost">Compare →</button>
-        </div>
-      </article>
+      </section>
     </section>
 
-    <!-- Bottom CTA -->
-    <div class="page-cta">
-      <a class="btn ghost" href="soul-coach.html">← Back</a>
-      <a class="btn primary" href="friends.html">Next → Friends</a>
-    </div>
+    <!-- Results -->
+    <section id="empty" class="empty" style="display:none;margin-top:16px">Add some friends in <a href="friends.html">Friends</a> to see matches ✨</section>
+    <section id="results" class="enter"></section>
 
-    <footer>© 2025 Soulink.global | Created with love by Soulink Team</footer>
+    <nav style="display:flex;justify-content:space-between;gap:10px;margin-top:16px">
+      <a class="btn" href="soul-coach.html">← Back: Soul Coach</a>
+      <a class="btn" href="result.html">Next: Results →</a>
+    </nav>
+
+    <footer>
+      <span>© 2025 Soulink.global | Created with love by Soulink Team</span>
+    </footer>
   </main>
 
-  <!-- Minimalus, izoliuotas JS tik Match puslapiui -->
-  <script src="match.js?v=3" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.js" defer></script>
+  <script src="match.js?v=4" defer></script>
+  <script>
+    // navbar + drawer
+    const navbar=document.querySelector('.navbar');
+    const onScroll=()=>{ if(window.scrollY>6) navbar.classList.add('scrolled'); else navbar.classList.remove('scrolled'); };
+    onScroll(); addEventListener('scroll', onScroll, {passive:true});
+    const drawer=document.getElementById('drawer');
+    document.getElementById('openDrawer')?.addEventListener('click',()=>{ drawer.classList.add('open'); document.body.classList.add('no-scroll'); });
+    document.getElementById('closeDrawer')?.addEventListener('click',()=>{ drawer.classList.remove('open'); document.body.classList.remove('no-scroll'); });
+    document.getElementById('drawerBackdrop')?.addEventListener('click',()=>{ drawer.classList.remove('open'); document.body.classList.remove('no-scroll'); });
+    document.getElementById('logoutLink')?.addEventListener('click', e=>{e.preventDefault();localStorage.clear();location.href='index.html';});
+    document.getElementById('logoutLinkMobile')?.addEventListener('click', e=>{e.preventDefault();localStorage.clear();location.href='index.html';});
+
+    // page background stars (light)
+    (function(){
+      const cvs=document.getElementById('stars'), ctx=cvs.getContext('2d');
+      const DPR=window.devicePixelRatio||1, reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+      function size(){ cvs.width=innerWidth*DPR; cvs.height=innerHeight*DPR; }
+      size(); addEventListener('resize', size);
+      const N = innerWidth<560 ? 24 : 40;
+      const stars = Array.from({length:N}, ()=>({ x:Math.random()*cvs.width, y:Math.random()*cvs.height, r:(Math.random()*1.2+0.6)*DPR, a:Math.random()*Math.PI*2}));
+      function tick(){
+        ctx.clearRect(0,0,cvs.width,cvs.height);
+        for(const s of stars){
+          s.a += 0.02 + Math.random()*0.015;
+          const flick=(Math.sin(s.a)+1)/2;
+          ctx.beginPath(); ctx.fillStyle=`rgba(0,253,216,${0.12+0.28*flick})`;
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
+        }
+        if(!reduce) requestAnimationFrame(tick);
+      }
+      tick();
+    })();
+  </script>
 </body>
 </html>
