@@ -5,71 +5,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Soulink · Match</title>
 
-  <!-- Page-local additions only for Match (nekeičia kitų puslapių) -->
+  <!-- Page-local CSS (tik Match). Nekeičia kitų puslapių. -->
   <style>
     :root{
-      --bg:#003c43; --fg:#eaf8f6; --accent:#00fdd8; --card:#014a52;
-      --border:rgba(0,253,216,.35);
+      --bg:#003c43; --fg:#eaf8f6; --accent:#00fdd8; --border:rgba(0,253,216,.35);
     }
     html,body{background:var(--bg);color:var(--fg);margin:0}
     .container{max-width:1100px;margin:0 auto;padding:24px}
 
-    /* Title + subline (pagal prompt) */
+    /* Title row — kompaktinis */
     .page-title{font-size:clamp(20px,2.2vw,28px);margin:0 0 8px}
     .page-sub{opacity:.9;margin:0 0 16px}
 
-    /* Snapshot + Filters top row */
+    /* Snapshot + Filters dviejų stulpelių išdėstymas */
     .top-row{display:grid;gap:16px;align-items:start}
-    @media(min-width:1024px){
-      .top-row{grid-template-columns:1fr minmax(280px,340px)}
-    }
+    @media(min-width:1024px){ .top-row{grid-template-columns:1fr minmax(280px,340px)} }
+
+    /* Kortos (naudojam tą patį vibe) */
     .card{background:linear-gradient(180deg,rgba(1,74,82,.74),rgba(1,74,82,.56));
-      border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:
-      0 0 0 1px var(--border),0 10px 30px rgba(0,253,216,.06)}
+      border:1px solid var(--border);border-radius:16px;padding:16px;
+      box-shadow:0 0 0 1px var(--border),0 10px 30px rgba(0,253,216,.06)}
+    .glow-card{position:relative}
     .glow-card::after{content:"";position:absolute;inset:-1px;border-radius:16px;
       box-shadow:0 0 24px rgba(0,253,216,.25),0 0 48px rgba(0,253,216,.15);
       pointer-events:none;opacity:0;transition:opacity .6s ease}
     .glow-card:hover::after{opacity:.9}
 
-    /* Mobile drawer controls */
+    .avatar{width:40px;height:40px;border-radius:999px;border:1px solid var(--border);
+      display:grid;place-items:center;background:rgba(0,253,216,.08);font-weight:700}
+    .name{font-weight:700}
+    .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    .badge{padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(0,253,216,.06);font-size:.92rem}
+
+    /* Mobile filters drawer (unikalūs ID) */
     .only-mobile{display:none}
     @media(max-width:767px){
       .only-mobile{display:inline-flex}
       #filtersPanel{position:fixed;inset:0 0 0 auto;width:min(88vw,360px);
         transform:translateX(100%);transition:transform .25s ease;background:#082e33;
-        z-index:60;padding:16px}
+        z-index:60;padding:16px;box-shadow:-16px 0 40px rgba(0,0,0,.35)}
       #filtersPanel.open{transform:translateX(0)}
     }
+    @media(min-width:768px){ .only-mobile{display:none} }
 
-    /* Cards grid 3/2/1 */
+    /* Kortelių tinklelis 3/2/1 */
     .cards{display:grid;gap:14px;margin-top:16px}
     @media(min-width:1280px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
     @media(min-width:768px) and (max-width:1279px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:767px){.cards{grid-template-columns:1fr}}
 
-    /* Match card (palikta ankstesnė estetika, tik minimalus hover) */
+    /* Match card */
     .match-card{position:relative;background:linear-gradient(180deg,rgba(1,74,82,.78),rgba(1,74,82,.58));
       border:1px solid var(--border);border-radius:16px;padding:14px;transition:transform .15s ease, box-shadow .2s ease}
     .match-card:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--border),0 14px 28px rgba(0,253,216,.10)}
     .match-card .header{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .avatar{width:40px;height:40px;border-radius:999px;display:grid;place-items:center;
-      background:rgba(0,253,216,.10);border:1px solid var(--border);font-weight:700}
-    .name{font-weight:700}
-    .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-    .badge{padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(0,253,216,.06);font-size:.92rem}
     .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-    .btn{appearance:none;border:1px solid var(--border);background:transparent;color:var(--fg);
-      padding:8px 12px;border-radius:10px;cursor:pointer;min-height:40px}
-    .btn.primary{background:var(--accent);color:#003136;border:none}
-    .btn.ghost{background:transparent}
-    .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-    /* Score ring (canvas viduje .score) */
+    /* Score ring (canvas) */
     .score{position:relative;width:52px;height:52px}
     .score canvas{position:absolute;inset:0}
     .score .num{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:.9rem}
 
-    /* CTA apačioje */
+    /* Bottom CTA */
     .page-cta{display:flex;gap:12px;justify-content:space-between;margin:24px 0}
     @media(max-width:767px){.page-cta{flex-direction:column}.page-cta .btn{width:100%}}
 
@@ -77,17 +74,20 @@
   </style>
 </head>
 
+<!-- svarbu: data-page="match" -->
 <body data-page="match">
-  <!-- Top nav (palikta seka Coach → Match → Friends → Results; auth dešinėje) -->
+  <!-- Header / Nav: naudok tą patį komponentą kaip kituose puslapiuose.
+       Čia minimalus variantas su klasėmis, kurias jau turi projekte (.topnav/.btn ir pan.). -->
   <nav class="topnav" role="navigation" aria-label="Main">
     <div class="container" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-      <div class="left" style="display:flex;gap:12px;flex-wrap:wrap">
-        <a data-nav="coach" href="soul-coach.html">Soul Coach</a>
-        <a data-nav="match" href="match.html">Match</a>
+      <div class="brand">Soulink</div>
+      <div class="nav-group" style="display:flex;gap:12px;flex-wrap:wrap">
+        <a data-nav="coach"   href="soul-coach.html">Soul Coach</a>
+        <a data-nav="match"   href="match.html" class="is-active">Match</a>
         <a data-nav="friends" href="friends.html">Friends</a>
         <a data-nav="results" href="result.html">Results</a>
       </div>
-      <div class="right" style="display:flex;gap:12px;flex-wrap:wrap">
+      <div class="nav-auth" style="display:flex;gap:12px;flex-wrap:wrap">
         <a href="login.html">Log In</a>
         <a href="signup.html">Sign Up</a>
         <a href="#" id="logoutLink">Log Out</a>
@@ -96,20 +96,20 @@
   </nav>
 
   <main class="container">
-    <!-- Tik title + subline (hero pašalintas) -->
+    <!-- Kompaktiškas title + subline -->
     <h1 class="page-title">Match Lab ✨</h1>
     <p class="page-sub">See who resonates with your Connection, Love Language, Hobbies and Values. Hover or tap each card for details.</p>
 
     <!-- Snapshot + Filters -->
     <div class="top-row">
-      <!-- Snapshot (kairėje desktop; viršuje mobile) -->
+      <!-- Snapshot -->
       <section id="yourSnapshot" class="card glow-card" style="position:relative">
         <h3 style="margin:0 0 8px">Your Snapshot</h3>
         <div style="display:flex;align-items:center;gap:12px">
           <div class="avatar" id="youAvatar">Y</div>
           <div>
             <div id="youName" class="name">You</div>
-            <div id="youMeta" style="opacity:.9;font-size:.95rem">Connection • Love Language • 2–4 Hobbies • Values</div>
+            <div id="youMeta" style="opacity:.9;font-size:.95rem">🎭 • 💌 • 🎵 • 💎</div>
           </div>
         </div>
         <div class="badges" id="youBadges" aria-live="polite" style="margin-top:10px"></div>
@@ -118,8 +118,8 @@
         <button id="filtersToggle" class="btn ghost only-mobile" style="margin-top:12px">Filters</button>
       </section>
 
-      <!-- Filters (dešinėje desktop; drawer mobile) -->
-      <aside id="filtersPanel" class="card glow-card filters" aria-label="Filters">
+      <!-- Filters (desktop dešinėje; mobile – drawer) -->
+      <aside id="filtersPanel" class="card glow-card filters-panel" aria-label="Filters">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
           <h3 style="margin:0">Filters</h3>
           <button class="btn ghost only-mobile" data-close="filters">Close</button>
@@ -154,10 +154,10 @@
       </aside>
     </div>
 
-    <!-- Cards grid (3/2/1) -->
+    <!-- Cards grid -->
     <section class="cards" id="cards">
-      <!-- Pavyzdinės kortelės (jei turi savo generavimą – jos pasikeis) -->
-      <article class="match-card">
+      <!-- Pavyzdžiai (jei turi savo generavimą – šie tik placeholderiai) -->
+      <article class="match-card" data-name="Aila" data-conn="both">
         <div class="header">
           <div style="display:flex;gap:10px;align-items:center">
             <div class="avatar">A</div>
@@ -176,7 +176,7 @@
         </div>
       </article>
 
-      <article class="match-card">
+      <article class="match-card" data-name="Milo" data-conn="romantic">
         <div class="header">
           <div style="display:flex;gap:10px;align-items:center">
             <div class="avatar">M</div>
@@ -195,7 +195,7 @@
         </div>
       </article>
 
-      <article class="match-card">
+      <article class="match-card" data-name="Nova" data-conn="friendship">
         <div class="header">
           <div style="display:flex;gap:10px;align-items:center">
             <div class="avatar">N</div>
@@ -215,7 +215,7 @@
       </article>
     </section>
 
-    <!-- CTA apačioje -->
+    <!-- Bottom CTA -->
     <div class="page-cta">
       <a class="btn ghost" href="soul-coach.html">← Back</a>
       <a class="btn primary" href="friends.html">Next → Friends</a>
@@ -224,7 +224,7 @@
     <footer>© 2025 Soulink.global | Created with love by Soulink Team</footer>
   </main>
 
-  <!-- Minimal JS pagal prompt (filters drawer + ring’ai) -->
-  <script src="match.js?v=2" defer></script>
+  <!-- Minimalus, izoliuotas JS tik Match puslapiui -->
+  <script src="match.js?v=3" defer></script>
 </body>
 </html>
