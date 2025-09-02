@@ -124,7 +124,9 @@ function animateRings(scope=document){
 
 
 /* --------- UI helpers ---------- */
-const resultsEl = $('#results'), emptyEl = $('#empty');
+const resultsEl = document.querySelector('#matchGrid') || document.querySelector('#results');
+const emptyEl   = document.querySelector('#mlabEmpty') || document.querySelector('#empty')
+|| (()=>{ const p=document.createElement('p'); p.style.display='none'; resultsEl?.after?.(p); return p; })();
 
 function listChips(title, list, iconFn){
   if(!list || !list.length) return '';
