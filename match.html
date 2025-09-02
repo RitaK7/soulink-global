@@ -149,47 +149,27 @@
   <!-- Žvaigždučių fonas (tik šiam puslapiui) -->
   <div class="starfield" aria-hidden="true"></div>
 
-  <!-- NAVBAR -->
-  <nav class="navbar" role="navigation" aria-label="Main">
-    <div class="nav-inner">
-      <div class="brand">Soulink</div>
-      <div class="nav-links" aria-label="Primary">
-        <a href="index.html">Home</a>
-        <a href="quiz.html">Quiz</a>
-        <a href="edit-profile.html">Edit Profile</a>
-        <a href="my-soul.html" aria-current="page">My Soul</a>
-        <a href="soul-chart.html">Soul Chart</a>
-        <a href="soul-coach.html">Soul Coach</a>
-        <a href="match.html">Match</a>
-        <a href="friends.html">Friends</a>
-        <a href="result.html">Results</a>
-        <a href="login.html">Log In</a>
-        <a href="signup.html">Sign Up</a>
-        <a href="#" id="logoutLink">Log Out</a>
-      </div>
-      <div class="hamburger"><button id="openDrawer" aria-label="Open menu">☰ Menu</button></div>
-    </div>
-  </nav>
+  <!-- Header/nav – paliekame kaip projekte; tik įsitikinam, kad „Match“ aktyvus per esamą mechanizmą -->
+<nav class="navbar" role="navigation" aria-label="Main">
+  <div class="nav-inner">
+    <div class="brand">Soulink</div>
 
-  <!-- MOBILE DRAWER -->
-  <div class="drawer" id="drawer" aria-hidden="true">
-    <div class="backdrop" id="drawerBackdrop" tabindex="-1" aria-label="Close"></div>
-    <aside class="panel" role="dialog" aria-modal="true" aria-label="Navigation">
-      <a href="index.html">Home</a>
-      <a href="quiz.html">Quiz</a>
-      <a href="edit-profile.html">Edit Profile</a>
-      <a href="my-soul.html">My Soul</a>
-      <a href="soul-chart.html">Soul Chart</a>
-      <a href="soul-coach.html">Soul Coach</a>
-      <a href="match.html" aria-current="page">Match</a>
-      <a href="friends.html">Friends</a>
-      <a href="result.html">Results</a>
+    <div class="nav-links" aria-label="Primary">
+      <a href="soul-coach.html" data-nav="coach">Soul Coach</a>
+      <a href="match.html" data-nav="match">Match</a>
+      <a href="friends.html" data-nav="friends">Friends</a>
+      <a href="result.html" data-nav="results">Results</a>
+
+      <!-- auth dešinėje – gali laikyti toje pačioje grupėje -->
       <a href="login.html">Log In</a>
       <a href="signup.html">Sign Up</a>
-      <a href="#" id="logoutLinkMobile">Log Out</a>
-      <button class="btn ghost" id="closeDrawer" style="margin-top:8px">Close</button>
-    </aside>
+      <a href="#" id="logoutLink">Log Out</a>
+    </div>
+
+    <div class="hamburger"><button id="openDrawer" aria-label="Open menu">☰ Menu</button></div>
   </div>
+</nav>
+
   <main class="container container--match">
     <!-- Kompaktiškas title -->
     <h1 class="page-title">Match Lab ✨</h1>
@@ -282,16 +262,29 @@
       c?.addEventListener('click', toggle);
     }
   })();
-  (()=>{ // min score live label
-    const r=document.getElementById('f-min'), lab=document.getElementById('minLabel');
-    if(r && lab){ const upd=()=>lab.textContent=r.value+'%'; r.addEventListener('input',upd); upd(); }
-  })();
-  (()=>{ // nav active by data-page/data-nav
-    const page = document.body.getAttribute('data-page') || 'match';
-    document.querySelectorAll('[data-nav]').forEach(a=>{
-      if(a.getAttribute('data-nav')===page) a.classList.add('is-active');
-    });
-  })();
+  /* Min score gyvas labelis */
+(() => {
+  const r   = document.getElementById('f-min');
+  const lab = document.getElementById('minlabel');
+  if (r && lab) {
+    const upd = () => { lab.textContent = r.value + '%'; };
+    upd();
+    r.addEventListener('input', upd);
+  }
+})();
+
+/* Aktyvus nav pagal body[data-page] */
+(() => {
+  const page = document.body.dataset.page; // pvz. "match"
+  if (!page) return;
+  // palaikyk ir .topnav, ir .nav-links — priklausomai nuo puslapio
+  document.querySelectorAll('.topnav a[data-nav], .nav-links a[data-nav]').forEach(a => {
+    const isActive = a.dataset.nav === page;
+    a.toggleAttribute('data-active', isActive);
+    if (isActive) a.setAttribute('aria-current', 'page');
+    else a.removeAttribute('aria-current');
+  });
+})();
   </script>
 </body>
 </html>

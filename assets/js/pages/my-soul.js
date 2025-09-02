@@ -67,26 +67,34 @@
     return parts.join(" ");
   }
 
-  function buildSummary(data) {
-    const name = data.name || "You";
-    const loves = normalizeList(data.loveLanguages || data.loveLanguage);
-    const primary = pickPrimaryLove(loves);
-    const ctype = data.connectionType || "both";
-    const about = (data.about || "").trim();
-    if (about) return about;
+function buildSummary(d){
+  const n = d.name || 'You';
+  const loves = Array.isArray(d.loveLanguages) ? d.loveLanguages : (d.loveLanguage ? [d.loveLanguage] : []);
+  const p = loves[0];
+  const ct = d.connectionType || 'meaningful connections';
+  const about = (d.about || '').trim();
 
-    const seek =
-      ctype === "romance"
-        ? "romance"
-        : ctype === "friendship"
-        ? "friendship"
-        : "meaningful connections";
+  const blessing = 'Your soul is seeking resonance. Trust your path, and the right connections will find you.';
 
-    if (primary) {
-      return `${name} is seeking ${seek}. Your heart blossoms with ${primary}. Be open, gentle and clear — resonance will find you.`;
+  // jei About turi mažai teksto — pridedam švelnų palaiminimą
+  if (about) {
+    const normalized = about.replaceAll('!','.').replaceAll('?','.');
+    const count = normalized.split('.').filter(s => s.trim()).length;
+    if (count < 2) {
+      const ensured = normalized.trim().endsWith('.') ? normalized.trim() : normalized.trim() + '.';
+      return ensured + ' ' + blessing;
     }
-    return `${name} is ready for ${seek}. Lead with your values, and let your light be seen.`;
+    return about;
   }
+
+  const a = p
+    ? `${n} is ready for ${ct}. Your heart blossoms in ${p}—let it be seen.`
+    : `${n} is ready for ${ct}. Lead with your values and steady light.`;
+
+  const b = `Trust your pace. The right souls will recognize your glow.`;
+  return `${a} ${b} ${blessing}`;
+}
+
 
   function render() {
     const data = parseSoulQuiz();
