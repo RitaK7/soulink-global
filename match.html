@@ -3,117 +3,228 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Soulink · Match Lab</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Soulink · Match</title>
+
+  <!-- Page-local additions only for Match (nekeičia kitų puslapių) -->
+  <style>
+    :root{
+      --bg:#003c43; --fg:#eaf8f6; --accent:#00fdd8; --card:#014a52;
+      --border:rgba(0,253,216,.35);
+    }
+    html,body{background:var(--bg);color:var(--fg);margin:0}
+    .container{max-width:1100px;margin:0 auto;padding:24px}
+
+    /* Title + subline (pagal prompt) */
+    .page-title{font-size:clamp(20px,2.2vw,28px);margin:0 0 8px}
+    .page-sub{opacity:.9;margin:0 0 16px}
+
+    /* Snapshot + Filters top row */
+    .top-row{display:grid;gap:16px;align-items:start}
+    @media(min-width:1024px){
+      .top-row{grid-template-columns:1fr minmax(280px,340px)}
+    }
+    .card{background:linear-gradient(180deg,rgba(1,74,82,.74),rgba(1,74,82,.56));
+      border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:
+      0 0 0 1px var(--border),0 10px 30px rgba(0,253,216,.06)}
+    .glow-card::after{content:"";position:absolute;inset:-1px;border-radius:16px;
+      box-shadow:0 0 24px rgba(0,253,216,.25),0 0 48px rgba(0,253,216,.15);
+      pointer-events:none;opacity:0;transition:opacity .6s ease}
+    .glow-card:hover::after{opacity:.9}
+
+    /* Mobile drawer controls */
+    .only-mobile{display:none}
+    @media(max-width:767px){
+      .only-mobile{display:inline-flex}
+      #filtersPanel{position:fixed;inset:0 0 0 auto;width:min(88vw,360px);
+        transform:translateX(100%);transition:transform .25s ease;background:#082e33;
+        z-index:60;padding:16px}
+      #filtersPanel.open{transform:translateX(0)}
+    }
+
+    /* Cards grid 3/2/1 */
+    .cards{display:grid;gap:14px;margin-top:16px}
+    @media(min-width:1280px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(min-width:768px) and (max-width:1279px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:767px){.cards{grid-template-columns:1fr}}
+
+    /* Match card (palikta ankstesnė estetika, tik minimalus hover) */
+    .match-card{position:relative;background:linear-gradient(180deg,rgba(1,74,82,.78),rgba(1,74,82,.58));
+      border:1px solid var(--border);border-radius:16px;padding:14px;transition:transform .15s ease, box-shadow .2s ease}
+    .match-card:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--border),0 14px 28px rgba(0,253,216,.10)}
+    .match-card .header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .avatar{width:40px;height:40px;border-radius:999px;display:grid;place-items:center;
+      background:rgba(0,253,216,.10);border:1px solid var(--border);font-weight:700}
+    .name{font-weight:700}
+    .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    .badge{padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(0,253,216,.06);font-size:.92rem}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .btn{appearance:none;border:1px solid var(--border);background:transparent;color:var(--fg);
+      padding:8px 12px;border-radius:10px;cursor:pointer;min-height:40px}
+    .btn.primary{background:var(--accent);color:#003136;border:none}
+    .btn.ghost{background:transparent}
+    .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+    /* Score ring (canvas viduje .score) */
+    .score{position:relative;width:52px;height:52px}
+    .score canvas{position:absolute;inset:0}
+    .score .num{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:.9rem}
+
+    /* CTA apačioje */
+    .page-cta{display:flex;gap:12px;justify-content:space-between;margin:24px 0}
+    @media(max-width:767px){.page-cta{flex-direction:column}.page-cta .btn{width:100%}}
+
+    footer{margin:20px 0 16px;padding-top:12px;border-top:1px solid var(--border);opacity:.9;font-size:.95rem}
+  </style>
 </head>
 
-<!-- IMPORTANT: page id -->
 <body data-page="match">
-  <!-- Unified top navigation -->
+  <!-- Top nav (palikta seka Coach → Match → Friends → Results; auth dešinėje) -->
   <nav class="topnav" role="navigation" aria-label="Main">
-    <div class="topnav__inner">
-      <div class="brand">Soulink</div>
-      <div class="topnav__links">
-        <a data-nav="coach"   href="soul-coach.html">Soul Coach</a>
-        <a data-nav="match"   href="match.html">Match</a>
+    <div class="container" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div class="left" style="display:flex;gap:12px;flex-wrap:wrap">
+        <a data-nav="coach" href="soul-coach.html">Soul Coach</a>
+        <a data-nav="match" href="match.html">Match</a>
         <a data-nav="friends" href="friends.html">Friends</a>
         <a data-nav="results" href="result.html">Results</a>
       </div>
-      <div class="topnav__auth">
+      <div class="right" style="display:flex;gap:12px;flex-wrap:wrap">
         <a href="login.html">Log In</a>
         <a href="signup.html">Sign Up</a>
         <a href="#" id="logoutLink">Log Out</a>
       </div>
-
-      <!-- mobile filters toggle lives here on small screens -->
-      <button id="filtersToggle" class="btn ghost topnav__filtersBtn" aria-controls="filtersPanel" aria-expanded="false">
-        ☰ Filters
-      </button>
     </div>
   </nav>
 
   <main class="container">
-    <header class="pagehead">
-      <h1>Match Lab</h1>
-      <p class="muted">Tune your filters and discover glowing matches.</p>
-    </header>
+    <!-- Tik title + subline (hero pašalintas) -->
+    <h1 class="page-title">Match Lab ✨</h1>
+    <p class="page-sub">See who resonates with your Connection, Love Language, Hobbies and Values. Hover or tap each card for details.</p>
 
-    <!-- Filters drawer / panel -->
-    <aside id="filtersPanel" class="filtersPanel" aria-hidden="true">
-      <div class="filtersPanel__inner">
-        <h2>Filters</h2>
-        <!-- keep your existing filter controls here -->
-        <div class="filters__row">
-          <button id="applyFilters" class="btn primary">Apply</button>
-          <button id="closeFilters" class="btn ghost">Close</button>
+    <!-- Snapshot + Filters -->
+    <div class="top-row">
+      <!-- Snapshot (kairėje desktop; viršuje mobile) -->
+      <section id="yourSnapshot" class="card glow-card" style="position:relative">
+        <h3 style="margin:0 0 8px">Your Snapshot</h3>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="avatar" id="youAvatar">Y</div>
+          <div>
+            <div id="youName" class="name">You</div>
+            <div id="youMeta" style="opacity:.9;font-size:.95rem">Connection • Love Language • 2–4 Hobbies • Values</div>
+          </div>
         </div>
-      </div>
-    </aside>
+        <div class="badges" id="youBadges" aria-live="polite" style="margin-top:10px"></div>
 
-    <!-- Match grid (your cards rendering stays the same) -->
-    <section class="matches">
-      <div id="matchGrid" class="matchGrid" aria-live="polite">
-        <p id="mlabEmpty" class="muted" style="display:none">
-    No candidates found. Add friends or relax filters.
-      </p>
-        <!-- your JS (match.js) fills cards here -->
-      </div>
+        <!-- Mobile drawer toggle -->
+        <button id="filtersToggle" class="btn ghost only-mobile" style="margin-top:12px">Filters</button>
+      </section>
+
+      <!-- Filters (dešinėje desktop; drawer mobile) -->
+      <aside id="filtersPanel" class="card glow-card filters" aria-label="Filters">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <h3 style="margin:0">Filters</h3>
+          <button class="btn ghost only-mobile" data-close="filters">Close</button>
+        </div>
+
+        <div style="display:grid;gap:12px;margin-top:12px">
+          <label style="display:grid;gap:6px">
+            <span>Search</span>
+            <input id="q" type="text" placeholder="Name or keyword"
+                   style="padding:10px;border-radius:10px;border:1px solid var(--border);background:rgba(0,253,216,.06);color:var(--fg)">
+          </label>
+
+          <label style="display:grid;gap:6px">
+            <span>Min score</span>
+            <input id="minScore" type="range" value="0" min="0" max="100">
+          </label>
+
+          <div>
+            <span style="display:block;margin:0 0 6px">Connection</span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn ghost" data-filter-conn="friendship">Friendship</button>
+              <button class="btn ghost" data-filter-conn="romantic">Romantic</button>
+              <button class="btn ghost" data-filter-conn="both">Both</button>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+            <button id="applyFilters" class="btn primary">Apply</button>
+            <button class="btn ghost" data-close="filters">Close</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Cards grid (3/2/1) -->
+    <section class="cards" id="cards">
+      <!-- Pavyzdinės kortelės (jei turi savo generavimą – jos pasikeis) -->
+      <article class="match-card">
+        <div class="header">
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="avatar">A</div>
+            <div class="name">Aila</div>
+          </div>
+          <div class="score" data-score="86"><div class="num">86%</div></div>
+        </div>
+        <div class="badges">
+          <span class="badge">🎵 Music</span><span class="badge">📚 Reading</span>
+          <span class="badge">💎 Honesty</span><span class="badge">❤️ Kindness</span>
+        </div>
+        <div class="actions">
+          <a class="btn" href="friends.html">Edit in Friends</a>
+          <button class="btn ghost">Message</button>
+          <button class="btn ghost">Compare →</button>
+        </div>
+      </article>
+
+      <article class="match-card">
+        <div class="header">
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="avatar">M</div>
+            <div class="name">Milo</div>
+          </div>
+          <div class="score" data-score="74"><div class="num">74%</div></div>
+        </div>
+        <div class="badges">
+          <span class="badge">🧘 Meditation</span><span class="badge">✈️ Travel</span>
+          <span class="badge">🌱 Growth</span><span class="badge">🌞 Freedom</span>
+        </div>
+        <div class="actions">
+          <a class="btn" href="friends.html">Edit in Friends</a>
+          <button class="btn ghost">Message</button>
+          <button class="btn ghost">Compare →</button>
+        </div>
+      </article>
+
+      <article class="match-card">
+        <div class="header">
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="avatar">N</div>
+            <div class="name">Nova</div>
+          </div>
+          <div class="score" data-score="68"><div class="num">68%</div></div>
+        </div>
+        <div class="badges">
+          <span class="badge">🎨 Art</span><span class="badge">🍳 Cooking</span>
+          <span class="badge">💎 Honesty</span><span class="badge">🌱 Growth</span>
+        </div>
+        <div class="actions">
+          <a class="btn" href="friends.html">Edit in Friends</a>
+          <button class="btn ghost">Message</button>
+          <button class="btn ghost">Compare →</button>
+        </div>
+      </article>
     </section>
 
-    <!-- Pager -->
-    <nav class="pager">
+    <!-- CTA apačioje -->
+    <div class="page-cta">
       <a class="btn ghost" href="soul-coach.html">← Back</a>
       <a class="btn primary" href="friends.html">Next → Friends</a>
-    </nav>
+    </div>
+
+    <footer>© 2025 Soulink.global | Created with love by Soulink Team</footer>
   </main>
 
-  <footer class="sitefooter">
-    © 2025 Soulink.global | Created with love by Soulink Team
-  </footer>
-
-  <script src="match.js" defer></script>
-
-  <!-- Minimal nav + drawer activator -->
-  <script>
-    (function () {
-      // set active nav via data-page/data-nav
-      const page = document.body.dataset.page;
-      document.querySelectorAll('.topnav a[data-nav]').forEach(a => {
-        if (a.dataset.nav === page) a.setAttribute('data-active', '1');
-      });
-
-      // filters drawer (unique IDs)
-      const toggleBtn = document.getElementById('filtersToggle');
-      const panel     = document.getElementById('filtersPanel');
-      const closeBtn  = document.getElementById('closeFilters');
-
-      const openPanel = () => {
-        panel.classList.add('open');
-        panel.setAttribute('aria-hidden', 'false');
-        toggleBtn.setAttribute('aria-expanded', 'true');
-        document.body.classList.add('no-scroll');
-      };
-      const closePanel = () => {
-        panel.classList.remove('open');
-        panel.setAttribute('aria-hidden', 'true');
-        toggleBtn.setAttribute('aria-expanded', 'false');
-        document.body.classList.remove('no-scroll');
-      };
-
-      toggleBtn?.addEventListener('click', () => {
-        panel.classList.contains('open') ? closePanel() : openPanel();
-      });
-      closeBtn?.addEventListener('click', closePanel);
-      panel?.addEventListener('click', (e) => {
-        if (e.target === panel) closePanel(); // click on backdrop
-      });
-      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closePanel(); });
-
-      // optional: logout clears storage (kept from other pages)
-      document.getElementById('logoutLink')?.addEventListener('click',(e)=>{
-        e.preventDefault(); localStorage.clear(); location.href='index.html';
-      });
-    })();
-  </script>
+  <!-- Minimal JS pagal prompt (filters drawer + ring’ai) -->
+  <script src="match.js?v=2" defer></script>
 </body>
 </html>
