@@ -149,24 +149,47 @@
   <!-- Žvaigždučių fonas (tik šiam puslapiui) -->
   <div class="starfield" aria-hidden="true"></div>
 
-  <!-- Header/nav – paliekame kaip projekte; tik įsitikinam, kad „Match“ aktyvus per esamą mechanizmą -->
-  <nav class="navbar">
+  <!-- NAVBAR -->
+  <nav class="navbar" role="navigation" aria-label="Main">
     <div class="nav-inner">
-      <a class="brand" href="index.html">Soulink</a>
-      <div class="nav-links">
-        <a href="soul-coach.html" data-nav="coach">Soul Coach</a>
-        <a href="match.html" data-nav="match">Match</a>
-        <a href="friends.html" data-nav="friends">Friends</a>
-        <a href="result.html" data-nav="results">Results</a>
-      </div>
-      <div class="nav-auth">
+      <div class="brand">Soulink</div>
+      <div class="nav-links" aria-label="Primary">
+        <a href="index.html">Home</a>
+        <a href="quiz.html">Quiz</a>
+        <a href="edit-profile.html">Edit Profile</a>
+        <a href="my-soul.html" aria-current="page">My Soul</a>
+        <a href="soul-chart.html">Soul Chart</a>
+        <a href="soul-coach.html">Soul Coach</a>
+        <a href="match.html">Match</a>
+        <a href="friends.html">Friends</a>
+        <a href="result.html">Results</a>
         <a href="login.html">Log In</a>
         <a href="signup.html">Sign Up</a>
         <a href="#" id="logoutLink">Log Out</a>
       </div>
+      <div class="hamburger"><button id="openDrawer" aria-label="Open menu">☰ Menu</button></div>
     </div>
   </nav>
 
+  <!-- MOBILE DRAWER -->
+  <div class="drawer" id="drawer" aria-hidden="true">
+    <div class="backdrop" id="drawerBackdrop" tabindex="-1" aria-label="Close"></div>
+    <aside class="panel" role="dialog" aria-modal="true" aria-label="Navigation">
+      <a href="index.html">Home</a>
+      <a href="quiz.html">Quiz</a>
+      <a href="edit-profile.html">Edit Profile</a>
+      <a href="my-soul.html">My Soul</a>
+      <a href="soul-chart.html">Soul Chart</a>
+      <a href="soul-coach.html">Soul Coach</a>
+      <a href="match.html" aria-current="page">Match</a>
+      <a href="friends.html">Friends</a>
+      <a href="result.html">Results</a>
+      <a href="login.html">Log In</a>
+      <a href="signup.html">Sign Up</a>
+      <a href="#" id="logoutLinkMobile">Log Out</a>
+      <button class="btn ghost" id="closeDrawer" style="margin-top:8px">Close</button>
+    </aside>
+  </div>
   <main class="container container--match">
     <!-- Kompaktiškas title -->
     <h1 class="page-title">Match Lab ✨</h1>
