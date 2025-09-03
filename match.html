@@ -160,10 +160,10 @@
       <a href="edit-profile.html">Edit Profile</a>
       <a href="my-soul.html">My Soul</a>
       <a href="soul-chart.html">Soul Chart</a>
-      <a href="soul-coach.html">Soul Coach</a>
-      <a href="match.html">Match</a>
-      <a href="friends.html">Friends</a>
-      <a href="result.html">Results</a>
+      <a href="soul-coach.html" data-nav="coach">Soul Coach</a>
+      <a href="match.html" data-nav="match">Match</a>
+      <a href="friends.html" data-nav="friends">Friends</a>
+      <a href="result.html" data-nav="results">Results</a>
       <a href="login.html">Log In</a>
       <a href="signup.html">Sign Up</a>
       <a href="#" id="logoutLink">Log Out</a>
@@ -300,15 +300,10 @@
 
 /* Aktyvus nav pagal body[data-page] */
 (() => {
-  const page = document.body.dataset.page; // pvz. "match"
-  if (!page) return;
-  // palaikyk ir .topnav, ir .nav-links — priklausomai nuo puslapio
-  document.querySelectorAll('.topnav a[data-nav], .nav-links a[data-nav]').forEach(a => {
-    const isActive = a.dataset.nav === page;
-    a.toggleAttribute('data-active', isActive);
-    if (isActive) a.setAttribute('aria-current', 'page');
-    else a.removeAttribute('aria-current');
-  });
+  const page = document.body.dataset.page; // "match"
+  if(!page) return;
+  document.querySelectorAll('.nav-links a[data-nav], .drawer .panel a[data-nav]')
+    .forEach(a => { if(a.dataset.nav === page) a.setAttribute('aria-current','page'); });
 })();
   </script>
 </body>
