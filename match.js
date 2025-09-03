@@ -367,4 +367,11 @@ render();
     };
   }
 })();
+// Po pirmo renderio ir kai keičiasi kortelės – pašalinam social row
+(function hideSocialRow(){
+  const kill = () => document.querySelectorAll('.match-card .social-icons').forEach(n=>n.remove());
+  kill();
+  const cardsWrap = document.getElementById('cards') || document.body;
+  new MutationObserver(kill).observe(cardsWrap, { childList:true, subtree:true });
+})();
 

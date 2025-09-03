@@ -142,6 +142,20 @@
   /* užtikrinam mygtukų click pojūtį */
   .btn{ transition: transform .06s ease, box-shadow .18s ease }
   .btn:active{ transform: translateY(1px) scale(.99) }
+  /* Hide social row on cards (prebėgančius „burbuliukus“) */
+  .match-card .social-icons{ display:none !important; }
+  /* NAV spalvos – kaip kituose puslapiuose */
+.navbar{ background:rgba(0,60,67,.85); border-bottom:1px solid var(--border) }
+.navbar .brand{ color:var(--accent); font-weight:800; letter-spacing:.4px }
+.navbar .nav-links a{ color:var(--fg); }
+.navbar .nav-links a[aria-current="page"],
+.navbar .nav-links a.is-active{
+  background:rgba(0,253,216,.14);
+  box-shadow:inset 0 0 0 1px var(--border);
+}
+.hamburger{ display:none; }
+@media (max-width:800px){ .hamburger{ display:block; } }
+
   </style>
 </head>
 
