@@ -1191,6 +1191,12 @@ body.no-scroll{ overflow:hidden; }
 .match-card .traits {
   display: none !important;
 }
+/* Kill old decorative mini-dot rows inside match cards */
+.match-card .mini-dots,
+.match-card .dots,
+.match-card .chem-dots {
+  display: none !important;
+}
 
 
 
