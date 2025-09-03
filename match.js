@@ -270,3 +270,32 @@ $('#btn-reset')?.addEventListener('click', ()=>{
 render();
 
 })(); 
+(() => {
+  // Aktyvus link pagal data-page / data-nav
+  const page = document.body.dataset.page || '';
+  document.querySelectorAll('.nav-links a[data-nav]').forEach(a => {
+    if (a.dataset.nav === page) a.setAttribute('aria-current','page');
+  });
+
+  // Drawer atidarymas/uždarymas
+  const open = document.getElementById('openDrawer');
+  const close = document.getElementById('closeDrawer');
+  const drawer = document.getElementById('drawer');
+  const backdrop = document.getElementById('drawerBackdrop');
+
+  const openD = () => { drawer?.classList.add('open'); document.body.classList.add('no-scroll'); };
+  const closeD = () => { drawer?.classList.remove('open'); document.body.classList.remove('no-scroll'); };
+
+  open?.addEventListener('click', openD);
+  close?.addEventListener('click', closeD);
+  backdrop?.addEventListener('click', closeD);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeD(); });
+
+  // Logout elgsena kaip kituose puslapiuose
+  document.getElementById('logoutLink')?.addEventListener('click', (e)=>{
+    e.preventDefault(); localStorage.clear(); location.href='index.html';
+  });
+  document.getElementById('logoutLinkMobile')?.addEventListener('click', (e)=>{
+    e.preventDefault(); localStorage.clear(); location.href='index.html';
+  });
+})();

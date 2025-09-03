@@ -1140,6 +1140,37 @@ main.container{position:relative;z-index:1}
   .navbar .nav-links{ display:none; }            /* mobile – slepiam pilną meniu */
   .navbar .hamburger{ display:block; }           /* mobile – rodom „☰ Menu“ */
 }
+/* --- NAV normalize (vienodas su kitais puslapiais) --- */
+.navbar { position: sticky; top: 0; z-index: 50; background: rgba(0,60,67,.85); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+.nav-inner { display:flex; justify-content:space-between; align-items:center; padding:10px 16px; }
+.nav-links { display:flex; gap:14px; flex-wrap:wrap; }
+.nav-links a { padding:8px 10px; border-radius:10px; border:1px solid transparent; transition:box-shadow .15s ease, border-color .15s ease; }
+.nav-links a:hover { border-color: var(--border); box-shadow:0 0 0 1px var(--border),0 0 16px rgba(0,253,216,.18); }
+.nav-links a[aria-current="page"] { border-color: var(--border); box-shadow: 0 0 0 1px var(--border) inset; }
+
+/* Hamburger – nematomas desktop'e, matomas tik mobile */
+.navbar .hamburger { display: none; }
+@media (max-width: 800px){
+  .navbar .nav-links { display: none; }
+  .navbar .hamburger { display: block; }
+}
+
+/* Slėpti „Menu“ tekstą didesniuose ekranuose (palikti tik ☰) */
+@media (min-width: 801px){
+  .navbar .hamburger .label { display: none; }
+}
+
+/* Drawer animacija kaip kituose puslapiuose */
+.drawer{ position:fixed; inset:0; display:none; z-index:100; }
+.drawer.open{ display:block; }
+.drawer .backdrop{ position:absolute; inset:0; background:rgba(0,60,67,.96); }
+.drawer .panel{ position:absolute; top:0; right:0; width:min(82vw,360px); height:100%; background:#003c43; border-left:1px solid var(--border); padding:18px; transform:translateX(100%); transition:transform .25s ease; }
+.drawer.open .panel{ transform:translateX(0); }
+@media (prefers-reduced-motion: reduce){ .drawer .panel { transition:none; } }
+body.no-scroll{ overflow:hidden; }
+.drawer .panel a{ display:block; padding:14px 12px; border-radius:12px; min-height:44px; transition:box-shadow .15s ease, background .15s ease; }
+.drawer .panel a:hover{ background:rgba(0,253,216,.08); box-shadow:0 0 0 1px var(--border),0 0 14px rgba(0,253,216,.18); }
+
 
 
 
