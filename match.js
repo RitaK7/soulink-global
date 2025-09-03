@@ -299,3 +299,15 @@ render();
     e.preventDefault(); localStorage.clear(); location.href='index.html';
   });
 })();
+// Add neutral mini dots to every card header for visual consistency
+(function uniformDots(){
+  const heads = document.querySelectorAll('.match-card .card-head');
+  heads.forEach(h=>{
+    if (!h.querySelector('.mini-dots')) {
+      const row = document.createElement('div');
+      row.className = 'mini-dots';
+      row.innerHTML = '<i></i><i></i><i></i><i></i>';
+      h.appendChild(row);
+    }
+  });
+})();

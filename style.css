@@ -1172,6 +1172,14 @@ body.no-scroll{ overflow:hidden; }
 .drawer .panel a:hover{ background:rgba(0,253,216,.08); box-shadow:0 0 0 1px var(--border),0 0 14px rgba(0,253,216,.18); }
 
 
+/* Hide stray bubble rows on any card (safe if class doesn't exist) */
+.match-card .bubbles,
+.match-card .mini-dots,
+.match-card .mini,
+.match-card .orbs {
+  display: none !important;
+}
+
 
 
 
