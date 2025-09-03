@@ -374,4 +374,12 @@ render();
   const cardsWrap = document.getElementById('cards') || document.body;
   new MutationObserver(kill).observe(cardsWrap, { childList:true, subtree:true });
 })();
-
+(() => {
+  const page = document.body.dataset.page;            // pvz. "match"
+  if (!page) return;
+  document.querySelectorAll('.nav-links a[data-nav]').forEach(a => {
+    const isActive = a.dataset.nav === page;
+    a.classList.toggle('is-active', isActive);
+    if (isActive) a.setAttribute('aria-current', 'page');
+  });
+})();
