@@ -311,3 +311,49 @@ render();
     }
   });
 })();
+// --- MATCH: remove stray mini circle rows on cards (robust) ---
+(function () {
+  function hideDotRows(root) {
+    if (!root) return;
+    const cards = root.querySelectorAll('.match-card');
+    cards.forEach(card => {
+      // apeinam visus galimus vidinius konteinerius
+      card.querySelectorAll(':scope *').forEach(el => {
+        const kids = Array.from(el.children);
+        if (kids.length >= 3 && kids.length <= 6) {
+          const isDotRow = kids.every(ch => {
+            const rect = ch.getBoundingClientRect();
+            const cs = getComputedStyle(ch);
+            const noText = !ch.textContent.trim();
+            const small = rect.width <= 18 && rect.height <= 18;
+            const round = parseFloat(cs.borderRadius || '0') >= rect.width / 2 - 1;
+            return noText && small && round;
+          });
+          if (isDotRow) el.style.display = 'none';
+        }
+      });
+    });
+  }
+
+  // paleidžiam kartą, kai DOM jau yra
+  const cardsRoot = document.querySelector('.cards') || document.getElementById('cards');
+  hideDotRows(cardsRoot);
+
+  // paleidžiam kaskart, kai kortelės persirenderina
+  if (cardsRoot) {
+    const mo = new MutationObserver(() => hideDotRows(cardsRoot));
+    mo.observe(cardsRoot, { childList: true, subtree: true });
+  }
+
+  // jei turi savo renderCards(), prijunk po jo:
+  if (typeof renderCards === 'function') {
+    const org = renderCards;
+    window.renderCards = function () {
+      const r = org.apply(this, arguments);
+      // šiek tiek vėliau, kai DOM įstatytas
+      setTimeout(() => hideDotRows(cardsRoot), 0);
+      return r;
+    };
+  }
+})();
+

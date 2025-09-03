@@ -1180,6 +1180,18 @@ body.no-scroll{ overflow:hidden; }
   display: none !important;
 }
 
+/* MATCH — hide stray bubble rows under names on all cards */
+.match-card .bubbles,
+.match-card .bubble-row,
+.match-card .mini-dots,
+.match-card .mini,
+.match-card .orbs,
+.match-card .meta-dots,
+.match-card .indicators,
+.match-card .traits {
+  display: none !important;
+}
+
 
 
 
