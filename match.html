@@ -3,373 +3,150 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Soulink · Match</title>
-
-  <!-- bendri stiliai jei naudojami projekte -->
+  <title>Soulink · Match Lab</title>
   <link rel="stylesheet" href="style.css"/>
-
   <style>
-  /* =========================
-     MATCH ENHANCEMENTS (layout, glow, a11y)
-     Palieka tavo esamą JS logiką neliečiamą
-     ========================= */
+    /* --- Page title guards --- */
+    .page-title{font-size:clamp(20px,2.2vw,28px);margin:0 0 8px}
+    .page-sub{opacity:.9;margin:0 0 16px}
 
-  :root{
-    --maxw: 1200px;
-    --accent:#00fdd8;
-    --card:rgba(255,255,255,.02);
-    --border:rgba(255,255,255,.08);
-  }
+    /* Container width */
+    .container.container--match{max-width:1200px;margin-inline:auto;padding-inline:clamp(16px,4vw,24px);padding-block:clamp(12px,3vw,24px)}
 
-  /* Centruotas, neribojamas layout'as */
-  .container.container--match{
-    max-width: var(--maxw);
-    margin-inline: auto;
-    padding-inline: clamp(16px,4vw,24px);
-    padding-block: clamp(12px,3vw,24px);
-  }
+    /* Snapshot + Filters layout */
+    .layout{display:grid;gap:clamp(12px,2.4vw,18px)}
+    @media (min-width:1024px){.layout{grid-template-columns:1.1fr .9fr;align-items:start}}
 
-  /* Titulinė eilutė – kompaktiška */
-  .page-title{font-size:clamp(20px,2.2vw,28px);margin:0 0 8px}
-  .page-sub{opacity:.9;margin:0 0 16px}
-
-  /* Viršuje – tavo snapshot + filtrai: 2 kolonos ≥1024px, kitaip – viena */
-  .layout{
-    display:grid;
-    gap: clamp(12px,2.4vw,18px);
-  }
-  @media (min-width:1024px){
-    .layout{
-      grid-template-columns: 1.1fr .9fr;
-      align-items:start;
+    /* Filters: sticky desktop, drawer mobile */
+    #filtersPanel.filters-panel{position:sticky;top:84px;align-self:start}
+    .only-mobile{display:none}
+    @media (max-width:767px){
+      .only-mobile{display:inline-flex}
+      #filtersPanel.filters-panel{
+        position:fixed; inset:0 0 0 auto; width:min(88vw,360px);
+        transform:translateX(100%); transition:transform .25s ease;
+        background:#082e33; z-index:60; padding:16px; box-shadow:-16px 0 40px rgba(0,0,0,.35)
+      }
+      #filtersPanel.open{transform:translateX(0)}
     }
-  }
+    @media (prefers-reduced-motion:reduce){#filtersPanel.filters-panel{transition:none}}
 
-  /* Snapshot žetonams */
-  .snapshot .chips{ display:flex; flex-wrap:wrap; gap:8px; }
-  .snapshot .chip{ max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    /* Cards grid (3/2/1) */
+    .cards{display:grid;gap:14px}
+    @media (min-width:1280px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media (min-width:768px) and (max-width:1279px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media (max-width:767px){.cards{grid-template-columns:1fr}}
 
-  /* Filtrų panelė: sticky desktop, drawer telefone */
-  .filters-panel{ position:sticky; top:84px; align-self:start; }
-  .only-mobile{ display:none; }
-  @media (max-width:767px){
-    .only-mobile{ display:inline-flex; }
-    .filters-panel{
-      position:fixed; inset:0 0 0 auto; width:min(88vw,360px);
-      transform:translateX(100%);
-      transition:transform .25s ease;
-      background:#082e33; z-index:60; padding:16px;
-      box-shadow:-16px 0 40px rgba(0,0,0,.35);
+    /* Nav spalvos – kad sutaptų su kitais puslapiais */
+    header a, .navbar a, .nav-links a, nav a{color:var(--fg)!important}
+    .navbar .nav-links a[aria-current="page"],
+    nav a[aria-current="page"]{
+      background:rgba(0,253,216,.14)!important;
+      box-shadow:inset 0 0 0 1px var(--border),0 0 18px rgba(0,253,216,.15)!important;
+      border-radius:10px
     }
-    .filters-panel.open{ transform:translateX(0) }
-  }
-  @media (prefers-reduced-motion:reduce){
-    .filters-panel{ transition:none }
-  }
-
-  /* Kortelių tinklelis – auto-fit, gražūs tarpai */
-  .match-grid,
-  .cards{
-    display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(280px,1fr));
-    gap: clamp(12px,2.5vw,16px);
-    align-items:start;
-  }
-
-  /* Kortelės mikro-animacijos ir glow */
-  .match-card{
-    border-radius:14px;
-    background:var(--card);
-    backdrop-filter:saturate(120%) blur(4px);
-    border:1px solid var(--border);
-    box-shadow:0 0 0 1px rgba(255,255,255,.02) inset;
-    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-    will-change:transform;
-  }
-  .match-card:hover{
-    transform:translateY(-2px);
-    box-shadow:0 6px 28px rgba(0,0,0,.28), 0 0 24px rgba(0,255,200,.06);
-    border-color: rgba(0,255,200,.14);
-  }
-  @media (max-width:480px){ .match-card{ border-radius:12px } }
-
-  /* Score ring (tavo JS jau generuoja <div class="score-ring"> su SVG) */
-  .score-ring{ position:relative; width:64px; height:64px; }
-  .score-ring svg{ width:64px; height:64px; display:block; filter: drop-shadow(0 0 6px rgba(0,253,216,.28)); }
-  .ring-track{ fill:none; stroke:rgba(255,255,255,.14); stroke-width:6; }
-  .ring-prog { fill:none; stroke:var(--accent); stroke-width:6; stroke-linecap:round; }
-  .score-num{
-    position:absolute; inset:0; display:grid; place-items:center;
-    font-weight:800; font-size:14px;
-  }
-  .score-num.small small{font-size:10px}
-  .score-num.good{ color:#b6ffe6 }
-  .score-num.ok{ color:#d0fff5 }
-  .score-num.low{ color:#bee; opacity:.9 }
-
-  /* Pagalbiniai badge efektai */
-  .badge--score{ transition: box-shadow .22s ease; }
-  .match-card:hover .badge--score{ box-shadow:0 0 0 4px rgba(0,255,200,.08); }
-
-  /* CTA */
-  .page-cta{display:flex;gap:12px;justify-content:space-between;margin:24px 0}
-  @media (max-width:767px){
-    .page-cta{ flex-direction:column }
-    .page-cta .btn{ width:100% }
-  }
-
-  /* Subtilus žvaigždučių fonas */
-  .starfield{ position:fixed; inset:0; pointer-events:none;
-  .starfield{ z-index: 0; }
-  .navbar   { z-index: 100; } /* kaip aukščiau */
-    background:
-      radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.18) 40%, transparent 41%) repeat,
-      radial-gradient(1.5px 1.5px at 80% 60%, rgba(0,255,200,.18) 40%, transparent 41%) repeat;
-    background-size:240px 240px, 300px 300px;
-    opacity:.32; animation:twinkle 6s ease-in-out infinite alternate;
-  }
-  @keyframes twinkle{
-    from{ opacity:.22; transform:translate3d(0,0,0) }
-    to  { opacity:.38; transform:translate3d(0,-8px,0) }
-  }
-  @media (prefers-reduced-motion:reduce){ .starfield{ animation:none } }
-
-  /* Pagalbinės smulkmenos */
-  .panel{ border:1px solid var(--border); border-radius:14px; padding:14px; background:rgba(255,255,255,.02) }
-  .panel__header{ font-weight:700; margin-bottom:8px }
-  .row{ display:flex; gap:8px; flex-wrap:wrap }
-  .hint{ opacity:.85 }
-  .muted{ opacity:.7 }
-
-  /* užtikrinam mygtukų click pojūtį */
-  .btn{ transition: transform .06s ease, box-shadow .18s ease }
-  .btn:active{ transform: translateY(1px) scale(.99) }
-  /* Hide social row on cards (prebėgančius „burbuliukus“) */
-  .match-card .social-icons{ display:none !important; }
-  /* NAV spalvos – kaip kituose puslapiuose */
-.navbar{ background:rgba(0,60,67,.85); border-bottom:1px solid var(--border) }
-.navbar .brand{ color:var(--accent); font-weight:800; letter-spacing:.4px }
-.navbar .nav-links a{ color:var(--fg); }
-.navbar .nav-links a[aria-current="page"],
-.navbar .nav-links a.is-active{
-  background:rgba(0,253,216,.14);
-  box-shadow:inset 0 0 0 1px var(--border);
-}
-.hamburger{ display:none; }
-@media (max-width:800px){ .hamburger{ display:block; } }
-/* --- NAV vienodinimas kaip kituose puslapiuose --- */
-:root{
-  /* jeigu netyčia nedefinuota */
-  --fg: #d6f7f3;
-  --accent:#00fdd8;
-  --border: rgba(255,255,255,.10);
-}
-
-/* pats baras */
-.navbar{
-  position: sticky; top:0; z-index:100;
-  background: rgba(0,60,67,.85);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border);
-}
-
-/* konteineris nav'e – jeigu jo dar nėra style.css */
-.navbar .nav-inner{
-  display:flex; align-items:center; gap:16px;
-  max-width: 1200px; margin:0 auto; padding:10px 16px;
-}
-
-/* logotipas */
-.navbar .brand{
-  color: var(--accent);
-  font-weight: 800; letter-spacing:.4px;
-}
-
-/* nuorodos */
-.navbar .nav-links { display:flex; flex-wrap:wrap; gap:6px 8px; }
-.navbar .nav-links a{
-  color: var(--fg);
-  padding:8px 10px; border-radius:10px;
-  text-decoration:none;
-  transition: background .2s ease, box-shadow .2s ease;
-}
-
-/* aktyvus linkas – lygiai taip, kaip Soul Coach */
-.navbar .nav-links a[aria-current="page"],
-.navbar .nav-links a.is-active{
-  background: rgba(0,253,216,.14);
-  box-shadow: inset 0 0 0 1px var(--border),
-              0 0 18px rgba(0,253,216,.15);
-}
-/* === NAV OVERRIDE FOR MATCH (hardens styles) === */
-:root{
-  --fg: #d6f7f3;
-  --accent: #00fdd8;
-  --border: rgba(255,255,255,.10);
-}
-
-/* pats baras */
-header, .navbar, .topbar, .site-nav {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(0,60,67,.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border);
-}
-
-/* nuorodų bazė */
-header a, .navbar a, .nav-links a, nav a {
-  color: var(--fg) !important;
-  text-decoration: none;
-  padding: 8px 10px;
-  border-radius: 10px;
-  transition: background .2s ease, box-shadow .2s ease, color .2s ease;
-}
-
-/* aktyvus — per visus įmanomus selektorius */
-header a[aria-current="page"],
-.navbar .nav-links a[aria-current="page"],
-nav a[aria-current="page"],
-header a.is-active,
-.navbar .nav-links a.is-active,
-nav a.is-active {
-  background: rgba(0,253,216,.14) !important;
-  box-shadow:
-    inset 0 0 0 1px var(--border),
-    0 0 18px rgba(0,253,216,.15) !important;
-}
-
-/* žvaigždutės žemiau NAV */
-.starfield{ z-index: 0; }
-
-/* hamburger logiką paliekam kaip pas tave */
   </style>
 </head>
 
 <body data-page="match">
-  <!-- Žvaigždučių fonas (tik šiam puslapiui) -->
+  <!-- Star background -->
   <div class="starfield" aria-hidden="true"></div>
 
-<!-- NAVBAR -->
-<!-- NAVBAR -->
-<nav class="navbar" role="navigation" aria-label="Main">
-  <div class="nav-inner">
-    <div class="brand">Soulink</div>
+  <!-- NAV – tokia pati kaip kituose (My Soul) -->
+  <nav class="navbar" role="navigation" aria-label="Main">
+    <div class="nav-inner">
+      <div class="brand">Soulink</div>
+      <div class="nav-links" aria-label="Primary">
+        <a href="index.html">Home</a>
+        <a href="quiz.html">Quiz</a>
+        <a href="edit-profile.html">Edit Profile</a>
+        <a href="my-soul.html">My Soul</a>
+        <a href="soul-chart.html">Soul Chart</a>
+        <a href="soul-coach.html" data-nav="coach">Soul Coach</a>
+        <a href="match.html" data-nav="match" aria-current="page">Match</a>
+        <a href="friends.html" data-nav="friends">Friends</a>
+        <a href="result.html" data-nav="results">Results</a>
+        <a href="login.html">Log In</a>
+        <a href="signup.html">Sign Up</a>
+        <a href="#" id="logoutLink">Log Out</a>
+      </div>
+      <div class="hamburger"><button id="openDrawer" aria-label="Open menu">☰ Menu</button></div>
+    </div>
+  </nav>
 
-    <!-- Center/left links -->
-    <div class="nav-links" aria-label="Primary">
+  <!-- MOBILE DRAWER -->
+  <div class="drawer" id="drawer" aria-hidden="true">
+    <div class="backdrop" id="drawerBackdrop" tabindex="-1" aria-label="Close"></div>
+    <aside class="panel" role="dialog" aria-modal="true" aria-label="Navigation">
       <a href="index.html">Home</a>
       <a href="quiz.html">Quiz</a>
       <a href="edit-profile.html">Edit Profile</a>
       <a href="my-soul.html">My Soul</a>
       <a href="soul-chart.html">Soul Chart</a>
       <a href="soul-coach.html" data-nav="coach">Soul Coach</a>
-      <a href="match.html" data-nav="match" class="nav-item is-active" aria-current="page">Match</a>
+      <a href="match.html" data-nav="match" aria-current="page">Match</a>
       <a href="friends.html" data-nav="friends">Friends</a>
       <a href="result.html" data-nav="results">Results</a>
       <a href="login.html">Log In</a>
       <a href="signup.html">Sign Up</a>
-      <a href="#" id="logoutLink">Log Out</a>
-    </div>
-
-    <!-- Mobile hamburger (hidden on desktop) -->
-    <div class="hamburger">
-      <button id="openDrawer" aria-label="Open menu">
-        <span aria-hidden="true">☰</span>
-        <span class="label">Menu</span>
-      </button>
-    </div>
+      <a href="#" id="logoutLinkMobile">Log Out</a>
+      <button class="btn ghost" id="closeDrawer" style="margin-top:8px">Close</button>
+    </aside>
   </div>
-</nav>
-
-<!-- MOBILE DRAWER -->
-<div class="drawer" id="drawer" aria-hidden="true">
-  <div class="backdrop" id="drawerBackdrop" tabindex="-1" aria-label="Close"></div>
-  <aside class="panel" role="dialog" aria-modal="true" aria-label="Navigation">
-    <a href="index.html">Home</a>
-    <a href="quiz.html">Quiz</a>
-    <a href="edit-profile.html">Edit Profile</a>
-    <a href="my-soul.html">My Soul</a>
-    <a href="soul-chart.html">Soul Chart</a>
-    <a href="soul-coach.html" data-nav="coach">Soul Coach</a>
-    <a href="match.html" data-nav="match">Match</a>
-    <a href="friends.html" data-nav="friends">Friends</a>
-    <a href="result.html" data-nav="results">Results</a>
-    <a href="login.html">Log In</a>
-    <a href="signup.html">Sign Up</a>
-    <a href="#" id="logoutLinkMobile">Log Out</a>
-    <button class="btn ghost" id="closeDrawer" style="margin-top:8px">Close</button>
-  </aside>
-</div>
 
   <main class="container container--match">
-    <!-- Kompaktiškas title -->
     <h1 class="page-title">Match Lab ✨</h1>
     <p class="page-sub">See who resonates with your Connection, Love Language, Hobbies and Values. Hover or tap each card for details.</p>
 
-    <!-- Snapshot + Filters -->
     <div class="layout">
-      <!-- YOUR SNAPSHOT (kairė) -->
-      <section class="panel snapshot" id="yourSnapshot" aria-label="Your Snapshot">
-        <div class="panel__header">Your Snapshot</div>
-        <div class="chips">
-          <span class="chip">Connection: <b id="me-ct">–</b></span>
-          <span class="chip">Love Language: <b id="me-ll">–</b></span>
+      <!-- Snapshot -->
+      <section class="panel snapshot">
+        <h3>Your Snapshot</h3>
+        <div class="pills">
+          <span class="pill"><b>Connection:</b> <span id="me-ct">–</span></span>
+          <span class="pill"><b>Love Language:</b> <span id="me-ll">–</span></span>
         </div>
-        <p class="muted" style="margin:.6rem 0 .2rem">Hobbies</p>
-        <div id="me-hobbies" class="hint">–</div>
-        <p class="muted" style="margin:.6rem 0 .2rem">Values</p>
-        <div id="me-values" class="hint">–</div>
+        <div style="margin-top:8px"><b>Hobbies</b><div id="me-hobbies">–</div></div>
+        <div style="margin-top:8px"><b>Values</b><div id="me-values">–</div></div>
       </section>
 
-      <!-- FILTERS (dešinė) -->
-      <section>
-        <button id="filtersToggle" class="btn ghost only-mobile" aria-expanded="false" aria-controls="filtersPanel">Filters</button>
+      <!-- Filters -->
+      <aside id="filtersPanel" class="panel filters-panel">
+        <h3>Filters</h3>
+        <div class="row" style="display:grid;grid-template-columns:1fr;gap:10px">
+          <input id="f-search" type="text" placeholder="Search name, notes, socials…" />
+          <label>Connection</label>
+          <select id="f-ct">
+            <option>Any</option>
+            <option>Romantic</option>
+            <option>Friendship</option>
+            <option>Both</option>
+          </select>
 
-        <aside id="filtersPanel" class="filters-panel panel" aria-label="Filters">
-          <div class="panel__header">Filters</div>
-          <div class="panel__body">
-            <div class="row" style="margin-bottom:8px">
-              <input id="f-search" class="input" type="search" placeholder="Search name, notes, socials…" style="flex:1;min-width:180px">
-            </div>
-
-            <div class="row" style="margin-bottom:8px">
-              <label style="min-width:120px">Connection</label>
-              <select id="f-ct" class="select" style="flex:1;min-width:180px">
-                <option value="">Any</option>
-                <option>Friendship</option>
-                <option>Romantic</option>
-                <option>Both</option>
-              </select>
-            </div>
-
-            <div class="row" style="margin-bottom:8px;align-items:center">
-              <label style="min-width:120px">Min score</label>
-              <input id="f-min" type="range" min="0" max="100" step="5" value="0" style="flex:1">
-              <span class="hint" id="minLabel"></span>
-            </div>
-
-            <div class="row" style="margin-bottom:8px;align-items:center">
-              <label style="min-width:120px">Love Language weight</label>
-              <input id="f-llw" type="range" min="0" max="2" step="0.1" value="1" style="flex:1">
-              <span class="hint" id="llw-label">1.0×</span>
-            </div>
-
-            <div class="row" style="margin-top:10px">
-              <button id="btn-reset" class="btn ghost" aria-label="Reset filters">Reset</button>
-              <button class="btn only-mobile" id="filtersCloseBtn" type="button">Close</button>
-            </div>
+          <div class="row" style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center">
+            <label>Min score</label><span id="minLabel" class="hint"></span>
+            <input id="f-min" type="range" min="0" max="100" step="5" value="0"/>
           </div>
-        </aside>
-      </section>
+
+          <div class="row" style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center">
+            <label>Love Language weight</label><span id="llw-label" class="hint">1.0×</span>
+            <input id="f-llw" type="range" min="0" max="2" step="0.1" value="1"/>
+          </div>
+
+          <div class="row" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+            <button id="btn-reset" class="btn ghost" aria-label="Reset filters">Reset</button>
+            <button class="btn ghost only-mobile" id="filtersCloseBtn" type="button">Close</button>
+          </div>
+        </div>
+      </aside>
     </div>
 
-    <!-- RESULT CARDS -->
-    <section class="cards match-grid" style="margin-top:16px" id="results"></section>
+    <!-- Cards -->
+    <section id="results" class="cards"></section>
     <p id="empty" class="hint" style="display:none;margin:8px 0 0">No matches yet. Add people in <a href="friends.html">Friends</a> ✨</p>
 
     <!-- CTA -->
-    <div class="page-cta">
+    <div class="page-cta" style="display:flex;gap:12px;justify-content:space-between;margin:24px 0">
       <a class="btn ghost" href="soul-coach.html">← Back: Soul Coach</a>
       <a class="btn" href="friends.html">Next → Friends</a>
     </div>
@@ -379,39 +156,30 @@ nav a.is-active {
     © 2025 Soulink.global | Created with love by Soulink Team
   </footer>
 
-  <!-- Tavo esamas renderis/filtrai (NEKEISTAS) -->
   <script src="match.js" defer></script>
 
-  <!-- Minimalus JS drawer'ui ir aktyviam navui (nekiša į tavo filtrų logiką) -->
+  <!-- small helpers: nav active + filters drawer + live labels -->
   <script>
-  (()=>{ // mobile filters drawer
-    const t = document.getElementById('filtersToggle');
-    const p = document.getElementById('filtersPanel');
-    const c = document.getElementById('filtersCloseBtn');
-    if(t && p){
-      const toggle = ()=>{ const open = !p.classList.contains('open'); p.classList.toggle('open'); t.setAttribute('aria-expanded', String(open)); };
-      t.addEventListener('click', toggle);
+    (()=>{ // mark active nav
+      const page = document.body.dataset.page || 'match';
+      document.querySelectorAll('.nav-links a[data-nav]').forEach(a=>{
+        if(a.dataset.nav===page){ a.setAttribute('aria-current','page'); }
+      });
+    })();
+    (()=>{ // drawer (mobile)
+      const t = document.getElementById('filtersToggle') || document.querySelector('.only-mobile');
+      const p = document.getElementById('filtersPanel');
+      const c = document.getElementById('filtersCloseBtn');
+      function toggle(){ p.classList.toggle('open'); }
+      t?.addEventListener('click', toggle);
       c?.addEventListener('click', toggle);
-    }
-  })();
-  /* Min score gyvas labelis */
-(() => {
-  const r   = document.getElementById('f-min');
-  const lab = document.getElementById('minLabel'); // ← buvo 'minlabel'
-  if (r && lab) {
-    const upd = () => { lab.textContent = r.value + '%'; };
-    upd();
-    r.addEventListener('input', upd);
-  }
-})();
-
-/* Aktyvus nav pagal body[data-page] */
-(() => {
-  const page = document.body.dataset.page; // "match"
-  if(!page) return;
-  document.querySelectorAll('.nav-links a[data-nav], .drawer .panel a[data-nav]')
-    .forEach(a => { if(a.dataset.nav === page) a.setAttribute('aria-current','page'); });
-})();
+    })();
+    (()=>{ // live labels
+      const r=document.getElementById('f-min'), lab=document.getElementById('minLabel');
+      const w=document.getElementById('f-llw'), wlab=document.getElementById('llw-label');
+      const U=()=>{ if(r&&lab) lab.textContent = (r.value||'0') + '%'; if(w&&wlab) wlab.textContent = (Number(w.value||1)).toFixed(1)+'×'; };
+      U(); r?.addEventListener('input',U); w?.addEventListener('input',U);
+    })();
   </script>
 </body>
 </html>
