@@ -374,12 +374,19 @@ render();
   const cardsWrap = document.getElementById('cards') || document.body;
   new MutationObserver(kill).observe(cardsWrap, { childList:true, subtree:true });
 })();
-(() => {
+
   const page = document.body.dataset.page;            // pvz. "match"
   if (!page) return;
-  document.querySelectorAll('.nav-links a[data-nav]').forEach(a => {
-    const isActive = a.dataset.nav === page;
-    a.classList.toggle('is-active', isActive);
-    if (isActive) a.setAttribute('aria-current', 'page');
+  // pažymi aktyvią 'Match' nuorodą meniu
+(() => {
+  document.querySelectorAll('.nav-links a, header a, nav a').forEach(a => {
+    const isMatch = (a.dataset.nav || a.textContent || '').toLowerCase().trim() === 'match';
+    if (isMatch) {
+      a.classList.add('is-active');
+      a.setAttribute('aria-current','page');
+    } else {
+      a.classList.remove('is-active');
+      a.removeAttribute('aria-current');
+    }
   });
 })();

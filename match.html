@@ -201,6 +201,46 @@
   box-shadow: inset 0 0 0 1px var(--border),
               0 0 18px rgba(0,253,216,.15);
 }
+/* === NAV OVERRIDE FOR MATCH (hardens styles) === */
+:root{
+  --fg: #d6f7f3;
+  --accent: #00fdd8;
+  --border: rgba(255,255,255,.10);
+}
+
+/* pats baras */
+header, .navbar, .topbar, .site-nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(0,60,67,.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+
+/* nuorodų bazė */
+header a, .navbar a, .nav-links a, nav a {
+  color: var(--fg) !important;
+  text-decoration: none;
+  padding: 8px 10px;
+  border-radius: 10px;
+  transition: background .2s ease, box-shadow .2s ease, color .2s ease;
+}
+
+/* aktyvus — per visus įmanomus selektorius */
+header a[aria-current="page"],
+.navbar .nav-links a[aria-current="page"],
+nav a[aria-current="page"],
+header a.is-active,
+.navbar .nav-links a.is-active,
+nav a.is-active {
+  background: rgba(0,253,216,.14) !important;
+  box-shadow:
+    inset 0 0 0 1px var(--border),
+    0 0 18px rgba(0,253,216,.15) !important;
+}
+
+/* žvaigždutės žemiau NAV */
+.starfield{ z-index: 0; }
 
 /* hamburger logiką paliekam kaip pas tave */
   </style>
@@ -224,7 +264,7 @@
       <a href="my-soul.html">My Soul</a>
       <a href="soul-chart.html">Soul Chart</a>
       <a href="soul-coach.html" data-nav="coach">Soul Coach</a>
-      <a href="match.html" data-nav="match">Match</a>
+      <a href="match.html" data-nav="match" class="nav-item is-active" aria-current="page">Match</a>
       <a href="friends.html" data-nav="friends">Friends</a>
       <a href="result.html" data-nav="results">Results</a>
       <a href="login.html">Log In</a>
