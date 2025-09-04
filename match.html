@@ -46,9 +46,81 @@
       border-radius:10px
     }
   </style>
+  <style id="match-page-scope">
+/* --------------------- MATCH PAGE — SCOPED POLISH --------------------- */
+
+/* 1) Kill stray dots (list markers / corner debug nodes) */
+.match-page ul,
+.match-page li{ list-style:none; }
+.match-page li::marker{ content:none; }
+.match-page .corner-dot,
+.match-page .dot{ display:none !important; }
+
+/* 2) Make “Match” nav look like other pages’ active link */
+.match-page .navbar .nav-links a[aria-current="page"]{
+  color: var(--fg);
+  background: rgba(0,253,216,.12);
+  border: 1px solid var(--border);
+  box-shadow: 0 0 14px rgba(0,253,216,.12) inset, 0 0 20px rgba(0,253,216,.10);
+}
+
+/* 3) Responsive grid (no overflow on phones/tablets) */
+.match-page .cards{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  align-items:start;
+}
+@media (max-width: 380px){
+  .match-page .cards{
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+}
+
+/* 4) Chip spacing (wrap nicely on mobile) */
+.match-page .chip{
+  margin: 4px 6px 0 0;
+}
+
+/* 5) Subtle hover elevation + glow (consistent with Soulink style) */
+.match-page .card{
+  transition: transform .18s ease, box-shadow .18s ease, outline-color .18s ease;
+}
+.match-page .card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0,255,200,.08), 0 0 0 1px rgba(0,255,200,.20) inset;
+}
+
+/* 6) Gentle glow for score badge (does not move DOM) */
+.match-page .score-badge,
+.match-page .score{
+  --glowA: 0 0 10px rgba(0,255,200,.35), 0 0 20px rgba(0,255,200,.20);
+  background: radial-gradient(120% 120% at 50% 30%,
+              rgba(0,255,200,.18), rgba(0,255,200,.08) 55%, transparent 60%);
+  box-shadow: var(--glowA);
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+@media (prefers-reduced-motion: no-preference){
+  @keyframes pulseGlow{
+    0%,100%{ box-shadow: 0 0 8px rgba(0,255,200,.30), 0 0 18px rgba(0,255,200,.16); }
+    50%{    box-shadow: 0 0 14px rgba(0,255,200,.42), 0 0 26px rgba(0,255,200,.22); }
+  }
+  .match-page .score-badge,
+  .match-page .score{
+    animation: pulseGlow 2.2s ease-in-out infinite;
+  }
+}
+.match-page .score-badge:hover,
+.match-page .score:hover{
+  transform: translateY(-1px) scale(1.02);
+}
+
+/* Keep sliders/inputs intact — no resets here */
+/* ------------------ end MATCH PAGE — SCOPED POLISH -------------------- */
+</style> 
 </head>
 
-<body data-page="match">
+<body class="match-page" data-page="match">
   <!-- Star background -->
   <div class="starfield" aria-hidden="true"></div>
 

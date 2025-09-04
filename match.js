@@ -216,3 +216,23 @@ function bind(){
 document.addEventListener('DOMContentLoaded', ()=>{ bind(); render(); });
 
 })();
+/* === Match page scoped helpers (non-invasive) === */
+(function(){
+  try{
+    // Set Match as active using the same aria-current styling as other pages
+    var links = document.querySelectorAll('.navbar .nav-links a, .drawer .panel a');
+    links.forEach(function(a){
+      var href = (a.getAttribute('href')||'').toLowerCase();
+      if(href.endsWith('match.html')) a.setAttribute('aria-current','page');
+    });
+
+    // Extra safety: if some list-style slipped in cards, neutralize it (scoped)
+    var wrap = document.querySelector('body.match-page');
+    if(wrap){
+      wrap.querySelectorAll('ul, li').forEach(function(el){
+        el.style.listStyle = 'none';
+      });
+    }
+  }catch(e){ /* no-op */ }
+})();
+
