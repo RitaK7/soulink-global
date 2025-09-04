@@ -1198,29 +1198,21 @@ body.no-scroll{ overflow:hidden; }
   display: none !important;
 }
 /* NAV – match like Coach/My Soul */
-.navbar .nav-links a{
-  color: var(--fg) !important;          /* šviesi spalva kaip kituose puslapiuose */
-  text-decoration: none;
-}
-.navbar .nav-links a:hover{
-  color: var(--fg);
-  border-color: var(--border);
-  box-shadow: 0 0 0 1px var(--border), 0 0 16px rgba(0,253,216,.18);
-}
-.navbar .nav-links a.is-active,
+/* Nav spalvos, kaip visur */
+.navbar .nav-links a{ color: var(--fg); }
 .navbar .nav-links a[aria-current="page"]{
-  color: var(--accent) !important;      /* neon akcentas aktyviam */
-  border-color: var(--border);
-  box-shadow: 0 0 0 1px var(--border), 0 0 12px rgba(0,253,216,.20) inset;
-}
-
-/* „Menu“ mygtukas – tik telefone */
-@media (min-width: 801px){
-  .hamburger{ display: none !important; }
+  background: rgba(0,253,216,.12);
+  border: 1px solid var(--border);
+  box-shadow: 0 0 14px rgba(0,253,216,.12) inset;
 }
 @media (max-width: 800px){
   .hamburger{ display:block; }
+  .nav-links{ display:none; }   /* kad “Menu” matytųsi tik telefone */
 }
+@media (min-width: 801px){
+  .hamburger{ display:none; }   /* kad “Menu” nebūtų desktop’e */
+}
+
 
 
 
