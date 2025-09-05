@@ -127,22 +127,25 @@
 
     <!-- Snapshot + Filters -->
     <section class="layout">
-      <!-- Snapshot (left) -->
-      <article id="yourSnapshot" class="card snapshot">
-        <h3>Your Snapshot</h3>
-        <div class="chips">
-          <span class="chip"><strong>Connection:</strong> <span id="snap-conn">–</span></span>
-          <span class="chip"><strong>Love Language:</strong> <span id="snap-ll">–</span></span>
-        </div>
-        <div style="margin-top:8px">
-          <div><strong>Hobbies</strong></div>
-          <div id="snap-hobbies" class="chips"></div>
-        </div>
-        <div style="margin-top:8px">
-          <div><strong>Values</strong></div>
-          <div id="snap-values" class="chips"></div>
-        </div>
-      </article>
+     <!-- Your Snapshot -->
+    <article id="yourSnapshot" class="card snapshot">
+    <h3>Your Snapshot</h3>
+
+    <div class="chips">
+    <span class="chip"><strong>Connection:</strong> <span id="snap-conn">–</span></span>
+    <span class="chip"><strong>Love Language:</strong> <span id="snap-ll">–</span></span>
+    </div>
+
+    <div style="margin-top:8px">
+    <div><strong>Hobbies</strong>: <span id="snap-hobbies-text">–</span></div>
+    <div id="snap-hobbies" class="chips"></div>
+    </div>
+
+    <div style="margin-top:8px">
+    <div><strong>Values</strong>: <span id="snap-values-text">–</span></div>
+    <div id="snap-values" class="chips"></div>
+  </div>
+  </article>
 
       <!-- Filters (right) -->
       <aside id="filtersPanel" class="card filters-panel" aria-label="Filters">

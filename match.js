@@ -316,3 +316,92 @@
     w   && w.addEventListener('input',   updW);
   })();
 })();
+/* =========================================================
+   Soulink · Match — Snapshot renderer (scoped & safe)
+   Fills Connection, Love Language (primary), Hobbies, Values
+   from localStorage.soulQuiz with graceful fallbacks.
+   ========================================================= */
+(function () {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+  function readQuiz() {
+    try {
+      return JSON.parse(localStorage.getItem('soulQuiz')) || {};
+    } catch {
+      return {};
+    }
+  }
+
+  function toList(v) {
+    if (Array.isArray(v)) return v.map(x => String(x).trim()).filter(Boolean);
+    if (typeof v === 'string')
+      return v.split(/[\n,|]/).map(s => s.trim()).filter(Boolean);
+    return [];
+  }
+
+  function renderSnapshot() {
+    const q = readQuiz();
+
+    // Elements
+    const connEl = $('#snap-conn');
+    const llEl   = $('#snap-ll');
+    const hobWrap = $('#snap-hobbies');
+    const valWrap = $('#snap-values');
+    const hobText = $('#snap-hobbies-text');
+    const valText = $('#snap-values-text');
+
+    // Data
+    const connection =
+      q.connectionType || q.connection || q.connectWith || q.connect || null;
+
+    const loves = toList(q.loveLanguages || q.loveLanguage);
+    const primaryLL = loves[0] || null;
+
+    const hobbies = toList(q.hobbies);
+    const values  = toList(q.values);
+
+    // Labels (always present with dash fallback)
+    if (connEl) connEl.textContent = connection || '–';
+    if (llEl)   llEl.textContent   = primaryLL  || '–';
+
+    // Chips
+    if (hobWrap) {
+      hobWrap.innerHTML = '';
+      if (hobbies.length) {
+        hobbies.forEach(h => {
+          const s = document.createElement('span');
+          s.className = 'chip';
+          s.textContent = h;
+          hobWrap.appendChild(s);
+        });
+      }
+    }
+    if (valWrap) {
+      valWrap.innerHTML = '';
+      if (values.length) {
+        values.forEach(v => {
+          const s = document.createElement('span');
+          s.className = 'chip';
+          s.textContent = v;
+          valWrap.appendChild(s);
+        });
+      }
+    }
+
+    // Descriptive text lines (visible summary)
+    const listText = arr =>
+      arr && arr.length ? arr.map(x => String(x).toLowerCase()).join(', ') : '–';
+    if (hobText) hobText.textContent = listText(hobbies);
+    if (valText) valText.textContent = listText(values);
+  }
+
+  // Run once on load
+  document.addEventListener('DOMContentLoaded', renderSnapshot);
+
+  // Optional: re-render if something else updates localStorage then fires an event
+  window.addEventListener('soulink:updateSnapshot', renderSnapshot);
+
+  // If your page already renders cards asynchronously, ensure snapshot renders anyway:
+  setTimeout(renderSnapshot, 0);
+})();
