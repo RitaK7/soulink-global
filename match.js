@@ -240,3 +240,79 @@
   const moTarget = resultsEl || document.body;
   new MutationObserver(hideStrayDots).observe(moTarget,{childList:true,subtree:true});
 })();
+/* =========================================================
+   Soulink · Match — non-breaking UI helpers
+   (keeps your existing data/filter logic intact)
+   ========================================================= */
+(function(){
+  const qs = (s, r=document)=>r.querySelector(s);
+  const qsa = (s, r=document)=>Array.from(r.querySelectorAll(s));
+
+  // 1) Remove stray dots (if any were injected by old markup)
+  function nukeDots(scope=document){
+    qsa('.corner-dot,.dot,.mini-dots,.dots,.chem-dots', scope).forEach(n=>n.style.display='none');
+    qsa('ul,li', scope).forEach(n=> n.style.listStyle='none');
+  }
+
+  // 2) Teal active nav (in case header markup differs)
+  (function setActiveNav(){
+    qsa('.navbar .nav-links a, .topnav a').forEach(a=>{
+      const href=(a.getAttribute('href')||'').toLowerCase();
+      if(href.endsWith('match.html')) a.setAttribute('aria-current','page');
+    });
+  })();
+
+  // 3) Score rings — convert any [data-score] badge into a glowing ring (idempotent)
+  function injectRing(el){
+    if(!el || el.__ringified) return;
+    const raw = el.getAttribute('data-score') || el.textContent || '0';
+    const val = Math.max(0, Math.min(100, parseInt(raw,10)||0));
+    el.innerHTML = ''; el.classList.add('score-ring');
+    const size = 64, r = 26, c = 2*Math.PI*r, off = c*(1 - val/100);
+    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('viewBox','0 0 64 64');
+    const track = document.createElementNS(svg.namespaceURI,'circle');
+    track.setAttribute('class','ring-track'); track.setAttribute('cx','32'); track.setAttribute('cy','32'); track.setAttribute('r',String(r));
+    const prog = document.createElementNS(svg.namespaceURI,'circle');
+    prog.setAttribute('class','ring-prog'); prog.setAttribute('cx','32'); prog.setAttribute('cy','32'); prog.setAttribute('r',String(r));
+    prog.style.transform='rotate(-90deg)'; prog.style.transformOrigin='32px 32px';
+    prog.style.strokeDasharray = String(c); prog.style.strokeDashoffset = String(off);
+    svg.appendChild(track); svg.appendChild(prog);
+    const num = document.createElement('div');
+    num.className = 'score-num ' + (val>=20 ? (val>=40 ? 'good':'ok') : 'low');
+    num.textContent = val + '%';
+    el.appendChild(svg); el.appendChild(num);
+    el.__ringified = true;
+  }
+  function ringifyAll(scope=document){
+    qsa('.match-card [data-score], .match-card .score', scope).forEach(injectRing);
+  }
+
+  // 4) Observe the results container so we enhance after your renderer updates
+  const results = qs('#results');
+  if(results){
+    const obs = new MutationObserver(()=>{ nukeDots(results); ringifyAll(results); });
+    obs.observe(results, {childList:true, subtree:true});
+  }
+  // Run once in case content is already there
+  nukeDots(document); ringifyAll(document);
+
+  // 5) Optional: filters drawer toggle if you use the unique IDs
+  (function drawer(){
+    const t=qs('#filtersToggle'), p=qs('#filtersPanel'), c=qs('#filtersCloseBtn')||qs('#closeFilters');
+    if(!t || !p) return;
+    const toggle=()=>{ const open=!p.classList.contains('open'); p.classList.toggle('open'); t.setAttribute('aria-expanded', String(open)); };
+    t.addEventListener('click', toggle); c && c.addEventListener('click', toggle);
+  })();
+
+  // 6) Live labels (keep in sync even if your code sets values programmatically)
+  (function liveLabels(){
+    const min=qs('#f-min'), minL=qs('#minlabel');
+    const w=qs('#f-llw'), wL=qs('#llw-label');
+    const updMin = ()=>{ if(min&&minL) minL.textContent=(min.value||'0')+'%'; };
+    const updW   = ()=>{ if(w&&wL)   wL.textContent=(Number(w.value||1)).toFixed(1)+'×'; };
+    updMin(); updW();
+    min && min.addEventListener('input', updMin);
+    w   && w.addEventListener('input',   updW);
+  })();
+})();

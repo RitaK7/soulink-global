@@ -4,36 +4,34 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Soulink · Match Lab</title>
-
-  <!-- your shared stylesheet -->
   <link rel="stylesheet" href="style.css"/>
 
-  <!-- ===== Match (scoped) polish — no structure changes ===== -->
+  <!-- ===== MATCH PAGE SCOPED FIXES (safe, isolated) ===== -->
   <style>
-    /* Page guards */
+    /* Container & title */
+    .container.container--match{max-width:1200px;margin-inline:auto;padding-inline:clamp(16px,4vw,24px);padding-block:clamp(12px,3vw,24px)}
     .page-title{font-size:clamp(20px,2.2vw,28px);margin:0 0 8px}
     .page-sub{opacity:.9;margin:0 0 16px}
-    .container.container--match{max-width:1200px;margin-inline:auto;padding-inline:clamp(16px,4vw,24px);padding-block:clamp(12px,3vw,24px)}
 
-    /* Nav: same visual language as other pages (teal active) */
-    .navbar .nav-links a{color:var(--fg)!important}
-    .navbar .nav-links a[aria-current="page"]{
-      background:rgba(0,253,216,.14);
-      border:1px solid var(--border);
-      box-shadow:inset 0 0 0 1px var(--border), 0 0 18px rgba(0,253,216,.15);
-      border-radius:10px;
+    /* Nav color parity (Match looked white on your install) */
+    .match-page .navbar .nav-links a{color:var(--muted)}
+    .match-page .navbar .nav-links a[aria-current="page"]{
       color:var(--fg);
+      background:rgba(0,253,216,.12);
+      border:1px solid var(--border);
+      box-shadow:0 0 18px rgba(0,253,216,.15), inset 0 0 0 1px var(--border);
+      border-radius:10px;
     }
 
-    /* Snapshot + Filters layout */
+    /* Snapshot + Filters side-by-side (desktop), stacked on mobile */
     .layout{display:grid;gap:clamp(12px,2.4vw,18px)}
     @media (min-width:1024px){.layout{grid-template-columns:1.1fr .9fr;align-items:start}}
 
-    /* Filters: sticky desktop; drawer on phones (unique IDs already in your file) */
+    /* Mobile drawer for filters (unique IDs) */
+    #filtersToggle.only-mobile{display:none}
     #filtersPanel{position:sticky;top:84px;align-self:start}
-    .only-mobile{display:none}
     @media (max-width:767px){
-      .only-mobile{display:inline-flex}
+      #filtersToggle.only-mobile{display:inline-flex}
       #filtersPanel{
         position:fixed;inset:0 0 0 auto;width:min(88vw,360px);
         transform:translateX(100%);transition:transform .25s ease;
@@ -43,18 +41,18 @@
     }
     @media (prefers-reduced-motion:reduce){#filtersPanel{transition:none}}
 
-    /* Cards grid — fully responsive */
+    /* Cards grid (fully responsive, no overflow) */
     .match-page .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;align-items:start}
     @media (max-width:380px){.match-page .cards{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}}
 
     /* Chip spacing */
     .match-page .chip{margin:4px 6px 0 0}
 
-    /* Subtle hover lift + glow (consistent with Soulink) */
-    .match-page .match-card{transition:transform .18s ease,box-shadow .18s ease,outline-color .18s ease}
+    /* Subtle hover elevation + glow for cards */
+    .match-page .match-card{transition:transform .18s ease, box-shadow .18s ease, outline-color .18s ease}
     .match-page .match-card:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,255,200,.08),0 0 0 1px rgba(0,255,200,.20) inset}
 
-    /* Score ring (works with ringSVG from match.js) */
+    /* Score ring visuals (when JS injects svg) */
     .score-ring{position:relative;width:64px;height:64px}
     .score-ring svg{width:64px;height:64px;display:block;filter:drop-shadow(0 0 6px rgba(0,253,216,.28))}
     .ring-track{fill:none;stroke:rgba(255,255,255,.14);stroke-width:6}
@@ -62,56 +60,165 @@
     .score-num{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;font-size:14px}
     .score-num.good{color:#b6ffe6}.score-num.ok{color:#d0fff5}.score-num.low{color:#bee;opacity:.9}
 
-    /* Gentle (accessible) glow on the badge */
-    .match-page .score-num{--glowA:0 0 10px rgba(0,255,200,.35),0 0 20px rgba(0,255,200,.20);text-shadow:0 0 6px rgba(0,255,200,.25)}
+    /* Gentle glow on the badge */
+    .match-page .score-num{ text-shadow:0 0 6px rgba(0,255,200,.25) }
     @media (prefers-reduced-motion:no-preference){
       @keyframes pulseGlow{0%,100%{filter:drop-shadow(0 0 8px rgba(0,255,200,.30))}50%{filter:drop-shadow(0 0 16px rgba(0,255,200,.42))}}
       .match-page .score-num{animation:pulseGlow 2.2s ease-in-out infinite}
     }
 
-    /* 1) remove stray dots: list markers & old decorative rows */
+    /* 1) kill stray black dots (list markers / leftover nodes) */
     .match-page ul,.match-page li{list-style:none}
     .match-page li::marker{content:none}
     .match-page .corner-dot,.match-page .dot,.match-page .mini-dots,.match-page .dots,.match-page .chem-dots{display:none!important}
 
-    /* CTA on mobile full-width */
+    /* CTA row */
     .page-cta{display:flex;gap:12px;justify-content:space-between;margin:24px 0}
     @media(max-width:767px){.page-cta{flex-direction:column}.page-cta .btn{width:100%}}
   </style>
 </head>
 
 <body data-page="match" class="match-page">
-  <!-- keep your existing navbar / header exactly as-is -->
-  <!-- … your current nav markup … -->
+  <!-- NAVBAR (same structure/colors as other pages) -->
+  <nav class="navbar" role="navigation" aria-label="Main">
+    <div class="nav-inner">
+      <div class="brand">Soulink</div>
+      <div class="nav-links" aria-label="Primary">
+        <a href="index.html">Home</a>
+        <a href="quiz.html">Quiz</a>
+        <a href="edit-profile.html">Edit Profile</a>
+        <a href="my-soul.html">My Soul</a>
+        <a href="soul-chart.html">Soul Chart</a>
+        <a href="soul-coach.html">Soul Coach</a>
+        <a href="match.html">Match</a>
+        <a href="friends.html">Friends</a>
+        <a href="result.html">Results</a>
+        <a href="login.html">Log In</a>
+        <a href="signup.html">Sign Up</a>
+        <a href="#" id="logoutLink">Log Out</a>
+      </div>
+      <div class="hamburger"><button id="openDrawer" aria-label="Open menu">☰ Menu</button></div>
+    </div>
+  </nav>
 
-  <!-- keep your existing page content exactly as-is (snapshot, filters, cards, cta) -->
-  <!-- IMPORTANT: the cards container keeps id="results" or class="cards" as in your current file -->
+  <!-- MOBILE NAV DRAWER -->
+  <div class="drawer" id="drawer" aria-hidden="true">
+    <div class="backdrop" id="drawerBackdrop" tabindex="-1" aria-label="Close"></div>
+    <aside class="panel" role="dialog" aria-modal="true" aria-label="Navigation">
+      <a href="index.html">Home</a>
+      <a href="quiz.html">Quiz</a>
+      <a href="edit-profile.html">Edit Profile</a>
+      <a href="my-soul.html">My Soul</a>
+      <a href="soul-chart.html">Soul Chart</a>
+      <a href="soul-coach.html">Soul Coach</a>
+      <a href="match.html" aria-current="page">Match</a>
+      <a href="friends.html">Friends</a>
+      <a href="result.html">Results</a>
+      <a href="login.html">Log In</a>
+      <a href="signup.html">Sign Up</a>
+      <a href="#" id="logoutLinkMobile">Log Out</a>
+      <button class="btn ghost" id="closeDrawer" style="margin-top:8px">Close</button>
+    </aside>
+  </div>
 
-  <!-- your existing markup goes here (unchanged) -->
+  <main class="container container--match">
+    <h1 class="page-title">Match Lab ✨</h1>
+    <p class="page-sub">See who resonates with your Connection, Love Language, Hobbies and Values. Hover or tap each card for details.</p>
 
-  <!-- your original scripts -->
+    <!-- Snapshot + Filters -->
+    <section class="layout">
+      <!-- Snapshot (left) -->
+      <article id="yourSnapshot" class="card snapshot">
+        <h3>Your Snapshot</h3>
+        <div class="chips">
+          <span class="chip"><strong>Connection:</strong> <span id="snap-conn">–</span></span>
+          <span class="chip"><strong>Love Language:</strong> <span id="snap-ll">–</span></span>
+        </div>
+        <div style="margin-top:8px">
+          <div><strong>Hobbies</strong></div>
+          <div id="snap-hobbies" class="chips"></div>
+        </div>
+        <div style="margin-top:8px">
+          <div><strong>Values</strong></div>
+          <div id="snap-values" class="chips"></div>
+        </div>
+      </article>
+
+      <!-- Filters (right) -->
+      <aside id="filtersPanel" class="card filters-panel" aria-label="Filters">
+        <h3>Filters</h3>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <input id="f-q" class="input" type="search" placeholder="Search name, notes, socials…" style="flex:1;min-width:0">
+        </div>
+
+        <label style="display:block;margin:.4rem 0 .2rem">Connection</label>
+        <select id="f-conn" class="input" style="width:100%">
+          <option value="any">Any</option>
+          <option>Friendship</option>
+          <option>Romantic</option>
+          <option>Both</option>
+        </select>
+
+        <label style="display:block;margin:.6rem 0 .2rem">Min score <small id="minlabel">0%</small></label>
+        <input id="f-min" type="range" min="0" max="100" step="1" value="0" style="width:100%">
+
+        <label style="display:block;margin:.6rem 0 .2rem">Love Language weight <small id="llw-label">1.0×</small></label>
+        <input id="f-llw" type="range" min="0.2" max="2.0" step="0.1" value="1.0" style="width:100%">
+
+        <div style="margin-top:10px">
+          <button id="filtersReset" class="btn ghost">Reset</button>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Cards -->
+    <section id="results" class="cards" aria-live="polite"></section>
+
+    <!-- Bottom CTA -->
+    <div class="page-cta">
+      <a class="btn ghost" href="soul-coach.html">← Back: Soul Coach</a>
+      <a class="btn" href="friends.html" style="background:var(--accent);color:#003136">Next → Friends</a>
+    </div>
+
+    <footer style="margin-top:12px;color:var(--muted);border-top:1px solid var(--border);padding-top:12px">
+      © 2025 Soulink.global | Created with love by Soulink Team
+    </footer>
+  </main>
+
+  <!-- Your original renderer (kept) -->
   <script src="match.js" defer></script>
 
-  <!-- Small helpers: set active nav + filters drawer -->
+  <!-- Tiny page helpers (non-breaking) -->
   <script>
-    // Active nav via href (no markup changes needed)
+    // Mark "Match" active by URL
     (function(){
       document.querySelectorAll('.navbar .nav-links a, .topnav a').forEach(a=>{
-        var href=(a.getAttribute('href')||'').toLowerCase();
+        const href=(a.getAttribute('href')||'').toLowerCase();
         if(href.endsWith('match.html')) a.setAttribute('aria-current','page');
       });
     })();
 
-    // Mobile filters drawer (IDs already unique in your file)
+    // Mobile filters drawer
     (function(){
-      var t=document.getElementById('filtersToggle');
-      var p=document.getElementById('filtersPanel');
-      var c=document.getElementById('filtersCloseBtn')||document.getElementById('closeFilters');
-      if(t&&p){
-        var toggle=function(){ var open=!p.classList.contains('open'); p.classList.toggle('open'); t.setAttribute('aria-expanded',String(open)); };
-        t.addEventListener('click',toggle);
-        c&&c.addEventListener('click',toggle);
+      const t=document.getElementById('filtersToggle'); // optional external toggle
+      const panel=document.getElementById('filtersPanel');
+      const close=document.getElementById('filtersCloseBtn')||document.getElementById('closeFilters');
+      if(t&&panel){
+        const toggle=()=>{ panel.classList.toggle('open'); t.setAttribute('aria-expanded', String(panel.classList.contains('open'))); };
+        t.addEventListener('click', toggle);
+        close&&close.addEventListener('click', toggle);
       }
+    })();
+
+    // Live slider labels (uses the exact IDs you already had)
+    (function(){
+      const min=document.getElementById('f-min'), minL=document.getElementById('minlabel');
+      const w=document.getElementById('f-llw'),   wL=document.getElementById('llw-label');
+      function updMin(){ if(min&&minL) minL.textContent = (min.value||'0') + '%'; }
+      function updW(){ if(w&&wL) wL.textContent = (Number(w.value||1)).toFixed(1)+'×'; }
+      updMin(); updW();
+      min&&min.addEventListener('input', updMin);
+      w&&w.addEventListener('input', updW);
     })();
   </script>
 </body>
