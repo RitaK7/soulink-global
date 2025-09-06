@@ -204,7 +204,41 @@
     // after rendering, nuke any stray dot rows (see below)
     hideStrayDots();
   }
+(function enableTagCollapses(){
+  // ieškome kelių galimų selektorių – nekeisdami tavo ID/klasių
+  const candidates = document.querySelectorAll(
+    '[data-collapsible-tags], .match-card .tags, .card.match .tags, .candidate-card .tags'
+  );
+  candidates.forEach(box => {
+    // jei jau turi data-atributą – paliekam; kitaip dedam tik jei aiškiai peraukšta
+    if (!box.hasAttribute('data-collapsible-tags')) {
+      const tooTall = box.scrollHeight > box.clientHeight + 8 || box.scrollHeight > 88;
+      if (!tooTall) return; // nieko nedarom
+      box.setAttribute('data-collapsible-tags','');
+    }
 
+    // jeigu užtenka vietos – nereikia jungiklio
+    if (box.scrollHeight <= (parseInt(getComputedStyle(box).getPropertyValue('--clamp')) || 72) + 4) return;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tags-toggle';
+    const update = () => {
+      const expanded = box.classList.toggle('expanded', box.classList.contains('expanded'));
+      btn.textContent = box.classList.contains('expanded') ? 'Show less' : 'Show more';
+    };
+    // pirmas state
+    btn.textContent = 'Show more';
+    btn.addEventListener('click', () => {
+      box.classList.toggle('expanded');
+      btn.textContent = box.classList.contains('expanded') ? 'Show less' : 'Show more';
+    });
+    box.after(btn);
+  });
+})();
+
+// Pastaba: jei tavo žymių konteineriai turi kitą klasę, tiesiog pridėk jiems
+// data-collapsible-tags atributą HTML pusėje – nieko kito keisti nereikės.
   // ===== remove black corner dots (robust, scoped to match cards) =====
   function looksLikeDot(el){
     const txtEmpty=!el.textContent.trim();

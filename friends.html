@@ -7,7 +7,6 @@
   <!-- auth guard: turi būti prieš kitus skriptus -->
   <script src="auth.js"></script>
 
-
   <!-- Global nav + icons -->
   <script src="nav.js?v=3" defer></script>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -41,26 +40,54 @@ a:hover{ color:var(--accent); }
   border-radius:16px; padding:1.2rem;
   box-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(0,253,216,.06) inset;
 }
-.section-title{ color:var(--text); margin:.2rem 0 .6rem; font-weight:800; letter-spacing:.2px; }
 
+/* Snapshot – didesnis raktinių laukų skaitomumas, mažiau tuščio tarpo */
+.card.snapshot .section-title{ margin-bottom:.4rem; }
+.card.snapshot p{ margin:.25rem 0; }
+.card.snapshot p strong{ font-size:1.05rem; letter-spacing:.2px; }
+
+/* Navbar aktyvi būsena – vienodas teal glow visur */
+.navbar a{
+  color:#cffff8; padding:.35rem .6rem; border-radius:12px;
+}
+.navbar a.active{
+  color:var(--accent);
+  background:rgba(0,253,216,.08);
+  box-shadow:0 0 0 1px var(--glow) inset, 0 0 14px var(--glow);
+}
+
+/* Bendri mygtukai ir ghost variacija (naudojama kortelėse) */
 .row{ display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
 .btn{
   cursor:pointer; border:1px solid var(--stroke); border-radius:999px;
   padding:.55rem .95rem; font-weight:700; color:var(--text);
   background:linear-gradient(180deg, rgba(0,253,216,.08), rgba(0,253,216,.02));
-  box-shadow:0 0 12px rgba(0,253,216,.2); transition:transform .15s ease, box-shadow .15s ease;
+  box-shadow:0 0 12px rgba(0,253,216,.2);
+  transition:transform .15s ease, box-shadow .15s ease;
 }
 .btn:hover{ box-shadow:0 0 18px rgba(0,253,216,.45); transform:translateY(-1px); }
+.btn-ghost{
+  background:transparent;
+  border:1px solid var(--stroke);
+  box-shadow:0 0 0 rgba(0,0,0,0);
+}
+.btn-ghost:hover{
+  background:rgba(0,253,216,.06);
+  box-shadow:0 0 16px rgba(0,253,216,.4);
+}
 
-.friends-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:.9rem; }
+/* Friends grid – daugiau „kvėpavimo“ tarp kortelių */
+.friends-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:1.2rem; }
 @media (max-width:720px){ .friends-grid{ grid-template-columns:1fr; } }
 
 .friend{
   background:var(--surface-2);
   border:1px solid var(--stroke);
-  border-radius:14px; padding:.9rem;
+  border-radius:14px; padding:1.1rem;
   box-shadow:0 6px 18px rgba(0,0,0,.35);
 }
+.friend + .friend{ margin-top:.1rem; } /* saugiklis jei grid -> list */
+
 .friend-head{ display:flex; align-items:center; justify-content:space-between; gap:.6rem; }
 .friend-meta{ display:flex; align-items:center; gap:.6rem; min-width:0; }
 .friend-meta .avatar{
@@ -106,7 +133,27 @@ input:focus, textarea:focus, select:focus{
 .social-icons [hidden]{ display:none !important; }
 
 .hint{ color:var(--muted); }
-</style>
+
+/* Collapsible „Add Friend“ (accordion) */
+details.add-accordion{ padding:0; overflow:hidden; }
+details.add-accordion > summary{
+  list-style:none; cursor:pointer; user-select:none;
+  padding:.7rem 1rem; margin:0 0 .6rem 0;
+  border:1px solid var(--stroke); border-radius:14px;
+  background:linear-gradient(180deg, rgba(0,253,216,.08), rgba(0,253,216,.02));
+  box-shadow:0 0 12px rgba(0,253,216,.2);
+  font-weight:800;
+}
+details.add-accordion[open] > summary{
+  box-shadow:0 0 18px rgba(0,253,216,.45);
+}
+details.add-accordion .inner{ padding:0; }
+
+/* Judesių mažinimas */
+@media (prefers-reduced-motion: reduce){
+  .btn, .btn-ghost, .social-icons .icon{ transition:none!important; transform:none!important; }
+}
+  </style>
 
 </head>
 <body>
@@ -134,7 +181,7 @@ input:focus, textarea:focus, select:focus{
 
     <div class="grid">
       <!-- Left: snapshot -->
-      <section class="card">
+      <section class="card snapshot">
         <h3 class="section-title">Your Snapshot</h3>
         <p><strong>Name:</strong> <span id="me-name">–</span></p>
         <p><strong>Connection:</strong> <span id="me-ct">–</span></p>
@@ -144,102 +191,109 @@ input:focus, textarea:focus, select:focus{
 
         <div class="row" style="margin-top:.8rem;">
           <a class="btn" href="edit-profile.html">Edit Profile</a>
-          <button id="exportFriends" class="btn" type="button">Export Friends JSON</button>
-          <button id="importFriends" class="btn" type="button">Import JSON</button>
+          <!-- Tik tekstų pervadinimas: ID ir logika išlieka -->
+          <button id="exportFriends" class="btn" type="button">Save My Friends</button>
+          <button id="importFriends" class="btn" type="button">Upload List</button>
           <input id="importFile" type="file" accept="application/json" style="display:none;">
         </div>
       </section>
 
-      <!-- Right: form + list -->
+      <!-- Right: accordion + list -->
       <section>
-        <form id="add-form" class="card" novalidate>
-          <h3 class="section-title">Add Friend / Candidate</h3>
+        <!-- Collapsible Add Friend -->
+        <details id="add-accordion" class="card add-accordion">
+          <summary>+ Add New Friend</summary>
+          <div class="inner">
+            <form id="add-form" class="card" novalidate style="margin:0; background:transparent; box-shadow:none; border:none; padding:0;">
+              <h3 class="section-title">Add Friend / Candidate</h3>
 
-          <label for="f-photo">Photo URL (optional)</label>
-          <input id="f-photo" type="url" placeholder="https://.../avatar.jpg" />
+              <label for="f-photo">Photo URL (optional)</label>
+              <input id="f-photo" type="url" placeholder="https://.../avatar.jpg" />
 
-          <div class="row" style="gap:.8rem;">
-            <div style="flex:1;">
-              <label for="f-name">Name</label>
-              <input id="f-name" type="text" placeholder="Name" required />
-            </div>
-            <div style="flex:1;">
-              <label for="f-ct">Connection</label>
-              <select id="f-ct">
-                <option value="">Any</option>
-                <option>Romantic</option>
-                <option>Friendship</option>
-                <option>Both</option>
-              </select>
-            </div>
+              <div class="row" style="gap:.8rem;">
+                <div style="flex:1;">
+                  <label for="f-name">Name</label>
+                  <input id="f-name" type="text" placeholder="Name" required />
+                </div>
+                <div style="flex:1;">
+                  <label for="f-ct">Connection</label>
+                  <select id="f-ct">
+                    <option value="">Any</option>
+                    <option>Romantic</option>
+                    <option>Friendship</option>
+                    <option>Both</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row" style="gap:.8rem; margin-top:.6rem;">
+                <div style="flex:1;">
+                  <label for="f-ll">Love Language</label>
+                  <select id="f-ll">
+                    <option value="">Unknown</option>
+                    <option>Words of Affirmation</option>
+                    <option>Acts of Service</option>
+                    <option>Receiving Gifts</option>
+                    <option>Quality Time</option>
+                    <option>Physical Touch</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="margin-top:.6rem;">
+                <label for="f-hobbies">Hobbies (comma separated)</label>
+                <input id="f-hobbies" type="text" placeholder="e.g., Traveling, Reading, Meditation" />
+              </div>
+
+              <div style="margin-top:.6rem;">
+                <label for="f-values">Values (comma separated)</label>
+                <input id="f-values" type="text" placeholder="e.g., Honesty, Kindness, Creativity" />
+              </div>
+
+              <div style="margin-top:.6rem;">
+                <label for="f-contact">Contact (email / phone / @handle / link)</label>
+                <input id="f-contact" type="text" placeholder="e.g., anna@email.com, +3706..., @anna, https://link" />
+              </div>
+
+              <div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem; margin-top:.6rem;">
+                <label>
+                  <div class="label-text">WhatsApp</div>
+                  <input id="f-whatsapp" type="text" placeholder="+3706..., 3706..., arba numeris">
+                </label>
+                <label>
+                  <div class="label-text">Instagram</div>
+                  <input id="f-instagram" type="text" placeholder="@vardas arba https://instagram.com/vardas">
+                </label>
+                <label>
+                  <div class="label-text">Facebook</div>
+                  <input id="f-facebook" type="text" placeholder="profilo nuoroda arba vartotojo vardas">
+                </label>
+                <label>
+                  <div class="label-text">Email</div>
+                  <input id="f-email" type="email" placeholder="name@example.com">
+                </label>
+              </div>
+
+              <!-- Live preview of what will be clickable -->
+              <div class="social-icons" id="contactPreview" style="margin-top:.6rem;">
+                <a class="icon wa" aria-label="WhatsApp" hidden><i class="bi bi-whatsapp"></i></a>
+                <a class="icon ig" aria-label="Instagram" hidden><i class="bi bi-instagram"></i></a>
+                <a class="icon fb" aria-label="Facebook" hidden><i class="bi bi-facebook"></i></a>
+                <a class="icon em" aria-label="Email" hidden><i class="bi bi-envelope"></i></a>
+              </div>
+
+              <div style="margin-top:.6rem;">
+                <label for="f-notes">Notes (optional)</label>
+                <textarea id="f-notes" rows="2" placeholder="How you met, vibe, etc."></textarea>
+              </div>
+
+              <div class="row" style="margin-top:.8rem;">
+                <button class="btn" type="submit">Add</button>
+                <button id="clearAll" class="btn" type="button">Clear All</button>
+              </div>
+            </form>
           </div>
-
-          <div class="row" style="gap:.8rem; margin-top:.6rem;">
-            <div style="flex:1;">
-              <label for="f-ll">Love Language</label>
-              <select id="f-ll">
-                <option value="">Unknown</option>
-                <option>Words of Affirmation</option>
-                <option>Acts of Service</option>
-                <option>Receiving Gifts</option>
-                <option>Quality Time</option>
-                <option>Physical Touch</option>
-              </select>
-            </div>
-          </div>
-
-          <div style="margin-top:.6rem;">
-            <label for="f-hobbies">Hobbies (comma separated)</label>
-            <input id="f-hobbies" type="text" placeholder="e.g., Traveling, Reading, Meditation" />
-          </div>
-
-          <div style="margin-top:.6rem;">
-            <label for="f-values">Values (comma separated)</label>
-            <input id="f-values" type="text" placeholder="e.g., Honesty, Kindness, Creativity" />
-          </div>
-
-          <div style="margin-top:.6rem;">
-            <label for="f-contact">Contact (email / phone / @handle / link)</label>
-            <input id="f-contact" type="text" placeholder="e.g., anna@email.com, +3706..., @anna, https://link" />
-          </div>
-
-          <div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem; margin-top:.6rem;">
-            <label>
-              <div class="label-text">WhatsApp</div>
-              <input id="f-whatsapp" type="text" placeholder="+3706..., 3706..., arba numeris">
-            </label>
-            <label>
-              <div class="label-text">Instagram</div>
-              <input id="f-instagram" type="text" placeholder="@vardas arba https://instagram.com/vardas">
-            </label>
-            <label>
-              <div class="label-text">Facebook</div>
-              <input id="f-facebook" type="text" placeholder="profilo nuoroda arba vartotojo vardas">
-            </label>
-            <label>
-              <div class="label-text">Email</div>
-              <input id="f-email" type="email" placeholder="name@example.com">
-            </label>
-          </div>
-
-          <!-- Live preview of what will be clickable -->
-          <div class="social-icons" id="contactPreview" style="margin-top:.6rem;">
-            <a class="icon wa" aria-label="WhatsApp" hidden><i class="bi bi-whatsapp"></i></a>
-            <a class="icon ig" aria-label="Instagram" hidden><i class="bi bi-instagram"></i></a>
-            <a class="icon fb" aria-label="Facebook" hidden><i class="bi bi-facebook"></i></a>
-            <a class="icon em" aria-label="Email" hidden><i class="bi bi-envelope"></i></a>
-          </div>
-
-          <div style="margin-top:.6rem;">
-            <label for="f-notes">Notes (optional)</label>
-            <textarea id="f-notes" rows="2" placeholder="How you met, vibe, etc."></textarea>
-          </div>
-
-          <div class="row" style="margin-top:.8rem;">
-            <button class="btn" type="submit">Add</button>
-            <button id="clearAll" class="btn" type="button">Clear All</button>
-          </div>
-        </form>
+        </details>
 
         <div class="card">
           <h3 class="section-title">Your Inner Circle</h3>
@@ -331,6 +385,17 @@ input:focus, textarea:focus, select:focus{
   <footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
     © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
   </footer>
+
+  <!-- Maža helper logika: atidaryti accordion desktop'e, uždaryti mobile; suvienodinti active nav -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const acc = document.querySelector('#add-accordion');
+      if (acc) acc.open = window.matchMedia('(min-width: 960px)').matches;
+
+      // Jei nav.js neįrašė active – pažymim šį puslapį saugiai (nekliudant eventų)
+      document.querySelectorAll('nav a[href$="friends.html"]').forEach(a => a.classList.add('active'));
+    });
+  </script>
 
   <script src="friends.js"></script>
 </body>
