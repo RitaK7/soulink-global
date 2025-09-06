@@ -405,3 +405,176 @@
   // If your page already renders cards asynchronously, ensure snapshot renders anyway:
   setTimeout(renderSnapshot, 0);
 })();
+/* ==== MATCH ENHANCEMENTS (incremental & scoped) ==== */
+(function(){
+  const $  = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+  // 0) Nav aktyvus (fallback, jei neturi bendro „data-active“ skripto)
+  try{
+    document.body.setAttribute('data-page','match');
+    const active = $('.navbar .nav-links a[href*="match"]');
+    active && active.setAttribute('data-active','1');
+  }catch{}
+
+  // Helpers
+  function readQuiz(){ try{return JSON.parse(localStorage.getItem('soulQuiz')||'{}')}catch{return{}} }
+  function list(v){ if(Array.isArray(v)) return v; if(typeof v==='string') return v.split(/[\n,]/).map(s=>s.trim()).filter(Boolean); return []; }
+
+  // 1) Snapshot — atstatyk aprašus kapsulėms (nekeičiant markup’o)
+  function renderSnapshot(){
+    const q = readQuiz();
+    // Surask Snapshot sekciją — paliekam lankstų paieškos būdą
+    const snap = $('#yourSnapshot') || $('.snapshot') || $('#snapshot');
+    if(!snap) return;
+
+    // Pasiruošiam/ieškom vietų tekstui (jei jų nėra — sukuriam "etiketė: reikšmė" kapsules)
+    const ensureLine = (key, label) => {
+      let row = snap.querySelector(`[data-snap="${key}"]`);
+      if(!row){
+        row = document.createElement('div');
+        row.className = 'chip';
+        row.setAttribute('data-snap', key);
+        snap.appendChild(row);
+      }
+      row.innerHTML = `<strong style="opacity:.9">${label}:</strong> <span class="snap-val"></span>`;
+      return row.querySelector('.snap-val');
+    };
+
+    const vConn = ensureLine('connection','Connection');
+    const vLove = ensureLine('love','Love Language');
+    const vHobs = ensureLine('hobbies','Hobbies');
+    const vVals = ensureLine('values','Values');
+
+    const connection = q.connectionType || '–';
+    const loves = list(q.loveLanguages || q.loveLanguage);
+    const primary = loves[0] || '–';
+    const hobbies = list(q.hobbies).slice(0,4);
+    const values  = list(q.values).slice(0,8);
+
+    vConn.textContent = connection || '–';
+    vLove.textContent = primary || '–';
+    vHobs.textContent = hobbies.length ? hobbies.join(', ') : '–';
+    vVals.textContent = values.length ? values.join(', ') : '–';
+  }
+
+  // 2) Segment toggle (Friendship / Romantic) su localStorage persiste
+  const SEG_KEY = 'soulMatchSegment';
+  const segWrap = $('#segmentToggle');
+  function getSeg(){ const s = localStorage.getItem(SEG_KEY); return (s==='romantic')?'romantic':'friend'; }
+  function setSeg(v){ localStorage.setItem(SEG_KEY, v); }
+
+  function paintSeg(){
+    if(!segWrap) return;
+    const cur = getSeg();
+    $$('.seg-btn', segWrap).forEach(btn=>{
+      const on = btn.dataset.seg === cur;
+      btn.setAttribute('aria-selected', on ? 'true':'false');
+    });
+    applySegmentFilter(cur);
+    tweakCardCTAs(cur);
+  }
+
+  segWrap && segWrap.addEventListener('click', (e)=>{
+    const b = e.target.closest('.seg-btn'); if(!b) return;
+    setSeg(b.dataset.seg === 'romantic' ? 'romantic' : 'friend');
+    paintSeg();
+  });
+
+  // 3) Filtras kortelėms (be tavo duomenų/generavimo logikos keitimo)
+  function detectConnectionForCard(card){
+    // Pirmenybė data-* atributams (jei turi)
+    const ds = card.dataset || {};
+    const dsc = (ds.connection || ds.conn || '').toLowerCase();
+    if(dsc) return dsc; // 'friendship' | 'romantic' | 'both'
+
+    // Fallback – pagal tekstą viduje
+    const t = card.textContent.toLowerCase();
+    if(t.includes('romantic')) return 'romantic';
+    if(t.includes('friend'))   return 'friendship';
+    if(t.includes('both'))     return 'both';
+    // Jei neįmanoma atskirti — rodom visur
+    return 'both';
+  }
+  function applySegmentFilter(seg){
+    const wantRom = (seg==='romantic');
+    $$('.cards .card').forEach(card=>{
+      const conn = detectConnectionForCard(card);
+      const show = (conn==='both') || (wantRom ? conn==='romantic' : conn==='friendship');
+      card.style.display = show ? '' : 'none';
+    });
+  }
+
+  // 4) CTA pervardijimas Romantikos režime (NEkeičiant struktūros; prisikabinam po renderio)
+  function encodeB64(obj){
+    try{ return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }
+    catch{ return ''; }
+  }
+  function cardToPayload(card){
+    // Jeigu turi data-person – paimam; jei ne, minimalus rinkinys iš DOM
+    try{
+      if(card.dataset.person){
+        return JSON.parse(card.dataset.person);
+      }
+    }catch{}
+    const name = ( $('.card-title', card)?.textContent || $('.name', card)?.textContent || '' ).trim();
+    const hobbies = $$('.chip.hobby, .chip[data-kind="hobby"]', card).map(c=>c.textContent.trim());
+    const values  = $$('.chip.value, .chip[data-kind="value"]', card).map(c=>c.textContent.trim());
+    const connection = detectConnectionForCard(card);
+    return { name, hobbies, values, connection };
+  }
+  function tweakCardCTAs(seg){
+    const isRom = (seg==='romantic');
+    $$('.cards .card').forEach(card=>{
+      // „pagrindinis“ veiksmas – imkim pirmą .btn.primary arba panašų
+      const primaryBtn = $('.btn.primary, .btn-primary', card);
+      if(!primaryBtn) return;
+
+      if(isRom){
+        primaryBtn.textContent = 'Save as Match';
+        primaryBtn.onclick = (ev)=>{
+          ev.preventDefault();
+          const data = cardToPayload(card);
+          const b64 = encodeB64(data);
+          location.href = `friends.html#add?type=romantic&data=${b64}`;
+        };
+      } else {
+        // paliekam tavo „Edit in Friends“ elgseną – nuimam mūsų onclick
+        primaryBtn.onclick = null;
+        // jei reikia, grąžinam etiketę
+        if(!/edit/i.test(primaryBtn.textContent)) primaryBtn.textContent = 'Edit in Friends';
+      }
+    });
+  }
+
+  // 5) Connection badge ant kortelės (jei nėra) – neardom struktūros
+  function ensureConnBadges(){
+    $$('.cards .card').forEach(card=>{
+      if($('.conn-badge', card)) return;
+      const c = detectConnectionForCard(card);
+      const label = (c==='romantic') ? '💖 Romantic' : (c==='friendship' ? '🫶 Friendship' : '✨ Both');
+      const pill = document.createElement('div');
+      pill.className = 'conn-badge chip';
+      pill.style.marginBottom = '6px';
+      pill.textContent = label;
+      // įdedam į kortelės viršų — jei turi header, dedam ten; jei ne, į pradžią
+      const header = $('.card-header', card) || card.firstElementChild;
+      (header || card).insertAdjacentElement('afterbegin', pill);
+    });
+  }
+
+  // 6) Pirmas inicijavimas po tavo esamo renderio
+  function initMatchEnhancements(){
+    renderSnapshot();
+    ensureConnBadges();
+    paintSeg();
+  }
+
+  // Jeigu tavo kodas jau sugeneravo DOM – startuojam; jei turi savo onReady – kviesk initMatchEnhancements() po renderio
+  if(document.readyState !== 'loading') initMatchEnhancements();
+  else document.addEventListener('DOMContentLoaded', initMatchEnhancements);
+
+  // (pasirinktinai) kai perrendra korteles, pranešk:
+  // document.dispatchEvent(new CustomEvent('match:cards-updated'));
+  document.addEventListener('match:cards-updated', initMatchEnhancements);
+})();

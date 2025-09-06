@@ -1212,6 +1212,70 @@ body.no-scroll{ overflow:hidden; }
 @media (min-width: 801px){
   .hamburger{ display:none; }   /* kad “Menu” nebūtų desktop’e */
 }
+/* ==== MATCH ENHANCEMENTS (scoped) ==== */
+.match-page .segment-toggle{
+  display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 14px;
+}
+.match-page .seg-btn{
+  min-height:44px; padding:8px 14px; border-radius:999px;
+  border:1px solid rgba(0,253,216,.28);
+  background:rgba(0,253,216,.06); color:#eaf8f6; cursor:pointer;
+  transition:box-shadow .18s ease, transform .12s ease, background .18s ease;
+}
+.match-page .seg-btn[aria-selected="true"]{
+  background:rgba(0,253,216,.18);
+  box-shadow:0 0 0 1px rgba(0,253,216,.32) inset, 0 0 18px rgba(0,253,216,.18);
+}
+.match-page .seg-btn:active{ transform:translateY(1px) }
+
+@media (prefers-reduced-motion:reduce){
+  .match-page .seg-btn{ transition:none }
+}
+
+/* Juodi taškai / markeriai tik Match puslapyje */
+.match-page ul, .match-page li{ list-style:none; padding-left:0 }
+.match-page li::marker{ content:none }
+.match-page .corner-dot, .match-page .dot{ display:none !important }
+
+/* Kortelių grid (neiškeičiant tavo esamo breakpoints) — tik jei konteineris .cards */
+.match-page .cards{
+  display:grid; gap:16px;
+  grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+}
+
+/* Chip’ai — švelnūs tarpai */
+.match-page .chip{ margin:4px 6px 0 0 }
+
+/* Kortelių hover mikro-lift + glow */
+.match-page .card{
+  transition:transform .18s ease, box-shadow .18s ease, outline-color .18s ease;
+}
+.match-page .card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 24px rgba(0,255,200,.08), 0 0 0 1px rgba(0,255,200,.20) inset;
+}
+
+/* Score ženkleliui pulsas (jei turi .score-badge) */
+.match-page .score-badge{
+  --glow:0 0 10px rgba(0,255,200,.35), 0 0 20px rgba(0,255,200,.20);
+  background:radial-gradient(120% 120% at 50% 30%, rgba(0,255,200,.18), rgba(0,255,200,.08) 55%, transparent 60%);
+  box-shadow:var(--glow);
+  transition:box-shadow .2s ease, transform .2s ease;
+}
+@media (prefers-reduced-motion:no-preference){
+  @keyframes pulseGlow{
+    0%,100%{ box-shadow:0 0 8px rgba(0,255,200,.30), 0 0 18px rgba(0,255,200,.16) }
+    50%     { box-shadow:0 0 14px rgba(0,255,200,.42), 0 0 26px rgba(0,255,200,.22) }
+  }
+  .match-page .score-badge{ animation:pulseGlow 2.2s ease-in-out infinite }
+}
+.match-page .score-badge:hover{ transform:translateY(-1px) scale(1.02) }
+
+/* Nav aktyvi spalva tik šiame puslapyje (jei neturi bendros logikos) */
+body[data-page="match"] .navbar .nav-links a[href*="match"]{
+  color:var(--accent);
+  text-shadow:0 0 12px rgba(0,253,216,.5);
+}
 
 
 
