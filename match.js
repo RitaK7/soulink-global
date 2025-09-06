@@ -252,14 +252,15 @@
     const root = resultsEl || document.body;
     if(!root) return;
     root.querySelectorAll('.match-card').forEach(card=>{
-      card.querySelectorAll(':scope *').forEach(node=>{
-        const kids=[...node.children];
-        if(kids.length>=3 && kids.length<=8 && kids.every(looksLikeDot)){
-          node.style.display='none';
-        }
-      });
+    card.querySelectorAll(':scope *').forEach(node=>{
+      const kids = [...node.children];
+      if(kids.length>=3 && kids.length<=8 && kids.every(looksLikeDot)){
+        node.style.display='none';
+      }
     });
-  }
+  });
+}
+
 
   // wire filters (live labels if you use them)
   (function liveLabels(){
@@ -274,6 +275,7 @@
   const moTarget = resultsEl || document.body;
   new MutationObserver(hideStrayDots).observe(moTarget,{childList:true,subtree:true});
 })();
+// --- Soulink: connection filter toggle (non-breaking) ---
 // --- Soulink: connection filter toggle (non-breaking) ---
 (function connectToggle(){
   const btnFriend = document.querySelector('[data-conn="friend"]');
@@ -290,36 +292,28 @@
   }
 
   function paint(){
-    if (btnFriend) btnFriend.classList.toggle('is-active', connectionType === 'friendship');
-    if (btnRom)    btnRom.classList.toggle('is-active',    connectionType === 'romantic');
+    btnFriend?.classList.toggle('is-active', connectionType === 'friendship');
+    btnRom?.classList.toggle('is-active',    connectionType === 'romantic');
     if (snapshotConn) snapshotConn.textContent = connectionType;
   }
-
-  // Provide a global getter for your render to read (if helpful)
+  // leisk renderyje pasiimti būseną, jei prireiks
   window.getConnectionType = () => connectionType;
 
   function refresh(){
-    // Call your existing render path without touching markup
+
     if (typeof window.renderMatches === 'function')      window.renderMatches();
     else if (typeof window.render === 'function')        window.render();
     else                                                 window.dispatchEvent(new CustomEvent('soulink:refresh'));
   }
-  // inside renderMatches():
-  const type = (window.getConnectionType?.() || 'both').toLowerCase();
-  const list = rawMatches.filter(m => {
-  if (type === 'both') return true;
-  return (m.connection || 'both').toLowerCase() === type;
-});
-// ...tęsi tavo kortelių generacija su 'list'
 
-
+  
   function setConnection(type){
     persist(type);
     paint();
     refresh();
   }
 
-  // Hook buttons
+
   btnFriend?.addEventListener('click', () => {
     setConnection(connectionType === 'friendship' ? 'both' : 'friendship');
   });
@@ -327,9 +321,10 @@
     setConnection(connectionType === 'romantic' ? 'both' : 'romantic');
   });
 
-  // Init
+  // init
   setConnection(connectionType);
 })();
+
 
 /* =========================================================
    Soulink · Match — non-breaking UI helpers
