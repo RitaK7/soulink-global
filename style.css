@@ -1322,6 +1322,11 @@ body[data-page="match"] .navbar .nav-links a[href*="match"]{
 @media (prefers-reduced-motion: reduce){
   .match-grid *{ transition:none!important; }
 }
+.pill-toggle.is-active{
+  box-shadow: 0 0 0 2px var(--teal-400, #00fdd8) inset,
+              0 0 12px rgba(0,255,200,.25);
+  background: rgba(0,255,200,.12);
+}
 
 
 

@@ -339,17 +339,25 @@ $('#edit-form')?.addEventListener('submit', (e) => {
 // ---------- Snapshot from soulQuiz ----------
 function fillSnapshot(){
   const me = readJSON('soulQuiz') || {};
-  $('#me-name')?.replaceChildren(document.createTextNode(me.name || '–'));
-  $('#me-ct')?.replaceChildren(document.createTextNode(me.connectionType || '–'));
-  $('#me-ll')?.replaceChildren(document.createTextNode(me.loveLanguage || '–'));
 
-  const hobbies = Array.isArray(me.hobbies) ? me.hobbies.join(', ')
-                 : (typeof me.hobbies === 'string' ? me.hobbies : '–');
-  const values  = Array.isArray(me.values) ? me.values.join(', ')
-                 : (typeof me.values === 'string' ? me.values : '–');
+  const getText = (v, fallback='–') => {
+    if (!v) return fallback;
+    if (Array.isArray(v)) return v.join(', ') || fallback;
+    if (typeof v === 'string') return v || fallback;
+    return fallback;
+  };
+  const setTxt = (selectors, val) => {
+    (Array.isArray(selectors) ? selectors : [selectors]).forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el) el.replaceChildren(document.createTextNode(val));
+    });
+  };
 
-  $('#me-hobbies')?.replaceChildren(document.createTextNode(hobbies || '–'));
-  $('#me-values')?.replaceChildren(document.createTextNode(values  || '–'));
+  setTxt(['#snapshot-name','#me-name'], me.name || '–');
+  setTxt(['#snapshot-connection','#me-ct'], me.connectionType || '–');
+  setTxt(['#snapshot-loveLanguage','#me-ll'], me.loveLanguage || '–');
+  setTxt(['#snapshot-hobbies','#me-hobbies'], getText(me.hobbies));
+  setTxt(['#snapshot-values','#me-values'],  getText(me.values));
 }
 
 // ---------- Live contact preview (form) ----------
@@ -357,7 +365,9 @@ function updatePreviewIcons(){
   const wrap = $('#contactPreview');
   if (!wrap) return;
 
-  const w = $('#f-whatsapp')?.value?.trim();
+  const digits = s => (s||'').toString().replace(/\D+/g,'');
+
+  const w  = $('#f-whatsapp')?.value?.trim();
   const ig = $('#f-instagram')?.value?.trim();
   const fb = $('#f-facebook')?.value?.trim();
   const em = $('#f-email')?.value?.trim();

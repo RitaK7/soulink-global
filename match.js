@@ -274,6 +274,63 @@
   const moTarget = resultsEl || document.body;
   new MutationObserver(hideStrayDots).observe(moTarget,{childList:true,subtree:true});
 })();
+// --- Soulink: connection filter toggle (non-breaking) ---
+(function connectToggle(){
+  const btnFriend = document.querySelector('[data-conn="friend"]');
+  const btnRom    = document.querySelector('[data-conn="romance"]');
+  const snapshotConn = document.querySelector('#snapshot-connection');
+
+  const pref = JSON.parse(localStorage.getItem('soulPref') || '{}');
+  let connectionType = (pref.connectionType || 'both').toLowerCase(); // 'both' | 'friendship' | 'romantic'
+
+  function persist(type){
+    connectionType = type;
+    pref.connectionType = type;
+    localStorage.setItem('soulPref', JSON.stringify(pref));
+  }
+
+  function paint(){
+    if (btnFriend) btnFriend.classList.toggle('is-active', connectionType === 'friendship');
+    if (btnRom)    btnRom.classList.toggle('is-active',    connectionType === 'romantic');
+    if (snapshotConn) snapshotConn.textContent = connectionType;
+  }
+
+  // Provide a global getter for your render to read (if helpful)
+  window.getConnectionType = () => connectionType;
+
+  function refresh(){
+    // Call your existing render path without touching markup
+    if (typeof window.renderMatches === 'function')      window.renderMatches();
+    else if (typeof window.render === 'function')        window.render();
+    else                                                 window.dispatchEvent(new CustomEvent('soulink:refresh'));
+  }
+  // inside renderMatches():
+  const type = (window.getConnectionType?.() || 'both').toLowerCase();
+  const list = rawMatches.filter(m => {
+  if (type === 'both') return true;
+  return (m.connection || 'both').toLowerCase() === type;
+});
+// ...tęsi tavo kortelių generacija su 'list'
+
+
+  function setConnection(type){
+    persist(type);
+    paint();
+    refresh();
+  }
+
+  // Hook buttons
+  btnFriend?.addEventListener('click', () => {
+    setConnection(connectionType === 'friendship' ? 'both' : 'friendship');
+  });
+  btnRom?.addEventListener('click', () => {
+    setConnection(connectionType === 'romantic' ? 'both' : 'romantic');
+  });
+
+  // Init
+  setConnection(connectionType);
+})();
+
 /* =========================================================
    Soulink · Match — non-breaking UI helpers
    (keeps your existing data/filter logic intact)
