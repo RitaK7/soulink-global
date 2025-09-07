@@ -1344,6 +1344,23 @@ body[data-page="match"] .navbar .nav-links a[href*="match"]{
   box-shadow: 0 0 0 1px rgba(0,255,200,.18) inset;
   /* keep the rest of your styles unchanged */
 }
+/* ==== Soulink · Match page only ==== */
+.match-page .is-hidden { display: none !important; }
+
+/* Mode chips subtle active glow (keeps brand intact) */
+.match-page #modeFriendship.is-active,
+.match-page #modeRomantic.is-active{
+  box-shadow: 0 0 0 2px var(--teal-300, #00fdd8) inset, 0 0 16px rgba(0,255,200,.25);
+  filter: saturate(1.15);
+}
+
+/* Snapshot emphasis */
+.match-page #yourSnapshot.friend-mode,
+.match-page #yourSnapshot.romantic-mode,
+.match-page #snapshot.friend-mode,
+.match-page #snapshot.romantic-mode{
+  box-shadow: 0 0 0 1px rgba(0,255,200,.18) inset;
+}
 
 
 

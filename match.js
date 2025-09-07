@@ -371,4 +371,265 @@
   // Initial pass
   apply();
 })();
+/* =========================================
+   Soulink · MATCH — tiny logic layer (no DOM rebuilds)
+   - Snapshot chips fill from localStorage.soulQuiz
+   - Friendship/Romantic mode with persistence
+   - Search + Min score + LL weight filters work together
+   - Cards are only shown/hidden via .is-hidden
+   - "Edit in Friends" hand-off via localStorage.friendDraft
+   ========================================= */
+(function(){
+  // ---------- utilities ----------
+  const $  = (s, r=document)=>r.querySelector(s);
+  const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+  const clamp = (v, a, b)=>Math.max(a, Math.min(b, v));
+  const esc = (s='') => String(s).replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+
+  // ---------- 1) Profile → Snapshot ----------
+  function loadProfileFromLS(){
+    try{
+      const q = JSON.parse(localStorage.getItem('soulQuiz')||'{}') || {};
+      const connection = (q.connectionType || q.connection || '').toString().toLowerCase() || 'both';
+      const lovePrimary = Array.isArray(q.loveLanguages) ? (q.loveLanguages[0]||'')
+                        : (q.loveLanguagePrimary || q.loveLanguage || '');
+      const toArr = (v, max)=>(
+        Array.isArray(v) ? v
+        : typeof v === 'string' ? v.split(/[\n,|]/) : []
+      ).map(x=>x.trim()).filter(Boolean).slice(0, max);
+      const hobbies = toArr(q.hobbies, 6);
+      const values  = toArr(q.values, 10);
+      return { connection, loveLanguage: lovePrimary, hobbies, values };
+    }catch{ return { connection:'both', loveLanguage:'', hobbies:[], values:[] }; }
+  }
+
+  function renderSnapshot(profile){
+    // find or softly assign anchors (no structure changes)
+    const snap = $('#yourSnapshot') || $('#snapshot') || $('.snapshot');
+    if(!snap) return;
+
+    const elConn = $('#snap-connection') || snap.querySelector('#snap-connection') || snap.querySelector('[data-snap="connection"]');
+    const elLove = $('#snap-love')       || snap.querySelector('#snap-love')       || snap.querySelector('[data-snap="love"]');
+    const elHobs = $('#snap-hobbies')    || snap.querySelector('#snap-hobbies')    || snap.querySelector('[data-snap="hobbies"]');
+    const elVals = $('#snap-values')     || snap.querySelector('#snap-values')     || snap.querySelector('[data-snap="values"]');
+
+    if (elConn) elConn.textContent = profile.connection || '–';
+    if (elLove) elLove.textContent = profile.loveLanguage || '–';
+
+    const chipify = arr => arr.map(t=>`<span class="chip">${esc(t)}</span>`).join('');
+    if (elHobs) elHobs.innerHTML = profile.hobbies.slice(0,6).length ? chipify(profile.hobbies.slice(0,6)) : '';
+    if (elVals) elVals.innerHTML = profile.values.slice(0,10).length ? chipify(profile.values.slice(0,10)) : '';
+  }
+
+  // ---------- 2) Cards metadata (no rebuild) ----------
+  function inferConnFromText(card){
+    const t = (card.textContent||'').toLowerCase();
+    if (t.includes('romantic')) return 'romantic';
+    if (t.includes('friend'))   return 'friendship';
+    return 'both';
+  }
+  function ensureCardMeta(){
+    $$('.match-card').forEach((card, i) => {
+      if (!card.dataset.id)          card.dataset.id = card.getAttribute('data-id') || String(i);
+      if (!card.dataset.connection)  card.dataset.connection = card.getAttribute('data-connection') || inferConnFromText(card);
+      // score baseline: prefer [data-score] inside, fallback to badge text
+      if (!card.dataset.score) {
+        const s = card.querySelector('[data-score], .score, .score-num');
+        const n = s ? parseInt(String(s.getAttribute('data-score') || s.textContent).replace(/[^\d]/g,''),10) : NaN;
+        if (!isNaN(n)) card.dataset.score = String(clamp(n,0,100));
+      }
+      // candidate LL if visible in text
+      if (!card.dataset.ll) {
+        const llLine = card.querySelector('[data-ll], .ll, .love, .love-language');
+        let ll = llLine ? llLine.getAttribute('data-ll') || llLine.textContent : '';
+        if (!ll) {
+          const m = (card.textContent||'').match(/Love\s*Language:\s*([^\n,]+)/i);
+          ll = m ? m[1].trim() : '';
+        }
+        if (ll) card.dataset.ll = ll;
+      }
+    });
+  }
+
+  // ---------- 3) State & mode ----------
+  const state = {
+    mode: (localStorage.getItem('matchMode') || 'friendship'), // default any – choose one; filter rules below include 'both'
+    search: '',
+    minScore: 0,
+    weight: 1.0,
+  };
+  function setMode(mode){
+    state.mode = (mode === 'romantic') ? 'romantic' : 'friendship';
+    localStorage.setItem('matchMode', state.mode);
+    // visual toggle (IDs are optional; we also support your existing chips)
+    const bF = $('#modeFriendship') || $('[data-conn="friend"]') || $('.seg-btn[data-seg="friend"]');
+    const bR = $('#modeRomantic')   || $('[data-conn="romance"]') || $('.seg-btn[data-seg="romantic"]');
+    bF && bF.classList.toggle('is-active', state.mode==='friendship');
+    bR && bR.classList.toggle('is-active', state.mode==='romantic');
+    // subtle snapshot emphasis
+    const snapshot = $('#yourSnapshot') || $('#snapshot');
+    if (snapshot){
+      snapshot.classList.remove('friend-mode','romantic-mode');
+      snapshot.classList.add(state.mode==='friendship' ? 'friend-mode' : 'romantic-mode');
+    }
+    // sync dropdown if exists (#f-connection)
+    const connSel = $('#f-connection');
+    if (connSel){
+      // keep user choice if it's not Any; only set when value is empty/Any
+      if (!connSel.value || /any/i.test(connSel.value)) {
+        connSel.value = state.mode; // value must exist in options; if not, ignore
+      }
+    }
+    updateView();
+  }
+
+  // ---------- 4) Candidates & filters ----------
+  function loadCandidates(){
+    // prefer DOM-derived metadata; no format changes
+    return $$('.match-card').map(card => ({
+      id: card.dataset.id,
+      el: card,
+      connection: (card.dataset.connection || 'both').toLowerCase(),
+      score: parseInt(card.dataset.score || '0', 10) || 0,
+      ll: card.dataset.ll || '', // candidate primary LL if detectable
+      searchText: (card.textContent || '').toLowerCase()
+    }));
+  }
+
+  function filterByMode(list, mode){
+    return list.filter(c => {
+      if (mode === 'friendship') return c.connection === 'friendship' || c.connection === 'both';
+      if (mode === 'romantic')   return c.connection === 'romantic'   || c.connection === 'both';
+      return true;
+    });
+  }
+
+  let profile = loadProfileFromLS();
+  let candidates = [];
+
+  function scoreWithWeight(c){
+    const base = c.score || 0;
+    const llMatch = (profile.loveLanguage && c.ll)
+      ? (c.ll.toLowerCase() === profile.loveLanguage.toLowerCase() ? 10 : 0)
+      : 0;
+    return clamp(Math.round(base + state.weight * llMatch), 0, 100);
+  }
+
+  function applyFilters(list){
+    // 1) connection dropdown (if user picked specific value, overrides mode)
+    const connSel = $('#f-connection');
+    const userConn = connSel && connSel.value && !/any/i.test(connSel.value) ? connSel.value.toLowerCase() : null;
+
+    let cur = list.slice(0);
+    if (userConn) {
+      cur = cur.filter(c => (c.connection === userConn || c.connection === 'both'));
+    } else {
+      cur = filterByMode(cur, state.mode);
+    }
+
+    // 2) search
+    if (state.search) {
+      const q = state.search.toLowerCase().trim();
+      cur = cur.filter(c => c.searchText.includes(q));
+    }
+
+    // 3) min score with LL weight
+    cur = cur.filter(c => scoreWithWeight(c) >= (state.minScore||0));
+
+    return cur;
+  }
+
+  function renderCards(visibleList){
+    const showSet = new Set(visibleList.map(x => x.id));
+    $$('.match-card').forEach(card => {
+      const id = card.dataset.id || '';
+      card.classList.toggle('is-hidden', !showSet.has(id));
+    });
+  }
+
+  function updateView(){
+    ensureCardMeta();
+    candidates = loadCandidates(); // refresh dom snapshot
+    const filtered = applyFilters(candidates);
+    renderCards(filtered);
+  }
+
+  // ---------- 5) Wiring ----------
+  function wireFilters(){
+    // mode chips
+    const btnFriend = $('#modeFriendship') || $('[data-conn="friend"]') || $('.seg-btn[data-seg="friend"]');
+    const btnRom    = $('#modeRomantic')   || $('[data-conn="romance"]') || $('.seg-btn[data-seg="romantic"]');
+    btnFriend && btnFriend.addEventListener('click', () => setMode('friendship'));
+    btnRom    && btnRom.addEventListener('click',    () => setMode('romantic'));
+
+    // search
+    const search = $('#f-search') || ($('#filters input[type="search"]') || $('#filters input[placeholder*="Search" i]'));
+    search && search.addEventListener('input', e => { state.search = e.target.value || ''; updateView(); });
+
+    // min score
+    const min = $('#f-min') || $('#filters input[type="range"][name*="min" i]') || $('#filters input[type="range"][id*="min" i]');
+    min && min.addEventListener('input', e => { state.minScore = parseInt(e.target.value||'0',10)||0; updateView(); });
+
+    // LL weight
+    const llw = $('#f-llw') || $('#filters input[type="range"][name*="ll" i]') || $('#filters input[type="range"][id*="ll" i]');
+    llw && llw.addEventListener('input', e => { state.weight = parseFloat(e.target.value||'1'); updateView(); });
+
+    // reset (keep mode)
+    const resetBtn = $('#btnReset') ||
+      Array.from(($$('#filters button, #filtersPanel button'))).find(b=>/reset/i.test(b.textContent||''));
+    resetBtn && resetBtn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      state.search = '';
+      state.minScore = 0;
+      state.weight = 1;
+      if (search) search.value = '';
+      if (min)    min.value    = '0';
+      if (llw)    llw.value    = '1';
+      const connSel = $('#f-connection'); if (connSel) connSel.value = 'Any';
+      updateView(); // keep current mode
+    });
+
+    // "Edit in Friends" hand-off
+    document.addEventListener('click', (e)=>{
+      const btn = e.target.closest('button, a');
+      if (!btn) return;
+      if (!/edit in friends/i.test(btn.textContent||'')) return;
+      const card = btn.closest('.match-card');
+      if (!card) return;
+
+      const payload = {
+        id: card.dataset.id || '',
+        name: (card.querySelector('.name, .card-title')?.textContent||'').trim(),
+        connection: card.dataset.connection || inferConnFromText(card),
+        loveLanguage: card.dataset.ll || '',
+        score: parseInt(card.dataset.score||'0',10)||0,
+        notes: ''
+      };
+      try { localStorage.setItem('friendDraft', JSON.stringify(payload)); } catch {}
+      location.href = 'friends.html#draft=1';
+    });
+  }
+
+  // ---------- 6) Boot ----------
+  document.addEventListener('DOMContentLoaded', () => {
+    // mark page for local CSS
+    document.body.classList.add('match-page');
+
+    // nav active (visual parity with other pages)
+    $$('.navbar a').forEach(a=>{
+      if (/match\.html$/i.test(a.getAttribute('href')||'')) {
+        a.classList.add('active'); a.setAttribute('aria-current','page');
+      }
+    });
+
+    const profile = loadProfileFromLS();
+    renderSnapshot(profile);
+    ensureCardMeta();
+    wireFilters();
+
+    // restore mode
+    const savedMode = (localStorage.getItem('matchMode')||'').toLowerCase();
+    setMode(savedMode==='romantic' ? 'romantic' : 'friendship'); // also calls updateView()
+  });
+})();
 
