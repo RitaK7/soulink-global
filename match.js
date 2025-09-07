@@ -919,4 +919,150 @@
     applyFilters();
   });
 })();
+/* =========================================
+   Soulink · Match — connection toggle + snapshot fallbacks
+   - neprastato DOM; tik prideda klases/data-* ir rodo/slėpia korteles
+   ========================================= */
+(() => {
+  const $  = (s, r=document)=>r.querySelector(s);
+  const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+  const norm = s => (s||'').toString().trim().toLowerCase();
+
+  // page namespace CSS
+  document.body.classList.add('match-page');
+
+  // ---- 1) Toggle buttons (IDs jei yra; kitaip ieškom pagal tekstą) ----
+  const btnFriend = $('#toggleFriendship') ||
+    $$('button, .btn, [role="button"]').find(b => norm(b.textContent)==='friendship');
+  const btnRom    = $('#toggleRomantic')  ||
+    $$('button, .btn, [role="button"]').find(b => norm(b.textContent)==='romantic');
+
+  if (!btnFriend || !btnRom) return; // saugiklis, nepakeičiant puslapio
+
+  // ---- 2) Paruošk korteles: .match-card + data-connection ----
+  function guessFromText(card){
+    // Pirmenybė tiksliam "Connection: ..." tekstui
+    const m = (card.textContent||'').match(/connection\s*:\s*(friendship|romantic|both)/i);
+    if (m) return m[1].toLowerCase();
+    // Kapsulės/žetonai
+    const chip = $(
+      '.chip, [data-conn], .connection, .conn, .badge', card
+    );
+    if (chip){
+      const t = norm(chip.getAttribute('data-conn') || chip.textContent);
+      if (/(^|[^a-z])romantic([^a-z]|$)/.test(t))   return 'romantic';
+      if (/(^|[^a-z])friend(ship)?([^a-z]|$)/.test(t)) return 'friendship';
+      if (/(^|[^a-z])both([^a-z]|$)/.test(t))       return 'both';
+    }
+    return 'both'; // fallback – kad mygtukai "veiktų" ir be duomenų
+  }
+
+  function ensureCards(){
+    // jei jau turim .match-card – nenaikinam, tik naudojam
+    let cards = $$('.match-card');
+    if (!cards.length){
+      // atsarginiai selektoriai; tik prirašom klasę, nekeičiam struktūros
+      const raw = $$('#matchGrid .card, .cards .card, .cards-grid .card, .grid > .card');
+      raw.forEach(el => el.classList.add('match-card'));
+      cards = $$('.match-card');
+    }
+    cards.forEach((card, i) => {
+      if (!card.dataset.connection){
+        card.dataset.connection = guessFromText(card);
+      } else {
+        card.dataset.connection = norm(card.dataset.connection);
+      }
+      if (!card.dataset.id){
+        card.dataset.id = card.getAttribute('data-id') || String(i);
+      }
+      // score ženkliukui suteikiam bendrą klasę (padėčiai CSS'e), bet nenešiojam
+      const s = card.querySelector('.score-badge, .score, .score-num');
+      if (s) s.classList.add('score-badge');
+    });
+    return cards;
+  }
+  const cards = ensureCards();
+
+  // ---- 3) Būsena + persistencija ----
+  const STORAGE = 'matchConnectionFilter'; // 'friendship' | 'romantic' | 'both-on' | 'both-off'
+
+  const setPressed = (btn, on) => {
+    btn.classList.toggle('is-active', !!on);
+    btn.setAttribute('aria-pressed', on ? 'true':'false');
+  };
+  const getPressed = btn => btn.classList.contains('is-active');
+
+  // atkurk
+  (function restore(){
+    const v = localStorage.getItem(STORAGE);
+    if (v === 'friendship')      { setPressed(btnFriend,true);  setPressed(btnRom,false); }
+    else if (v === 'romantic')   { setPressed(btnFriend,false); setPressed(btnRom,true);  }
+    else if (v === 'both-on')    { setPressed(btnFriend,true);  setPressed(btnRom,true);  }
+    else if (v === 'both-off')   { setPressed(btnFriend,false); setPressed(btnRom,false); }
+  })();
+
+  function persist(){
+    const f = getPressed(btnFriend), r = getPressed(btnRom);
+    let val = 'both-off';
+    if (f &&  r) val = 'both-on';
+    if (f && !r) val = 'friendship';
+    if (!f && r) val = 'romantic';
+    localStorage.setItem(STORAGE, val);
+  }
+
+  // ---- 4) Filtravimas (rodyk/slėpk, nekeičiam DOM) ----
+  function applyConnectionFilter(){
+    const friendOn = getPressed(btnFriend);
+    const romOn    = getPressed(btnRom);
+
+    ensureCards().forEach(card => {
+      const type = card.dataset.connection || 'both';
+      let show = true;
+
+      if (!friendOn && !romOn) {
+        show = true;                       // abu off -> visos
+      } else if (friendOn && !romOn) {
+        show = (type==='friendship' || type==='both');
+      } else if (!friendOn && romOn) {
+        show = (type==='romantic'  || type==='both');
+      } else {
+        show = true;                       // abu on -> visos
+      }
+      card.style.display = show ? '' : 'none';
+    });
+
+    persist();
+  }
+
+  // ---- 5) Click handlers (multi-toggle) ----
+  btnFriend.addEventListener('click', () => {
+    setPressed(btnFriend, !getPressed(btnFriend));
+    applyConnectionFilter();
+  });
+  btnRom.addEventListener('click', () => {
+    setPressed(btnRom, !getPressed(btnRom));
+    applyConnectionFilter();
+  });
+
+  // ---- 6) Snapshot fallback tekstai (nekeičiant struktūros) ----
+  (function snapshotFallbacks(){
+    const snap = $('.snapshot, #snapshot, #yourSnapshot, [data-snapshot]');
+    if(!snap) return;
+    const setMuted = (el, text) => {
+      if (!el) return;
+      const raw = (el.textContent||'').trim();
+      if (!raw || raw==='–') { el.textContent = text; el.classList.add('muted'); }
+    };
+    setMuted(snap.querySelector('#snap-connection, .connection-value, .connection'), 'Not selected');
+    setMuted(snap.querySelector('#snap-love, .love-language-value, .love-language'), 'Not selected');
+
+    const hob = snap.querySelector('#snap-hobbies, .snapshot-hobbies, .hobbies');
+    if (hob && !hob.textContent.trim()) { hob.textContent = 'No items yet'; hob.classList.add('muted'); }
+    const val = snap.querySelector('#snap-values, .snapshot-values, .values');
+    if (val && !val.textContent.trim()) { val.textContent = 'No items yet'; val.classList.add('muted'); }
+  })();
+
+  // ---- 7) Pirmas pritaikymas ----
+  applyConnectionFilter();
+})();
 

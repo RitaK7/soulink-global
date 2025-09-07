@@ -155,6 +155,20 @@
 
 /* Pilki placeholder’iai Snapshot’e */
 .match-page .muted{ opacity:.7; }
+/* Soulink · Match (scoped) */
+.match-page #toggleFriendship.is-active,
+.match-page #toggleRomantic.is-active{
+  box-shadow: 0 0 0 2px rgba(80,255,200,.25), 0 0 16px rgba(80,255,200,.25);
+}
+.match-page .muted{ opacity:.7; }
+
+/* Visose kortelėse vienoda score padėtis (nekeičiant DOM) */
+.match-page .match-card{ position: relative; }
+.match-page .match-card .score-badge,
+.match-page .match-card .score,
+.match-page .match-card .score-num{
+  position:absolute; top:8px; right:8px;
+}
   </style>
 </head>
 
