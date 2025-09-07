@@ -919,150 +919,162 @@
     applyFilters();
   });
 })();
+
 /* =========================================
-   Soulink · Match — connection toggle + snapshot fallbacks
-   - neprastato DOM; tik prideda klases/data-* ir rodo/slėpia korteles
+   Soulink · Match — robust Friendship/Romantic toggle (delegated)
+   - No DOM rebuild; just adds classes/data-* and shows/hides
    ========================================= */
 (() => {
   const $  = (s, r=document)=>r.querySelector(s);
   const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
   const norm = s => (s||'').toString().trim().toLowerCase();
 
-  // page namespace CSS
+  // namespace for CSS
   document.body.classList.add('match-page');
 
-  // ---- 1) Toggle buttons (IDs jei yra; kitaip ieškom pagal tekstą) ----
-  const btnFriend = $('#toggleFriendship') ||
-    $$('button, .btn, [role="button"]').find(b => norm(b.textContent)==='friendship');
-  const btnRom    = $('#toggleRomantic')  ||
-    $$('button, .btn, [role="button"]').find(b => norm(b.textContent)==='romantic');
+  // ---- Selectors for toggles (support several markup variants) ----
+  const FRIEND_SEL   = '#toggleFriendship, [data-conn="friend"], .seg-btn[data-seg="friend"], [data-filter="friendship"], [data-role="friendship"]';
+  const ROMANTIC_SEL = '#toggleRomantic,  [data-conn="romance"], .seg-btn[data-seg="romantic"], [data-filter="romantic"],  [data-role="romantic"]';
 
-  if (!btnFriend || !btnRom) return; // saugiklis, nepakeičiant puslapio
+  function resolveButtons(){
+    const friend = document.querySelector(FRIEND_SEL);
+    const romantic = document.querySelector(ROMANTIC_SEL);
+    // assign IDs if missing (non-breaking)
+    if (friend && friend.id !== 'toggleFriendship') friend.id = 'toggleFriendship';
+    if (romantic && romantic.id !== 'toggleRomantic') romantic.id = 'toggleRomantic';
+    return { friend, romantic };
+  }
 
-  // ---- 2) Paruošk korteles: .match-card + data-connection ----
-  function guessFromText(card){
-    // Pirmenybė tiksliam "Connection: ..." tekstui
-    const m = (card.textContent||'').match(/connection\s*:\s*(friendship|romantic|both)/i);
+  // ---- Cards: make sure we have .match-card and data-connection ----
+  function guessConn(card){
+    const t = (card.textContent || '').toLowerCase();
+    const m = t.match(/connection\s*:\s*(friendship|romantic|both)/i);
     if (m) return m[1].toLowerCase();
-    // Kapsulės/žetonai
-    const chip = $(
-      '.chip, [data-conn], .connection, .conn, .badge', card
-    );
-    if (chip){
-      const t = norm(chip.getAttribute('data-conn') || chip.textContent);
-      if (/(^|[^a-z])romantic([^a-z]|$)/.test(t))   return 'romantic';
-      if (/(^|[^a-z])friend(ship)?([^a-z]|$)/.test(t)) return 'friendship';
-      if (/(^|[^a-z])both([^a-z]|$)/.test(t))       return 'both';
-    }
-    return 'both'; // fallback – kad mygtukai "veiktų" ir be duomenų
+    if (t.includes('romantic') || t.includes('romance')) return 'romantic';
+    if (t.includes('friendship') || t.includes('friend')) return 'friendship';
+    if (t.includes('both')) return 'both';
+    return 'both'; // fallback – būtinas
   }
 
   function ensureCards(){
-    // jei jau turim .match-card – nenaikinam, tik naudojam
     let cards = $$('.match-card');
     if (!cards.length){
-      // atsarginiai selektoriai; tik prirašom klasę, nekeičiam struktūros
+      // add class without changing structure
       const raw = $$('#matchGrid .card, .cards .card, .cards-grid .card, .grid > .card');
       raw.forEach(el => el.classList.add('match-card'));
       cards = $$('.match-card');
     }
     cards.forEach((card, i) => {
-      if (!card.dataset.connection){
-        card.dataset.connection = guessFromText(card);
-      } else {
-        card.dataset.connection = norm(card.dataset.connection);
-      }
-      if (!card.dataset.id){
-        card.dataset.id = card.getAttribute('data-id') || String(i);
-      }
-      // score ženkliukui suteikiam bendrą klasę (padėčiai CSS'e), bet nenešiojam
+      if (!card.dataset.connection) card.dataset.connection = guessConn(card);
+      if (!card.dataset.id) card.dataset.id = card.getAttribute('data-id') || String(i);
+      // normalize score badge pos (class only; no move)
       const s = card.querySelector('.score-badge, .score, .score-num');
       if (s) s.classList.add('score-badge');
     });
     return cards;
   }
-  const cards = ensureCards();
+  ensureCards();
 
-  // ---- 3) Būsena + persistencija ----
+  // ---- State & persistence ----
   const STORAGE = 'matchConnectionFilter'; // 'friendship' | 'romantic' | 'both-on' | 'both-off'
 
-  const setPressed = (btn, on) => {
+  function getPressed(btn){ return !!(btn && btn.classList.contains('is-active')); }
+  function setPressed(btn, on){
+    if (!btn) return;
     btn.classList.toggle('is-active', !!on);
     btn.setAttribute('aria-pressed', on ? 'true':'false');
-  };
-  const getPressed = btn => btn.classList.contains('is-active');
-
-  // atkurk
-  (function restore(){
-    const v = localStorage.getItem(STORAGE);
-    if (v === 'friendship')      { setPressed(btnFriend,true);  setPressed(btnRom,false); }
-    else if (v === 'romantic')   { setPressed(btnFriend,false); setPressed(btnRom,true);  }
-    else if (v === 'both-on')    { setPressed(btnFriend,true);  setPressed(btnRom,true);  }
-    else if (v === 'both-off')   { setPressed(btnFriend,false); setPressed(btnRom,false); }
-  })();
-
-  function persist(){
-    const f = getPressed(btnFriend), r = getPressed(btnRom);
-    let val = 'both-off';
-    if (f &&  r) val = 'both-on';
-    if (f && !r) val = 'friendship';
-    if (!f && r) val = 'romantic';
-    localStorage.setItem(STORAGE, val);
   }
 
-  // ---- 4) Filtravimas (rodyk/slėpk, nekeičiam DOM) ----
+  function readState(){
+    const saved = localStorage.getItem(STORAGE);
+    const {friend, romantic} = resolveButtons();
+    // default both-on
+    let f = true, r = true;
+    if (saved === 'friendship')      { f = true;  r = false; }
+    else if (saved === 'romantic')   { f = false; r = true;  }
+    else if (saved === 'both-off')   { f = false; r = false; }
+    // paint
+    setPressed(friend, f);
+    setPressed(romantic, r);
+    return { f, r };
+  }
+
+  function persistState(){
+    const {friend, romantic} = resolveButtons();
+    const f = getPressed(friend), r = getPressed(romantic);
+    let v = 'both-off';
+    if (f &&  r) v = 'both-on';
+    if (f && !r) v = 'friendship';
+    if (!f && r) v = 'romantic';
+    localStorage.setItem(STORAGE, v);
+  }
+
+  // ---- Apply filter ----
   function applyConnectionFilter(){
-    const friendOn = getPressed(btnFriend);
-    const romOn    = getPressed(btnRom);
+    const {friend, romantic} = resolveButtons();
+    const friendOn = getPressed(friend);
+    const romOn    = getPressed(romantic);
 
     ensureCards().forEach(card => {
       const type = card.dataset.connection || 'both';
       let show = true;
 
       if (!friendOn && !romOn) {
-        show = true;                       // abu off -> visos
+        show = true; // both off -> all
       } else if (friendOn && !romOn) {
-        show = (type==='friendship' || type==='both');
+        show = (type === 'friendship' || type === 'both');
       } else if (!friendOn && romOn) {
-        show = (type==='romantic'  || type==='both');
+        show = (type === 'romantic' || type === 'both');
       } else {
-        show = true;                       // abu on -> visos
+        show = true; // both on -> all
       }
+
+      // Class + inline as a safety net
+      card.classList.toggle('is-hidden', !show);
       card.style.display = show ? '' : 'none';
     });
 
-    persist();
+    persistState();
   }
 
-  // ---- 5) Click handlers (multi-toggle) ----
-  btnFriend.addEventListener('click', () => {
-    setPressed(btnFriend, !getPressed(btnFriend));
-    applyConnectionFilter();
-  });
-  btnRom.addEventListener('click', () => {
-    setPressed(btnRom, !getPressed(btnRom));
-    applyConnectionFilter();
-  });
+  // ---- Delegated clicks (works even if buttons render late) ----
+  document.addEventListener('click', (e) => {
+    const tFriend = e.target.closest(FRIEND_SEL);
+    const tRom    = e.target.closest(ROMANTIC_SEL);
+    if (!tFriend && !tRom) return;
 
-  // ---- 6) Snapshot fallback tekstai (nekeičiant struktūros) ----
+    const isLink = (el) => el && el.tagName === 'A';
+    if (isLink(tFriend) || isLink(tRom)) e.preventDefault();
+
+    if (tFriend){
+      setPressed(tFriend, !getPressed(tFriend));
+      applyConnectionFilter();
+    }
+    if (tRom){
+      setPressed(tRom, !getPressed(tRom));
+      applyConnectionFilter();
+    }
+  }, true); // capture to beat other handlers
+
+  // ---- First paint ----
+  readState();
+  applyConnectionFilter();
+
+  // ---- Snapshot fallbacks (optional, small) ----
   (function snapshotFallbacks(){
     const snap = $('.snapshot, #snapshot, #yourSnapshot, [data-snapshot]');
     if(!snap) return;
-    const setMuted = (el, text) => {
+    const mutify = (el, txt) => {
       if (!el) return;
-      const raw = (el.textContent||'').trim();
-      if (!raw || raw==='–') { el.textContent = text; el.classList.add('muted'); }
+      const t = (el.textContent||'').trim();
+      if (!t || t === '–'){ el.textContent = txt; el.classList.add('muted'); }
     };
-    setMuted(snap.querySelector('#snap-connection, .connection-value, .connection'), 'Not selected');
-    setMuted(snap.querySelector('#snap-love, .love-language-value, .love-language'), 'Not selected');
+    mutify(snap.querySelector('#snap-connection, .connection-value, .connection'), 'Not selected');
+    mutify(snap.querySelector('#snap-love, .love-language-value, .love-language'), 'Not selected');
 
     const hob = snap.querySelector('#snap-hobbies, .snapshot-hobbies, .hobbies');
     if (hob && !hob.textContent.trim()) { hob.textContent = 'No items yet'; hob.classList.add('muted'); }
     const val = snap.querySelector('#snap-values, .snapshot-values, .values');
     if (val && !val.textContent.trim()) { val.textContent = 'No items yet'; val.classList.add('muted'); }
   })();
-
-  // ---- 7) Pirmas pritaikymas ----
-  applyConnectionFilter();
 })();
-
