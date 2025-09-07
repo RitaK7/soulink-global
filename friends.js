@@ -496,3 +496,63 @@ updatePreviewIcons();
     }
   })();
 })();
+/* ==========================================
+   Soulink – Friends: quick shims (non-breaking)
+   - Love Language save/migrate (ll <-> loveLanguage)
+   - Navbar order + active glow
+   - Footer Next → Results
+   ========================================== */
+(function friendsFixes(){
+  // --- A) Love Language: migrate + mirror
+  const KEY = 'soulFriends';
+  function fixLL(list){
+    (list || []).forEach(f => {
+      const cur = f.ll || f.loveLanguage;
+      const val = (cur && String(cur).trim()) ? cur : 'Unknown';
+      if (!f.ll)           f.ll = val;
+      if (!f.loveLanguage) f.loveLanguage = val;
+    });
+    return list || [];
+  }
+  try {
+    const arr = JSON.parse(localStorage.getItem(KEY) || '[]');
+    localStorage.setItem(KEY, JSON.stringify(fixLL(arr)));
+    if (typeof window.render === 'function') window.render(arr);
+  } catch {}
+
+  // ensure all future saves keep both keys in sync (wrap existing saveFriends if present)
+  if (typeof window.saveFriends === 'function'){
+    const __saveFriends = window.saveFriends;
+    window.saveFriends = function(list){ return __saveFriends( fixLL(list) ); };
+  }
+
+  // --- B) Navbar: order + active (matches other pages)
+  const nav = document.querySelector('.navbar #navMenu, .navbar .nav-links');
+  const desired = [
+    'quiz.html','edit-profile.html','my-soul.html','soul-chart.html',
+    'soul-coach.html','match.html','friends.html','result.html'
+  ];
+  if (nav){
+    const items = Array.from(nav.querySelectorAll('a'));
+    items.sort((a,b) => {
+      const ia = desired.indexOf(a.getAttribute('href')||'');
+      const ib = desired.indexOf(b.getAttribute('href')||'');
+      return (ia<0?999:ia) - (ib<0?999:ib);
+    }).forEach(a => nav.appendChild(a.closest('li') || a));
+
+    items.forEach(a => {
+      const active = /friends\.html$/i.test(a.getAttribute('href')||'');
+      a.classList.toggle('active', active);
+      if (active) a.setAttribute('aria-current','page');
+      else a.removeAttribute('aria-current');
+    });
+  }
+
+  // --- C) Footer: Next → Results (non-destructive)
+  document.querySelectorAll('a[href$="match.html"]').forEach(a => {
+    if (/Next/i.test(a.textContent || '')) {
+      a.href = 'result.html';
+      a.textContent = a.textContent.replace(/Match/i, 'Results');
+    }
+  });
+})();

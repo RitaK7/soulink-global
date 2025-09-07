@@ -172,6 +172,11 @@
       const card=document.createElement('div');
       card.className='match-card';
       card.innerHTML=`
+      // expose connection for filtering (friendship | romantic | both)
+      card.dataset.connection = (String(f.ct || 'both').toLowerCase().includes('romantic')
+      ? 'romantic'
+     : String(f.ct || 'both').toLowerCase().includes('friend') ? 'friendship' : 'both');
+
         <div class="head">
           <div class="meta">
             <img class="avatar" src="${avatarFor(f.name,f.photo)}" alt="">
@@ -726,7 +731,77 @@
       } else {
         ok = true; // both on -> show all
       }
-      show(card, ok);
+      show(card, ok);/* =========================================
+   Soulink – Match: Friendship/Romantic filter
+   Uses .seg-btn[data-seg="friend|romantic"]
+   Saves to localStorage('soulMatchConnFilter')
+   Filters .match-card by data-connection
+   ========================================= */
+(function matchConnectionFilter(){
+  const btnFriend   = document.querySelector('.seg-btn[data-seg="friend"]');
+  const btnRomantic = document.querySelector('.seg-btn[data-seg="romantic"]');
+  const snapshot    = document.getElementById('yourSnapshot');
+
+  // restore last choice
+  let state = { friend:false, romantic:false };
+  try {
+    const saved = JSON.parse(localStorage.getItem('soulMatchConnFilter') || '{}');
+    if (typeof saved.friend === 'boolean')   state.friend   = saved.friend;
+    if (typeof saved.romantic === 'boolean') state.romantic = saved.romantic;
+  } catch {}
+
+  const save = () =>
+    localStorage.setItem('soulMatchConnFilter', JSON.stringify(state));
+
+  function paintButtons(){
+    if (btnFriend){
+      btnFriend.classList.toggle('is-active', state.friend);
+      btnFriend.setAttribute('aria-selected', String(state.friend));
+    }
+    if (btnRomantic){
+      btnRomantic.classList.toggle('is-active', state.romantic);
+      btnRomantic.setAttribute('aria-selected', String(state.romantic));
+    }
+  }
+
+  function paintSnapshot(){
+    if (!snapshot) return;
+    snapshot.classList.remove('friend-mode','romantic-mode');
+    if (state.friend && !state.romantic)  snapshot.classList.add('friend-mode');
+    if (state.romantic && !state.friend)  snapshot.classList.add('romantic-mode');
+    // both off or both on -> no extra class
+  }
+
+  function matchOk(conn){
+    conn = (conn || 'both').toLowerCase();
+    if (state.friend && !state.romantic)   return conn === 'friendship' || conn === 'both';
+    if (state.romantic && !state.friend)   return conn === 'romantic'  || conn === 'both';
+    return true; // both off or both on -> show all
+  }
+
+  function apply(){
+    document.querySelectorAll('.match-card').forEach(card => {
+      const conn = card.dataset.connection || 'both';
+      card.style.display = matchOk(conn) ? '' : 'none';
+    });
+    paintButtons();
+    paintSnapshot();
+    save();
+  }
+
+  btnFriend   && btnFriend.addEventListener('click',   () => { state.friend   = !state.friend;   apply(); });
+  btnRomantic && btnRomantic.addEventListener('click', () => { state.romantic = !state.romantic; apply(); });
+
+  // ensure filter reapplies after any re-render
+  if (typeof render === 'function'){
+    const __render = render;
+    render = function(...args){ const out = __render.apply(this,args); try{ apply(); }catch{} return out; };
+  }
+
+  // initial pass
+  apply();
+})();
+
     });
 
     paintButtons();

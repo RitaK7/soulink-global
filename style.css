@@ -1327,6 +1327,23 @@ body[data-page="match"] .navbar .nav-links a[href*="match"]{
               0 0 12px rgba(0,255,200,.25);
   background: rgba(0,255,200,.12);
 }
+/* Keep cards from over-stretching */
+.match-page .cards,
+.match-page .cards-grid{
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* Make filters sticky on mobile (your container is #filtersPanel) */
+@media (max-width: 768px){
+  #filtersPanel { position: sticky; top: .5rem; z-index: 5; }
+}
+
+/* Snapshot subtle emphasis only (no content change) */
+#yourSnapshot.friend-mode,
+#yourSnapshot.romantic-mode{
+  box-shadow: 0 0 0 1px rgba(0,255,200,.18) inset;
+  /* keep the rest of your styles unchanged */
+}
 
 
 
