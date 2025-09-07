@@ -632,4 +632,291 @@
     setMode(savedMode==='romantic' ? 'romantic' : 'friendship'); // also calls updateView()
   });
 })();
+/* =========================================
+   Soulink · Match — incremental logic (no DOM rebuilds)
+   - Snapshot fallsbacks
+   - Friendship/Romantic multi-toggle
+   - Search + Min score + LL weight together
+   - Cards only show/hide via .is-hidden
+   - Score badge placement + mobile actions stack
+   ========================================= */
+(function(){
+  // --- helpers ---
+  const $  = (s, r=document)=>r.querySelector(s);
+  const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+  const clamp = (v,a,b)=>Math.max(a, Math.min(b, v));
+  const txt = n => (n?.textContent||'').trim();
+  const norm = s => (s||'').toString().trim().toLowerCase();
+
+  // page namespace (CSS)
+  document.body.classList.add('match-page');
+
+  // ---- Snapshot: profile -> chips/labels (no structure change) ----
+  function loadProfileFromLS(){
+    try{
+      const q = JSON.parse(localStorage.getItem('soulQuiz')||'{}') || {};
+      const connection = norm(q.connectionType || q.connection) || 'both';
+      const loveLanguage = Array.isArray(q.loveLanguages) ? q.loveLanguages[0]||''
+                         : (q.loveLanguagePrimary || q.loveLanguage || '');
+      const toArr = v => (Array.isArray(v) ? v
+                       : typeof v==='string' ? v.split(/[\n,|]/) : [])
+                       .map(x=>x.trim()).filter(Boolean);
+      return {
+        connection, loveLanguage,
+        hobbies: toArr(q.hobbies).slice(0,6),
+        values:  toArr(q.values).slice(0,10)
+      };
+    }catch{ return {connection:'both', loveLanguage:'', hobbies:[], values:[]}; }
+  }
+
+  function renderSnapshot(p){
+    const snap = $('#yourSnapshot') || $('#snapshot') || $('.snapshot');
+    if(!snap) return;
+
+    const elConn = $('#snap-connection') || snap.querySelector('#snap-connection');
+    const elLove = $('#snap-love')       || snap.querySelector('#snap-love');
+    const elHobs = $('#snap-hobbies')    || snap.querySelector('#snap-hobbies');
+    const elVals = $('#snap-values')     || snap.querySelector('#snap-values');
+
+    // Connection
+    if (elConn){
+      elConn.textContent = p.connection || '';
+      if (!p.connection || p.connection === 'both'){
+        elConn.textContent = 'Not selected';
+        elConn.classList.add('muted');
+      } else elConn.classList.remove('muted');
+    }
+
+    // Love Language
+    if (elLove){
+      elLove.textContent = p.loveLanguage || 'Not selected';
+      elLove.classList.toggle('muted', !p.loveLanguage);
+    }
+
+    // chips helper
+    const chipify = arr => arr.map(t=>`<span class="chip">${t}</span>`).join('');
+
+    // Hobbies
+    if (elHobs){
+      if (p.hobbies.length){
+        elHobs.innerHTML = chipify(p.hobbies);
+        elHobs.classList.add('chips','clamp-3');
+        elHobs.classList.remove('muted');
+      } else {
+        elHobs.textContent = 'No items yet';
+        elHobs.classList.add('muted');
+      }
+    }
+
+    // Values
+    if (elVals){
+      if (p.values.length){
+        elVals.innerHTML = chipify(p.values);
+        elVals.classList.add('chips','clamp-3');
+        elVals.classList.remove('muted');
+      } else {
+        elVals.textContent = 'No items yet';
+        elVals.classList.add('muted');
+      }
+    }
+  }
+
+  // ---- Cards metadata (no DOM rebuild) ----
+  function inferConnFromText(card){
+    const t = norm(card.textContent);
+    if (t.includes('romantic')) return 'romantic';
+    if (t.includes('friend'))   return 'friendship';
+    return 'both';
+  }
+  function ensureCards(){
+    // mark cards + minimal metadata
+    const candidates =
+      $$('.match-card').length ? $$('.match-card') :
+      $$('#matchGrid .card, .cards .card, .cards-grid .card');
+
+    candidates.forEach((card, i)=>{
+      card.classList.add('match-card');
+
+      // score badge element -> unify class (no move)
+      const scoreEl = card.querySelector('.score-badge, .score-num, .score');
+      if (scoreEl) scoreEl.classList.add('score-badge');
+
+      // a) id
+      if (!card.dataset.id) card.dataset.id = card.getAttribute('data-id') || String(i);
+
+      // b) connection
+      if (!card.dataset.connection) {
+        // try global array if exists (matchData / candidates)
+        let fromData = null;
+        try{
+          const arr = (window.matchData || window.candidates || []);
+          if (Array.isArray(arr) && arr[i]) {
+            const raw = arr[i].connection || arr[i].ct || arr[i].connectionType;
+            fromData = norm(raw);
+          }
+        }catch{}
+        card.dataset.connection = fromData || inferConnFromText(card);
+      }
+
+      // c) score baseline
+      if (!card.dataset.score){
+        const s = card.querySelector('[data-score], .score, .score-num');
+        const n = s ? parseInt((s.getAttribute('data-score')||s.textContent).replace(/[^\d]/g,''),10) : NaN;
+        if (!isNaN(n)) card.dataset.score = String(clamp(n,0,100));
+      }
+
+      // d) LL (optional, for weight)
+      if (!card.dataset.ll){
+        const ll = card.querySelector('[data-ll], .love-language, .ll');
+        if (ll){
+          card.dataset.ll = ll.getAttribute('data-ll') || txt(ll);
+        }
+      }
+
+      // e) actions stackable (for mobile)
+      const actions = card.querySelector('.card-actions, .actions, .btn-row');
+      if (actions && /message/i.test(actions.textContent) && /compare/i.test(actions.textContent)){
+        actions.classList.add('actions-stackable');
+      }
+    });
+  }
+
+  // ---- State + filters ----
+  const toggles = {
+    friend:  null,
+    romantic:null
+  };
+  // find toggle buttons (we don't rename them)
+  toggles.friend   = $('#modeFriendship') || $('[data-conn="friend"]') || $('.seg-btn[data-seg="friend"]') ||
+                     Array.from($$('button, .btn, a')).find(b=>/friendship/i.test(txt(b)));
+  toggles.romantic = $('#modeRomantic')   || $('[data-conn="romance"]') || $('.seg-btn[data-seg="romantic"]') ||
+                     Array.from($$('button, .btn, a')).find(b=>/romantic/i.test(txt(b)));
+
+  // multi-toggle state
+  let state = { friend:true, romantic:true, search:'', minScore:0, weight:1 };
+  try{
+    const saved = JSON.parse(localStorage.getItem('soulMatchConnFilter')||'{}');
+    if (typeof saved.friend==='boolean')   state.friend = saved.friend;
+    if (typeof saved.romantic==='boolean') state.romantic = saved.romantic;
+  }catch{}
+
+  function persistToggles(){
+    localStorage.setItem('soulMatchConnFilter', JSON.stringify({friend:state.friend, romantic:state.romantic}));
+  }
+
+  function paintToggles(){
+    if (toggles.friend)   toggles.friend.classList.toggle('is-active',   state.friend);
+    if (toggles.romantic) toggles.romantic.classList.toggle('is-active', state.romantic);
+
+    const snap = $('#yourSnapshot') || $('#snapshot');
+    if (snap){
+      snap.classList.remove('friend-mode','romantic-mode');
+      if (state.friend && !state.romantic)   snap.classList.add('friend-mode');
+      if (state.romantic && !state.friend)   snap.classList.add('romantic-mode');
+    }
+  }
+
+  function matchOk(conn){
+    conn = norm(conn||'both');
+    const F = !!state.friend, R = !!state.romantic;
+    if (!F && !R) return true;     // abu off -> visos
+    if (F && R)   return true;     // abu on  -> visos
+    if (F)        return (conn==='friendship' || conn==='both');
+    if (R)        return (conn==='romantic'  || conn==='both');
+    return true;
+  }
+
+  function scoreWithWeight(card){
+    const base = parseInt(card.dataset.score||'0',10)||0;
+    const me   = loadProfileFromLS();
+    const ll   = norm(card.dataset.ll||'');
+    const llMe = norm(me.loveLanguage||'');
+    const bonus = (ll && llMe && ll===llMe) ? 10 : 0; // paprastas LL bonusas
+    return clamp(Math.round(base + state.weight*bonus), 0, 100);
+  }
+
+  function applyFilters(){
+    ensureCards();
+
+    // search
+    const q = norm(state.search);
+    // connection dropdown override
+    const sel = $('#f-connection');
+    const userConn = sel && sel.value && !/any/i.test(sel.value) ? norm(sel.value) : null;
+
+    $$('.match-card').forEach(card=>{
+      const conn = userConn || card.dataset.connection || 'both';
+      let show = matchOk(conn);
+
+      if (show && q){
+        show = norm(card.textContent).includes(q);
+      }
+      if (show && state.minScore>0){
+        show = scoreWithWeight(card) >= state.minScore;
+      }
+      card.classList.toggle('is-hidden', !show);
+    });
+
+    paintToggles();
+    persistToggles();
+  }
+
+  // events
+  function wire(){
+    if (toggles.friend)   toggles.friend.addEventListener('click', ()=>{ state.friend = !state.friend; applyFilters(); });
+    if (toggles.romantic) toggles.romantic.addEventListener('click', ()=>{ state.romantic = !state.romantic; applyFilters(); });
+
+    const search = $('#f-search') || ($('#filters input[type="search"]') || $('#filters input[placeholder*="Search" i]'));
+    search && search.addEventListener('input', e=>{ state.search = e.target.value||''; applyFilters(); });
+
+    const min = $('#f-min') || $('#filters input[type="range"][name*="min" i]') || $('#filters input[type="range"][id*="min" i]');
+    min && min.addEventListener('input', e=>{ state.minScore = parseInt(e.target.value||'0',10)||0; applyFilters(); });
+
+    const llw = $('#f-llw') || $('#filters input[type="range"][name*="ll" i]') || $('#filters input[type="range"][id*="ll" i]');
+    llw && llw.addEventListener('input', e=>{ state.weight = parseFloat(e.target.value||'1'); applyFilters(); });
+
+    const resetBtn = $('#btnReset') || Array.from(($$('#filters button, #filtersPanel button'))).find(b=>/reset/i.test(txt(b)));
+    resetBtn && resetBtn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      state.search=''; state.minScore=0; state.weight=1;
+      if (search) search.value='';
+      if (min) min.value='0';
+      if (llw) llw.value='1';
+      const sel = $('#f-connection'); if (sel) sel.value='Any';
+      applyFilters(); // neišjungiant režimo
+    });
+
+    // Edit in Friends hand-off
+    document.addEventListener('click', (e)=>{
+      const btn = e.target.closest('button,a');
+      if (!btn || !/edit in friends/i.test(txt(btn))) return;
+      const card = btn.closest('.match-card'); if(!card) return;
+
+      const payload = {
+        id: card.dataset.id || '',
+        name: txt(card.querySelector('.name, .card-title')) || '',
+        connection: card.dataset.connection || inferConnFromText(card),
+        loveLanguage: card.dataset.ll || '',
+        score: parseInt(card.dataset.score||'0',10)||0
+      };
+      try{ localStorage.setItem('friendDraft', JSON.stringify(payload)); }catch{}
+      location.href = 'friends.html#draft=1';
+    });
+
+    // nav active parity (glow)
+    $$('.navbar a').forEach(a=>{
+      const isHere = /match\.html$/i.test(a.getAttribute('href')||'');
+      a.classList.toggle('active', isHere);
+      if (isHere) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
+    });
+  }
+
+  // boot
+  document.addEventListener('DOMContentLoaded', ()=>{
+    renderSnapshot(loadProfileFromLS());
+    ensureCards();
+    wire();
+    applyFilters();
+  });
+})();
 

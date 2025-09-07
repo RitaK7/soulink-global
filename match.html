@@ -91,7 +91,70 @@
    #snapshot.romantic-mode{
    box-shadow: 0 0 0 1px rgba(0,255,200,.18) inset;
   }
+/* ==== Soulink · Match page (scoped) ==== */
+.match-page .is-hidden{ display:none!important; }
 
+/* Score badge – visose kortelėse vienoda padėtis */
+.match-page .match-card{ position:relative; }
+.match-page .match-card .score-badge,
+.match-page .match-card .score,
+.match-page .match-card .score-num{
+  position:absolute; top:8px; right:8px;
+}
+
+/* Kortelių grid responsyvas be „stretch“ */
+@media (max-width: 480px){
+  .match-page #matchGrid,
+  .match-page .cards,
+  .match-page .cards-grid{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+@media (min-width: 481px) and (max-width: 1024px){
+  .match-page #matchGrid,
+  .match-page .cards,
+  .match-page .cards-grid{
+    display:grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 1rem;
+  }
+}
+/* >1024px paliekam kaip yra (nekeičiam) */
+
+/* Message/Compare – mobile stulpeliu (nekeičiant DOM) */
+@media (max-width: 480px){
+  .match-page .actions-stackable{
+    display:flex; flex-direction:column; gap:10px;
+  }
+}
+
+/* Žetonų konteinerio „fade“ vietoj karpymo (be JS „more“) */
+.match-page .chips.clamp-3,
+.match-page .tags.clamp-3{
+  --clamp-lines: 3;
+  max-height: calc(1.25em * var(--clamp-lines) + 8px);
+  overflow:hidden;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0));
+          mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0));
+}
+
+/* Toggle glow (aktyvus) – subtiliai */
+.match-page .is-active{
+  box-shadow: 0 0 0 2px rgba(0,255,200,.28) inset, 0 0 14px rgba(0,255,200,.25);
+}
+
+/* Snapshot akcentas pagal režimą */
+.match-page #yourSnapshot.friend-mode,
+.match-page #yourSnapshot.romantic-mode,
+.match-page #snapshot.friend-mode,
+.match-page #snapshot.romantic-mode{
+  box-shadow: 0 0 0 1px rgba(0,255,200,.18) inset;
+}
+
+/* Pilki placeholder’iai Snapshot’e */
+.match-page .muted{ opacity:.7; }
   </style>
 </head>
 
