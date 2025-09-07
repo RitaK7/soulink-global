@@ -415,3 +415,84 @@ render();
 updatePreviewIcons();
 
 })();
+
+/* ==========================================
+   Soulink – Friends shims (non-breaking)
+   - Ensure loveLanguage persists + migrate old entries
+   - Align navbar order & active state
+   - Fix footer Next → Results
+   ========================================== */
+(function friendsShims(){
+  // --- A) loveLanguage: save & one-time migrate ---
+  const KEY = 'soulFriends';
+
+  function normalizeLL(list){
+    return (list || []).map(f => {
+      const ll = f?.loveLanguage || f?.ll || 'Unknown';
+      return Object.assign({}, f, { loveLanguage: ll, ll: ll });
+    });
+  }
+
+  // monkey-patch saveFriends to always store both keys (ll & loveLanguage)
+  if (typeof window.saveFriends === 'function'){
+    const __saveFriends = window.saveFriends;
+    window.saveFriends = function(list){
+      return __saveFriends( normalizeLL(list) );
+    };
+  }
+
+  // one-time migration of existing records
+  try {
+    const cur = JSON.parse(localStorage.getItem(KEY) || '[]');
+    const migrated = normalizeLL(cur);
+    localStorage.setItem(KEY, JSON.stringify(migrated));
+    // re-render if your render(list) exists
+    if (typeof window.render === 'function') window.render(migrated);
+  } catch {}
+
+  // --- B) navbar: enforce order + active class (no markup rename) ---
+  const desiredOrder = [
+    'quiz.html','edit-profile.html','my-soul.html','soul-chart.html',
+    'soul-coach.html','match.html','friends.html','result.html'
+  ];
+  const navList = document.querySelector('.navbar .nav-links, .navbar #navMenu');
+  if (navList){
+    const items = Array.from(navList.querySelectorAll('li, a')).filter(x => x.tagName === 'LI' || x.tagName === 'A');
+    // normalize to <li> wrappers if present
+    const links = items.map(n => n.tagName === 'LI' ? n.querySelector('a') : n).filter(Boolean);
+
+    // sort by desired order (append unknowns at the end)
+    links
+      .sort((a,b) => {
+        const ia = desiredOrder.indexOf(a.getAttribute('href'));
+        const ib = desiredOrder.indexOf(b.getAttribute('href'));
+        return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+      })
+      .forEach(a => (a.parentElement && a.parentElement.tagName === 'LI')
+        ? navList.appendChild(a.parentElement)
+        : navList.appendChild(a));
+
+    // active glow + aria
+    links.forEach(a => {
+      if (a.getAttribute('href')?.endsWith('friends.html')){
+        a.classList.add('active');
+        a.setAttribute('aria-current','page');
+      } else {
+        a.classList.remove('active');
+        a.removeAttribute('aria-current');
+      }
+    });
+  }
+
+  // --- C) footer Next → Results (non-destructive) ---
+  (function fixFooterNext(){
+    // try main-bottom nav first, then any nav in main/footer
+    const scope = document.querySelector('main') || document;
+    const candidates = Array.from(scope.querySelectorAll('a[href$="match.html"], a[data-next="match"]'));
+    const btn = candidates.reverse().find(Boolean); // likely the "Next" button is the last one
+    if (btn){
+      btn.setAttribute('href','result.html');
+      if (btn.textContent) btn.textContent = btn.textContent.replace(/Match/i, 'Results');
+    }
+  })();
+})();

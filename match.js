@@ -306,7 +306,7 @@
     else                                                 window.dispatchEvent(new CustomEvent('soulink:refresh'));
   }
 
-  
+
   function setConnection(type){
     persist(type);
     paint();
@@ -664,3 +664,80 @@
   // document.dispatchEvent(new CustomEvent('match:cards-updated'));
   document.addEventListener('match:cards-updated', initMatchEnhancements);
 })();
+
+/* ================================
+   Soulink – Match: connection filter
+   Persists to localStorage('soulMatchConnFilter')
+   Filters .match-card by [data-connection]
+   ================================ */
+(function matchConnectionFilter(){
+  const btnFriend   = document.getElementById('btnFriend');
+  const btnRomantic = document.getElementById('btnRomantic');
+  const snapshot    = document.getElementById('snapshot');
+
+  // restore saved state
+  let state = { friend: false, romantic: false };
+  try {
+    const saved = JSON.parse(localStorage.getItem('soulMatchConnFilter') || '{}');
+    if (typeof saved.friend === 'boolean')   state.friend   = saved.friend;
+    if (typeof saved.romantic === 'boolean') state.romantic = saved.romantic;
+  } catch {}
+
+  function save() {
+    localStorage.setItem('soulMatchConnFilter', JSON.stringify(state));
+  }
+
+  function paintButtons() {
+    btnFriend  && btnFriend.classList.toggle('is-active',   !!state.friend);
+    btnRomantic&& btnRomantic.classList.toggle('is-active', !!state.romantic);
+  }
+
+  function paintSnapshot() {
+    if (!snapshot) return;
+    snapshot.classList.remove('friend-mode','romantic-mode');
+    if (state.friend && !state.romantic)   snapshot.classList.add('friend-mode');
+    if (state.romantic && !state.friend)   snapshot.classList.add('romantic-mode');
+    // (both off OR both on -> no special class)
+  }
+
+  function show(card, showIt){
+    card.style.display = showIt ? '' : 'none';
+  }
+
+  function applyFilter(){
+    const cards = document.querySelectorAll('.match-card');
+    // logic:
+    // both off -> show all
+    // only friend on -> show friendship & both
+    // only romantic on -> show romantic & both
+    // both on -> show all
+    const friendOn   = !!state.friend;
+    const romanticOn = !!state.romantic;
+
+    cards.forEach(card => {
+      const conn = (card.getAttribute('data-connection') || 'both').toLowerCase();
+      let ok = true;
+      if (friendOn && !romanticOn) {
+        ok = (conn === 'friendship' || conn === 'both');
+      } else if (romanticOn && !friendOn) {
+        ok = (conn === 'romantic' || conn === 'both');
+      } else if (!friendOn && !romanticOn) {
+        ok = true; // show all
+      } else {
+        ok = true; // both on -> show all
+      }
+      show(card, ok);
+    });
+
+    paintButtons();
+    paintSnapshot();
+    save();
+  }
+
+  btnFriend  && btnFriend.addEventListener('click',  () => { state.friend   = !state.friend;   applyFilter(); });
+  btnRomantic&& btnRomantic.addEventListener('click',() => { state.romantic = !state.romantic; applyFilter(); });
+
+  // initial paint
+  applyFilter();
+})();
+

@@ -75,6 +75,23 @@
     /* CTA row */
     .page-cta{display:flex;gap:12px;justify-content:space-between;margin:24px 0}
     @media(max-width:767px){.page-cta{flex-direction:column}.page-cta .btn{width:100%}}
+
+    /* Cards grid: avoid over-stretching */
+    .cards-grid{
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+   }
+
+  /* Mobile sticky filters */
+    @media (max-width: 768px){
+    #filters{ position: sticky; top: .5rem; z-index: 5; }
+   }
+
+     /* Snapshot subtle emphasis (no content changes) */
+   #snapshot.friend-mode,
+   #snapshot.romantic-mode{
+   box-shadow: 0 0 0 1px rgba(0,255,200,.18) inset;
+  }
+
   </style>
 </head>
 
