@@ -1194,3 +1194,141 @@
   ensureCards();
   apply();
 })();
+/* =========================================
+   Soulink · Match — definitive toggle + snapshot fill (no DOM rebuild)
+   ========================================= */
+(() => {
+  const $  = (s, r=document)=>r.querySelector(s);
+  const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+  const norm = s => (s||'').toString().trim().toLowerCase();
+  const STORAGE = 'matchConnectionFilter'; // 'friendship' | 'romantic' | 'both-on' | 'both-off'
+
+  // scope for CSS
+  document.body.classList.add('match-page');
+
+  // --------- ensure cards + connection ---------
+  function inferConn(card){
+    const t = norm(card.textContent);
+    const m = t.match(/connection\s*:\s*(friendship|romantic|both)/i);
+    if (m) return m[1].toLowerCase();
+    if (t.includes('romantic') || t.includes('romance')) return 'romantic';
+    if (t.includes('friendship') || t.includes('friend')) return 'friendship';
+    if (t.includes('both')) return 'both';
+    return 'both';
+  }
+  function ensureCards(){
+    let cards = $$('.match-card');
+    if (!cards.length){
+      $$('#results .card, .cards .card, .cards-grid .card, .grid > .card')
+        .forEach(el => el.classList.add('match-card'));
+      cards = $$('.match-card');
+    }
+    cards.forEach((c,i)=>{
+      if (!c.dataset.connection) c.dataset.connection = inferConn(c);
+      if (!c.dataset.id) c.dataset.id = c.getAttribute('data-id') || String(i);
+      const s = c.querySelector('.score-badge, .score, .score-num');
+      if (s) s.classList.add('score-badge'); // tik padėčiai (CSS)
+    });
+    return cards;
+  }
+
+  // --------- toggles ---------
+  const wrap = $('#segmentToggle');
+  const btnF = wrap?.querySelector('.seg-btn[data-seg="friend"]');
+  const btnR = wrap?.querySelector('.seg-btn[data-seg="romantic"]');
+
+  const setPressed = (btn,on)=>{ btn?.classList.toggle('is-active', !!on); btn?.setAttribute('aria-pressed', on?'true':'false'); };
+  const getPressed = btn => !!btn?.classList.contains('is-active');
+
+  (function restore(){
+    const v = localStorage.getItem(STORAGE);
+    let f=true, r=true; // default: abu on → visos matomos
+    if (v==='friendship'){ f=true; r=false; }
+    else if (v==='romantic'){ f=false; r=true; }
+    else if (v==='both-off'){ f=false; r=false; }
+    setPressed(btnF,f); setPressed(btnR,r);
+  })();
+
+  function persist(){
+    const f=getPressed(btnF), r=getPressed(btnR);
+    let v='both-off';
+    if (f&&r) v='both-on'; else if (f) v='friendship'; else if (r) v='romantic';
+    localStorage.setItem(STORAGE, v);
+  }
+
+  function applyFilter(){
+    const friendOn=getPressed(btnF);
+    const romOn=getPressed(btnR);
+    ensureCards().forEach(card=>{
+      const type=(card.dataset.connection||'both').toLowerCase();
+      let show = true;
+      if (!friendOn && !romOn) show = true;                              // abu off → visos
+      else if (friendOn && !romOn) show = (type==='friendship'||type==='both');
+      else if (!friendOn && romOn) show = (type==='romantic'||type==='both');
+      else show = true;                                                  // abu on → visos
+      card.classList.toggle('is-hidden', !show);
+      card.style.display = show ? '' : 'none';                           // saugiklis
+    });
+    // snapshot subtilus akcentas
+    const snap = $('#yourSnapshot') || $('#snapshot');
+    if (snap){
+      snap.classList.remove('friend-mode','romantic-mode');
+      if (friendOn && !romOn) snap.classList.add('friend-mode');
+      if (romOn && !friendOn) snap.classList.add('romantic-mode');
+    }
+    persist();
+  }
+
+  // deleguotas paspaudimas — veiks net jei mygtukai perpiešiami
+  wrap?.addEventListener('click', (e)=>{
+    const b = e.target.closest('.seg-btn');
+    if (!b) return;
+    e.preventDefault();
+    setPressed(b, !b.classList.contains('is-active'));
+    applyFilter();
+  }, true);
+
+  // reapply po #results perpiešimo
+  const res = $('#results');
+  if (res){
+    new MutationObserver(()=>{ ensureCards(); applyFilter(); })
+      .observe(res, {childList:true, subtree:true});
+  }
+
+  // --------- Snapshot fallbacks (Connection/Love/Chips) ---------
+  function fillSnapshot(){
+    let q={}; try{ q=JSON.parse(localStorage.getItem('soulQuiz')||'{}')||{} }catch{}
+    const conn = q.connectionType || q.connection || '';
+    const ll   = Array.isArray(q.loveLanguages) ? (q.loveLanguages.find(Boolean)||'')
+                 : (q.loveLanguagePrimary || q.loveLanguage || '');
+
+    const toArr = v => Array.isArray(v) ? v
+                     : typeof v==='string' ? v.split(/[\n,|]/).map(s=>s.trim()).filter(Boolean) : [];
+    const hobbies = toArr(q.hobbies).slice(0,6);
+    const values  = toArr(q.values).slice(0,10);
+
+    const connEl = $('#snap-conn'); if (connEl){ connEl.textContent = conn || 'Not selected'; connEl.classList.toggle('muted', !conn); }
+    const llEl   = $('#snap-ll');   if (llEl){   llEl.textContent   = ll   || 'Not selected'; llEl.classList.toggle('muted', !ll); }
+
+    const hWrap=$('#snap-hobbies'), hTxt=$('#snap-hobbies-text');
+    if (hWrap){
+      if (hobbies.length){ hWrap.innerHTML = hobbies.map(t=>`<span class="chip">${t}</span>`).join(''); hWrap.classList.remove('muted'); }
+      else { hWrap.textContent='No items yet'; hWrap.classList.add('muted'); }
+    }
+    if (hTxt) hTxt.textContent = hobbies.length ? hobbies.map(s=>s.toLowerCase()).join(', ') : '–';
+
+    const vWrap=$('#snap-values'), vTxt=$('#snap-values-text');
+    if (vWrap){
+      if (values.length){ vWrap.innerHTML = values.map(t=>`<span class="chip">${t}</span>`).join(''); vWrap.classList.remove('muted'); }
+      else { vWrap.textContent='No items yet'; vWrap.classList.add('muted'); }
+    }
+    if (vTxt) vTxt.textContent = values.length ? values.map(s=>s.toLowerCase()).join(', ') : '–';
+  }
+
+  // boot
+  if (document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', ()=>{ fillSnapshot(); ensureCards(); applyFilter(); });
+  } else {
+    fillSnapshot(); ensureCards(); applyFilter();
+  }
+})();
