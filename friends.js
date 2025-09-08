@@ -556,3 +556,100 @@ updatePreviewIcons();
     }
   });
 })();
+/* =========================================
+   Soulink · Friends — SCOPE=friendship + pills as nav + snapshot hydrate
+   ========================================= */
+(() => {
+  const SCOPE = 'friendship';
+  const $  = (s, r=document)=>r.querySelector(s);
+  const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+  const safeJSON = s => { try { return JSON.parse(s); } catch { return null; } };
+  const norm = s => (s||'').toString().trim().toLowerCase();
+
+  document.body.classList.add('friends-page');
+
+  // Navbar active
+  document.querySelectorAll('.navbar .nav-links a').forEach(a=>{
+    const on = /friends\.html$/i.test(a.getAttribute('href')||'');
+    a.classList.toggle('active', on);
+    if (on) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
+  });
+
+  // Snapshot
+  function hydrateSnapshot(q){
+    const conn = (() => {
+      const c = norm(q?.connectionType || q?.connection);
+      return c === 'both' ? SCOPE : (c || '—');
+    })();
+    const love = Array.isArray(q?.loveLanguages) ? (q.loveLanguages[0] || '') :
+                 (q?.loveLanguagePrimary || q?.loveLanguage || '');
+    const toArr = v => Array.isArray(v) ? v :
+                  (typeof v==='string' ? v.split(/[\n,|]/).map(s=>s.trim()).filter(Boolean) : []);
+    const hobbies = toArr(q?.hobbies);
+    const values  = toArr(q?.values);
+
+    const setTxt = (sel, val) => { const el = document.querySelector(sel); if (el) el.textContent = val || '—'; };
+    const setChips = (sel, arr) => {
+      const box = document.querySelector(sel); if (!box) return;
+      box.innerHTML = '';
+      (arr||[]).forEach(t => { const s=document.createElement('span'); s.className='chip'; s.textContent=t; box.appendChild(s); });
+      if (!box.children.length) { const dash=document.createElement('span'); dash.textContent='—'; box.appendChild(dash); }
+    };
+
+    setTxt('#snapshot-connection', conn);
+    setTxt('#snapshot-love', love || '—');
+    setChips('#snapshot-hobbies', hobbies);
+    setChips('#snapshot-values', values);
+  }
+
+  // Pills: Friendship aktyvus, Romantic -> match.html
+  function hydratePills(){
+    const row = document.querySelector('.pill-row'); if (!row) return;
+    row.innerHTML = '';
+    const active = (txt)=>{
+      const s=document.createElement('span');
+      s.className='pill is-active'; s.setAttribute('role','tab'); s.setAttribute('aria-selected','true');
+      s.textContent=txt; return s;
+    };
+    const link = (txt,href)=>{
+      const a=document.createElement('a');
+      a.className='pill'; a.href=href; a.setAttribute('role','tab'); a.setAttribute('aria-selected','false');
+      a.textContent=txt; return a;
+    };
+    row.append(active('Friendship'), link('Romantic','match.html'));
+  }
+
+  // includeByScope (legacy "both" praleidžiam)
+  function includeByScope(conn, scope){ if(!conn) return false; if(conn==='both') return true; return conn===scope; }
+
+  const quiz = safeJSON(localStorage.getItem('soulQuiz')) || {};
+  const allFromLS = safeJSON(localStorage.getItem('soulFriends')) || [];
+  const scoped = allFromLS.filter(p => includeByScope(norm(p.connection), SCOPE));
+
+  document.addEventListener('DOMContentLoaded', () => {
+    hydrateSnapshot(quiz);
+    hydratePills();
+
+    if (typeof window.renderPeople === 'function') {
+      window.renderPeople(scoped);
+    } else if (typeof window.renderFriends === 'function') {
+      window.renderFriends(scoped);
+    } else {
+      // fallback: jei kortelės jau sugeneruotos, tiesiog paslėpk ne-scope
+      let cards = $$('.friend-card, .match-card, .cards .card');
+      cards.forEach(c=>{
+        const t = (c.dataset.connection || '').toLowerCase();
+        const ok = includeByScope(t || (()=>{ const m=(c.textContent||'').match(/connection\s*:\s*(friendship|romantic|both)/i); return (m?m[1].toLowerCase():'both'); })(), SCOPE);
+        c.classList.toggle('is-hidden', !ok);
+        c.style.display = ok ? '' : 'none';
+      });
+    }
+
+    // Footer „Next → Results“ (tik patvirtinam)
+    const next = document.querySelector('a[href$="result.html"], a[href$="results.html"]');
+    if (!next) {
+      const candidate = Array.from(document.querySelectorAll('a')).find(a=>/next/i.test(a.textContent||''));
+      candidate && (candidate.href = 'result.html');
+    }
+  });
+})();

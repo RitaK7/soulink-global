@@ -1361,6 +1361,44 @@ body[data-page="match"] .navbar .nav-links a[href*="match"]{
 .match-page #snapshot.romantic-mode{
   box-shadow: 0 0 0 1px rgba(0,255,200,.18) inset;
 }
+/* ==== Shared navbar active glow (tas pats kaip Soul Coach) ==== */
+.navbar .nav-links a.active {
+  box-shadow: 0 0 0 2px rgba(0,255,200,.24) inset, 0 0 18px rgba(0,255,200,.25);
+  border-radius: 999px;
+}
+
+/* ==== Grid auto-fill (kortelėms abiejuose) ==== */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+/* Container max width (neišsitemptų per plačiai) */
+.page-wrap, .container, main {
+  max-width: 1180px;
+  margin-inline: auto;
+}
+
+/* Snapshot + Filters – mobilinis stacking */
+@media (max-width: 768px) {
+  .snapshot, .filters { grid-column: 1 / -1; }
+  .pill-row { gap: 8px; }
+  .pill { padding: 6px 12px; }
+}
+
+/* Match/Friends mažas scoping */
+.match-page .muted, .friends-page .muted { opacity: .7; }
+
+/* Pašalinam likusius dekoratyvinius taškus tik šiuose puslapiuose */
+.match-page .corner-dot, .match-page .dot, .match-page .mini-dots,
+.friends-page .corner-dot, .friends-page .dot, .friends-page .mini-dots { display:none !important; }
+
+/* Score badge padėtis vienoda (nejudinam DOM) */
+.match-page .match-card, .friends-page .friend-card { position: relative; }
+.match-page .match-card .score-badge, .match-page .match-card .score, .match-page .match-card .score-num {
+  position:absolute; top:8px; right:8px;
+}
 
 
 

@@ -1332,3 +1332,129 @@
     fillSnapshot(); ensureCards(); applyFilter();
   }
 })();
+/* =========================================
+   Soulink · Match — SCOPE=romantic + pills as nav + snapshot hydrate
+   (DOM nerekonstruojamas; tik klases/atributai ir show/hide)
+   ========================================= */
+(() => {
+  const SCOPE = 'romantic';                         // <<< svarbu
+  const $  = (s, r=document)=>r.querySelector(s);
+  const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+  const safeJSON = s => { try { return JSON.parse(s); } catch { return null; } };
+  const norm = s => (s||'').toString().trim().toLowerCase();
+
+  document.body.classList.add('match-page');
+
+  // ---- 0) Navbar: teisingas active/glow ----
+  document.querySelectorAll('.navbar .nav-links a').forEach(a=>{
+    const on = /match\.html$/i.test(a.getAttribute('href')||'');
+    a.classList.toggle('active', on);
+    if (on) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
+  });
+
+  // ---- 1) Snapshot iš soulQuiz (be perstatymo) ----
+  function hydrateSnapshot(q){
+    const conn = (() => {
+      const c = norm(q?.connectionType || q?.connection);
+      return c === 'both' ? SCOPE : (c || '—');      // legacy: both -> romantic šiame puslapyje
+    })();
+    const love = Array.isArray(q?.loveLanguages) ? (q.loveLanguages[0] || '') :
+                 (q?.loveLanguagePrimary || q?.loveLanguage || '');
+    const toArr = v => Array.isArray(v) ? v :
+                  (typeof v==='string' ? v.split(/[\n,|]/).map(s=>s.trim()).filter(Boolean) : []);
+    const hobbies = toArr(q?.hobbies);
+    const values  = toArr(q?.values);
+
+    const setTxt = (sel, val) => { const el = document.querySelector(sel); if (el) el.textContent = val || '—'; };
+    const setChips = (sel, arr) => {
+      const box = document.querySelector(sel); if (!box) return;
+      box.innerHTML = '';
+      (arr||[]).forEach(t => { const s=document.createElement('span'); s.className='chip'; s.textContent=t; box.appendChild(s); });
+      if (!box.children.length) { const dash=document.createElement('span'); dash.textContent='—'; box.appendChild(dash); }
+    };
+
+    setTxt('#snapshot-connection', conn);
+    setTxt('#snapshot-love', love || '—');
+    setChips('#snapshot-hobbies', hobbies);
+    setChips('#snapshot-values', values);
+  }
+
+  // ---- 2) Pills kaip navigacija: Romantic aktyvus, Friendship -> friends.html ----
+  function hydratePills(){
+    const row = document.querySelector('.pill-row'); if (!row) return;
+    row.innerHTML = '';
+    const makeActive = (txt) => {
+      const s = document.createElement('span');
+      s.className = 'pill is-active'; s.setAttribute('role','tab'); s.setAttribute('aria-selected','true');
+      s.textContent = txt; return s;
+    };
+    const makeLink = (txt, href) => {
+      const a = document.createElement('a');
+      a.className = 'pill'; a.href = href; a.setAttribute('role','tab'); a.setAttribute('aria-selected','false');
+      a.textContent = txt; return a;
+    };
+    row.append(makeLink('Friendship','friends.html'), makeActive('Romantic'));
+  }
+
+  // ---- 3) SCOPE filtras (legacy "both" priimamas) ----
+  function includeByScope(personConn, scope){
+    if (!personConn) return false;
+    if (personConn === 'both') return true; // legacy
+    return personConn.toLowerCase() === scope;
+  }
+
+  // ---- 4) People šaltinis (nekeičiant pavadinimų) ----
+  const quiz = safeJSON(localStorage.getItem('soulQuiz')) || {};
+  const allFromLS = safeJSON(localStorage.getItem('soulFriends')) || []; // nekeičiam kintamųjų pavadinimo
+  const scoped = allFromLS.filter(p => includeByScope(norm(p.connection), SCOPE));
+
+  // ---- 5) Render kelias (paliekam tavo esamą logiką) ----
+  // Jei turite renderPeople(...) — naudokite jį; kitaip paslepiame nereikalingas korteles DOM'e.
+  function applyDOMScopeFallback(){
+    // uždėti .match-card + data-connection jei trūksta
+    let cards = $$('.match-card');
+    if (!cards.length){
+      $$('#results .card, .cards .card, .cards-grid .card').forEach(el=>el.classList.add('match-card'));
+      cards = $$('.match-card');
+    }
+    const guessConn = (card)=>{
+      const m = (card.textContent||'').match(/connection\s*:\s*(friendship|romantic|both)/i);
+      if (m) return m[1].toLowerCase();
+      const t = norm(card.textContent);
+      if (t.includes('romantic')) return 'romantic';
+      if (t.includes('friend'))   return 'friendship';
+      if (t.includes('both'))     return 'both';
+      return 'both';
+    };
+    cards.forEach(c=>{
+      if (!c.dataset.connection) c.dataset.connection = guessConn(c);
+      const ok = includeByScope(c.dataset.connection, SCOPE);
+      c.classList.toggle('is-hidden', !ok);
+      c.style.display = ok ? '' : 'none';
+    });
+  }
+
+  // ---- 6) Paleidimas ----
+  document.addEventListener('DOMContentLoaded', () => {
+    hydrateSnapshot(quiz);
+    hydratePills();
+
+    if (typeof window.renderPeople === 'function') {
+      window.renderPeople(scoped);
+    } else if (typeof window.renderMatches === 'function') {
+      window.renderMatches(scoped);
+    } else {
+      applyDOMScopeFallback();
+      // jei vėliau kortelės generuojamos asinchroniškai:
+      const res = $('#results');
+      if (res) new MutationObserver(applyDOMScopeFallback).observe(res, {childList:true,subtree:true});
+    }
+
+    // Footer „Next → Friends“ (tik patvirtinam)
+    const next = document.querySelector('a[href$="friends.html"]');
+    if (!next) {
+      const candidate = Array.from(document.querySelectorAll('a')).find(a=>/next/i.test(a.textContent||''));
+      candidate && (candidate.href = 'friends.html');
+    }
+  });
+})();
