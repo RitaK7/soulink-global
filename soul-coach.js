@@ -232,21 +232,19 @@
       const row=document.createElement('div');
       row.className='task-row';
       row.innerHTML=`<input type="checkbox" ${t.done?'checked':''} data-id="${t.id}" />
-        <span class="task-ico">${taskIcon(t.text)}</span>
-        <span style="flex:1">${t.text}</span>
-        <button class="btn" data-del="${t.id}">Remove</button>`;
+     <span class="task-ico">${taskIcon(t.text)}</span>
+     <span class="task-text" style="flex:1">${t.text}</span>
+     <button class="btn" data-del="${t.id}">Remove</button>`;
       box.appendChild(row);
 
       // toggle done -> flash + float away
       const cb=row.querySelector('input[type="checkbox"]');
-      cb.addEventListener('change', ()=>{
-        const arr=getCoach().tasks||[]; const it=arr.find(x=>x.id===t.id);
-        if(it){ it.done=cb.checked; saveTasks(arr); }
-        if(cb.checked){
-          if(!reduceMotion){ row.classList.add('flash'); setTimeout(()=>{ row.classList.add('float'); }, 140); }
-          setTimeout(()=>{ row.remove(); }, reduceMotion?0:520);
-        }
-      });
+      
+        cb.addEventListener('change', ()=>{
+      const arr=getCoach().tasks||[]; const it=arr.find(x=>x.id===t.id);
+      if(it){ it.done=cb.checked; saveTasks(arr); }
+       row.classList.toggle('is-done', cb.checked);
+     });
       // delete
       row.querySelector('[data-del]').addEventListener('click', ()=>{
         const arr=getCoach().tasks||[]; const i=arr.findIndex(x=>x.id===t.id);
@@ -260,10 +258,12 @@
       const arr=getCoach().tasks||[]; arr.push({id:String(Date.now()), text:v, done:false, createdAt:Date.now()});
       saveTasks(arr); $('#task-input').value=''; renderTasks();
     });
-    $('#resetTasks')?.addEventListener('click', ()=>{
-      if(!confirm('Reset coach tasks?')) return;
-      const s=getCoach(); setCoach({ ...s, tasks: [] }); renderTasks();
-    });
+   $('#resetTasks')?.addEventListener('click', ()=>{
+  const s = getCoach();
+  const arr = (s.tasks || []).map(t => ({ ...t, done:false }));
+  saveTasks(arr);     // paliekam visas užduotis, tik atžymėtas
+  renderTasks();
+   });
   }
 
   // ---------- Action + Insights ----------

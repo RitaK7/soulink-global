@@ -92,6 +92,20 @@
   .task-row.flash{box-shadow:0 0 0 1px var(--border), 0 0 22px rgba(0,253,216,.35) inset}
   @keyframes floatOut{to{opacity:0;transform:translateY(-10px);height:0;margin:0;padding:0}}
   .task-row.float{animation:floatOut .5s ease forwards}
+  /* Growth Tasks — rodom tekstą ir pažymėtoms užduotims taikom strike-through */
+  .coach-page #tasks .task-text { display: inline; }
+  .coach-page #tasks .is-done .task-text {
+  text-decoration: line-through;
+  opacity: .7;
+}
+/* jei koks senas selektorius slėpė tekstą prie :checked — neutralizuojam */
+  .coach-page #tasks input[type="checkbox"]:checked ~ .task-text {
+  display: inline;
+  visibility: visible;
+  text-decoration: line-through;
+  opacity: .7;
+}
+
 
   /* Insights list */
   #coach-insights{list-style:none;padding:0;margin:8px 0 0}
