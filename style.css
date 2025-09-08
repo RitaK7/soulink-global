@@ -1399,6 +1399,16 @@ body[data-page="match"] .navbar .nav-links a[href*="match"]{
 .match-page .match-card .score-badge, .match-page .match-card .score, .match-page .match-card .score-num {
   position:absolute; top:8px; right:8px;
 }
+/* Soul Coach — Growth Tasks (scoped) */
+.coach-page #growthTasks .task-text{ display:inline; }
+.coach-page #growthTasks .is-done .task-text{
+  text-decoration: line-through;
+  opacity: .7;
+}
+/* jei senas CSS slėpė tekstą prie :checked — atšaukiam */
+.coach-page #growthTasks input[type="checkbox"]:checked ~ .task-text{
+  display:inline; visibility:visible; text-decoration: line-through; opacity:.7;
+}
 
 
 

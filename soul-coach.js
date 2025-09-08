@@ -379,3 +379,114 @@
     $('#exportCoach')?.addEventListener('click', e=>{ e.preventDefault(); exportPNG(); });
   });
 })();
+/* =========================================
+   Soul Coach — Growth Tasks fixes (non-breaking)
+   - Checkbox nebešalina teksto: tik .is-done klasė
+   - Reset tik atžymi (netrina užduočių)
+   - Viskas persistuojama į localStorage.soulCoachTasks
+   ========================================= */
+(() => {
+  const KEY = 'soulCoachTasks';
+  const $  = (s, r=document)=>r.querySelector(s);
+  const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+  const normText = el => (el?.textContent || '').replace(/\s+/g,' ').trim();
+
+  // puslapio scope klasė stiliams
+  document.body.classList.add('coach-page');
+
+  // randi Growth Tasks sekciją (be struktūros keitimo)
+  const section = $('#growthTasks') || $('.growth-tasks') || $('[data-section="growth-tasks"]');
+  if (!section) return;
+
+  // Vienos užduoties sudedamosios dalys
+  function getRowParts(row){
+    const cb = row.querySelector('input[type="checkbox"]');
+    // prioritetas: .task-text arba <label>, jei nėra — sukurti inline span (nekaitaliojant struktūros)
+    let textEl = row.querySelector('.task-text') || row.querySelector('label') || row.querySelector('[data-text]');
+    if (!textEl){
+      textEl = document.createElement('span');
+      textEl.className = 'task-text';
+      // ištraukiam gryną tekstą (be „Remove“ ir pan.)
+      textEl.textContent = normText(row).replace(/Remove$/i,'').trim();
+      row.appendChild(textEl);
+    }
+    return { cb, textEl };
+  }
+
+  // Visos eilutės, kurios turi checkbox
+  function rows(){
+    // palaikom li/.task-item/.row ir pan.
+    return Array.from(section.querySelectorAll('li, .task-item, .row')).filter(r => r.querySelector('input[type="checkbox"]'));
+  }
+
+  // ---- perskaityti/sukelti iš localStorage į UI
+  function loadFromStorage(){
+    const saved = JSON.parse(localStorage.getItem(KEY) || '[]');
+    const map = new Map(saved.map(t => [t.text.toLowerCase(), !!t.done]));
+    const snapshot = [];
+
+    rows().forEach((row, idx) => {
+      row.dataset.taskId = row.dataset.taskId || String(idx);
+      const { cb, textEl } = getRowParts(row);
+      const text = normText(textEl);
+
+      const done = map.has(text.toLowerCase()) ? map.get(text.toLowerCase())
+                  : !!cb?.checked; // jei buvo pažymėta HTML'e
+
+      if (cb) cb.checked = done;
+      row.classList.toggle('is-done', done);
+      snapshot.push({ text, done });
+    });
+
+    localStorage.setItem(KEY, JSON.stringify(snapshot));
+  }
+
+  // ---- išsaugoti iš UI į localStorage
+  function saveToStorage(){
+    const arr = rows().map(row => {
+      const { cb, textEl } = getRowParts(row);
+      return { text: normText(textEl), done: !!cb?.checked };
+    });
+    localStorage.setItem(KEY, JSON.stringify(arr));
+  }
+
+  // ---- checkbox toggling (nebetrina teksto)
+  section.addEventListener('change', (e) => {
+    const cb = e.target.closest('input[type="checkbox"]');
+    if (!cb) return;
+    const row = cb.closest('li, .task-item, .row');
+    if (row){
+      row.classList.toggle('is-done', cb.checked);
+    }
+    saveToStorage();
+  });
+
+  // ---- Reset (tik nuimame varneles, paliekam užduotis)
+  const resetBtn =
+    Array.from(section.querySelectorAll('button, .btn, [type="reset"]'))
+      .find(b => /reset/i.test((b.textContent||b.value||'').trim()));
+  if (resetBtn){
+    resetBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      rows().forEach(row => {
+        const { cb } = getRowParts(row);
+        if (cb) cb.checked = false;
+        row.classList.remove('is-done');
+      });
+      // persistuojam atžymėtą būseną, nieko netrindami
+      const arr = rows().map(row => ({ text: normText(getRowParts(row).textEl), done:false }));
+      localStorage.setItem(KEY, JSON.stringify(arr));
+    });
+  }
+
+  // ---- stebim naujai pridėtas custom užduotis (auto-prisijungia)
+  const mo = new MutationObserver(() => loadFromStorage());
+  mo.observe(section, { childList: true, subtree: true });
+
+  // pirmas paleidimas
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadFromStorage, { once: true });
+  } else {
+    loadFromStorage();
+  }
+})();
