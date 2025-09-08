@@ -225,13 +225,13 @@
     }
   }
   function saveTasks(arr){ const s=getCoach(); setCoach({...s, tasks:[...arr]}); }
- function renderTasks(){
+function renderTasks(){
   const box = $('#tasks'); box.innerHTML = '';
   const state = getCoach();
   const list = state.tasks || [];
   const hideDone = !!state.hideDone;
 
-  list.forEach((t, idx) => {
+  list.forEach((t) => {
     const row = document.createElement('div');
     row.className = 'task-row';
     row.innerHTML = `
@@ -244,40 +244,22 @@
       </label>
       <button class="btn" data-del="${t.id}">Remove</button>`;
     box.appendChild(row);
-    // UI state: hideDone
-function applyHideToggleUI(){
-  const st = getCoach(); const on = !!st.hideDone;
-  const tgl = $('#toggleDone');
-  if (tgl){ tgl.checked = on; }
-  // jei jungiklis yra – užtikrinam, kad paslėpta
-  if (on){
-    $('#tasks')?.querySelectorAll('.task-row.is-done').forEach(r=> r.style.display = 'none');
-  } else {
-    $('#tasks')?.querySelectorAll('.task-row').forEach(r=> r.style.display = '');
-  }
-}
-$('#toggleDone')?.addEventListener('change', (e)=>{
-  const s = getCoach();
-  setCoach({ ...s, hideDone: !!e.target.checked });
-  renderTasks();
-});
 
-
-    // pradinė būsena (strike-through)
+    // pradinė būsena
     row.classList.toggle('is-done', !!t.done);
     if (hideDone && t.done) row.style.display = 'none';
 
-    // checkbox -> tik žymime, NETRINAM eilutės
+    // checkbox – tik pažymim, NIEKO nenaikinam
     const cb = row.querySelector('input[type="checkbox"]');
     cb.addEventListener('change', ()=>{
       const arr = getCoach().tasks || [];
       const it = arr.find(x => x.id === t.id);
       if (it){ it.done = cb.checked; saveTasks(arr); }
       row.classList.toggle('is-done', cb.checked);
-      if ((getCoach().hideDone)) row.style.display = cb.checked ? 'none' : '';
+      if (getCoach().hideDone) row.style.display = cb.checked ? 'none' : '';
     });
 
-    // Remove su „Undo“
+    // Remove su Undo
     row.querySelector('[data-del]').addEventListener('click', ()=>{
       const arr = getCoach().tasks || [];
       const i = arr.findIndex(x => x.id === t.id);
@@ -298,11 +280,24 @@ $('#toggleDone')?.addEventListener('change', (e)=>{
     });
   });
 
-  applyHideToggleUI(); // sinchronizuojam „Hide completed“ perjungiklį
+  applyHideToggleUI();
 }
 
+   function applyHideToggleUI(){
+   const st = getCoach(); const on = !!st.hideDone;
+   const tgl = $('#toggleDone');
+   if (tgl) tgl.checked = on;
 
-      // toggle done -> flash + float away
+   if (on) { $('#tasks')?.querySelectorAll('.task-row.is-done').forEach(r=> r.style.display='none'); }
+   else    { $('#tasks')?.querySelectorAll('.task-row').forEach(r=> r.style.display=''); }
+ }
+   $('#toggleDone')?.addEventListener('change', (e)=>{
+  const s = getCoach();
+  setCoach({ ...s, hideDone: !!e.target.checked });
+  renderTasks();
+});
+  
+      
       const cb=row.querySelector('input[type="checkbox"]');
       
         cb.addEventListener('change', ()=>{
@@ -310,32 +305,31 @@ $('#toggleDone')?.addEventListener('change', (e)=>{
       if(it){ it.done=cb.checked; saveTasks(arr); }
        row.classList.toggle('is-done', cb.checked);
      });
-      // delete
+    
       row.querySelector('[data-del]').addEventListener('click', ()=>{
         const arr=getCoach().tasks||[]; const i=arr.findIndex(x=>x.id===t.id);
         if(i>-1){ arr.splice(i,1); saveTasks(arr); row.remove(); }
       });
     });
   
-  function bindAddTask(){
-    $('#add-task')?.addEventListener('submit', e=>{
-      e.preventDefault(); const v=($('#task-input')?.value||'').trim(); if(!v) return;
-      const arr=getCoach().tasks||[]; arr.push({id:String(Date.now()), text:v, done:false, createdAt:Date.now()});
-      saveTasks(arr); $('#task-input').value=''; renderTasks();
-    });
-   $('#resetTasks')?.addEventListener('click', ()=>{
-  const s = getCoach();
-  const arr = (s.tasks || []).map(t => ({ ...t, done:false }));
-  saveTasks(arr);     // paliekam visas užduotis, tik atžymėtas
-  renderTasks();
-   });
-  }
-// NEW: Enter prideda užduotį (telefonui)
-  $('#task-input')?.addEventListener('keydown', e=>{
-    if(e.key === 'Enter'){ e.preventDefault(); $('#add-task')?.dispatchEvent(new Event('submit',{cancelable:true})); }
+ function bindAddTask(){
+  $('#add-task')?.addEventListener('submit', e=>{
+    e.preventDefault();
+    const v = ($('#task-input')?.value||'').trim();
+    if(!v) return;
+    const arr = getCoach().tasks || [];
+    arr.push({ id:String(Date.now()), text:v, done:false, createdAt:Date.now() });
+    saveTasks(arr);
+    $('#task-input').value='';
+    renderTasks();
   });
 
-  // NEW: Reset – TIK atžymi visus
+  // Enter -> Add
+  $('#task-input')?.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); $('#add-task')?.dispatchEvent(new Event('submit',{cancelable:true})); }
+  });
+
+  // Reset -> tik nuima varneles
   $('#resetTasks')?.addEventListener('click', (e)=>{
     e.preventDefault();
     const s = getCoach();
@@ -343,6 +337,8 @@ $('#toggleDone')?.addEventListener('change', (e)=>{
     saveTasks(arr);
     renderTasks();
   });
+}
+
 
   // ---------- Action + Insights ----------
   function renderActionAndInsight(p, forceNew=false){
@@ -480,114 +476,3 @@ $('#toggleDone')?.addEventListener('change', (e)=>{
     $('#exportCoach')?.addEventListener('click', e=>{ e.preventDefault(); exportPNG(); });
   });
 
-/* =========================================
-   Soul Coach — Growth Tasks fixes (non-breaking)
-   - Checkbox nebešalina teksto: tik .is-done klasė
-   - Reset tik atžymi (netrina užduočių)
-   - Viskas persistuojama į localStorage.soulCoachTasks
-   ========================================= */
-(() => {
-  const KEY = 'soulCoachTasks';
-  const $  = (s, r=document)=>r.querySelector(s);
-  const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
-  const normText = el => (el?.textContent || '').replace(/\s+/g,' ').trim();
-
-  // puslapio scope klasė stiliams
-  document.body.classList.add('coach-page');
-
-  // randi Growth Tasks sekciją (be struktūros keitimo)
-  const section = $('#growthTasks') || $('.growth-tasks') || $('[data-section="growth-tasks"]');
-  if (!section) return;
-
-  // Vienos užduoties sudedamosios dalys
-  function getRowParts(row){
-    const cb = row.querySelector('input[type="checkbox"]');
-    // prioritetas: .task-text arba <label>, jei nėra — sukurti inline span (nekaitaliojant struktūros)
-    let textEl = row.querySelector('.task-text') || row.querySelector('label') || row.querySelector('[data-text]');
-    if (!textEl){
-      textEl = document.createElement('span');
-      textEl.className = 'task-text';
-      // ištraukiam gryną tekstą (be „Remove“ ir pan.)
-      textEl.textContent = normText(row).replace(/Remove$/i,'').trim();
-      row.appendChild(textEl);
-    }
-    return { cb, textEl };
-  }
-
-  // Visos eilutės, kurios turi checkbox
-  function rows(){
-    // palaikom li/.task-item/.row ir pan.
-    return Array.from(section.querySelectorAll('li, .task-item, .row')).filter(r => r.querySelector('input[type="checkbox"]'));
-  }
-
-  // ---- perskaityti/sukelti iš localStorage į UI
-  function loadFromStorage(){
-    const saved = JSON.parse(localStorage.getItem(KEY) || '[]');
-    const map = new Map(saved.map(t => [t.text.toLowerCase(), !!t.done]));
-    const snapshot = [];
-
-    rows().forEach((row, idx) => {
-      row.dataset.taskId = row.dataset.taskId || String(idx);
-      const { cb, textEl } = getRowParts(row);
-      const text = normText(textEl);
-
-      const done = map.has(text.toLowerCase()) ? map.get(text.toLowerCase())
-                  : !!cb?.checked; // jei buvo pažymėta HTML'e
-
-      if (cb) cb.checked = done;
-      row.classList.toggle('is-done', done);
-      snapshot.push({ text, done });
-    });
-
-    localStorage.setItem(KEY, JSON.stringify(snapshot));
-  }
-
-  // ---- išsaugoti iš UI į localStorage
-  function saveToStorage(){
-    const arr = rows().map(row => {
-      const { cb, textEl } = getRowParts(row);
-      return { text: normText(textEl), done: !!cb?.checked };
-    });
-    localStorage.setItem(KEY, JSON.stringify(arr));
-  }
-
-  // ---- checkbox toggling (nebetrina teksto)
-  section.addEventListener('change', (e) => {
-    const cb = e.target.closest('input[type="checkbox"]');
-    if (!cb) return;
-    const row = cb.closest('li, .task-item, .row');
-    if (row){
-      row.classList.toggle('is-done', cb.checked);
-    }
-    saveToStorage();
-  });
-
-  // ---- Reset (tik nuimame varneles, paliekam užduotis)
-  const resetBtn =
-    Array.from(section.querySelectorAll('button, .btn, [type="reset"]'))
-      .find(b => /reset/i.test((b.textContent||b.value||'').trim()));
-  if (resetBtn){
-    resetBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      rows().forEach(row => {
-        const { cb } = getRowParts(row);
-        if (cb) cb.checked = false;
-        row.classList.remove('is-done');
-      });
-      // persistuojam atžymėtą būseną, nieko netrindami
-      const arr = rows().map(row => ({ text: normText(getRowParts(row).textEl), done:false }));
-      localStorage.setItem(KEY, JSON.stringify(arr));
-    });
-  }
-
-  // ---- stebim naujai pridėtas custom užduotis (auto-prisijungia)
-  const mo = new MutationObserver(() => loadFromStorage());
-  mo.observe(section, { childList: true, subtree: true });
-
-  // pirmas paleidimas
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadFromStorage, { once: true });
-  } else {
-    loadFromStorage();
-  }
-})();

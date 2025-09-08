@@ -75,50 +75,9 @@
   .glow-underline{position:relative}
   .glow-underline::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);box-shadow:0 0 12px rgba(0,253,216,.6);opacity:0;transform:scaleX(.6);transition:.45s}
   .glow-underline.show::after{opacity:1;transform:scaleX(1)}
-  /* Soul Coach — Growth Tasks (scoped) */
-  .coach-page #growthTasks .task-text{ display:inline; }
-  .coach-page #growthTasks .is-done .task-text{
-  text-decoration: line-through;
-  opacity: .7;
-}
-/* jei senas CSS slėpė tekstą prie :checked — atšaukiam */
-.coach-page #growthTasks input[type="checkbox"]:checked ~ .task-text{
-  display:inline; visibility:visible; text-decoration: line-through; opacity:.7;
-}
-
-
+  
   /* Tasks: flash + float away */
-  .task-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid rgba(255,255,255,.06)}
-  .task-row.flash{box-shadow:0 0 0 1px var(--border), 0 0 22px rgba(0,253,216,.35) inset}
-  @keyframes floatOut{to{opacity:0;transform:translateY(-10px);height:0;margin:0;padding:0}}
-  .task-row.float{animation:floatOut .5s ease forwards}
-  /* Growth Tasks — rodom tekstą ir pažymėtoms užduotims taikom strike-through */
-  .coach-page #tasks .task-text { display: inline; }
-  .coach-page #tasks .is-done .task-text {
-  text-decoration: line-through;
-  opacity: .7;
-  /* Growth Tasks — checked state & accessibility */
-.coach-page #tasks .task-text{ display:inline; }
-.coach-page #tasks .is-done .task-text{
-  text-decoration: line-through;
-  opacity: .8;               /* buvo .7 – truputį tamsiau */
-  color: rgba(255,255,255,.9);
-}
-/* jei koks senas selektorius slėpė tekstą prie :checked — neutralizuojam */
-.coach-page #tasks input[type="checkbox"]:checked ~ .task-text{
-  display:inline; visibility:visible; text-decoration:line-through; opacity:.8;
-}
-/* didesnė paspaudimo zona mobilui */
-.coach-page #tasks .task-row{ min-height:40px; }
 
-/* „ghost“ Remove mygtukas (mažiau triukšmo) */
-.coach-page #tasks [data-del].btn{
-  background: transparent;
-  border: 1px solid var(--border);
-  opacity: .9;
-}
-
-}
 /* jei koks senas selektorius slėpė tekstą prie :checked — neutralizuojam */
   .coach-page #tasks input[type="checkbox"]:checked ~ .task-text {
   display: inline;
