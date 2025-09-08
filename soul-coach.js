@@ -225,17 +225,82 @@
     }
   }
   function saveTasks(arr){ const s=getCoach(); setCoach({...s, tasks:[...arr]}); }
-  function renderTasks(){
-    const box=$('#tasks'); box.innerHTML='';
-    const list=getCoach().tasks||[];
-    list.forEach(t=>{
-      const row=document.createElement('div');
-      row.className='task-row';
-      row.innerHTML=`<input type="checkbox" ${t.done?'checked':''} data-id="${t.id}" />
-     <span class="task-ico">${taskIcon(t.text)}</span>
-     <span class="task-text" style="flex:1">${t.text}</span>
-     <button class="btn" data-del="${t.id}">Remove</button>`;
-      box.appendChild(row);
+ function renderTasks(){
+  const box = $('#tasks'); box.innerHTML = '';
+  const state = getCoach();
+  const list = state.tasks || [];
+  const hideDone = !!state.hideDone;
+
+  list.forEach((t, idx) => {
+    const row = document.createElement('div');
+    row.className = 'task-row';
+    row.innerHTML = `
+      <label style="display:flex;align-items:center;gap:10px;flex:1 1 auto;">
+        <input type="checkbox" ${t.done?'checked':''}
+               data-id="${t.id}"
+               aria-label="Mark ‘${String(t.text).replace(/"/g,'&quot;')}’ done">
+        <span class="task-ico">${taskIcon(t.text)}</span>
+        <span class="task-text" style="flex:1">${t.text}</span>
+      </label>
+      <button class="btn" data-del="${t.id}">Remove</button>`;
+    box.appendChild(row);
+    // UI state: hideDone
+function applyHideToggleUI(){
+  const st = getCoach(); const on = !!st.hideDone;
+  const tgl = $('#toggleDone');
+  if (tgl){ tgl.checked = on; }
+  // jei jungiklis yra – užtikrinam, kad paslėpta
+  if (on){
+    $('#tasks')?.querySelectorAll('.task-row.is-done').forEach(r=> r.style.display = 'none');
+  } else {
+    $('#tasks')?.querySelectorAll('.task-row').forEach(r=> r.style.display = '');
+  }
+}
+$('#toggleDone')?.addEventListener('change', (e)=>{
+  const s = getCoach();
+  setCoach({ ...s, hideDone: !!e.target.checked });
+  renderTasks();
+});
+
+
+    // pradinė būsena (strike-through)
+    row.classList.toggle('is-done', !!t.done);
+    if (hideDone && t.done) row.style.display = 'none';
+
+    // checkbox -> tik žymime, NETRINAM eilutės
+    const cb = row.querySelector('input[type="checkbox"]');
+    cb.addEventListener('change', ()=>{
+      const arr = getCoach().tasks || [];
+      const it = arr.find(x => x.id === t.id);
+      if (it){ it.done = cb.checked; saveTasks(arr); }
+      row.classList.toggle('is-done', cb.checked);
+      if ((getCoach().hideDone)) row.style.display = cb.checked ? 'none' : '';
+    });
+
+    // Remove su „Undo“
+    row.querySelector('[data-del]').addEventListener('click', ()=>{
+      const arr = getCoach().tasks || [];
+      const i = arr.findIndex(x => x.id === t.id);
+      if (i > -1){
+        const removed = arr.splice(i,1)[0];
+        saveTasks(arr);
+        row.remove();
+        showToast(`Removed: “${removed.text}”`, {
+          actionLabel: 'Undo',
+          onAction: () => {
+            const arr2 = getCoach().tasks || [];
+            arr2.splice(i,0,removed);
+            saveTasks(arr2);
+            renderTasks();
+          }
+        });
+      }
+    });
+  });
+
+  applyHideToggleUI(); // sinchronizuojam „Hide completed“ perjungiklį
+}
+
 
       // toggle done -> flash + float away
       const cb=row.querySelector('input[type="checkbox"]');
@@ -251,7 +316,7 @@
         if(i>-1){ arr.splice(i,1); saveTasks(arr); row.remove(); }
       });
     });
-  }
+  
   function bindAddTask(){
     $('#add-task')?.addEventListener('submit', e=>{
       e.preventDefault(); const v=($('#task-input')?.value||'').trim(); if(!v) return;
@@ -265,6 +330,19 @@
   renderTasks();
    });
   }
+// NEW: Enter prideda užduotį (telefonui)
+  $('#task-input')?.addEventListener('keydown', e=>{
+    if(e.key === 'Enter'){ e.preventDefault(); $('#add-task')?.dispatchEvent(new Event('submit',{cancelable:true})); }
+  });
+
+  // NEW: Reset – TIK atžymi visus
+  $('#resetTasks')?.addEventListener('click', (e)=>{
+    e.preventDefault();
+    const s = getCoach();
+    const arr = (s.tasks || []).map(t => ({ ...t, done:false }));
+    saveTasks(arr);
+    renderTasks();
+  });
 
   // ---------- Action + Insights ----------
   function renderActionAndInsight(p, forceNew=false){
@@ -355,6 +433,29 @@
     n.textContent=msg; n.style.opacity='1'; setTimeout(()=> n.style.opacity='0', 1200);
     const ann=$('#ann'); if(ann) ann.textContent=msg;
   }
+  function showToast(message, {actionLabel, onAction} = {}){
+  let el = document.getElementById('toast-action');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'toast-action';
+    el.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);padding:10px 14px;border-radius:10px;background:#0a3;box-shadow:0 8px 30px rgba(0,0,0,.25);color:#fff;z-index:9999;display:flex;gap:10px;align-items:center;opacity:0;transition:.2s';
+    const btn = document.createElement('button'); btn.className='btn'; btn.style.cssText='background:transparent;border:1px solid rgba(255,255,255,.6);color:#fff';
+    btn.id='toast-action-btn'; el.appendChild(document.createElement('span'));
+    el.appendChild(btn);
+    document.body.appendChild(el);
+  }
+  el.firstElementChild.textContent = message;
+  const btn = document.getElementById('toast-action-btn');
+  if(actionLabel && typeof onAction === 'function'){
+    btn.textContent = actionLabel; btn.style.display='inline-block';
+    btn.onclick = () => { onAction(); el.style.opacity='0'; };
+  } else {
+    btn.style.display='none'; btn.onclick=null;
+  }
+  el.style.opacity='1'; setTimeout(()=> el.style.opacity='0', actionLabel ? 4000 : 1600);
+  const ann = document.getElementById('ann'); if(ann) ann.textContent = message;
+}
+
 
   // ---------- init ----------
   document.addEventListener('DOMContentLoaded', ()=>{
@@ -378,7 +479,7 @@
     // export
     $('#exportCoach')?.addEventListener('click', e=>{ e.preventDefault(); exportPNG(); });
   });
-})();
+
 /* =========================================
    Soul Coach — Growth Tasks fixes (non-breaking)
    - Checkbox nebešalina teksto: tik .is-done klasė

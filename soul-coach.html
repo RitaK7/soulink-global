@@ -97,6 +97,27 @@
   .coach-page #tasks .is-done .task-text {
   text-decoration: line-through;
   opacity: .7;
+  /* Growth Tasks — checked state & accessibility */
+.coach-page #tasks .task-text{ display:inline; }
+.coach-page #tasks .is-done .task-text{
+  text-decoration: line-through;
+  opacity: .8;               /* buvo .7 – truputį tamsiau */
+  color: rgba(255,255,255,.9);
+}
+/* jei koks senas selektorius slėpė tekstą prie :checked — neutralizuojam */
+.coach-page #tasks input[type="checkbox"]:checked ~ .task-text{
+  display:inline; visibility:visible; text-decoration:line-through; opacity:.8;
+}
+/* didesnė paspaudimo zona mobilui */
+.coach-page #tasks .task-row{ min-height:40px; }
+
+/* „ghost“ Remove mygtukas (mažiau triukšmo) */
+.coach-page #tasks [data-del].btn{
+  background: transparent;
+  border: 1px solid var(--border);
+  opacity: .9;
+}
+
 }
 /* jei koks senas selektorius slėpė tekstą prie :checked — neutralizuojam */
   .coach-page #tasks input[type="checkbox"]:checked ~ .task-text {
@@ -207,6 +228,9 @@
         <!-- Growth Tasks -->
         <section class="card glow-card" id="tasksCard">
           <div class="h"><h3>Growth Tasks</h3><button class="btn" id="resetTasks">Reset</button></div>
+          <label class="inline-flex" style="gap:.5rem; align-items:center; margin-left:8px;">
+        <input id="toggleDone" type="checkbox"> Hide completed
+          </label>
           <div id="tasks"></div>
           <form id="add-task" class="row" style="margin-top:12px">
             <input id="task-input" class="btn" style="text-align:left" placeholder="Add custom task…" />
