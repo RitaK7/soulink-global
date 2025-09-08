@@ -1078,3 +1078,119 @@
     if (val && !val.textContent.trim()) { val.textContent = 'No items yet'; val.classList.add('muted'); }
   })();
 })();
+/* =========================================
+   Soulink · Match — Friendship/Romantic toggles (authoritative, no DOM rebuild)
+   - Prideda data-connection kortelėms (jei trūksta) iš teksto; fallback 'both'
+   - Multi-toggle: abu off → visos; vienas on → filtruota; abu on → visos
+   - Būsena persistuojama į localStorage.matchConnectionFilter
+   ========================================= */
+(() => {
+  const $  = (s, r=document)=>r.querySelector(s);
+  const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+  const norm = s => (s||'').toString().trim().toLowerCase();
+
+  // Užtikrinam puslapio scope klasę (tik stiliams)
+  document.body.classList.add('match-page');
+
+  // --- mygtukai (tavo markup: .seg-btn[data-seg]) ---
+  const seg = $('#segmentToggle');
+  if (!seg) return;
+  const btnF = seg.querySelector('.seg-btn[data-seg="friend"]');
+  const btnR = seg.querySelector('.seg-btn[data-seg="romantic"]');
+
+  // --- kortelėms suteikiam .match-card ir data-connection (be perpiešimo) ---
+  function deriveConn(card){
+    const txt = (card.textContent||'').toLowerCase();
+    const m = txt.match(/connection\s*:\s*(friendship|romantic|both)/i);
+    if (m) return m[1].toLowerCase();
+    if (txt.includes('romantic') || txt.includes('romance')) return 'romantic';
+    if (txt.includes('friendship') || txt.includes('friend')) return 'friendship';
+    if (txt.includes('both')) return 'both';
+    return 'both';
+  }
+  function ensureCards(){
+    let cards = $$('.match-card');
+    if (!cards.length){
+      // nedalydami DOM – tik prirašom klasę populiariausioms kortelėms
+      $$('#results .card, .cards .card, .cards-grid .card, .grid > .card').forEach(el=>el.classList.add('match-card'));
+      cards = $$('.match-card');
+    }
+    cards.forEach((c,i)=>{
+      if(!c.dataset.connection) c.dataset.connection = deriveConn(c);
+      if(!c.dataset.id) c.dataset.id = c.getAttribute('data-id') || String(i);
+      const s = c.querySelector('.score-badge, .score, .score-num');
+      if (s) s.classList.add('score-badge'); // tik klasė pozicionavimui
+    });
+    return cards;
+  }
+
+  // --- būsena + persistencija ---
+  const STORAGE = 'matchConnectionFilter'; // 'friendship' | 'romantic' | 'both-on' | 'both-off'
+  const setPressed = (btn,on)=>{ btn?.classList.toggle('is-active',!!on); btn?.setAttribute('aria-pressed', on?'true':'false'); };
+  const getPressed = btn => !!btn?.classList.contains('is-active');
+
+  // atstatom
+  (function restore(){
+    const v = localStorage.getItem(STORAGE);
+    let f=true, r=true; // default – abu on (rodom viską)
+    if (v==='friendship'){ f=true; r=false; }
+    else if (v==='romantic'){ f=false; r=true; }
+    else if (v==='both-off'){ f=false; r=false; }
+    setPressed(btnF,f); setPressed(btnR,r);
+  })();
+
+  function persist(){
+    const f=getPressed(btnF), r=getPressed(btnR);
+    let v='both-off';
+    if (f && r) v='both-on';
+    else if (f && !r) v='friendship';
+    else if (!f && r) v='romantic';
+    localStorage.setItem(STORAGE, v);
+  }
+
+  // --- filtras (rodyk/slėpk) ---
+  function apply(){
+    const friendOn=getPressed(btnF);
+    const romOn=getPressed(btnR);
+    const snap = $('#yourSnapshot') || $('#snapshot');
+
+    ensureCards().forEach(card=>{
+      const t=(card.dataset.connection||'both').toLowerCase();
+      let show=true;
+      if (!friendOn && !romOn) show=true;                       // abu off
+      else if (friendOn && !romOn) show=(t==='friendship'||t==='both');
+      else if (!friendOn && romOn) show=(t==='romantic'||t==='both');
+      else show=true;                                           // abu on
+      card.classList.toggle('is-hidden', !show);
+      card.style.display = show ? '' : 'none';
+    });
+
+    // subtilus snapshot akcentas
+    if (snap){
+      snap.classList.remove('friend-mode','romantic-mode');
+      if (friendOn && !romOn) snap.classList.add('friend-mode');
+      if (romOn && !friendOn) snap.classList.add('romantic-mode');
+    }
+    persist();
+  }
+
+  // --- click delegavimas (veikia patikimai) ---
+  seg.addEventListener('click', (e)=>{
+    const b = e.target.closest('.seg-btn');
+    if (!b) return;
+    if (b === btnF) setPressed(btnF, !getPressed(btnF));
+    if (b === btnR) setPressed(btnR, !getPressed(btnR));
+    apply();
+  }, true);
+
+  // --- reapply po bet kokio #results perpiešimo ---
+  const target = $('#results');
+  if (target){
+    new MutationObserver(()=>{ ensureCards(); apply(); })
+      .observe(target, {childList:true, subtree:true});
+  }
+
+  // pirmas paleidimas
+  ensureCards();
+  apply();
+})();
