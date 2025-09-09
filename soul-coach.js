@@ -463,4 +463,155 @@ function renderTasks(){
     $('#exportCoach')?.addEventListener('click', e=>{ e.preventDefault(); exportPNG(); });
   });
 })();
+/* =========================================================
+   Soulink · Soul Coach — Growth Tasks (scoped to #tasksList)
+   Storage: soulink.coach.tasks (array of Task), soulink.coach.ui
+   ========================================================= */
+(() => {
+  const LIST = document.getElementById('tasksList');
+  if (!LIST) return;                       // jei šio bloko nėra puslapyje – nieko nedarom
+  const INPUT = document.getElementById('addTaskInput');
+  const BTN_ADD = document.getElementById('addTaskBtn');
+  const BTN_RESET = document.getElementById('resetBtn');
+  const TOGGLE_HIDE = document.getElementById('hideDone'); // neprivalomas
+
+  const STORAGE_KEY = 'soulink.coach.tasks';
+  const UI_KEY = 'soulink.coach.ui';
+
+  /** @type {{id:string,text:string,done:boolean}[]} */
+  let tasks = [];
+  /** @type {{hideDone?:boolean}} */
+  let ui = { hideDone:false };
+
+  /** paskutinis pašalintas (Undo) */
+  let lastRemoved = null; // {task, index, timerId}
+
+  // ---------- helpers ----------
+  const uid = () => Math.random().toString(36).slice(2,9);
+  const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  const load = () => {
+    try { tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') || []; }
+    catch { tasks = []; }
+    try { ui = Object.assign({hideDone:false}, JSON.parse(localStorage.getItem(UI_KEY) || '{}') || {}); }
+    catch { ui = {hideDone:false}; }
+  };
+  const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  const saveUI = () => localStorage.setItem(UI_KEY, JSON.stringify(ui));
+
+  // ---------- render ----------
+  function render(){
+    const hide = !!ui.hideDone;
+    LIST.innerHTML = '';
+    tasks.forEach(t => {
+      const li = document.createElement('li');
+      li.className = 'task' + (t.done ? ' done' : '');
+      li.dataset.id = t.id;
+      li.innerHTML = `
+        <label>
+          <input type="checkbox" ${t.done ? 'checked' : ''} aria-label="Mark ‘${esc(t.text)}’ done">
+          <span class="task-text">${esc(t.text)}</span>
+        </label>
+        <button class="remove-btn" type="button">Remove</button>
+      `;
+      if (hide && t.done) li.style.display = 'none';
+      LIST.appendChild(li);
+    });
+    // sync toggle if exists
+    if (TOGGLE_HIDE) TOGGLE_HIDE.checked = !!ui.hideDone;
+  }
+
+  // ---------- toast with Undo ----------
+  function ensureToast(){
+    let el = document.getElementById('coachToast');
+    if (!el){
+      el = document.createElement('div');
+      el.id = 'coachToast';
+      el.innerHTML = `<span class="toast-text"></span><button class="toast-action" type="button"></button>`;
+      document.body.appendChild(el);
+    }
+    return el;
+  }
+  function showToast(text, {actionLabel, onAction} = {}){
+    const t = ensureToast();
+    t.querySelector('.toast-text').textContent = text;
+    const btn = t.querySelector('.toast-action');
+    if (actionLabel && typeof onAction === 'function'){
+      btn.textContent = actionLabel;
+      btn.style.display = 'inline-block';
+      btn.onclick = () => { onAction(); hideToast(); };
+    } else {
+      btn.style.display = 'none';
+      btn.onclick = null;
+    }
+    t.classList.add('show');
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(hideToast, actionLabel ? 3500 : 1600);
+  }
+  function hideToast(){
+    const t = document.getElementById('coachToast');
+    if (t) t.classList.remove('show');
+  }
+
+  // ---------- actions ----------
+  function addTask(){
+    const text = (INPUT?.value || '').trim();
+    if (!text) return;
+    tasks.unshift({ id:uid(), text, done:false });
+    save(); render();
+    INPUT.value = '';
+  }
+  function toggleDone(id, checked){
+    const it = tasks.find(x => x.id === id);
+    if (!it) return;
+    it.done = !!checked;
+    save(); render();
+  }
+  function removeTask(id){
+    const index = tasks.findIndex(x => x.id === id);
+    if (index < 0) return;
+    // įsimenam prieš render
+    lastRemoved = { task: tasks[index], index };
+    tasks.splice(index, 1);
+    save(); render();
+    // vienas toast su Undo
+    showToast(`Removed: “${lastRemoved.task.text}”`, {
+      actionLabel: 'Undo',
+      onAction: () => {
+        if (!lastRemoved) return;
+        tasks.splice(lastRemoved.index, 0, lastRemoved.task);
+        save(); render();
+        lastRemoved = null;
+      }
+    });
+  }
+  function resetTasks(){
+    tasks = tasks.map(t => ({ ...t, done:false }));
+    save(); render();
+  }
+
+  // ---------- wiring (delegated) ----------
+  LIST.addEventListener('change', (e) => {
+    const cb = e.target.closest('input[type="checkbox"]');
+    if (!cb) return;
+    const row = cb.closest('.task');
+    if (!row) return;
+    toggleDone(row.dataset.id, cb.checked);
+  });
+  LIST.addEventListener('click', (e) => {
+    const btn = e.target.closest('.remove-btn');
+    if (!btn) return;
+    const row = btn.closest('.task');
+    if (!row) return;
+    removeTask(row.dataset.id);
+  });
+
+  BTN_ADD && BTN_ADD.addEventListener('click', addTask);
+  INPUT && INPUT.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); addTask(); } });
+  BTN_RESET && BTN_RESET.addEventListener('click', (e)=>{ e.preventDefault(); resetTasks(); });
+  TOGGLE_HIDE && TOGGLE_HIDE.addEventListener('change', (e)=>{ ui.hideDone = !!e.target.checked; saveUI(); render(); });
+
+  // ---------- boot ----------
+  load(); render();
+})();
 

@@ -137,7 +137,36 @@
   /* Stars canvases in cards */
   .stars{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.8}
   .card > *:not(canvas){position:relative;z-index:1}
-
+  /* Growth Tasks (scoped to the new IDs) */
+#tasksList .task{
+  display:flex; align-items:center; gap:10px;
+  min-height:44px; padding:4px 0;        /* patogi hit-area */
+}
+#tasksList .task > label{
+  display:flex; align-items:center; gap:10px; flex:1 1 auto;
+}
+#tasksList .task .task-text{ display:inline; }
+#tasksList .task.done .task-text{
+  text-decoration:line-through; opacity:.85; /* strike-through, bet tekstas lieka */
+}
+/* švelnus „ghost“ Remove, negriaunant brand’o */
+#tasksList .remove-btn{
+  margin-left:auto; white-space:nowrap;
+  background:transparent; border:1px solid var(--border);
+  padding:6px 10px; border-radius:10px; cursor:pointer;
+}
+/* toast (Undo) */
+#coachToast{
+  position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+  background:#02464d; color:#fff; border:1px solid var(--border);
+  border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.25);
+  padding:10px 12px; display:none; gap:10px; align-items:center; z-index:9999;
+}
+#coachToast.show{ display:flex; }
+#coachToast .toast-action{
+  background:transparent; border:1px solid rgba(255,255,255,.6);
+  color:#fff; padding:6px 10px; border-radius:10px; cursor:pointer;
+}
   footer{margin:40px 0 16px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:.95rem;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 </style>
 </head>
