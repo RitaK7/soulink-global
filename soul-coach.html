@@ -76,14 +76,31 @@
   .glow-underline::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);box-shadow:0 0 12px rgba(0,253,216,.6);opacity:0;transform:scaleX(.6);transition:.45s}
   .glow-underline.show::after{opacity:1;transform:scaleX(1)}
   
-  /* Tasks: flash + float away */
+  /* Tasks: state & accessibility (REPLACES old "flash + float away" block) */
+.coach-page #tasks .task-text { display: inline; }
 
-/* jei koks senas selektorius slėpė tekstą prie :checked — neutralizuojam */
-  .coach-page #tasks input[type="checkbox"]:checked ~ .task-text {
+.coach-page #tasks .is-done .task-text{
+  text-decoration: line-through;
+  opacity: .8;                            /* šiek tiek tamsiau nei .7 */
+  color: rgba(255,255,255,.9);            /* geresnis kontrastas */
+}
+
+/* didesnė paspaudimo zona visai eilutei (mobilui) */
+.coach-page #tasks .task-row{ min-height: 40px; }
+
+/* „ghost“ stiliaus Remove – mažiau vizualinio triukšmo */
+.coach-page #tasks [data-del].btn{
+  background: transparent;
+  border: 1px solid var(--border);
+  opacity: .9;
+}
+
+/* neutralizuojam senas :checked taisykles, kurios slėpė tekstą */
+.coach-page #tasks input[type="checkbox"]:checked ~ .task-text{
   display: inline;
   visibility: visible;
   text-decoration: line-through;
-  opacity: .7;
+  opacity: .8;
 }
 
 

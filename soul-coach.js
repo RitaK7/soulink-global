@@ -296,22 +296,7 @@ function renderTasks(){
   setCoach({ ...s, hideDone: !!e.target.checked });
   renderTasks();
 });
-  
-      
-      const cb=row.querySelector('input[type="checkbox"]');
-      
-        cb.addEventListener('change', ()=>{
-      const arr=getCoach().tasks||[]; const it=arr.find(x=>x.id===t.id);
-      if(it){ it.done=cb.checked; saveTasks(arr); }
-       row.classList.toggle('is-done', cb.checked);
-     });
-    
-      row.querySelector('[data-del]').addEventListener('click', ()=>{
-        const arr=getCoach().tasks||[]; const i=arr.findIndex(x=>x.id===t.id);
-        if(i>-1){ arr.splice(i,1); saveTasks(arr); row.remove(); }
       });
-    });
-  
  function bindAddTask(){
   $('#add-task')?.addEventListener('submit', e=>{
     e.preventDefault();
