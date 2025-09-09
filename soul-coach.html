@@ -84,6 +84,31 @@
   opacity: .8;                            /* šiek tiek tamsiau nei .7 */
   color: rgba(255,255,255,.9);            /* geresnis kontrastas */
 }
+/* Growth Tasks — keep "Remove" inline with the text */
+.coach-page #tasks .task-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:40px;          /* lieka didesnė hit-area */
+  flex-wrap:nowrap;         /* mygtukas toje pačioje eilėje */
+}
+.coach-page #tasks .task-row > label{
+  display:flex;             /* apsauga, jei inline style nusimuštų */
+  align-items:center;
+  gap:10px;
+  flex:1 1 auto;            /* tekstas ima likusį plotą */
+  min-width:220px;
+}
+.coach-page #tasks .task-row [data-del].btn{
+  margin-left:auto;         /* stumia "Remove" į dešinę */
+  padding:6px 10px;         /* kompaktiškesnis „ghost“ */
+  white-space:nowrap;       /* nesulaužyti teksto */
+}
+
+/* labai siauram ekranui – leisti persikelti į kitą eilę */
+@media (max-width: 460px){
+  .coach-page #tasks .task-row{ flex-wrap:wrap; }
+}
 
 /* didesnė paspaudimo zona visai eilutei (mobilui) */
 .coach-page #tasks .task-row{ min-height: 40px; }
