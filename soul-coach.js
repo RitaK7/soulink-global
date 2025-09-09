@@ -296,7 +296,7 @@ function renderTasks(){
   setCoach({ ...s, hideDone: !!e.target.checked });
   renderTasks();
 });
-      });
+  
  function bindAddTask(){
   $('#add-task')?.addEventListener('submit', e=>{
     e.preventDefault();
@@ -440,6 +440,8 @@ function renderTasks(){
 
   // ---------- init ----------
   document.addEventListener('DOMContentLoaded', ()=>{
+    document.body.classList.add('coach-page'); // ← pridėta
+    wireNav(); wireTooltips();
     wireNav(); wireTooltips();
     // stars
     makeStars($('#bgStars')); makeStars($('#actionCard .stars')); makeStars($('#insightsCard .stars'));
@@ -460,4 +462,5 @@ function renderTasks(){
     // export
     $('#exportCoach')?.addEventListener('click', e=>{ e.preventDefault(); exportPNG(); });
   });
+})();
 
