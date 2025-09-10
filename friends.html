@@ -146,6 +146,42 @@ input:focus, textarea:focus, select:focus{
   .nav-links{display:none}
   .nav-links.open{display:flex;flex-direction:column;align-items:flex-start}
 }
+/* NAV — same glow + no separators */
+.navbar{position:sticky;top:0;background:#002e30;border-bottom:1px solid var(--stroke);box-shadow:0 0 12px rgba(0,253,216,.25);z-index:50}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 1rem}
+.brand{font-weight:700;color:var(--accent);text-decoration:none}
+.nav-links{list-style:none;display:flex;flex-wrap:wrap;gap:.6rem;margin:0;padding:0}
+.nav-links li{list-style:none}                        /* hide any markers */
+.nav-links li::before{content:none !important}        /* kill CSS separators, if any */
+.nav-links a{display:inline-block;padding:.45rem .7rem;border-radius:10px;border:1px solid transparent;color:var(--text);text-decoration:none}
+.nav-links a:hover{border-color:var(--stroke);box-shadow:0 0 0 1px var(--stroke),0 0 16px rgba(0,253,216,.25);color:var(--accent)}
+.nav-links a.active,.nav-links a[aria-current="page"]{background:var(--accent);color:#00343a;border-color:transparent;box-shadow:0 0 0 2px var(--accent) inset,0 0 18px rgba(0,253,216,.35)}
+.nav-btn{display:none;background:transparent;border:1px solid var(--stroke);border-radius:10px;padding:.4rem .6rem;color:var(--accent)}
+@media (max-width:900px){.nav-btn{display:block}.nav-links{display:none}.nav-links.open{display:flex;flex-direction:column;align-items:flex-start}}
+
+/* Cards grid + spacing + stack rules */
+.friends-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+@media (max-width:720px){.friends-grid{grid-template-columns:1fr}}   /* phone: 1 col */
+@media (min-width:721px) and (max-width:1024px){.friends-grid{grid-template-columns:repeat(2,minmax(0,1fr))}} /* tablet: 2 cols */
+
+/* Score always top-right */
+.friend{position:relative}
+.friend .score{position:absolute;top:8px;right:8px}
+
+/* Actions ≥44px for a11y */
+.friend .btn{min-height:44px}
+
+/* Chips wrap and compact mode */
+.friend .chips{display:flex;flex-wrap:wrap;gap:.35rem}
+.friend .chip{display:inline-flex;align-items:center;padding:.25rem .55rem;border-radius:999px;border:1px solid var(--stroke)}
+.collapsible{overflow:hidden;transition:max-height .25s ease}
+.more-toggle{cursor:pointer;font-weight:700;margin-left:.5rem;color:var(--link)}
+
+/* Toast (Undo) */
+#friendsToasts{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:10px;z-index:1000}
+.toast{background:#02464d;color:#fff;border:1px solid var(--stroke);border-radius:12px;padding:10px 12px;display:flex;gap:.6rem;align-items:center;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+.toast .undo{background:transparent;border:1px solid rgba(255,255,255,.7);color:#fff;padding:6px 10px;border-radius:12px;cursor:pointer}
+@media(max-width:480px){#friendsToasts{left:8px;right:8px}.toast{width:100%}}
 </style>
 
 </head>
@@ -374,11 +410,24 @@ input:focus, textarea:focus, select:focus{
   <footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
     © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
   </footer>
+
+  <script src="friends.js"></script>
+
   <script>
-  document.getElementById('navToggle')?.addEventListener('click', ()=>{
+  // Mobile toggle and separator cleanup (non-destructive)
+  document.getElementById('navToggle')?.addEventListener('click',()=>{
     document.getElementById('navMenu')?.classList.toggle('open');
   });
+  (function fixNav(){
+    const ul=document.querySelector('.nav-links'); if(!ul) return;
+    // remove accidental “*”, “·”, “|”, “/” separators that might be li items
+    [...ul.children].forEach(li=>{
+      const t=(li.textContent||'').trim(); if(['*','·','|','/','•'].includes(t)) li.remove();
+    });
+    // make sure Friends is marked active here
+    ul.querySelector('a[href*="friends"]')?.classList.add('active');
+  })();
 </script>
-  <script src="friends.js"></script>
+
 </body>
 </html>

@@ -1070,3 +1070,161 @@ updatePreviewIcons();
   // ---------- initial paint ----------
   applyFilters();
 })();
+/* =========================================================
+   Soulink · Friends — card normalize + +N more + Remove→Undo
+   and Add-form validation/normalization (non-breaking)
+   ========================================================= */
+(() => {
+  const $ = (s,r=document)=>r.querySelector(s);
+  const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+
+  // ---------- Toast container ----------
+  const TOASTS = (()=>{ let c=$('#friendsToasts'); if(!c){ c=document.createElement('div'); c.id='friendsToasts'; c.setAttribute('aria-live','polite'); c.setAttribute('aria-atomic','true'); document.body.appendChild(c);} return c; })();
+  const showToast = (msg, onUndo) => {
+    const el=document.createElement('div'); el.className='toast';
+    el.innerHTML = `<span>${msg}</span><button class="undo" aria-label="Undo">${'Undo'}</button>`;
+    TOASTS.appendChild(el);
+    const btn=el.querySelector('.undo');
+    let t=setTimeout(()=>{ el.remove(); },5200);
+    btn.onclick=()=>{ clearTimeout(t); el.remove(); onUndo&&onUndo(); };
+  };
+
+  // ---------- Helpers ----------
+  const norm = s => (s||'').toString().trim();
+  const uniq = arr => { const seen=new Set(), out=[]; for(const x of arr){ const k=x.toLowerCase(); if(!seen.has(k)){ seen.add(k); out.push(x);} } return out; };
+  const splitList = (txt) => norm(txt).split(/[,\u00B7|/]+/).map(s=>s.trim()).filter(Boolean);
+
+  // Extract chips/text tokens from a "Hobbies:" or "Values:" row
+  function tokensFromRow(row){
+    const chips = $$('.chip', row).map(x=>norm(x.textContent));
+    if (chips.length) return chips.filter(Boolean);
+    const after = (row.textContent||'').split(':').slice(1).join(':'); // everything after first colon
+    return splitList(after);
+  }
+
+  // Build labeled chips row with +N more (max 3 shown)
+  function buildLabeledChips(label, items){
+    const wrap = document.createElement('div');
+    wrap.className='chips';
+    const b = document.createElement('b'); b.textContent = label + ': '; wrap.appendChild(b);
+
+    const box = document.createElement('span'); box.className = 'collapsible'; wrap.appendChild(box);
+
+    const max=3; items.forEach((t,i)=>{ const c=document.createElement('span'); c.className='chip'; c.textContent=t; if(i>=max) c.dataset.more='1'; box.appendChild(c); });
+
+    if(items.length>max){
+      const more=document.createElement('span'); more.className='more-toggle'; more.setAttribute('role','button'); more.tabIndex=0;
+      let open=false;
+      function paint(){ $$('.chip[data-more]',box).forEach(el=> el.style.display=open?'inline-flex':'none'); more.textContent=open?'Show less':`+${items.length-max} more`; }
+      more.onclick=()=>{ open=!open; paint(); };
+      more.onkeydown=(e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); more.click(); } };
+      wrap.appendChild(more);
+      paint();
+    }
+    return wrap;
+  }
+
+  // Merge duplicated "Values:" rows into one; also compact Hobbies/Values lines
+  function normalizeCard(card){
+    const body = card.querySelector('.friend-body') || card;
+    if(!body) return;
+
+    // Score pin
+    const sc = card.querySelector('.score'); if(sc) sc.classList.add('score-badge');
+
+    // gather all rows that start with "Values:" or "Hobbies:"
+    const rows = $$('.friend-body > *', card);
+    const valRows = rows.filter(el => /^values\s*:/i.test((el.textContent||'').trim()));
+    const hobRows = rows.filter(el => /^hobbies\s*:/i.test((el.textContent||'').trim()));
+
+    if (valRows.length){
+      const items = uniq(valRows.flatMap(tokensFromRow));
+      const repl = buildLabeledChips('Values', items);
+      valRows[0].replaceWith(repl);
+      valRows.slice(1).forEach(el=>el.remove());
+    }
+    if (hobRows.length){
+      const items = uniq(hobRows.flatMap(tokensFromRow));
+      const repl = buildLabeledChips('Hobbies', items);
+      hobRows[0].replaceWith(repl);
+      hobRows.slice(1).forEach(el=>el.remove());
+    }
+  }
+
+  // Enhance all current cards (call after your render runs)
+  function enhanceAll(){
+    $$('#friends-list .friend').forEach(normalizeCard);
+  }
+
+  // If your app has a global render() -> patch to enhance after it finishes
+  if (typeof window.render === 'function'){
+    const __render = window.render;
+    window.render = function(...args){ const out = __render.apply(this,args); try{ enhanceAll(); }catch{} return out; };
+  }
+  // Run once on load as well
+  if (document.readyState !== 'loading') enhanceAll();
+  else document.addEventListener('DOMContentLoaded', enhanceAll);
+
+  // ---------- Remove with Undo (optimistic) ----------
+  document.addEventListener('click',(e)=>{
+    const btn = e.target.closest('.friend .btn, .friend [data-rm]');
+    if(!btn) return;
+    const label = (btn.textContent||'').trim().toLowerCase();
+    if (!/remove/.test(label)) return;
+
+    e.preventDefault(); e.stopPropagation();
+
+    const card = btn.closest('.friend'); if(!card) return;
+    const name = norm(card.querySelector('.name')?.textContent) || 'Friend';
+    card.classList.add('is-hidden');
+
+    // Remove from storage after 5s unless undone
+    let timer = setTimeout(()=> persistRemove(name), 5000);
+    showToast(`Friend removed —`, ()=>{ clearTimeout(timer); card.classList.remove('is-hidden'); });
+  }, true);
+
+  function loadFriends(){
+    try{
+      const a = JSON.parse(localStorage.getItem('soulink.friends.list')||'null');
+      if (Array.isArray(a)) return a;
+      return JSON.parse(localStorage.getItem('soulFriends')||'[]')||[];
+    }catch{ return []; }
+  }
+  function saveFriends(list){
+    try{ localStorage.setItem('soulink.friends.list', JSON.stringify(list)); }catch{}
+    try{ localStorage.setItem('soulFriends', JSON.stringify(list)); }catch{}
+  }
+  function persistRemove(name){
+    const list = loadFriends();
+    const i = list.findIndex(f => (f.name||'').trim().toLowerCase() === name.toLowerCase());
+    if (i>-1){ list.splice(i,1); saveFriends(list); }
+    // re-render if your app exposes render(list)
+    if (typeof window.render === 'function') window.render(list);
+    enhanceAll();
+  }
+
+  // ---------- Add Friend: validate + normalize (no markup changes) ----------
+  const form = document.getElementById('add-form');
+  function emailOk(v){ return !v || v.includes('@'); }
+  const cleanPhone = v => (v||'').replace(/[^\d+ -]/g,''); // allow +, digits, space, dash
+  function igHandle(v){
+    v = (v||'').trim();
+    const m=v.match(/^https?:\/\/(www\.)?instagram\.com\/([^/?#]+)\/?/i);
+    if (m) return m[2];
+    return v.replace(/^@/,'');
+  }
+  form && form.addEventListener('submit',(e)=>{
+    // normalize into inputs so existing handler saves normalized values
+    const f = form;
+    const email = f.querySelector('#f-email') || f.querySelector('input[type="email"]');
+    const wa    = f.querySelector('#f-whatsapp');
+    const insta = f.querySelector('#f-instagram');
+
+    if (email && !emailOk(email.value)){ e.preventDefault(); alert('Please enter a valid email (must contain @).'); email.focus(); return; }
+    if (wa){ wa.value = cleanPhone(wa.value); }
+    if (insta){ insta.value = igHandle(insta.value); }
+
+    // clear fields after your original handler runs
+    setTimeout(()=>{ try{ f.reset(); }catch{} }, 0);
+  }, true);
+})();
