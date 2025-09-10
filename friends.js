@@ -653,3 +653,420 @@ updatePreviewIcons();
     }
   });
 })();
+/* =========================================================
+   Soulink · Friends — Enhancements (non-destructive)
+   Requirements covered: 1,2,3,4,5,6,7,8,9,10
+   ========================================================= */
+(() => {
+  // ---------- storage adapter (back-compat) ----------
+  const NEW_FRIENDS = 'soulink.friends.list';
+  const OLD_FRIENDS = 'soulFriends';                // existing key in your app
+  const NEW_QUIZ    = 'soulink.soulQuiz';
+  const OLD_QUIZ    = 'soulQuiz';
+
+  const safeJSON = s => { try { return JSON.parse(s); } catch { return null; } };
+
+  function loadAllFriends(){
+    const fromNew = safeJSON(localStorage.getItem(NEW_FRIENDS));
+    if (Array.isArray(fromNew)) return fromNew;
+    const fromOld = safeJSON(localStorage.getItem(OLD_FRIENDS)) || [];
+    return fromOld;
+  }
+  function saveAllFriends(list){
+    const arr = Array.isArray(list) ? list : [];
+    try { localStorage.setItem(NEW_FRIENDS, JSON.stringify(arr)); } catch {}
+    try { localStorage.setItem(OLD_FRIENDS, JSON.stringify(arr)); } catch {}
+  }
+  function loadQuiz(){
+    return safeJSON(localStorage.getItem(NEW_QUIZ)) ||
+           safeJSON(localStorage.getItem(OLD_QUIZ)) || {};
+  }
+
+  // Make existing helpers call our adapters
+  if (typeof window.loadFriends === 'function'){
+    window.loadFriends = loadAllFriends;
+  }
+  if (typeof window.saveFriends === 'function'){
+    const __save = window.saveFriends;
+    window.saveFriends = (l)=>{ saveAllFriends(l); return __save(l); };
+  }
+
+  // ---------- deterministic score (for stable sort) ----------
+  function stableScore(f){
+    const s = (f.name||'')+'|'+(Array.isArray(f.values)?f.values.join(','):f.values||'')+'|'+(f.ll||f.loveLanguage||'');
+    let h=0; for(let i=0;i<s.length;i++) h=(h*31 + s.charCodeAt(i))>>>0;
+    return 50 + (h % 51); // 50..100
+  }
+  if (typeof window.scoreWithMe === 'function'){
+    window.scoreWithMe = stableScore;
+  }
+
+  // ---------- toolbar UI (inject above list) ----------
+  const listWrap = document.querySelector('#friends-list')?.closest('.card');
+  if (listWrap && !document.getElementById('friendsToolbar')){
+    const bar = document.createElement('div');
+    bar.id = 'friendsToolbar';
+    bar.innerHTML = `
+      <input id="friendsSearch" type="search" aria-label="Search friends" placeholder="Search name, notes, socials…" />
+      <div id="filterConnection" class="row" role="group" aria-label="Filter by connection">
+        <span class="chip" data-val="">Any</span>
+        <span class="chip" data-val="friendship">Friendship</span>
+        <span class="chip" data-val="romantic">Romantic</span>
+      </div>
+      <div id="filterLoveLanguage" class="row" role="group" aria-label="Filter by love language">
+        <span class="chip" data-val="">All</span>
+        <span class="chip" data-val="acts">Acts</span>
+        <span class="chip" data-val="gifts">Gifts</span>
+        <span class="chip" data-val="quality_time">Quality Time</span>
+        <span class="chip" data-val="physical_touch">Physical Touch</span>
+        <span class="chip" data-val="words">Words</span>
+      </div>
+      <div id="friendsSort" class="row" role="group" aria-label="Sort">
+        <span class="chip" data-sort="score-asc"  aria-pressed="false">Score ⬆︎</span>
+        <span class="chip" data-sort="score-desc" aria-pressed="true">Score ⬇︎</span>
+        <span class="chip" data-sort="az"         aria-pressed="false">A–Z</span>
+      </div>
+    `;
+    listWrap.insertBefore(bar, listWrap.querySelector('#friends-list'));
+  }
+
+  // ---------- in-memory state + debounced filter ----------
+  let RAW = loadAllFriends();
+  let STATE = { q:'', conn:'', ll:'', sort:'score-desc' };
+
+  const $  = (s,r=document)=>r.querySelector(s);
+  const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+
+  function llKey(f){
+    const t = (f.loveLanguage || f.ll || '').toString().toLowerCase();
+    if (/acts/.test(t)) return 'acts';
+    if (/gift/.test(t)) return 'gifts';
+    if (/quality/.test(t)) return 'quality_time';
+    if (/touch/.test(t)) return 'physical_touch';
+    if (/word/.test(t)) return 'words';
+    return 'unknown';
+  }
+  const norm = s => (s||'').toString().trim().toLowerCase();
+  const includes = (hay,needle)=> norm(hay).includes(norm(needle));
+
+  function applyFilters(){
+    let list = RAW.slice();
+
+    // search
+    if (STATE.q){
+      list = list.filter(f=>{
+        const blob = [
+          f.name, f.notes, f.contact, f.email, f.instagram, f.facebook,
+          (Array.isArray(f.hobbies)?f.hobbies.join(','):f.hobbies||''),
+          (Array.isArray(f.values)?f.values.join(','):f.values||'')
+        ].join(' | ');
+        return includes(blob, STATE.q);
+      });
+    }
+    // connection
+    if (STATE.conn){
+      list = list.filter(f=>{
+        const c = norm(f.connection || f.ct || '');
+        if (c === 'both' || c === 'any') return true;
+        return c === STATE.conn;
+      });
+    }
+    // love language
+    if (STATE.ll){
+      list = list.filter(f=> llKey(f) === STATE.ll);
+    }
+    // sort
+    if (STATE.sort === 'az'){
+      list.sort((a,b)=> (a.name||'').localeCompare(b.name||''));
+    } else if (STATE.sort === 'score-asc'){
+      list.sort((a,b)=> stableScore(a) - stableScore(b));
+    } else {
+      list.sort((a,b)=> stableScore(b) - stableScore(a));
+    }
+
+    // render using your existing renderer, then enhance cards
+    if (typeof window.render === 'function') window.render(list);
+    enhanceCards(list);
+  }
+
+  // debounce search
+  const debounce = (fn,ms=250)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
+
+  // wire controls
+  $('#friendsSearch')?.addEventListener('input', debounce(e => { STATE.q = e.target.value; applyFilters(); }, 250));
+  $('#filterConnection')?.addEventListener('click', e=>{
+    const c = e.target.closest('.chip'); if(!c) return;
+    STATE.conn = c.dataset.val || '';
+    $$('#filterConnection .chip').forEach(x=>x.classList.toggle('is-active', x===c));
+    applyFilters();
+  });
+  $('#filterLoveLanguage')?.addEventListener('click', e=>{
+    const c = e.target.closest('.chip'); if(!c) return;
+    STATE.ll = c.dataset.val || '';
+    $$('#filterLoveLanguage .chip').forEach(x=>x.classList.toggle('is-active', x===c));
+    applyFilters();
+  });
+  $('#friendsSort')?.addEventListener('click', e=>{
+    const c = e.target.closest('.chip'); if(!c) return;
+    STATE.sort = c.dataset.sort || 'score-desc';
+    $$('#friendsSort .chip').forEach(x=>x.setAttribute('aria-pressed', x===c ? 'true':'false'));
+    applyFilters();
+  });
+
+  // ---------- enhance rendered cards (badges, chips, dataset, copy) ----------
+  function enhanceCards(list){
+    const cards = $$('#friends-list .friend');
+    cards.forEach((card, i)=>{
+      const f = list[i] || {};
+      // dataset for external filters
+      card.dataset.key = (f.id || (f.email||'').toLowerCase() || (f.instagram||'').toLowerCase() || (f.name||'') );
+      card.dataset.connection = (f.connection || f.ct || 'both').toLowerCase();
+
+      // love-language badge near name
+      const nameEl = card.querySelector('.friend-meta .name');
+      if (nameEl && !nameEl.nextElementSibling?.classList?.contains('ll-badge')){
+        const map = {
+          acts:'Acts of Service', gifts:'Receiving Gifts', quality_time:'Quality Time',
+          physical_touch:'Physical Touch', words:'Words of Affirmation', unknown:'Unknown'
+        };
+        const s = document.createElement('span');
+        s.className = 'll-badge chip';
+        s.style.marginLeft = '.4rem';
+        s.textContent = map[llKey(f)];
+        nameEl.after(s);
+      }
+
+      // convert Hobbies/Values lines into chips (max 3 + “+N more”)
+      ['hobbies','values'].forEach(kind=>{
+        const row = Array.from(card.querySelectorAll('.friend-body > div')).find(d => /^(\s*)?(Hobbies|Values)\s*:/.test(d.textContent||''));
+        if (!row) return;
+        const items = (kind==='hobbies' ? (f.hobbies||[]) : (f.values||[]));
+        if (!items.length) return;
+        const box = document.createElement('div');
+        box.className = 'chips';
+        const cap = document.createElement('b'); cap.textContent = (kind==='hobbies'?'Hobbies: ':'Values: ');
+        box.appendChild(cap);
+
+        const wrap = document.createElement('span');
+        wrap.className = 'collapsible'; wrap.style.display='inline-block';
+        const max = 3;
+        items.forEach((t,idx)=>{
+          const c = document.createElement('span');
+          c.className = 'chip'; c.textContent = t;
+          if (idx>=max) c.dataset.more='1';
+          wrap.appendChild(c);
+        });
+        box.appendChild(wrap);
+
+        if (items.length>max){
+          const more = document.createElement('span');
+          more.className = 'more-toggle'; more.tabIndex=0;
+          more.textContent = `+${items.length-max} more`;
+          more.setAttribute('role','button');
+          let open=false;
+          more.onclick = ()=>{ open=!open; $$('.chip[data-more]',wrap).forEach(el=> el.style.display=open?'inline-flex':'none'); more.textContent = open?'Show less':`+${items.length-max} more`; };
+          box.appendChild(more);
+          // start collapsed
+          $$('.chip[data-more]',wrap).forEach(el=> el.style.display='none');
+        }
+        row.replaceWith(box);
+      });
+
+      // copy helpers next to email/handle inside Contact row (if present anchors)
+      Array.from(card.querySelectorAll('.friend-body a[href^="mailto:"], .friend-body a[href*="instagram.com/"]')).forEach(a=>{
+        if (a.nextElementSibling?.classList?.contains('copy-btn')) return;
+        const btn = document.createElement('button');
+        btn.type='button'; btn.className='copy-btn'; btn.innerHTML='<i class="bi bi-clipboard"></i> Copy';
+        btn.setAttribute('aria-label','Copy contact');
+        btn.onclick = async ()=>{
+          const val = a.href.startsWith('mailto:') ? a.href.replace(/^mailto:/,'') : a.href.replace(/^https?:\/\/(www\.)?instagram\.com\//,'').replace(/\/.*$/,'');
+          try{ await navigator.clipboard.writeText(val); btn.innerHTML='<i class="bi bi-check2"></i> Copied'; setTimeout(()=>btn.innerHTML='<i class="bi bi-clipboard"></i> Copy',1200);}catch{}
+        };
+        a.after(btn);
+      });
+    });
+  }
+
+  // ---------- Remove with Undo (capture; cancels old immediate delete) ----------
+  const TOASTS = (()=>{ const c=document.createElement('div'); c.id='friendsToasts'; document.body.appendChild(c); return c; })();
+
+  function showToast(name, onUndo){
+    const t=document.createElement('div'); t.className='toast';
+    t.innerHTML=`<span>Removed ${name}.</span><button class="undo" aria-label="Undo removing ${name}">Undo</button>`;
+    TOASTS.appendChild(t);
+    const btn=t.querySelector('.undo');
+    let timer=setTimeout(()=>{ t.remove(); }, 5200);
+    btn.onclick=()=>{ clearTimeout(timer); t.remove(); onUndo&&onUndo(); };
+    return ()=>{ clearTimeout(timer); t.remove(); };
+  }
+
+  document.addEventListener('click', (e)=>{
+    const rm = e.target.closest('#friends-list [data-rm]');
+    if (!rm) return;
+    e.preventDefault(); e.stopPropagation(); // stop old handler
+
+    const card = rm.closest('.friend');
+    const key  = card?.dataset.key || '';
+    const name = card?.querySelector('.name')?.textContent?.trim() || 'friend';
+    card?.classList.add('is-hidden');
+
+    // find friend by key
+    let arr = loadAllFriends();
+    const idx = arr.findIndex(f => (f.id||'')===key || (f.email||'').toLowerCase()===key || (f.instagram||'').toLowerCase()===key || (f.name||'')===key);
+    const fallbackIdx = +rm.getAttribute('data-rm'); // as last resort
+    const realIdx = idx>=0 ? idx : fallbackIdx;
+    const removed = arr[realIdx];
+
+    // schedule delete in 5s unless undone
+    const cancelToast = showToast(name, () => {
+      // undo
+      card?.classList.remove('is-hidden');
+    });
+    const t = setTimeout(()=>{
+      const cur = loadAllFriends();
+      const i = realIdx;
+      if (i>-1 && cur[i] && (removed ? cur[i].name===removed.name : true)){
+        cur.splice(i,1);
+        saveAllFriends(cur);
+        RAW = cur.slice();
+        applyFilters();
+      }
+      cancelToast();
+    }, 5000);
+    // If user clicks Undo button, we already restored the card visually; do nothing else.
+  }, true); // capture
+
+  // ---------- Add form: validation / normalization / dedupe (capture) ----------
+  const form = document.getElementById('add-form');
+  function emailOk(v){ return /^\S+@\S+\.\S+$/.test(v||''); }
+  function phoneDigits(v){ return (v||'').replace(/[^\d+]/g,''); }
+  function igHandle(v){
+    if (!v) return '';
+    const m = v.match(/^https?:\/\/(www\.)?instagram\.com\/([^/?#]+)\/?/i);
+    if (m) return m[2];
+    return v.replace(/^@/,'');
+  }
+  function mergeInto(dst, src){
+    const copy = (k)=>{ if (!dst[k] && src[k]) dst[k]=src[k]; };
+    ['photo','ct','ll','hobbies','values','contact','notes','whatsapp','instagram','facebook','email'].forEach(k=>{
+      if (!dst[k] && src[k]) dst[k]=src[k];
+    });
+    // keep name; do not override existing non-empty
+    return dst;
+  }
+  form && form.addEventListener('submit', (e)=>{
+    // handle here, stop old submit listener
+    e.preventDefault(); e.stopPropagation();
+
+    const nm = document.getElementById('f-name')?.value?.trim();
+    if (!nm){ alert('Please enter a name.'); return; }
+
+    const ig = igHandle(document.getElementById('f-instagram')?.value?.trim());
+    const em = document.getElementById('f-email')?.value?.trim();
+    if (em && !emailOk(em)){ alert('Please enter a valid email.'); return; }
+
+    const friend = {
+      name: nm,
+      photo: document.getElementById('f-photo')?.value?.trim() || '',
+      ct: (document.getElementById('f-ct')?.value || '').trim(),
+      ll: (document.getElementById('f-ll')?.value || '').trim(),
+      hobbies: (document.getElementById('f-hobbies')?.value || '').split(',').map(s=>s.trim()).filter(Boolean),
+      values:  (document.getElementById('f-values')?.value || '').split(',').map(s=>s.trim()).filter(Boolean),
+      contact: document.getElementById('f-contact')?.value?.trim() || '',
+      notes:   document.getElementById('f-notes')?.value?.trim() || '',
+      whatsapp: phoneDigits(document.getElementById('f-whatsapp')?.value),
+      instagram: ig,
+      facebook: document.getElementById('f-facebook')?.value?.trim() || '',
+      email: em || ''
+    };
+    // dedupe by email OR instagram handle (case-insensitive)
+    const arr = loadAllFriends();
+    const byEmail = em ? arr.findIndex(x => (x.email||'').toLowerCase() === em.toLowerCase()) : -1;
+    const byIg    = ig ? arr.findIndex(x => (x.instagram||'').toLowerCase() === ig.toLowerCase()) : -1;
+    const dupIdx = byEmail>-1 ? byEmail : (byIg>-1 ? byIg : -1);
+
+    if (dupIdx>-1){
+      const choice = prompt(`This contact exists.\nType: UPDATE to merge, SKIP to cancel, NEW to add as another.`);
+      if (!choice || /skip/i.test(choice)) return;
+      if (/update/i.test(choice)){
+        arr[dupIdx] = mergeInto(arr[dupIdx], friend);
+        saveAllFriends(arr);
+        RAW = arr.slice();
+        form.reset(); applyFilters(); return;
+      }
+      // NEW -> add with suffix
+      friend.name = `${friend.name} (2)`;
+    }
+    arr.unshift(friend);
+    saveAllFriends(arr);
+    RAW = arr.slice();
+    form.reset();
+    applyFilters();
+  }, true); // capture
+
+  // ---------- Export / Import JSON (shape + merge choices) ----------
+  const expBtn = document.getElementById('exportFriends');
+  expBtn && expBtn.addEventListener('click', (e)=>{
+    e.preventDefault(); e.stopPropagation();
+    const data = { version:1, items: loadAllFriends() };
+    const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const url  = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='soulink-friends.json'; a.click();
+    URL.revokeObjectURL(url);
+  }, true);
+
+  const impBtn = document.getElementById('importFriends');
+  const impFile= document.getElementById('importFile');
+  impBtn && impBtn.addEventListener('click',(e)=>{ e.preventDefault(); e.stopPropagation(); impFile?.click(); }, true);
+  impFile && impFile.addEventListener('change', (e)=>{
+    const file = e.target.files?.[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const parsed = JSON.parse(reader.result);
+        const items = Array.isArray(parsed?.items) ? parsed.items :
+                      (Array.isArray(parsed) ? parsed : []);
+        if (!Array.isArray(items)) throw new Error('Invalid JSON');
+
+        const existing = loadAllFriends();
+        const emailMap = new Map(existing.map((f,i)=>[(f.email||'').toLowerCase(),i]));
+        const igMap    = new Map(existing.map((f,i)=>[(f.instagram||'').toLowerCase(),i]));
+
+        const choice = prompt('Duplicates: MERGE to prefer imported non-empty, SKIP to keep existing, REPLACE to override existing.');
+        const out = existing.slice();
+
+        items.forEach(f=>{
+          const ekey=(f.email||'').toLowerCase(), ikey=(f.instagram||'').toLowerCase();
+          const hit = (ekey && emailMap.has(ekey)) ? emailMap.get(ekey)
+                    : (ikey && igMap.has(ikey)) ? igMap.get(ikey) : -1;
+          if (hit<0){ out.push(f); return; }
+          if (/replace/i.test(choice)){ out[hit] = f; return; }
+          if (/merge/i.test(choice)){
+            const dst = out[hit];
+            Object.keys(f).forEach(k=>{ if(!dst[k] && f[k]) dst[k]=f[k]; });
+          }
+          // skip => do nothing
+        });
+
+        saveAllFriends(out); RAW = out.slice(); applyFilters();
+      }catch(err){ alert('Invalid JSON.'); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }, true);
+
+  // ---------- hydrate snapshot from soulink.soulQuiz (non-breaking) ----------
+  (function hydrateSnapshot(){
+    const me = loadQuiz();
+    const get = (v)=> Array.isArray(v) ? v.join(', ') : (v||'—');
+    const S = (sel,val)=>{ const el=document.querySelector(sel); if(el) el.textContent = val; };
+    S('#me-name', me.name || '—');
+    S('#me-ct',   me.connectionType || me.connection || '—');
+    S('#me-ll',   (Array.isArray(me.loveLanguages) ? me.loveLanguages[0] : (me.loveLanguage || '—')));
+    S('#me-hobbies', get(me.hobbies));
+    S('#me-values',  get(me.values));
+  })();
+
+  // ---------- initial paint ----------
+  applyFilters();
+})();
