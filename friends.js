@@ -813,7 +813,8 @@ updatePreviewIcons();
     applyFilters();
   });
 
-  // ---------- enhance rendered cards (badges, chips, dataset, copy) ----------
+  // turn off copy buttons everywhere
+  const ENABLE_COPY_BUTTONS = false;
   function enhanceCards(list){
     const cards = $$('#friends-list .friend');
     cards.forEach((card, i)=>{
@@ -872,20 +873,40 @@ updatePreviewIcons();
         row.replaceWith(box);
       });
 
-      // copy helpers next to email/handle inside Contact row (if present anchors)
-      Array.from(card.querySelectorAll('.friend-body a[href^="mailto:"], .friend-body a[href*="instagram.com/"]')).forEach(a=>{
-        if (a.nextElementSibling?.classList?.contains('copy-btn')) return;
-        const btn = document.createElement('button');
-        btn.type='button'; btn.className='copy-btn'; btn.innerHTML='<i class="bi bi-clipboard"></i> Copy';
-        btn.setAttribute('aria-label','Copy contact');
-        btn.onclick = async ()=>{
-          const val = a.href.startsWith('mailto:') ? a.href.replace(/^mailto:/,'') : a.href.replace(/^https?:\/\/(www\.)?instagram\.com\//,'').replace(/\/.*$/,'');
-          try{ await navigator.clipboard.writeText(val); btn.innerHTML='<i class="bi bi-check2"></i> Copied'; setTimeout(()=>btn.innerHTML='<i class="bi bi-clipboard"></i> Copy',1200);}catch{}
-        };
-        a.after(btn);
-      });
-    });
-  }
+      /* copy helpers next to email/handle inside Contact row (if present anchors) */
+if (!ENABLE_COPY_BUTTONS) {
+  $$('.copy-btn', card).forEach(b => b.remove());
+} else {
+  const anchors = card.querySelectorAll(
+    '.friend-body a[href^="mailto:"], .friend-body a[href*="instagram.com/"]'
+  );
+  anchors.forEach(a => {
+    if (a.nextElementSibling?.classList?.contains('copy-btn')) return;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy-btn';
+    btn.textContent = 'Copy';
+    btn.setAttribute('aria-label', 'Copy contact');
+
+    btn.onclick = async () => {
+      const val = a.href.startsWith('mailto:')
+        ? a.href.replace('mailto:', '')
+        : a.href;
+      try {
+        await navigator.clipboard.writeText(val);
+        const old = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => (btn.textContent = old), 1200);
+      } catch {}
+    };
+
+    a.after(btn);
+  });
+} // <— čia baigiasi copy helperio if/else
+}); // <— čia baigiasi cards.forEach
+}   // <— čia baigiasi function enhanceCards(list)
+
 
   // ---------- Remove with Undo (capture; cancels old immediate delete) ----------
   const TOASTS = (()=>{ const c=document.createElement('div'); c.id='friendsToasts'; document.body.appendChild(c); return c; })();
@@ -938,14 +959,18 @@ updatePreviewIcons();
 
   // ---------- Add form: validation / normalization / dedupe (capture) ----------
   const form = document.getElementById('add-form');
-  function emailOk(v){ return /^\S+@\S+\.\S+$/.test(v||''); }
-  function phoneDigits(v){ return (v||'').replace(/[^\d+]/g,''); }
-  function igHandle(v){
-    if (!v) return '';
-    const m = v.match(/^https?:\/\/(www\.)?instagram\.com\/([^/?#]+)\/?/i);
-    if (m) return m[2];
-    return v.replace(/^@/,'');
-  }
+  function emailOk(v){
+  v = (v ?? '').trim();
+  return !v || v.includes('@'); // tuščia leidžiama, arba privalo turėti @
+}
+const cleanPhone = v => (v || '').replace(/[^\d+\- ]/g, ''); // leidžiam +, skaičius, tarpą, minusą
+function igHandle(v){
+  v = (v || '').trim();
+  const m = v.match(/^https?:\/\/(www\.)?instagram\.com\/([^/?#]+)\/?/i);
+  if (m) return m[2];
+  return v.replace(/^@/, '');
+}
+
   function mergeInto(dst, src){
     const copy = (k)=>{ if (!dst[k] && src[k]) dst[k]=src[k]; };
     ['photo','ct','ll','hobbies','values','contact','notes','whatsapp','instagram','facebook','email'].forEach(k=>{
@@ -1220,9 +1245,12 @@ updatePreviewIcons();
     const wa    = f.querySelector('#f-whatsapp');
     const insta = f.querySelector('#f-instagram');
 
-    if (email && !emailOk(email.value)){ e.preventDefault(); alert('Please enter a valid email (must contain @).'); email.focus(); return; }
-    if (wa){ wa.value = cleanPhone(wa.value); }
-    if (insta){ insta.value = igHandle(insta.value); }
+    if (email && !emailOk(email.value)) {
+  e.preventDefault();
+  alert('Please enter a valid email (must contain @).');
+  return;
+}
+
 
     // clear fields after your original handler runs
     setTimeout(()=>{ try{ f.reset(); }catch{} }, 0);
