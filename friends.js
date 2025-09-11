@@ -1256,3 +1256,175 @@ function igHandle(v){
     setTimeout(()=>{ try{ f.reset(); }catch{} }, 0);
   }, true);
 })();
+/* =========================================================
+   Soulink · Friends — tiny polish (non-breaking)
+   - Navbar order + active
+   - Snapshot hydrate from localStorage.soulQuiz (with fallback)
+   - Clear All fixes (form reset)
+   - Ensure freshly added friend shows immediately
+   - Values/Hobbies: dedupe + chips + "+N more"
+   - Keep filters/sort working (calls existing render/applyFilters if present)
+   - Next → Results link fix
+   ========================================================= */
+(() => {
+  const $  = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+  /* ---------- Navbar: order + glow (like other pages) ---------- */
+  (function fixNav(){
+    const ul = $('#navMenu') || $('.nav-links');
+    if(!ul) return;
+    const desired = [
+      'Home','Quiz','Edit Profile','My Soul','Soul Chart','Soul Coach',
+      'Match','Friends','Results','Log In','Sign Up','Log Out'
+    ];
+    const items = Array.from(ul.querySelectorAll('li, a')).map(n => n.tagName==='A' ? n.parentElement : n).filter(Boolean);
+    const byLabel = new Map();
+    items.forEach(li => {
+      const a = li.querySelector('a'); if(!a) return;
+      const label = (a.textContent||'').trim();
+      if(!byLabel.has(label)) byLabel.set(label, li); else li.remove(); // remove dup separators/cards
+    });
+    desired.forEach(label => { const li = byLabel.get(label); if(li) ul.appendChild(li); });
+    // active
+    ul.querySelectorAll('a').forEach(a => {
+      const isHere = /friends\.html$/i.test(a.getAttribute('href')||'');
+      a.classList.toggle('active', isHere);
+      if (isHere) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
+    });
+  })();
+
+  /* ---------- Snapshot hydrate (Name/Connection/LL/Hobbies/Values) ---------- */
+  (function snapshot(){
+    function readQuiz(){
+      try{
+        return JSON.parse(localStorage.getItem('soulink.soulQuiz')) ||
+               JSON.parse(localStorage.getItem('soulQuiz')) || {};
+      }catch{ return {}; }
+    }
+    const toList = v => Array.isArray(v) ? v
+      : (typeof v === 'string' ? v.split(/[,\n]/).map(s=>s.trim()).filter(Boolean) : []);
+    const uniq = arr => { const s=new Set(); return arr.filter(x=>{ const k=(x||'').toLowerCase(); if(s.has(k))return false; s.add(k); return true; }); };
+
+    function setText(sel,val){ const el=$(sel); if(!el) return; el.textContent=(val && String(val).trim()) ? String(val) : '–'; }
+    function chips(sel, arr){
+      const box=$(sel); if(!box) return;
+      box.innerHTML='';
+      const list = uniq(toList(arr));
+      if(!list.length){ box.textContent='–'; return; }
+      list.forEach(t=>{ const c=document.createElement('span'); c.className='chip'; c.textContent=t; box.appendChild(c); });
+    }
+
+    function hydrate(){
+      const q = readQuiz();
+      setText('#me-name', q.name);
+      setText('#me-ct', q.connection || q.connectionType);
+      setText('#me-ll', (Array.isArray(q.loveLanguages) && q.loveLanguages[0]) || q.loveLanguage || '–');
+      chips('#me-hobbies', q.hobbies);
+      chips('#me-values',  q.values);
+    }
+    document.addEventListener('DOMContentLoaded', hydrate);
+    window.addEventListener('soulink:updateSnapshot', hydrate);
+  })();
+
+  /* ---------- Clear All: tikras form reset (nekeičiant markup) ---------- */
+  (function clearAllFix(){
+    const btn = $('#clearAll') || $$('button').find(b => /^clear all$/i.test(b.textContent||''));
+    if(!btn) return;
+    btn.addEventListener('click', () => {
+      const scope = btn.closest('.card') || document;
+      $$('input,select,textarea', scope).forEach(el=>{
+        if(el.type==='checkbox'||el.type==='radio') el.checked=false;
+        else el.value='';
+      });
+    });
+  })();
+
+  /* ---------- Make new friend appear immediately after Add ---------- */
+  (function showAfterAdd(){
+    // Find the "Add" button next to the form.
+    const addBtn = $('#addFriendBtn') || $$('button').find(b => /^\s*add\s*$/i.test(b.textContent||''));
+    if(!addBtn) return;
+    addBtn.addEventListener('click', () => {
+      // Give the page's own "add" handler a tick to write to storage, then re-render.
+      setTimeout(() => {
+        try {
+          if (typeof window.applyFilters === 'function') { window.applyFilters(); }
+          else if (typeof window.render === 'function')   { window.render(); }
+          // call any enhancers you have (chips, +N more, etc.)
+          document.dispatchEvent(new CustomEvent('friends:enhance'));
+        } catch {}
+      }, 30);
+    });
+  })();
+
+  /* ---------- Cards: dedupe Values/Hobbies + compact chips with +N ---------- */
+  (function enhanceCards(){
+    const uniq = arr => { const s=new Set(); return arr.filter(x=>{ const k=(x||'').toLowerCase(); if(s.has(k))return false; s.add(k); return true; }); };
+    const tokensFrom = (row, key) => {
+      // Try chips first
+      const chips = $$('.chip', row).map(x=> (x.textContent||'').trim()).filter(Boolean);
+      if (chips.length) return chips;
+      // Fallback: text after "Values:" or "Hobbies:"
+      const t = (row.textContent||'').split(':').slice(1).join(':');
+      return t.split(/[,\u00B7|/]+/).map(s=>s.trim()).filter(Boolean);
+    };
+    function buildLine(label, items){
+      const wrap=document.createElement('div');
+      wrap.className='chips';
+      const b=document.createElement('b'); b.textContent=label+': '; wrap.appendChild(b);
+      const box=document.createElement('span'); box.className='collapsible'; wrap.appendChild(box);
+      const list = uniq(items);
+      list.forEach((t,i)=>{ const c=document.createElement('span'); c.className='chip'; c.textContent=t; if(i>=3) c.dataset.more='1'; box.appendChild(c); });
+      if(list.length>3){
+        const more=document.createElement('span'); more.className='more-toggle'; more.tabIndex=0; let open=false;
+        const paint=()=>{ $$('.chip[data-more]',box).forEach(el=> el.style.display=open?'inline-flex':'none'); more.textContent=open?'Show less':`+${list.length-3} more`; };
+        more.onclick=()=>{ open=!open; paint(); };
+        more.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); more.click(); } };
+        wrap.appendChild(more); paint();
+      }
+      return wrap;
+    }
+    function normalizeCard(card){
+      const area = card.querySelector('.friend-body') || card;
+      if(!area) return;
+
+      // Score pin
+      const sc = card.querySelector('.score');
+      if (sc){ sc.style.position='absolute'; sc.style.top='8px'; sc.style.right='8px'; }
+
+      // Merge/compact "Values:" rows
+      const rows = Array.from(area.children);
+      const valRows = rows.filter(el => /^values\s*:/i.test((el.textContent||'').trim()));
+      if (valRows.length){
+        const list = valRows.flatMap(r=>tokensFrom(r,'values'));
+        const line = buildLine('Values', list);
+        valRows[0].replaceWith(line);
+        valRows.slice(1).forEach(el=>el.remove());
+      }
+      // Merge/compact "Hobbies:" rows
+      const hobRows = rows.filter(el => /^hobbies\s*:/i.test((el.textContent||'').trim()));
+      if (hobRows.length){
+        const list = hobRows.flatMap(r=>tokensFrom(r,'hobbies'));
+        const line = buildLine('Hobbies', list);
+        hobRows[0].replaceWith(line);
+        hobRows.slice(1).forEach(el=>el.remove());
+      }
+    }
+    function run(){ $$('#friends-list .friend').forEach(normalizeCard); }
+    if (document.readyState !== 'loading') run(); else document.addEventListener('DOMContentLoaded', run);
+    document.addEventListener('friends:enhance', run);
+    // if your render() exists, patch once so enhancement runs after it
+    if (typeof window.render === 'function' && !window.__friendsEnhPatched){
+      const r = window.render; window.render = function(...a){ const out = r.apply(this,a); try{ run(); }catch{} return out; };
+      window.__friendsEnhPatched = true;
+    }
+  })();
+
+  /* ---------- Fix footer Next → Results ---------- */
+  (function fixNext(){
+    const next = $$('a,button').find(el => /next/i.test(el.textContent||''));
+    if(next && next.tagName==='A') next.setAttribute('href','results.html');
+  })();
+})();
+
