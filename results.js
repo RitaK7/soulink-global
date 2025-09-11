@@ -25,21 +25,27 @@ function readFirst(keys){
 const digits = s => (s||'').toString().replace(/\D+/g,'');
 
 function normaliseFriend(raw){
-  const f = raw || {};
-  // tolerate different property names used around the app
-  const ct = (f.connection || f.ct || '').toLowerCase();           // friendship|romantic|both
-  const ll = (f.loveLanguage || f.ll || 'unknown').toLowerCase();   // acts|gifts|quality_time|physical_touch|words|unknown
-  const hobbies = normList(f.hobbies);
-  const values  = normList(f.values);
+  const r = raw || {};
+  const name = r.name || r.fullName || '';
+  const ct   = (r.connection || r.ct || 'both').toLowerCase(); // friendship|romantic|both
+  let ll     = (r.loveLanguage || r.ll || r.love_language || 'unknown')
+                .toString().toLowerCase().replace(/\s+/g,'_');  // acts|gifts|quality_time|...
 
- return {
-    name:  m.name || '',
-    ct:    (m.connectionType || m.connection || '').toLowerCase(),
-    ll:    (primary || '').toLowerCase(),
-    hobbies: Array.isArray(m.hobbies) ? m.hobbies : [],
-    values:  Array.isArray(m.values)  ? m.values  : [],
-    photo: m.profilePhoto1 || '',
-    email: m.email || ''
+  const hobbies = normList(r.hobbies); // į lower-case sąrašą
+  const values  = normList(r.values);
+
+  return {
+    name,
+    ct,
+    ll,
+    hobbies,
+    values,
+    photo:     r.photo || r.avatar || r.image || '',
+    whatsapp:  r.whatsapp || r.phone || '',
+    instagram: r.instagramHandle || r.instagram || '',
+    facebook:  r.facebook || '',
+    email:     r.email || (r.contacts && r.contacts.email) || '',
+    contact:   r.contact || ''
   };
 }
 
@@ -75,6 +81,20 @@ function normaliseFriend(raw){
     }
     return items.length ? `<div class="social-icons">${items.join('')}</div>` : '';
   }
+  // global filters for Shared Hobbies / Values chips
+const STATE = { filterH: new Set(), filterV: new Set() };
+
+function matchesFilters(f){
+  if (STATE.filterH.size){
+    const hasAllH = [...STATE.filterH].every(t => f.hobbies.includes(t));
+    if (!hasAllH) return false;
+  }
+  if (STATE.filterV.size){
+    const hasAllV = [...STATE.filterV].every(t => f.values.includes(t));
+    if (!hasAllV) return false;
+  }
+  return true;
+}
 
   // =============== data ===============
  function me(){
@@ -257,20 +277,22 @@ const matchesFilters = f => {
     return document.querySelector('#feedbackForm') || null;
   }
 
-  function fillFeedbackContext({avg, top3, topH, topV}){
-    const w = parseFloat($('#llWeight')?.value || '1') || 1;
-    $('#fbWeight')?.setAttribute('value', w.toFixed(1));
-    $('#fbAvg')?.setAttribute('value', avg ?? 0);
-    $('#fbTop3')?.setAttribute('value', (top3||[]).join(', '));
-    $('#fbH')?.setAttribute('value', (topH||[]).join(', '));
-    $('#fbV')?.setAttribute('value', (topV||[]).join(', '));
-    $('#fbTs')?.setAttribute('value', new Date().toISOString());
+function fillFeedbackContext({avg, top3, topH, topV}){
+  const w = parseFloat($('#llWeight')?.value || '1') || 1;
+  $('#fbWeight')?.setAttribute('value', w.toFixed(1));
+  $('#fbAvg')?.setAttribute('value', avg ?? 0);
+  $('#fbTop3')?.setAttribute('value', (top3||[]).join(', '));
+  $('#fbH')?.setAttribute('value', (topH||[]).join(', '));
+  $('#fbV')?.setAttribute('value', (topV||[]).join(', '));
+  $('#fbTs')?.setAttribute('value', new Date().toISOString());
 
-    try{
-      const m = READ(LS_ME) || {};
-      if (m.email && $('#fbEmail') && !$('#fbEmail').value) $('#fbEmail').value = m.email;
-    }catch{}
-  }
+  // ← naudok mūsų saugų skaitytuvą
+  try{
+    const m = readFirst(ME_KEYS) || {};
+    if (m.email && $('#fbEmail') && !$('#fbEmail').value) $('#fbEmail').value = m.email;
+  }catch{}
+}
+
 
   function setupFeedbackOnce(){
     if (setupFeedbackOnce._done) return;
@@ -336,78 +358,45 @@ const matchesFilters = f => {
 
   // =============== render ===============
   function render(){
-    const w = parseFloat($('#llWeight')?.value || '1') || 1;
-    $('#llwLabel') && ($('#llwLabel').textContent = w.toFixed(1)+'×');
+  const romF = rom.filter(({f}) => matchesFilters(f));
+  const friF = fri.filter(({f}) => matchesFilters(f));
 
-    const { rom, fri, avg, top3, topH, topV } = compute(w);
-
-    // list panes
-    const romEl = document.querySelector('#romantic');
-    const friEl = document.querySelector('#friendship');
-    const emptyEl = document.querySelector('#empty');
-    document.querySelector('#llWeight')?.addEventListener('input', render);
-
-
-    const romF = rom.filter(({f}) => matchesFilters(f));
-    const friF = fri.filter(({f}) => matchesFilters(f));
-
-    emptyEl && (emptyEl.style.display = (romF.length || friF.length) ? 'none' : 'block');
-    romEl && renderList(romEl, romF);
-    friEl && renderList(friEl, friF);
-
-
+  emptyEl && (emptyEl.style.display = (romF.length || friF.length) ? 'none' : 'block');
+  romEl && renderList(romEl, romF);
+  friEl && renderList(friEl, friF);
+ 
     // insights
-    const ins = $('#insights');
-    if (ins){
-      ins.innerHTML = `
-        <div class="card" style="padding:.8rem;">
-          <div class="section-title" style="margin:.1rem 0 .4rem;">Overview</div>
-          <div>Average score: <span class="pill">${avg}%</span></div>
-          <div>Top matches: ${
-            top3.length ? top3.map(n=>`<span class="pill" style="margin-right:.3rem;">${escapeHTML(n)}</span>`).join('') : '—'
-          }</div>
-        </div>
-        <div class="card" style="padding:.8rem;">
-          <div class="section-title" style="margin:.1rem 0 .4rem;">Shared Hobbies</div>
-          ${topH.length ? topH.map(n=>`<span class="pill" style="margin-right:.3rem;">${escapeHTML(n)}</span>`).join('') : '—'}
-        </div>
-        <div class="card" style="padding:.8rem;">
-          <div class="section-title" style="margin:.1rem 0 .4rem;">Shared Values</div>
-          ${topV.length ? topV.map(n=>`<span class="pill" style="margin-right:.3rem;">${escapeHTML(n)}</span>`).join('') : '—'}
-        </div>
-      `;
-    }
-    // after we set ins.innerHTML …
-const wireChip = (sel, kind) => {
-  document.querySelectorAll(sel).forEach(chip=>{
-    chip.addEventListener('click', ()=>{
-      const val = chip.dataset.val;
-      const set = (kind==='h') ? STATE.filterH : STATE.filterV;
-      chip.classList.toggle('active');
-      if (chip.classList.contains('active')) set.add(val); else set.delete(val);
-      render(); // reapply
-    });
-  });
-};
-
+      const ins = $('#insights');
 if (ins){
   ins.innerHTML = `
     <div class="card" style="padding:.8rem;">
       <div class="section-title" style="margin:.1rem 0 .4rem;">Overview</div>
       <div>Average score: <span class="pill">${avg}%</span></div>
-      <div>Top matches: ${ top3.length ? top3.map(n=>`<span class="pill" style="margin-right:.3rem;">${escapeHTML(n)}</span>`).join('') : '—' }</div>
+      <div>Top matches: ${
+        top3.length ? top3.map(n=>`<span class="pill" style="margin-right:.3rem;">${escapeHTML(n)}</span>`).join('') : '—'
+      }</div>
     </div>
     <div class="card" style="padding:.8rem;">
       <div class="section-title" style="margin:.1rem 0 .4rem;">Shared Hobbies</div>
-      ${topH.length ? topH.map(n=>`<button class="pill" data-val="${n}" style="margin-right:.3rem;" type="button">${escapeHTML(n)}</button>`).join('') : '—'}
+      ${topH.length ? topH.map(n=>`<button class="pill" data-val="${n}" type="button" style="margin-right:.3rem;">${escapeHTML(n)}</button>`).join('') : '—'}
     </div>
     <div class="card" style="padding:.8rem;">
       <div class="section-title" style="margin:.1rem 0 .4rem;">Shared Values</div>
-      ${topV.length ? topV.map(n=>`<button class="pill" data-val="${n}" style="margin-right:.3rem;" type="button">${escapeHTML(n)}</button>`).join('') : '—'}
+      ${topV.length ? topV.map(n=>`<button class="pill" data-val="${n}" type="button" style="margin-right:.3rem;">${escapeHTML(n)}</button>`).join('') : '—'}
     </div>
   `;
-  wireChip('#insights .card:nth-child(2) .pill','h');
-  wireChip('#insights .card:nth-child(3) .pill','v');
+  const wireChip = (sel, set) => {
+    ins.querySelectorAll(sel).forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const v = btn.dataset.val;
+        btn.classList.toggle('active');
+        if (btn.classList.contains('active')) set.add(v); else set.delete(v);
+        render(); // perpiešiam su filtrais
+      });
+    });
+  };
+  wireChip('.card:nth-child(2) .pill', STATE.filterH);
+  wireChip('.card:nth-child(3) .pill', STATE.filterV);
 }
 
 
@@ -418,6 +407,7 @@ if (ins){
 
   // =============== events ===============
   $('#llWeight')?.addEventListener('input', render);
+  render();
 
   $('#btnPrint')?.addEventListener('click', () => window.print());
 
