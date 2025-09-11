@@ -4,22 +4,44 @@
   // =============== tiny helpers ===============
   const $  = sel => document.querySelector(sel);
   const $$ = sel => Array.from(document.querySelectorAll(sel));
-  const READ = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+  // ===== storage helpers (support legacy keys) =====
+const READ_JSON = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
 
-  const LS_ME = 'soulQuiz';
-  const LS_FRIENDS = 'soulFriends';
+const ME_KEYS      = ['soulink.soulQuiz', 'soulQuiz'];
+const FRIENDS_KEYS = ['soulink.friends.list', 'soulFriends'];
 
-  function escapeHTML(str=''){
-    return String(str).replace(/[&<>"']/g, ch => ({
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-    })[ch]);
+function readFirst(keys){
+  for (const k of keys){
+    const v = READ_JSON(k);
+    if (v && (Array.isArray(v) ? v.length : Object.keys(v).length)) return v;
   }
+  return Array.isArray(keys) && keys.includes('soulink.friends.list') ? [] : {};
+}
   function normList(v){
-    if (!v) return [];
-    if (Array.isArray(v)) return v.map(x=>String(x).trim().toLowerCase()).filter(Boolean);
-    return String(v).split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
-  }
-  const digits = s => (s||'').toString().replace(/\D+/g,'');
+  if (!v) return [];
+  if (Array.isArray(v)) return v.map(x=>String(x).trim().toLowerCase()).filter(Boolean);
+  return String(v).split(/[,|]/).map(s=>s.trim().toLowerCase()).filter(Boolean);
+}
+const digits = s => (s||'').toString().replace(/\D+/g,'');
+
+function normaliseFriend(raw){
+  const f = raw || {};
+  // tolerate different property names used around the app
+  const ct = (f.connection || f.ct || '').toLowerCase();           // friendship|romantic|both
+  const ll = (f.loveLanguage || f.ll || 'unknown').toLowerCase();   // acts|gifts|quality_time|physical_touch|words|unknown
+  const hobbies = normList(f.hobbies);
+  const values  = normList(f.values);
+
+ return {
+    name:  m.name || '',
+    ct:    (m.connectionType || m.connection || '').toLowerCase(),
+    ll:    (primary || '').toLowerCase(),
+    hobbies: Array.isArray(m.hobbies) ? m.hobbies : [],
+    values:  Array.isArray(m.values)  ? m.values  : [],
+    photo: m.profilePhoto1 || '',
+    email: m.email || ''
+  };
+}
 
   function avatarFor(name, photo){
     const url = (photo||'').trim();
@@ -55,18 +77,21 @@
   }
 
   // =============== data ===============
-  function me(){
-    const m = READ(LS_ME) || {};
-    // užpildom kairę "Your Snapshot" (jei yra atitinkami elementai)
-    $('#me-name')?.replaceChildren(document.createTextNode(m.name || '–'));
-    $('#me-ct')?.replaceChildren(document.createTextNode(m.connectionType || '–'));
-    $('#me-ll')?.replaceChildren(document.createTextNode(m.loveLanguage || '–'));
-    $('#me-hobbies')?.replaceChildren(document.createTextNode(
-      Array.isArray(m.hobbies) ? m.hobbies.join(', ') : (m.hobbies || '–')
-    ));
-    $('#me-values')?.replaceChildren(document.createTextNode(
-      Array.isArray(m.values) ? m.values.join(', ') : (m.values || '–')
-    ));
+ function me(){
+  const m = readFirst(ME_KEYS) || {};
+  const llArr = Array.isArray(m.loveLanguages) ? m.loveLanguages : [];
+  const primary = (m.loveLanguage || llArr[0] || '–');
+
+  // Fill Snapshot safely (dashes if missing)
+  document.querySelector('#me-name')?.replaceChildren(document.createTextNode(m.name || '–'));
+  document.querySelector('#me-ct')  ?.replaceChildren(document.createTextNode(m.connectionType || m.connection || '–'));
+  document.querySelector('#me-ll')  ?.replaceChildren(document.createTextNode(primary || '–'));
+  document.querySelector('#me-hobbies')?.replaceChildren(
+    document.createTextNode(Array.isArray(m.hobbies) ? m.hobbies.join(', ') : (m.hobbies || '–'))
+  );
+  document.querySelector('#me-values')?.replaceChildren(
+    document.createTextNode(Array.isArray(m.values) ? m.values.join(', ') : (m.values || '–'))
+  );
     return {
       name: m.name || '',
       ct: m.connectionType || '',
@@ -77,19 +102,19 @@
       email: m.email || ''
     };
   }
-  function friends(){
-    const list = READ(LS_FRIENDS);
-    return Array.isArray(list) ? list : [];
-  }
+function friends(){
+  const list = readFirst(FRIENDS_KEYS);
+  return Array.isArray(list) ? list : [];
+}
 
   // =============== scoring ===============
-  function jaccard(a,b){
-    const A = new Set(normList(a)), B = new Set(normList(b));
-    if (A.size===0 && B.size===0) return 0;
-    let inter = 0; A.forEach(v=>{ if(B.has(v)) inter++; });
-    const union = A.size + B.size - inter;
-    return union ? inter/union : 0;
-  }
+function jaccard(a,b){
+  const A = new Set(a), B = new Set(b);
+  if (!A.size && !B.size) return 0;
+  let inter = 0; A.forEach(v => { if (B.has(v)) inter++; });
+  const union = A.size + B.size - inter;
+  return union ? inter/union : 0;
+}
   function llMatch(a,b){
     if (!a || !b) return 0;
     return a.trim().toLowerCase() === b.trim().toLowerCase() ? 1 : 0;
@@ -101,50 +126,48 @@
     return desired.toLowerCase() === candidate.toLowerCase() ? 1 : 0;
   }
   function score(meObj, f, wLL=1){
-    const sLL = 25 * llMatch(meObj.ll, f.ll) * wLL;
-    const sCT = 15 * ctMatch(meObj.ct, f.ct);
-    const sH  = 30 * jaccard(meObj.hobbies, f.hobbies);
-    const sV  = 30 * jaccard(meObj.values,  f.values);
-    let total = sLL + sCT + sH + sV;
-
-    const infoPieces = (f.ll?1:0) + (normList(f.hobbies).length?1:0) + (normList(f.values).length?1:0);
-    if (infoPieces <= 1) total *= 0.8;
-
-    return Math.max(0, Math.min(100, Math.round(total)));
-  }
+  // spec: Final = (hobbies + values + w*LL) / (2 + w)
+  const STATE = { filterH: new Set(), filterV: new Set() };
+const matchesFilters = f => {
+  if (STATE.filterH.size && ![...STATE.filterH].every(t => f.hobbies.includes(t))) return false;
+  if (STATE.filterV.size && ![...STATE.filterV].every(t => f.values.includes(t)))  return false;
+  return true;
+};
+  const sH = 100 * jaccard(normList(meObj.hobbies), f.hobbies);
+  const sV = 100 * jaccard(normList(meObj.values),  f.values);
+  const sL = (meObj.ll && f.ll) ? (meObj.ll === f.ll ? 100 : 0) : 0;
+  const total = (sH + sV + wLL*sL) / (2 + wLL);
+  return Math.round(Math.max(0, Math.min(100, total)));
+}
 
   // =============== compute ===============
   function compute(weightLL=1){
-    const M = me();
-    const list = friends();
-    const rows = list.map(f => ({ f, s: score(M, f, weightLL) }));
+  const M = me();
+  const list = friends().map(normaliseFriend);
 
-    const rom = rows
-      .filter(({f}) => f.ct === 'Romantic' || f.ct === 'Both')
-      .sort((a,b)=> b.s - a.s || String(a.f.name||'').localeCompare(b.f.name||'') )
-      .slice(0,6);
+  const rows = list.map(f => ({ f, s: score(M, f, weightLL) }));
+  // filter buckets
+  const rom = rows.filter(({f}) => f.ct === 'romantic'   || f.ct === 'both')
+                  .sort((a,b)=> b.s - a.s || a.f.name.localeCompare(b.f.name));
+  const fri = rows.filter(({f}) => f.ct === 'friendship' || f.ct === 'both')
+                  .sort((a,b)=> b.s - a.s || a.f.name.localeCompare(b.f.name));
 
-    const fri = rows
-      .filter(({f}) => f.ct === 'Friendship' || f.ct === 'Both')
-      .sort((a,b)=> b.s - a.s || String(a.f.name||'').localeCompare(b.f.name||'') )
-      .slice(0,6);
+  const avg = rows.length ? Math.round(rows.reduce((t,r)=>t+r.s,0)/rows.length) : 0;
+  const top3 = rows.slice().sort((a,b)=>b.s-a.s).slice(0,3).map(x=>x.f.name).filter(Boolean);
 
-    const avg = rows.length ? Math.round(rows.reduce((t,r)=>t+r.s,0)/rows.length) : 0;
-    const top3 = rows.slice().sort((a,b)=>b.s-a.s).slice(0,3).map(x=>x.f.name).filter(Boolean);
+  // shared with me
+  const myH = new Set(normList(M.hobbies));
+  const myV = new Set(normList(M.values));
+  const countsH = {}, countsV = {};
+  rows.forEach(({f})=>{
+    f.hobbies.forEach(h=>{ if (myH.has(h)) countsH[h]=(countsH[h]||0)+1; });
+    f.values .forEach(v=>{ if (myV.has(v)) countsV[v]=(countsV[v]||0)+1; });
+  });
+  const topH = Object.entries(countsH).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k);
+  const topV = Object.entries(countsV).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k);
 
-    // shared with me
-    const myH = new Set(normList(M.hobbies));
-    const myV = new Set(normList(M.values));
-    const countsH = {}, countsV = {};
-    rows.forEach(({f})=>{
-      normList(f.hobbies).forEach(h=>{ if (myH.has(h)) countsH[h]=(countsH[h]||0)+1; });
-      normList(f.values).forEach(v=>{ if (myV.has(v)) countsV[v]=(countsV[v]||0)+1; });
-    });
-    const topH = Object.entries(countsH).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k);
-    const topV = Object.entries(countsV).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k);
-
-    return { rom, fri, avg, top3, topH, topV, me: M };
-  }
+  return { rom, fri, avg, top3, topH, topV, me: M };
+}
 
   // =============== UI for cards & links ===============
   function messageLinkHTML(f){
@@ -279,7 +302,7 @@
 
       const params = {
         user_email: (form.querySelector('#fbEmail')?.value || '').trim(),
-        page: 'result.html',
+        page: 'results.html',
         rating,
         feedback: (txt?.value || '').trim(),
         weightLL: $('#fbWeight')?.value || '',
@@ -296,7 +319,7 @@
         emailjs
           .send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params, EMAILJS_PUBLIC)
           .then(()=>{
-            if (status) status.textContent = '✓ Sent. Ačiū!';
+            if (status) status.textContent = '✓ Sent. Thank you!';
             form.reset();
             radios.forEach(r=>r.checked=false); radios[4].checked=true; highlight(5); upd();
           })
@@ -319,11 +342,19 @@
     const { rom, fri, avg, top3, topH, topV } = compute(w);
 
     // list panes
-    const romEl = $('#romantic'), friEl = $('#friendship'), emptyEl = $('#empty');
-    const hasAny = rom.length || fri.length;
-    if (emptyEl) emptyEl.style.display = hasAny ? 'none' : 'block';
-    if (romEl) renderList(romEl, rom);
-    if (friEl) renderList(friEl, fri);
+    const romEl = document.querySelector('#romantic');
+    const friEl = document.querySelector('#friendship');
+    const emptyEl = document.querySelector('#empty');
+    document.querySelector('#llWeight')?.addEventListener('input', render);
+
+
+    const romF = rom.filter(({f}) => matchesFilters(f));
+    const friF = fri.filter(({f}) => matchesFilters(f));
+
+    emptyEl && (emptyEl.style.display = (romF.length || friF.length) ? 'none' : 'block');
+    romEl && renderList(romEl, romF);
+    friEl && renderList(friEl, friF);
+
 
     // insights
     const ins = $('#insights');
@@ -346,6 +377,39 @@
         </div>
       `;
     }
+    // after we set ins.innerHTML …
+const wireChip = (sel, kind) => {
+  document.querySelectorAll(sel).forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const val = chip.dataset.val;
+      const set = (kind==='h') ? STATE.filterH : STATE.filterV;
+      chip.classList.toggle('active');
+      if (chip.classList.contains('active')) set.add(val); else set.delete(val);
+      render(); // reapply
+    });
+  });
+};
+
+if (ins){
+  ins.innerHTML = `
+    <div class="card" style="padding:.8rem;">
+      <div class="section-title" style="margin:.1rem 0 .4rem;">Overview</div>
+      <div>Average score: <span class="pill">${avg}%</span></div>
+      <div>Top matches: ${ top3.length ? top3.map(n=>`<span class="pill" style="margin-right:.3rem;">${escapeHTML(n)}</span>`).join('') : '—' }</div>
+    </div>
+    <div class="card" style="padding:.8rem;">
+      <div class="section-title" style="margin:.1rem 0 .4rem;">Shared Hobbies</div>
+      ${topH.length ? topH.map(n=>`<button class="pill" data-val="${n}" style="margin-right:.3rem;" type="button">${escapeHTML(n)}</button>`).join('') : '—'}
+    </div>
+    <div class="card" style="padding:.8rem;">
+      <div class="section-title" style="margin:.1rem 0 .4rem;">Shared Values</div>
+      ${topV.length ? topV.map(n=>`<button class="pill" data-val="${n}" style="margin-right:.3rem;" type="button">${escapeHTML(n)}</button>`).join('') : '—'}
+    </div>
+  `;
+  wireChip('#insights .card:nth-child(2) .pill','h');
+  wireChip('#insights .card:nth-child(3) .pill','v');
+}
+
 
     // feedback context + one-time setup
     fillFeedbackContext({avg, top3, topH, topV});

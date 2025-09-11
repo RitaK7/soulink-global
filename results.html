@@ -6,6 +6,8 @@
   <title>Soulink – Results</title>
   <!-- auth guard: turi būti prieš kitus skriptus -->
   <script src="auth.js"></script>
+  <script src="nav.js?v=3" defer></script>
+
 
   <!-- Icons -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -97,6 +99,11 @@
   .insights-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.8rem; }
   @media (max-width:900px){ .insights-grid{ grid-template-columns:1fr; } }
   .pill{ display:inline-block; padding:.3rem .6rem; border-radius:999px; border:1px solid var(--stroke); background:rgba(0,253,216,.08); }
+  #insights .pill.active{
+  box-shadow:0 0 0 2px var(--stroke), 0 0 16px rgba(0,253,216,.25);
+  background:rgba(0,253,216,.12);
+}
+
   /* Feedback stars */
   /* Feedback stars (geltonos) */
 /* Feedback stars */
@@ -144,21 +151,14 @@
 </head>
 <body>
   <!-- Navbar -->
-  <nav class="navbar">
-    <div class="container container-flex">
-      <a href="index.html" class="brand">Soulink</a>
-      <ul style="list-style:none; display:flex; gap:.6rem; margin:0; padding:0; flex-wrap:wrap;">
-        <li><a href="quiz.html">Quiz</a></li>
-        <li><a href="edit-profile.html">Edit Profile</a></li>
-        <li><a href="my-soul.html">My Soul</a></li>
-        <li><a href="soul-chart.html">Soul Chart</a></li>
-        <li><a href="soul-coach.html">Soul Coach</a></li>
-        <li><a href="friends.html">Friends</a></li>
-        <li><a href="match.html">Match</a></li>
-        <li><a href="result.html">Results</a></li>
-      </ul>
-    </div>
-  </nav>
+<nav class="navbar">
+  <div class="container container-flex">
+    <a href="index.html" class="brand">Soulink</a>
+    <button id="navToggle" aria-label="Toggle navigation" style="display:none"></button>
+    <ul id="navMenu" class="nav-links" style="list-style:none; display:flex; gap:.6rem; margin:0; padding:0; flex-wrap:wrap;"></ul>
+  </div>
+</nav>
+
 
   <section class="card" id="feedback-card" style="margin-top:1rem;">
   <h3 class="section-title">Feedback</h3>
@@ -247,24 +247,27 @@
 
         <div class="insights-grid" id="insights"></div>
 
-        <h4 class="section-title" style="margin-top:1rem;">Romantic</h4>
+        <h4 class="section-title" id="romHdr" style="margin-top:1rem;">Romantic</h4>
         <div id="romantic" class="results-grid"></div>
 
-        <h4 class="section-title" style="margin-top:1rem;">Friendship</h4>
+        <h4 class="section-title" id="friHdr" style="margin-top:1rem;">Friendship</h4>
         <div id="friendship" class="results-grid"></div>
+ 
 
         <p id="empty" class="hint" style="display:none; margin-top:.6rem;">No friends yet. Add some on the Friends page.</p>
       </section>
       </div> <!-- ← uždarom .grid -->
   </main>
 
-  <footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
-    © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
-  </footer>
+  <footer>
+      <span>© 2025 Soulink.global | Created with love by Soulink Team</span>
+    </footer>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 <script>try{ emailjs.init("SV7ptjuNI88paiVbz"); }catch(e){}</script>
-<script src="result.js?v=15"></script>
+<script src="results.js?v=16"></script>
+
 
 </body>
 </html>
