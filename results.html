@@ -6,9 +6,7 @@
   <title>Soulink – Results</title>
   <!-- auth guard: turi būti prieš kitus skriptus -->
   <script src="auth.js"></script>
-  <script src="nav.js?v=3" defer></script>
-
-
+  
   <!-- Icons -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -181,6 +179,11 @@
 
 </head>
 <body>
+  <style>
+  /* Hide any legacy nav leftovers if nav.js still runs */
+  .navbar, #navMenu { display:none !important; }
+</style>
+
   <header class="soulink-nav" role="banner">
   <div class="nav-inner">
     <a class="brand" href="index.html">Soulink</a>

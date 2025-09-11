@@ -1,4 +1,20 @@
 (() => {
+  // ---- storage helpers (place at top of results.js) ----
+function readJSON(keys, fallback){
+  if (!Array.isArray(keys)) keys = [keys];
+  for (const k of keys){
+    try {
+      const v = JSON.parse(localStorage.getItem(k));
+      if (v) return v;
+    } catch {}
+  }
+  return fallback;
+}
+
+// Accept both legacy and new keys
+const QUIZ    = readJSON(['soulink.soulQuiz','soulQuiz'], {});
+const FRIENDS = readJSON(['soulink.friends.list','soulink.friends','soulFriends'], []);
+
   'use strict';
 
   // =============== tiny helpers ===============
@@ -126,6 +142,8 @@ function friends(){
   const list = readFirst(FRIENDS_KEYS);
   return Array.isArray(list) ? list : [];
 }
+el('#me-ll').textContent = (primaryLoveLanguage || '—');
+
 
   // =============== scoring ===============
 function jaccard(a,b){
@@ -430,6 +448,10 @@ if (ins){
   });
 
   // =============== init ===============
+  // example usage inside your init:
+hydrateSnapshot(QUIZ);     // fills name/connection/love language/hobbies/values
+renderAll(FRIENDS);        // whatever function populates the lists
+
   render();
 
 })();
