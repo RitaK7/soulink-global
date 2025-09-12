@@ -1,457 +1,436 @@
+// results.js — Soulink Results (robust, legacy-safe, no layout changes)
 (() => {
-  // ---- storage helpers (place at top of results.js) ----
-function readJSON(keys, fallback){
-  if (!Array.isArray(keys)) keys = [keys];
-  for (const k of keys){
-    try {
-      const v = JSON.parse(localStorage.getItem(k));
-      if (v) return v;
-    } catch {}
+  // ========== tiny helpers ==========
+  const $  = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s, r));
+
+  function readJSON(keys, fallback) {
+    const list = Array.isArray(keys) ? keys : [keys];
+    for (const k of list) {
+      try {
+        const v = JSON.parse(localStorage.getItem(k));
+        if (v) return v;
+      } catch {}
+    }
+    return fallback;
   }
-  return fallback;
-}
-
-// Accept both legacy and new keys
-const QUIZ    = readJSON(['soulink.soulQuiz','soulQuiz'], {});
-const FRIENDS = readJSON(['soulink.friends.list','soulink.friends','soulFriends'], []);
-
-  'use strict';
-
-  // =============== tiny helpers ===============
-  const $  = sel => document.querySelector(sel);
-  const $$ = sel => Array.from(document.querySelectorAll(sel));
-  // ===== storage helpers (support legacy keys) =====
-const READ_JSON = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
-
-const ME_KEYS      = ['soulink.soulQuiz', 'soulQuiz'];
-const FRIENDS_KEYS = ['soulink.friends.list', 'soulFriends'];
-
-function readFirst(keys){
-  for (const k of keys){
-    const v = READ_JSON(k);
-    if (v && (Array.isArray(v) ? v.length : Object.keys(v).length)) return v;
+  const escapeHTML = (s) => String(s ?? '').replace(/[&<>"']/g, m =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const digits = (s) => String(s||'').replace(/[^\d+]+/g, '');
+  function normList(src) {
+    if (!src) return [];
+    if (Array.isArray(src)) return [...new Set(src.map(x => String(x).toLowerCase().trim()).filter(Boolean))];
+    return [...new Set(String(src).toLowerCase()
+      .split(/[,|/;]+|\s{2,}|\s(?=\S{3,})/) // commas, pipes, slashes, multi-spaces
+      .map(t => t.trim())
+      .filter(Boolean))];
   }
-  return Array.isArray(keys) && keys.includes('soulink.friends.list') ? [] : {};
-}
-  function normList(v){
-  if (!v) return [];
-  if (Array.isArray(v)) return v.map(x=>String(x).trim().toLowerCase()).filter(Boolean);
-  return String(v).split(/[,|]/).map(s=>s.trim().toLowerCase()).filter(Boolean);
-}
-const digits = s => (s||'').toString().replace(/\D+/g,'');
 
-function normaliseFriend(raw){
-  const r = raw || {};
-  const name = r.name || r.fullName || '';
-  const ct   = (r.connection || r.ct || 'both').toLowerCase(); // friendship|romantic|both
-  let ll     = (r.loveLanguage || r.ll || r.love_language || 'unknown')
-                .toString().toLowerCase().replace(/\s+/g,'_');  // acts|gifts|quality_time|...
-
-  const hobbies = normList(r.hobbies); // į lower-case sąrašą
-  const values  = normList(r.values);
-
-  return {
-    name,
-    ct,
-    ll,
-    hobbies,
-    values,
-    photo:     r.photo || r.avatar || r.image || '',
-    whatsapp:  r.whatsapp || r.phone || '',
-    instagram: r.instagramHandle || r.instagram || '',
-    facebook:  r.facebook || '',
-    email:     r.email || (r.contacts && r.contacts.email) || '',
-    contact:   r.contact || ''
+  // Love language canonical ids
+  const LL_MAP = {
+    'acts of service':'acts_of_service','acts':'acts_of_service','service':'acts_of_service',
+    'receiving gifts':'receiving_gifts','gifts':'receiving_gifts','gift':'receiving_gifts',
+    'quality time':'quality_time','time':'quality_time',
+    'physical touch':'physical_touch','touch':'physical_touch',
+    'words of affirmation':'words_of_affirmation','words':'words_of_affirmation','affirmation':'words_of_affirmation',
+    'unknown':'unknown','': 'unknown'
   };
-}
+  function normLL(v){
+    if (Array.isArray(v) && v.length) v = v[0];
+    v = String(v||'').toLowerCase().trim();
+    return LL_MAP[v] || LL_MAP[(v.replace(/[-_]+/g,' '))] || 'unknown';
+  }
+  function prettyLL(id){
+    const map = {
+      acts_of_service:'Acts of Service',
+      receiving_gifts:'Receiving Gifts',
+      quality_time:'Quality Time',
+      physical_touch:'Physical Touch',
+      words_of_affirmation:'Words of Affirmation',
+      unknown:'Unknown'
+    };
+    return map[id] || 'Unknown';
+  }
 
+  // avatar: url if given, else single-initial SVG (data URI)
   function avatarFor(name, photo){
-    const url = (photo||'').trim();
-    if (/^https?:\/\//i.test(url) || url.startsWith('data:image')) return url;
-    const ch = (name||'?').trim().charAt(0).toUpperCase() || 'S';
-    const svg =
-      `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
-         <rect width="100%" height="100%" fill="#064a4a"/>
-         <text x="50%" y="58%" font-size="42" font-family="system-ui"
-               text-anchor="middle" fill="#FFD166">${ch}</text>
-       </svg>`;
+    const url = String(photo||'');
+    if (/^(data:|https?:)/i.test(url)) return url;
+    const ch = (String(name||' ').trim()[0] || '?').toUpperCase();
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      <rect width="64" height="64" rx="12" fill="#06494f"/>
+      <text x="50%" y="56%" text-anchor="middle" font-size="28" fill="#00fdd8" font-family="system-ui,Segoe UI,Arial,sans-serif">${escapeHTML(ch)}</text>
+    </svg>`;
     return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
   }
 
-  function socialIconsHTML(f){
-    const items = [];
-    if (f.whatsapp){
-      const n = digits(f.whatsapp);
-      if (n) items.push(`<a class="icon" href="https://wa.me/${n}" target="_blank" rel="noopener" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>`);
-    }
-    if (f.instagram){
-      const u = /^https?:\/\//i.test(f.instagram) ? f.instagram : `https://instagram.com/${f.instagram.replace(/^@/,'')}`;
-      items.push(`<a class="icon" href="${u}" target="_blank" rel="noopener" title="Instagram"><i class="bi bi-instagram"></i></a>`);
-    }
-    if (f.facebook){
-      const u = /^https?:\/\//i.test(f.facebook) ? f.facebook : `https://facebook.com/${f.facebook.replace(/^@/,'')}`;
-      items.push(`<a class="icon" href="${u}" target="_blank" rel="noopener" title="Facebook"><i class="bi bi-facebook"></i></a>`);
-    }
-    if (f.email && /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(f.email)){
-      items.push(`<a class="icon" href="mailto:${f.email}" title="Email"><i class="bi bi-envelope"></i></a>`);
-    }
-    return items.length ? `<div class="social-icons">${items.join('')}</div>` : '';
-  }
-  // global filters for Shared Hobbies / Values chips
-const STATE = { filterH: new Set(), filterV: new Set() };
+  // ========== storage (legacy-safe) ==========
+  const QUIZ_RAW = readJSON(['soulink.soulQuiz','soulQuiz'], {}) || {};
+  const FRIENDS_RAW = readJSON(['soulink.friends.list','soulink.friends','soulFriends'], []) || [];
 
-function matchesFilters(f){
-  if (STATE.filterH.size){
-    const hasAllH = [...STATE.filterH].every(t => f.hobbies.includes(t));
-    if (!hasAllH) return false;
+  // Build "me" from quiz
+  function buildMe(q) {
+    const ll = normLL(q.loveLanguage || q.loveLanguages || q.primaryLoveLanguage);
+    const hobbies = normList(q.hobbies);
+    const values  = normList(q.values);
+    const me = {
+      name: String(q.name || q.fullname || '').trim() || '—',
+      ct:   String(q.connection || q.connectionType || q.connect || '').toLowerCase() || 'both',
+      ll,
+      hobbies, values,
+      photo: q.photo || q.avatar || ''
+    };
+    // Snapshot fill (dashes where missing)
+    $('#me-name')    && ($('#me-name').textContent = me.name || '—');
+    $('#me-ct')      && ($('#me-ct').textContent   = me.ct || '—');
+    $('#me-ll')      && ($('#me-ll').textContent   = prettyLL(me.ll) || '—');
+    $('#me-hobbies') && ($('#me-hobbies').textContent = (me.hobbies.join(', ') || '—'));
+    $('#me-values')  && ($('#me-values').textContent  = (me.values.join(', ') || '—'));
+    return me;
   }
-  if (STATE.filterV.size){
-    const hasAllV = [...STATE.filterV].every(t => f.values.includes(t));
-    if (!hasAllV) return false;
-  }
-  return true;
-}
+  const ME = buildMe(QUIZ_RAW);
 
-  // =============== data ===============
- function me(){
-  const m = readFirst(ME_KEYS) || {};
-  const llArr = Array.isArray(m.loveLanguages) ? m.loveLanguages : [];
-  const primary = (m.loveLanguage || llArr[0] || '–');
+  // Normalize friend
+  function normaliseFriend(f) {
+    const ctRaw = (f.connection || f.ct || '').toString().toLowerCase();
+    let ct = 'both';
+    if (/rom/.test(ctRaw)) ct = 'romantic';
+    else if (/friend/.test(ctRaw)) ct = 'friendship';
+    else if (/both|any|either/.test(ctRaw)) ct = 'both';
 
-  // Fill Snapshot safely (dashes if missing)
-  document.querySelector('#me-name')?.replaceChildren(document.createTextNode(m.name || '–'));
-  document.querySelector('#me-ct')  ?.replaceChildren(document.createTextNode(m.connectionType || m.connection || '–'));
-  document.querySelector('#me-ll')  ?.replaceChildren(document.createTextNode(primary || '–'));
-  document.querySelector('#me-hobbies')?.replaceChildren(
-    document.createTextNode(Array.isArray(m.hobbies) ? m.hobbies.join(', ') : (m.hobbies || '–'))
-  );
-  document.querySelector('#me-values')?.replaceChildren(
-    document.createTextNode(Array.isArray(m.values) ? m.values.join(', ') : (m.values || '–'))
-  );
+    const ll = normLL(f.loveLanguage || f.love_language || f.ll || f.love_language_primary);
+
+    const h = normList(f.hobbies);
+    const v = normList(f.values);
+
     return {
-      name: m.name || '',
-      ct: m.connectionType || '',
-      ll: m.loveLanguage || '',
-      hobbies: m.hobbies || [],
-      values: m.values || [],
-      photo: m.profilePhoto1 || '',
-      email: m.email || ''
+      id: String(f.id || f.key || f.email || f.instagram || f.name || Math.random().toString(36).slice(2)).toLowerCase(),
+      name: String(f.name || '—').trim(),
+      ct, ll,
+      hobbies: h, values: v,
+      score: typeof f.score === 'number' ? f.score : undefined,
+      photo: f.photo || f.avatar || '',
+      whatsapp: f.whatsapp || f.wa || '',
+      instagram: f.instagram || f.ig || '',
+      facebook: f.facebook || f.fb || '',
+      email: f.email || '',
+      contact: f.contact || f.url || f.website || '',
+      notes: f.notes || ''
     };
   }
-function friends(){
-  const list = readFirst(FRIENDS_KEYS);
-  return Array.isArray(list) ? list : [];
-}
-el('#me-ll').textContent = (primaryLoveLanguage || '—');
+  const FRIENDS = Array.isArray(FRIENDS_RAW) ? FRIENDS_RAW.map(normaliseFriend) : [];
 
-
-  // =============== scoring ===============
-function jaccard(a,b){
-  const A = new Set(a), B = new Set(b);
-  if (!A.size && !B.size) return 0;
-  let inter = 0; A.forEach(v => { if (B.has(v)) inter++; });
-  const union = A.size + B.size - inter;
-  return union ? inter/union : 0;
-}
-  function llMatch(a,b){
-    if (!a || !b) return 0;
-    return a.trim().toLowerCase() === b.trim().toLowerCase() ? 1 : 0;
+  // ========== scoring ==========
+  function jaccard(a, b){
+    const A = new Set(a||[]), B = new Set(b||[]);
+    if (!A.size && !B.size) return 0;
+    let inter = 0; for (const x of A) if (B.has(x)) inter++;
+    const uni = new Set([...A, ...B]).size || 1;
+    return inter/uni;
   }
-  function ctMatch(desired, candidate){
-    if (!desired || desired === 'Any') return 1;
-    if (!candidate) return 0;
-    if (candidate === 'Both') return 1;
-    return desired.toLowerCase() === candidate.toLowerCase() ? 1 : 0;
+  function score(me, fr, weight){
+    const hs = Math.round(jaccard(me.hobbies, fr.hobbies) * 100);
+    const vs = Math.round(jaccard(me.values,  fr.values)  * 100);
+    const ls = (me.ll && fr.ll && me.ll === fr.ll) ? 100 : 0;
+    const final = Math.round((hs + vs + weight*ls) / (2 + weight));
+    return { final, hs, vs, ls };
   }
-  function score(meObj, f, wLL=1){
-  // spec: Final = (hobbies + values + w*LL) / (2 + w)
-  const STATE = { filterH: new Set(), filterV: new Set() };
-const matchesFilters = f => {
-  if (STATE.filterH.size && ![...STATE.filterH].every(t => f.hobbies.includes(t))) return false;
-  if (STATE.filterV.size && ![...STATE.filterV].every(t => f.values.includes(t)))  return false;
-  return true;
-};
-  const sH = 100 * jaccard(normList(meObj.hobbies), f.hobbies);
-  const sV = 100 * jaccard(normList(meObj.values),  f.values);
-  const sL = (meObj.ll && f.ll) ? (meObj.ll === f.ll ? 100 : 0) : 0;
-  const total = (sH + sV + wLL*sL) / (2 + wLL);
-  return Math.round(Math.max(0, Math.min(100, total)));
-}
 
-  // =============== compute ===============
-  function compute(weightLL=1){
-  const M = me();
-  const list = friends().map(normaliseFriend);
+  // ========== state / compute / render ==========
+  const STATE = { filterH: new Set(), filterV: new Set(), weight: 1.0 };
 
-  const rows = list.map(f => ({ f, s: score(M, f, weightLL) }));
-  // filter buckets
-  const rom = rows.filter(({f}) => f.ct === 'romantic'   || f.ct === 'both')
-                  .sort((a,b)=> b.s - a.s || a.f.name.localeCompare(b.f.name));
-  const fri = rows.filter(({f}) => f.ct === 'friendship' || f.ct === 'both')
-                  .sort((a,b)=> b.s - a.s || a.f.name.localeCompare(b.f.name));
+  function passesFilters(f){
+    if (STATE.filterH.size && ![...STATE.filterH].every(t => f.hobbies.includes(t))) return false;
+    if (STATE.filterV.size && ![...STATE.filterV].every(t => f.values.includes(t)))  return false;
+    return true;
+  }
 
-  const avg = rows.length ? Math.round(rows.reduce((t,r)=>t+r.s,0)/rows.length) : 0;
-  const top3 = rows.slice().sort((a,b)=>b.s-a.s).slice(0,3).map(x=>x.f.name).filter(Boolean);
+  function compute(weight){
+    // enrich with scores
+    const enriched = FRIENDS.map(fr => {
+      const sc = score(ME, fr, weight);
+      return {...fr, ...sc};
+    });
 
-  // shared with me
-  const myH = new Set(normList(M.hobbies));
-  const myV = new Set(normList(M.values));
-  const countsH = {}, countsV = {};
-  rows.forEach(({f})=>{
-    f.hobbies.forEach(h=>{ if (myH.has(h)) countsH[h]=(countsH[h]||0)+1; });
-    f.values .forEach(v=>{ if (myV.has(v)) countsV[v]=(countsV[v]||0)+1; });
-  });
-  const topH = Object.entries(countsH).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k);
-  const topV = Object.entries(countsV).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k);
+    // split (include BOTH into both lists)
+    const romantic   = enriched.filter(f => f.ct === 'romantic'  || f.ct === 'both')
+                               .sort((a,b)=> b.final - a.final || a.name.localeCompare(b.name));
+    const friendship = enriched.filter(f => f.ct === 'friendship'|| f.ct === 'both')
+                               .sort((a,b)=> b.final - a.final || a.name.localeCompare(b.name));
 
-  return { rom, fri, avg, top3, topH, topV, me: M };
-}
+    // insights
+    const all = enriched;
+    const avg = all.length ? Math.round(all.reduce((s,x)=>s+x.final,0)/all.length) : 0;
+    const top3 = all.slice(0).sort((a,b)=> b.final - a.final || a.name.localeCompare(b.name)).slice(0,3).map(x=>x.name);
 
-  // =============== UI for cards & links ===============
-  function messageLinkHTML(f){
-    if (f.whatsapp && digits(f.whatsapp))
-      return `<a class="btn" href="https://wa.me/${digits(f.whatsapp)}" target="_blank" rel="noopener">Message</a>`;
-    if (f.instagram){
-      const u = /^https?:\/\//i.test(f.instagram) ? f.instagram : `https://instagram.com/${f.instagram.replace(/^@/,'')}`;
-      return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
+    // shared tokens (with ME) — top 3 by count
+    const hobCounts = new Map();
+    const valCounts = new Map();
+    for (const f of all){
+      for (const h of f.hobbies) if (ME.hobbies.includes(h)) hobCounts.set(h,(hobCounts.get(h)||0)+1);
+      for (const v of f.values)  if (ME.values.includes(v))  valCounts.set(v,(valCounts.get(v)||0)+1);
     }
-    if (f.facebook){
-      const u = /^https?:\/\//i.test(f.facebook) ? f.facebook : `https://facebook.com/${f.facebook.replace(/^@/,'')}`;
-      return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
+    const topH = [...hobCounts.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,3);
+    const topV = [...valCounts.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,3);
+
+    return { romantic, friendship, avg, top3, topH, topV };
+  }
+
+  function iconLinkHTML(fr){
+    // choose best "Message" target
+    if (fr.whatsapp){
+      const n = digits(fr.whatsapp);
+      return `<a class="icon" href="https://wa.me/${encodeURIComponent(n)}" target="_blank" rel="noopener" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>`;
     }
-    if (f.email && /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(f.email))
-      return `<a class="btn" href="mailto:${f.email}">Message</a>`;
-    if (f.contact){
-      const v = String(f.contact).trim();
-      if (/^https?:\/\//i.test(v)) return `<a class="btn" href="${v}" target="_blank" rel="noopener">Message</a>`;
-      if (/^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(v)) return `<a class="btn" href="mailto:${v}">Message</a>`;
-      if (/^\+?\d[\d\s-]{6,}$/.test(v)) return `<a class="btn" href="https://wa.me/${digits(v)}" target="_blank" rel="noopener">Message</a>`;
-      if (/^@?[\w.]{2,}$/i.test(v)) return `<a class="btn" href="https://instagram.com/${v.replace(/^@/,'')}" target="_blank" rel="noopener">Message</a>`;
+    if (fr.instagram){
+      const h = String(fr.instagram).replace(/^@/,'').trim();
+      return `<a class="icon" href="https://instagram.com/${encodeURIComponent(h)}" target="_blank" rel="noopener" title="Instagram"><i class="bi bi-instagram"></i></a>`;
+    }
+    if (fr.facebook){
+      const u = /^https?:/.test(fr.facebook) ? fr.facebook : `https://facebook.com/${fr.facebook}`;
+      return `<a class="icon" href="${escapeHTML(u)}" target="_blank" rel="noopener" title="Facebook"><i class="bi bi-facebook"></i></a>`;
+    }
+    if (fr.email){
+      return `<a class="icon" href="mailto:${escapeHTML(fr.email)}" title="Email"><i class="bi bi-envelope"></i></a>`;
+    }
+    if (fr.contact){
+      const u = /^https?:/.test(fr.contact) ? fr.contact : `https://${fr.contact}`;
+      return `<a class="icon" href="${escapeHTML(u)}" target="_blank" rel="noopener" title="Link"><i class="bi bi-link-45deg"></i></a>`;
     }
     return '';
   }
-  function compareLinkHTML(f){
-    const name = (f.name||'').trim();
-    return name ? `<a class="btn" href="compare.html?a=me&b=${encodeURIComponent(name)}">Compare →</a>` : '';
-  }
 
-  function renderList(el, items){
-    el.innerHTML = '';
-    items.forEach(({f,s})=>{
+  function renderList(container, items){
+    const wrap = $(container);
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    const frag = document.createDocumentFragment();
+
+    let visibleCount = 0;
+    for (const f of items){
+      if (!passesFilters(f)) continue;
+      visibleCount++;
+
       const card = document.createElement('div');
-      card.className = 'match-card';
-      const cls = s >= 75 ? 'good' : s >= 55 ? 'ok' : 'low';
-      const hobbies = normList(f.hobbies).join(', ');
-      const values  = normList(f.values).join(', ');
+      card.className = 'friend card'; // reuse existing card styles
+      card.style.transition='opacity .18s ease, transform .18s ease'; card.style.opacity='0'; card.style.transform='scale(.98)';
+
+      const scoreClass = f.final >= 75 ? 'good' : f.final >= 55 ? 'ok':'low';
+      const photo = avatarFor(f.name, f.photo);
+      const hint  = `${f.ct} · ${prettyLL(f.ll)}`;
+
       card.innerHTML = `
-        <div class="head">
-          <div class="meta">
-            <img class="avatar" src="${avatarFor(f.name, f.photo)}" alt="">
-            <div style="min-width:0;">
-              <div class="name">${escapeHTML(f.name||'—')}</div>
-              <div class="hint" style="font-size:.9rem;">
-                ${escapeHTML(f.ct||'—')} · ${escapeHTML(f.ll||'—')}
-              </div>
+        <div class="friend-head">
+          <div class="friend-meta">
+            <img class="avatar" src="${photo}" alt="" loading="lazy">
+            <div>
+              <div class="name">${escapeHTML(f.name)}</div>
+              <div class="hint" style="opacity:.8">${escapeHTML(hint)}</div>
             </div>
           </div>
-          <span class="score ${cls}" title="Compatibility">${s}%</span>
+          <div class="score ${scoreClass}">${f.final}%</div>
         </div>
-
-        ${socialIconsHTML(f)}
-
-        ${hobbies ? `<div><b>Hobbies:</b> ${escapeHTML(hobbies)}</div>` : ''}
-        ${values  ? `<div><b>Values:</b> ${escapeHTML(values)}</div>`   : ''}
-
-        <div class="row" style="margin-top:.6rem;">
-          <a class="btn" href="friends.html">Edit in Friends</a>
-          ${messageLinkHTML(f)}
-          ${compareLinkHTML(f)}
+        <div class="friend-body">
+          ${f.hobbies.length ? `<div class="row"><strong style="opacity:.9">Hobbies:</strong>&nbsp;<span>${escapeHTML(f.hobbies.slice(0,3).join(', '))}${f.hobbies.length>3?` &nbsp;<em class="muted">+${f.hobbies.length-3} more</em>`:''}</span></div>`:''}
+          ${f.values.length  ? `<div class="row"><strong style="opacity:.9">Values:</strong>&nbsp;<span>${escapeHTML(f.values.slice(0,3).join(', '))}${f.values.length>3?` &nbsp;<em class="muted">+${f.values.length-3} more</em>`:''}</span></div>`:''}
+          <div class="social-icons" style="margin:.4rem 0 .2rem">${iconLinkHTML(f)}</div>
+          <div class="row" style="gap:.5rem; flex-wrap:wrap; margin-top:.3rem">
+            <a class="btn" href="friends.html" aria-label="Edit ${escapeHTML(f.name)} in Friends">Edit in Friends</a>
+            ${iconLinkHTML(f) ? `<span class="btn" role="link" onclick="this.previousElementSibling?.querySelector('a')?.click()" aria-label="Message ${escapeHTML(f.name)}">Message</span>`:''}
+            <a class="btn" href="compare.html?b=${encodeURIComponent(f.name)}" aria-label="Compare with ${escapeHTML(f.name)}">Compare →</a>
+          </div>
         </div>
       `;
-      el.appendChild(card);
-    });
-  }
-
-  // =============== EmailJS loader (NO send here) ===============
-  // Public Key (iš tavo EmailJS paskyros): SV7ptjuNI88paiVbz
-  const EMAILJS_PUBLIC = 'SV7ptjuNI88paiVbz';
-  const EMAILJS_SERVICE = 'service_ifo7026';
-  const EMAILJS_TEMPLATE = 'template_99hg4ni';
-
-  function ensureEmailJSReady(cb){
-    if (window.emailjs && typeof window.emailjs.send === 'function'){
-      try{ emailjs.init(EMAILJS_PUBLIC); }catch(_){}
-      cb && cb(); return;
+      frag.appendChild(card);
+      requestAnimationFrame(()=>{ card.style.opacity='1'; card.style.transform='none'; });
     }
-    const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js';
-    s.onload = () => { try{ emailjs.init(EMAILJS_PUBLIC); }catch(_){}
-                      cb && cb(); };
-    document.head.appendChild(s);
+    wrap.appendChild(frag);
+    // empty state toggle
+    const empty = $('#empty');
+    if (empty) empty.style.display = visibleCount ? 'none' : '';
   }
 
-  // =============== Feedback helpers ===============
-  function pickFeedbackForm(){
-    return document.querySelector('#feedbackForm') || null;
+  function renderInsights(data){
+    const el = $('#insights');
+    if (!el) return;
+    const chip = (txt, kind, active=false) =>
+      `<button class="chip ${active?'is-active':''}" data-kind="${kind}" data-token="${escapeHTML(txt)}">${escapeHTML(txt)}</button>`;
+
+    const hChips = data.topH.map(([t,c]) => chip(`${t} (${c})`, 'h', STATE.filterH.has(t)));
+    const vChips = data.topV.map(([t,c]) => chip(`${t} (${c})`, 'v', STATE.filterV.has(t)));
+
+    el.innerHTML = `
+      <div class="card">
+        <h4 class="section-title">Overview</h4>
+        <p class="muted">Average score: <strong>${data.avg}%</strong></p>
+        <p class="muted">Top matches: ${data.top3.length? data.top3.map(escapeHTML).join(', ') : '—'}</p>
+      </div>
+      <div class="card">
+        <h4 class="section-title">Shared Hobbies</h4>
+        <div class="row">${hChips.join('') || '<span class="muted">—</span>'}</div>
+      </div>
+      <div class="card">
+        <h4 class="section-title">Shared Values</h4>
+        <div class="row">${vChips.join('') || '<span class="muted">—</span>'}</div>
+      </div>
+    `;
+
+    // toggle chips
+    el.addEventListener('click', (e)=>{
+      const b = e.target.closest('.chip'); if(!b) return;
+      const kind = b.dataset.kind, label = b.dataset.token;
+      const raw = (label || '').replace(/\s\(\d+\)$/,'').toLowerCase(); // strip "(N)"
+      if (kind==='h'){
+        STATE.filterH.has(raw) ? STATE.filterH.delete(raw) : STATE.filterH.add(raw);
+      } else if (kind==='v'){
+        STATE.filterV.has(raw) ? STATE.filterV.delete(raw) : STATE.filterV.add(raw);
+      }
+      render(); // full re-render
+    }, {once:false});
   }
 
-function fillFeedbackContext({avg, top3, topH, topV}){
-  const w = parseFloat($('#llWeight')?.value || '1') || 1;
-  $('#fbWeight')?.setAttribute('value', w.toFixed(1));
-  $('#fbAvg')?.setAttribute('value', avg ?? 0);
-  $('#fbTop3')?.setAttribute('value', (top3||[]).join(', '));
-  $('#fbH')?.setAttribute('value', (topH||[]).join(', '));
-  $('#fbV')?.setAttribute('value', (topV||[]).join(', '));
-  $('#fbTs')?.setAttribute('value', new Date().toISOString());
-
-  // ← naudok mūsų saugų skaitytuvą
-  try{
-    const m = readFirst(ME_KEYS) || {};
-    if (m.email && $('#fbEmail') && !$('#fbEmail').value) $('#fbEmail').value = m.email;
-  }catch{}
-}
-
-
-  function setupFeedbackOnce(){
-    if (setupFeedbackOnce._done) return;
-    const form = pickFeedbackForm();
-    if (!form) return;
-    setupFeedbackOnce._done = true;
-
-    const stars  = Array.from(form.querySelectorAll('#fbStars label'));
-    const radios = Array.from(form.querySelectorAll('#fbStars input[type="radio"]'));
-    const txt    = form.querySelector('#fbText');
-    const cnt    = form.querySelector('#fbCount');
-    const btn    = form.querySelector('#fbSend');
-    const status = form.querySelector('#fbStatus');
-
-    // stars UI
-    const highlight = v => stars.forEach((lab,i)=>lab.classList.toggle('active', i < v));
-    stars.forEach((lab,i)=> lab.addEventListener('click', ()=>{ radios[i].checked = true; highlight(i+1); }));
-    if (!radios.some(r=>r.checked)) { radios[4].checked = true; highlight(5); }
-
-    // counter
-    const upd = ()=>{ if (cnt && txt) cnt.textContent = String(txt.value.length); };
-    txt?.addEventListener('input', upd); upd();
-
-    // submit
-    form.addEventListener('submit', (e)=>{
-      e.preventDefault();
-      const rating = (form.querySelector('input[name="rating"]:checked')||{}).value || '';
-      if (!rating){ alert('Please select a rating.'); return; }
-
-      const params = {
-        user_email: (form.querySelector('#fbEmail')?.value || '').trim(),
-        page: 'results.html',
-        rating,
-        feedback: (txt?.value || '').trim(),
-        weightLL: $('#fbWeight')?.value || '',
-        avg: $('#fbAvg')?.value || '',
-        top3: $('#fbTop3')?.value || '',
-        sharedHobbies: $('#fbH')?.value || '',
-        sharedValues: $('#fbV')?.value || ''
-      };
-
-      if (btn){ btn.disabled = true; btn.dataset._old = btn.textContent; btn.textContent = 'Sending…'; }
-      if (status) status.textContent = '';
-
-      ensureEmailJSReady(()=>{
-        emailjs
-          .send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params, EMAILJS_PUBLIC)
-          .then(()=>{
-            if (status) status.textContent = '✓ Sent. Thank you!';
-            form.reset();
-            radios.forEach(r=>r.checked=false); radios[4].checked=true; highlight(5); upd();
-          })
-          .catch(err=>{
-            console.error('EmailJS error:', err, err?.text || '');
-            if (status) status.textContent = '✘ Send failed. Try again later.';
-          })
-          .finally(()=>{
-            if (btn){ btn.disabled = false; btn.textContent = btn.dataset._old || 'Send Feedback'; }
-          });
-      });
-    });
-  }
-
-  // =============== render ===============
-  function render(){
-  const romF = rom.filter(({f}) => matchesFilters(f));
-  const friF = fri.filter(({f}) => matchesFilters(f));
-
-  emptyEl && (emptyEl.style.display = (romF.length || friF.length) ? 'none' : 'block');
-  romEl && renderList(romEl, romF);
-  friEl && renderList(friEl, friF);
- 
-    // insights
-      const ins = $('#insights');
-if (ins){
-  ins.innerHTML = `
-    <div class="card" style="padding:.8rem;">
-      <div class="section-title" style="margin:.1rem 0 .4rem;">Overview</div>
-      <div>Average score: <span class="pill">${avg}%</span></div>
-      <div>Top matches: ${
-        top3.length ? top3.map(n=>`<span class="pill" style="margin-right:.3rem;">${escapeHTML(n)}</span>`).join('') : '—'
-      }</div>
-    </div>
-    <div class="card" style="padding:.8rem;">
-      <div class="section-title" style="margin:.1rem 0 .4rem;">Shared Hobbies</div>
-      ${topH.length ? topH.map(n=>`<button class="pill" data-val="${n}" type="button" style="margin-right:.3rem;">${escapeHTML(n)}</button>`).join('') : '—'}
-    </div>
-    <div class="card" style="padding:.8rem;">
-      <div class="section-title" style="margin:.1rem 0 .4rem;">Shared Values</div>
-      ${topV.length ? topV.map(n=>`<button class="pill" data-val="${n}" type="button" style="margin-right:.3rem;">${escapeHTML(n)}</button>`).join('') : '—'}
-    </div>
-  `;
-  const wireChip = (sel, set) => {
-    ins.querySelectorAll(sel).forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const v = btn.dataset.val;
-        btn.classList.toggle('active');
-        if (btn.classList.contains('active')) set.add(v); else set.delete(v);
-        render(); // perpiešiam su filtrais
-      });
-    });
-  };
-  wireChip('.card:nth-child(2) .pill', STATE.filterH);
-  wireChip('.card:nth-child(3) .pill', STATE.filterV);
-}
-
-
-    // feedback context + one-time setup
-    fillFeedbackContext({avg, top3, topH, topV});
-    setupFeedbackOnce();
-  }
-
-  // =============== events ===============
-  $('#llWeight')?.addEventListener('input', render);
-  render();
-
-  $('#btnPrint')?.addEventListener('click', () => window.print());
-
-  $('#btnExport')?.addEventListener('click', () => {
-    const w = parseFloat($('#llWeight')?.value || '1') || 1;
-    const data = compute(w);
-    const out = {
-      generatedAt: new Date().toISOString(),
-      weightLL: w,
-      me: data.me,
-      romantic: data.rom.map(r=>({score:r.s, ...r.f})),
-      friendship: data.fri.map(r=>({score:r.s, ...r.f})),
-      insights: { average:data.avg, topMatches:data.top3, sharedHobbies:data.topH, sharedValues:data.topV }
-    };
-    const blob = new Blob([JSON.stringify(out,null,2)], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
+  function exportJSON(payload){
+    const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
     const a = document.createElement('a');
-    a.href = url; a.download = 'soulink-results.json'; a.click();
-    URL.revokeObjectURL(url);
+    a.href = URL.createObjectURL(blob);
+    a.download = `soulink-results-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function render(){
+    const w = Number($('#llWeight')?.value || 1) || 1;
+    STATE.weight = Math.max(0, Math.min(2, w));
+    $('#llwLabel') && ($('#llwLabel').textContent = `${STATE.weight.toFixed(1)}×`);
+
+    const data = compute(STATE.weight);
+    renderInsights(data);
+    renderList('#romantic',   data.romantic);
+    renderList('#friendship', data.friendship);
+
+    // feed context for feedback (non-blocking)
+    fillFeedbackContext({
+      avg: data.avg, top3: data.top3,
+      hobbies: data.topH.map(([t])=>t),
+      values:  data.topV.map(([t])=>t)
+    });
+  }
+
+  // ========== slider / buttons ==========
+  $('#llWeight') && $('#llWeight').addEventListener('input', render);
+  $('#btnExport') && $('#btnExport').addEventListener('click', ()=>{
+    const data = compute(STATE.weight);
+    exportJSON({
+      generatedAt: new Date().toISOString(),
+      weightLL: STATE.weight,
+      me: ME,
+      insights: { avg:data.avg, top3:data.top3, topH:data.topH, topV:data.topV },
+      romantic: data.romantic.map(({name,ct,ll,hobbies,values,final})=>({name,ct,ll,hobbies,values,score:final})),
+      friendship: data.friendship.map(({name,ct,ll,hobbies,values,final})=>({name,ct,ll,hobbies,values,score:final}))
+    });
   });
+  $('#btnPrint') && $('#btnPrint').addEventListener('click', ()=> window.print());
 
-  // =============== init ===============
-  // example usage inside your init:
-hydrateSnapshot(QUIZ);     // fills name/connection/love language/hobbies/values
-renderAll(FRIENDS);        // whatever function populates the lists
+  // ========== Feedback (EmailJS-friendly, idempotent) ==========
+  function restoreDraft(){
+    try{
+      const d = JSON.parse(localStorage.getItem('soulink.soulFeedbackDraft')||'{}');
+      if (d.email) $('#fbEmail').value = d.email;
+      if (d.text)  $('#fbText').value  = d.text;
+      updateCounter();
+    }catch{}
+  }
+  function saveDraft(){
+    const d = { email: $('#fbEmail')?.value || '', text: $('#fbText')?.value || '' };
+    localStorage.setItem('soulink.soulFeedbackDraft', JSON.stringify(d));
+  }
+  function updateCounter(){
+    const t = $('#fbText')?.value || '';
+    $('#fbCount') && ($('#fbCount').textContent = `${t.length}/600`);
+  }
+  function setupStars(){
+    const box = $('#fbStars'); if(!box) return;
+    // accept any children with data-v; if missing, build 5 buttons
+    let stars = $$('[data-v]', box);
+    if (!stars.length){
+      box.innerHTML = '';
+      for (let i=1;i<=5;i++){
+        const b = document.createElement('button');
+        b.type='button'; b.setAttribute('data-v', String(i));
+        b.className='star'; b.textContent='★';
+        box.appendChild(b);
+      }
+      stars = $$('[data-v]', box);
+    }
+    const set = (n)=> stars.forEach(s=> s.classList.toggle('active', Number(s.dataset.v)<=n));
+    box.addEventListener('click', e=>{
+      const b = e.target.closest('[data-v]'); if(!b) return;
+      box.dataset.value = String(b.dataset.v);
+      set(Number(b.dataset.v));
+    });
+    set(Number(box.dataset.value||'5')); // default 5
+  }
+  function fillFeedbackContext(ctx){
+    // stash in hidden meta fields if present (optional)
+    const t = $('#feedbackForm'); if(!t) return;
+    Object.entries(ctx||{}).forEach(([k,v])=>{
+      let input = t.querySelector(`[name="ctx_${k}"]`);
+      if(!input){ input = document.createElement('input'); input.type='hidden'; input.name=`ctx_${k}`; t.appendChild(input); }
+      input.value = Array.isArray(v) ? v.join(', ') : String(v);
+    });
+  }
+  function setupFeedbackOnce(){
+    const form = $('#feedbackForm'); if(!form) return;
+    if (form.__wired) return; form.__wired = true;
 
-  render();
+    setupStars();
+    restoreDraft();
+    $('#fbText') && $('#fbText').addEventListener('input', ()=>{ updateCounter(); saveDraft(); });
+    $('#fbEmail') && $('#fbEmail').addEventListener('input', saveDraft);
 
+    $('#fbSend') && $('#fbSend').addEventListener('click', async (e)=>{
+      e.preventDefault();
+      const rating = Number($('#fbStars')?.dataset.value || 0) || 0;
+      const email  = $('#fbEmail')?.value.trim() || '';
+      const text   = $('#fbText')?.value.trim() || '';
+      const status = $('#fbStatus'); if (status) status.textContent = 'Sending…';
+
+      const payload = { rating, email, text, at: new Date().toISOString() };
+      // prefer EmailJS if available and initialized
+      try{
+        if (window.emailjs && typeof window.emailjs.send === 'function') {
+          // service/template/user keys should already be on page (as you noted)
+          // If you expose globals EMAILJS_SERVICE / EMAILJS_TEMPLATE, use them; else send with first service.
+          const svc = window.EMAILJS_SERVICE || window.emailServiceID || '';
+          const tpl = window.EMAILJS_TEMPLATE || window.emailTemplateID || '';
+          if (svc && tpl) {
+            await window.emailjs.send(svc, tpl, payload);
+          } else {
+            // fallback: just log when keys are not present
+            console.log('Feedback (no EmailJS keys):', payload);
+          }
+        } else {
+          console.log('Feedback:', payload);
+        }
+        if (status) status.textContent = 'Thanks for your feedback! 🌟';
+        // reset but keep stars at 5 by default
+        $('#fbText') && ($('#fbText').value = '');
+        $('#fbEmail') && ($('#fbEmail').value = '');
+        $('#fbStars') && ($('#fbStars').dataset.value = '5');
+        updateCounter();
+        localStorage.removeItem('soulink.soulFeedbackDraft');
+      }catch(err){
+        console.warn(err);
+        if (status) status.textContent = 'Sorry, failed to send. Please try again.';
+      }
+    });
+  }
+
+  // ========== boot ==========
+  document.addEventListener('DOMContentLoaded', () => {
+    // give a sane default to slider label
+    $('#llwLabel') && ($('#llwLabel').textContent = `${(Number($('#llWeight')?.value||1)||1).toFixed(1)}×`);
+    setupFeedbackOnce();
+    render();
+  });
 })();
