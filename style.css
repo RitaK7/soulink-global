@@ -1507,6 +1507,26 @@ body[data-page="match"] .navbar .nav-links a[href*="match"]{
   .soulink-nav .nav-links a{ transition: none; }
   .soulink-nav::after{ transition: none; }
 }
+/* NAVBAR – vienodas visur */
+.navbar{position:sticky;top:0;z-index:50;background:rgba(0,60,67,.88);backdrop-filter:blur(8px);
+  border-bottom:1px solid rgba(0,253,216,.28)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem 1rem}
+.brand{font-weight:800;color:#00fdd8;text-decoration:none}
+.nav-links{list-style:none;display:flex;gap:.8rem;flex-wrap:wrap;margin:0;padding:0}
+.nav-links a{display:block;padding:.55rem .8rem;border:1px solid transparent;border-radius:10px;color:#eafff9;text-decoration:none}
+.nav-links a:hover{border-color:rgba(0,253,216,.28);box-shadow:0 0 0 1px rgba(0,253,216,.28),0 0 16px rgba(0,253,216,.25)}
+.nav-links a.active{box-shadow:0 0 0 2px rgba(0,253,216,.35) inset,0 0 18px rgba(0,253,216,.35);filter:saturate(1.1)}
+#navToggle{display:none;background:transparent;border:1px solid #00fdd8;color:#00fdd8;border-radius:10px;padding:.35rem .6rem}
+
+/* Mobile drawer */
+@media (max-width:800px){
+  #navToggle{display:block}
+  .nav-links{display:none}
+  body.nav-open .nav-links{
+    display:block;position:fixed;inset:56px 0 0 auto;width:min(82vw,320px);height:calc(100vh - 56px);
+    background:#00363a;border-left:1px solid rgba(0,253,216,.28);padding:12px;overflow:auto}
+  body.nav-open .nav-links li{margin:.2rem 0}
+}
 
 
 

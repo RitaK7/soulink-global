@@ -176,9 +176,34 @@
 .soulink-nav.scrolled::after{opacity:.85;transform:scaleX(1);}
 @media (prefers-reduced-motion:reduce){.soulink-nav .nav-links a,.soulink-nav::after{transition:none}}
 </style>
+<script src="nav.js?v=3" defer></script>
+
 
 </head>
 <body>
+  <nav class="navbar">
+  <div class="nav-inner container">
+    <a class="brand" href="index.html">Soulink</a>
+
+    <button id="navToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+
+    <ul id="navMenu" class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="quiz.html">Quiz</a></li>
+      <li><a href="edit-profile.html">Edit Profile</a></li>
+      <li><a href="my-soul.html">My Soul</a></li>
+      <li><a href="soul-chart.html">Soul Chart</a></li>
+      <li><a href="soul-coach.html">Soul Coach</a></li>
+      <li><a href="match.html">Match</a></li>
+      <li><a href="friends.html">Friends</a></li>
+      <li><a href="results.html">Results</a></li>
+      <li><a href="login.html">Log In</a></li>
+      <li><a href="signup.html">Sign Up</a></li>
+      <li><a href="logout.html">Log Out</a></li>
+    </ul>
+  </div>
+</nav>
+
   <style>
   /* Hide any legacy nav leftovers if nav.js still runs */
   .navbar, #navMenu { display:none !important; }
@@ -191,30 +216,6 @@
     <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
       <span class="bar"></span><span class="bar"></span><span class="bar"></span>
     </button>
-
-    <nav class="navbar">
-  <div class="container nav-inner">
-    <a href="index.html" class="brand">Soulink</a>
-
-    <button id="navToggle" class="hamburger" aria-label="Toggle navigation">☰</button>
-
-    <!-- VIENA <ul>, o VISI <li> – viduje -->
-    <ul id="navMenu" class="nav-links">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="quiz.html">Quiz</a></li>
-      <li><a href="edit-profile.html">Edit Profile</a></li>
-      <li><a href="my-soul.html">My Soul</a></li>
-      <li><a href="soul-chart.html">Soul Chart</a></li>
-      <li><a href="soul-coach.html">Soul Coach</a></li>
-      <li><a href="match.html">Match</a></li>
-      <li><a href="friends.html">Friends</a></li>
-      <li><a href="results.html" class="active" aria-current="page">Results</a></li>
-      <li><a href="login.html">Log In</a></li>
-      <li><a href="signup.html">Sign Up</a></li>
-      <li><a href="logout.html">Log Out</a></li>
-    </ul>
-  </div>
-</nav>
 
   <section class="card" id="feedback-card" style="margin-top:1rem;">
   <h3 class="section-title">Feedback</h3>
