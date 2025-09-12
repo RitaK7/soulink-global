@@ -177,147 +177,160 @@
 @media (prefers-reduced-motion:reduce){.soulink-nav .nav-links a,.soulink-nav::after{transition:none}}
 </style>
 
-
-
 </head>
 <body>
- <header class="soulink-nav" role="banner">
-  <div class="nav-inner">
-    <a class="brand" href="index.html">Soulink</a>
+  <!-- NAV -->
+  <header class="soulink-nav" role="banner">
+    <div class="nav-inner">
+      <a class="brand" href="index.html">Soulink</a>
 
-    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
-      <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-    </button>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
 
-    <nav class="nav" aria-label="Primary">
-      <ul class="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="quiz.html">Quiz</a></li>
-        <li><a href="edit-profile.html">Edit Profile</a></li>
-        <li><a href="my-soul.html">My Soul</a></li>
-        <li><a href="soul-chart.html">Soul Chart</a></li>
-        <li><a href="soul-coach.html">Soul Coach</a></li>
-        <li><a href="match.html">Match</a></li>
-        <li><a href="friends.html">Friends</a></li>
-        <li><a href="results.html" class="active" aria-current="page">Results</a></li>
-        <li><a href="login.html">Log In</a></li>
-        <li><a href="signup.html">Sign Up</a></li>
-        <li><a href="logout.html">Log Out</a></li>
-      </ul>
-    </nav>
-  </div>
-</header>
-
-
-
-    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
-      <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-    </button>
-
-
-      <label style="width:100%;">
-        Email (optional)
-        <input type="email" id="fbEmail" placeholder="you@example.com" autocomplete="email">
-      </label>
+      <nav class="nav" aria-label="Primary">
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="quiz.html">Quiz</a></li>
+          <li><a href="edit-profile.html">Edit Profile</a></li>
+          <li><a href="my-soul.html">My Soul</a></li>
+          <li><a href="soul-chart.html">Soul Chart</a></li>
+          <li><a href="soul-coach.html">Soul Coach</a></li>
+          <li><a href="match.html">Match</a></li>
+          <li><a href="friends.html">Friends</a></li>
+          <li><a href="results.html" class="active" aria-current="page">Results</a></li>
+          <li><a href="login.html">Log In</a></li>
+          <li><a href="signup.html">Sign Up</a></li>
+          <li><a href="logout.html">Log Out</a></li>
+        </ul>
+      </nav>
     </div>
+  </header>
 
-    <label style="display:block; margin-top:.6rem;">
-      Comments
-      <textarea id="fbText" rows="4" maxlength="600" placeholder="What worked well? What should we improve?"></textarea>
-      <small class="hint" style="float:right;"><span id="fbCount">0</span>/600</small>
-    </label>
-
-    <!-- Hidden context (užpildys JS) -->
-    <input type="hidden" id="fbWeight">
-    <input type="hidden" id="fbAvg">
-    <input type="hidden" id="fbTop3">
-    <input type="hidden" id="fbH">
-    <input type="hidden" id="fbV">
-    <input type="hidden" id="fbTs">
-
-    <div class="row" style="margin-top:.8rem;">
-      <button class="btn" type="submit" id="fbSend">Send Feedback</button>
-      <span id="fbStatus" class="hint" style="margin-left:.6rem;"></span>
-    </div>
-  </form>
-</section>
-
-
-
+  <!-- PAGE -->
   <main class="container">
-    <section class="card" id="feedback-card" style="margin-top:1rem;">
-  <h3 class="section-title">Feedback</h3>
-
-  <form id="feedbackForm" novalidate>
-    <div class="row" style="flex-direction:column; gap:.6rem;">
-      <div>
-        <div class="hint" style="margin-bottom:.25rem;">Rating</div>
-        <div id="fbStars" class="stars" role="radiogroup" aria-label="Rate">
-          <input id="s1" type="radio" name="rating" value="1"><label for="s1">★</label>
-          <input id="s2" type="radio" name="rating" value="2"><label for="s2">★</label>
-          <input id="s3" type="radio" name="rating" value="3"><label for="s3">★</label>
-          <input id="s4" type="radio" name="rating" value="4"><label for="s4">★</label>
-          <input id="s5" type="radio" name="rating" value="5"><label for="s5">★</label>
-        </div>
-      </div>
     <h1 class="section-title" style="font-size:1.6rem;">🏁 Results</h1>
-    <header class="soulink-nav" role="banner">
-  <div class="nav-inner">
-    <a class="brand" href="index.html">Soulink</a>
 
-    <div class="grid">
-      <!-- Left: your snapshot + controls -->
-      <section class="card">
-        <h3 class="section-title">Your Snapshot</h3>
-        <p><strong>Name:</strong> <span id="me-name">–</span></p>
-        <p><strong>Connection:</strong> <span id="me-ct">–</span></p>
-        <p><strong>Love Language:</strong> <span id="me-ll">–</span></p>
-        <p><strong>Hobbies:</strong> <span id="me-hobbies">–</span></p>
-        <p><strong>Values:</strong> <span id="me-values">–</span></p>
+    <!-- Feedback -->
+    <section class="card" id="feedback-card" style="margin-top:1rem;">
+      <h3 class="section-title">Feedback</h3>
 
-        <hr style="border-color:var(--stroke); border-width:1px; margin:1rem 0;">
+      <form id="feedbackForm" novalidate>
+        <div class="row" style="flex-direction:column; gap:.6rem;">
 
-        <h3 class="section-title">Settings</h3>
-        <label>Love Language Weight (x)
-          <input id="llWeight" type="range" min="0" max="2" step="0.1" value="1">
-        </label>
-        <div class="row" style="justify-content:space-between;">
-          <span id="llwLabel" class="pill">1.0×</span>
-          <div class="actions">
-            <button id="btnExport" class="btn" type="button">Export Results JSON</button>
-            <button id="btnPrint" class="btn" type="button">Print / Save PDF</button>
+          <div>
+            <div class="hint" style="margin-bottom:.25rem;">Rating</div>
+            <div id="fbStars" class="stars" role="radiogroup" aria-label="Rate">
+              <input id="s1" type="radio" name="rating" value="1"><label for="s1">★</label>
+              <input id="s2" type="radio" name="rating" value="2"><label for="s2">★</label>
+              <input id="s3" type="radio" name="rating" value="3"><label for="s3">★</label>
+              <input id="s4" type="radio" name="rating" value="4"><label for="s4">★</label>
+              <input id="s5" type="radio" name="rating" value="5"><label for="s5">★</label>
+            </div>
+          </div>
+
+          <label style="width:100%;">Email (optional)
+            <input type="email" id="fbEmail" placeholder="you@example.com" autocomplete="email">
+          </label>
+
+          <label style="display:block; margin-top:.6rem;">Comments
+            <textarea id="fbText" rows="4" maxlength="600" placeholder="What worked well? What should we improve?"></textarea>
+            <small class="hint" style="float:right;"><span id="fbCount">0</span>/600</small>
+          </label>
+
+          <!-- Hidden context (pildo JS) -->
+          <input type="hidden" id="fbWeight">
+          <input type="hidden" id="fbAvg">
+          <input type="hidden" id="fbTop3">
+          <input type="hidden" id="fbH">
+          <input type="hidden" id="fbV">
+          <input type="hidden" id="fbTs">
+
+          <div class="row" style="margin-top:.8rem;">
+            <button class="btn" type="submit" id="fbSend">Send Feedback</button>
+            <span id="fbStatus" class="hint" style="margin-left:.6rem;"></span>
           </div>
         </div>
+      </form>
+    </section>
 
-        <hr style="border-color:var(--stroke); border-width:1px; margin:1rem 0;">
+    <!-- Results (grid: kairė + dešinė) -->
+    <section class="card" style="margin-top:1rem;">
+      <div class="grid">
 
-        <div class="row">
-          <a class="btn" href="friends.html">← Friends</a>
-          <a class="btn" href="match.html">← Match</a>
-          <a class="btn" href="compare.html">Compare →</a>
-        </div>
-      </section>
+        <!-- Kairė: Snapshot + Settings -->
+        <section class="card" style="margin:0;">
+          <h3 class="section-title">Your Snapshot</h3>
+          <p><strong>Name:</strong> <span id="me-name">–</span></p>
+          <p><strong>Connection:</strong> <span id="me-ct">–</span></p>
+          <p><strong>Love Language:</strong> <span id="me-ll">–</span></p>
+          <p><strong>Hobbies:</strong> <span id="me-hobbies">–</span></p>
+          <p><strong>Values:</strong> <span id="me-values">–</span></p>
 
-      <!-- Right: results -->
-      <section class="card">
-        <h3 class="section-title">Top Matches</h3>
+          <hr style="border-color:var(--stroke); border-width:1px; margin:1rem 0;">
 
-        <div class="insights-grid" id="insights"></div>
+          <h3 class="section-title">Settings</h3>
+          <label>Love Language Weight (x)
+            <input id="llWeight" type="range" min="0" max="2" step="0.1" value="1">
+          </label>
+          <div class="row" style="justify-content:space-between;">
+            <span id="llwLabel" class="pill">1.0×</span>
+            <div class="actions">
+              <button id="btnExport" class="btn" type="button">Export Results JSON</button>
+              <button id="btnPrint" class="btn" type="button">Print / Save PDF</button>
+            </div>
+          </div>
 
-        <h4 class="section-title" id="romHdr" style="margin-top:1rem;">Romantic</h4>
-        <div id="romantic" class="results-grid"></div>
+          <hr style="border-color:var(--stroke); border-width:1px; margin:1rem 0;">
 
-        <h4 class="section-title" id="friHdr" style="margin-top:1rem;">Friendship</h4>
-        <div id="friendship" class="results-grid"></div>
+          <div class="row">
+            <a class="btn" href="friends.html">← Friends</a>
+            <a class="btn" href="match.html">← Match</a>
+            <a class="btn" href="compare.html">Compare →</a>
+          </div>
+        </section>
 
-        <p id="empty" class="hint" style="display:none; margin-top:.6rem;">No friends yet. Add some on the Friends page.</p>
-      </section>
-      </div> <!-- ← uždarom .grid -->
+        <!-- Dešinė: Insights + sąrašai -->
+        <section class="card" style="margin:0;">
+          <h3 class="section-title">Top Matches</h3>
+
+          <div class="insights-grid" id="insights"></div>
+
+          <h4 class="section-title" id="romHdr" style="margin-top:1rem;">Romantic</h4>
+          <div id="romantic" class="results-grid"></div>
+
+          <h4 class="section-title" id="friHdr" style="margin-top:1rem;">Friendship</h4>
+          <div id="friendship" class="results-grid"></div>
+
+          <p id="empty" class="hint" style="display:none; margin-top:.6rem;">No friends yet. Add some on the Friends page.</p>
+        </section>
+
+      </div><!-- /.grid -->
+    </section>
   </main>
 
   <footer>
-      <span>© 2025 Soulink.global | Created with love by Soulink Team</span>
-    </footer>
+    <span>© 2025 Soulink.global | Created with love by Soulink Team</span>
+  </footer>
+
+  <!-- Mažas hamburger JS (vietoje nav.js) -->
+  <script>
+    (function(){
+      const t = document.querySelector('.nav-toggle');
+      const n = document.querySelector('.soulink-nav .nav');
+      if (t && n) {
+        t.addEventListener('click', () => {
+          const open = n.classList.toggle('open');
+          t.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+      }
+    }());
+  </script>
+
+  <!-- Puslapio logika -->
+  <script src="results.js" defer></script>
+</body>
+
   
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 <script>try{ emailjs.init("SV7ptjuNI88paiVbz"); }catch(e){}</script>
