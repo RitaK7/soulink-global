@@ -176,7 +176,33 @@
 .soulink-nav.scrolled::after{opacity:.85;transform:scaleX(1);}
 @media (prefers-reduced-motion:reduce){.soulink-nav .nav-links a,.soulink-nav::after{transition:none}}
 </style>
+<style>
+/* --- Soulink nav (drop-in, namespaced) --- */
+.soulink-nav{position:sticky;top:0;z-index:50;background:rgba(0,60,67,.86);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--stroke);}
+.soulink-nav .nav-inner{max-width:1180px;margin:0 auto;padding:10px 16px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.soulink-nav .brand{font-weight:800;text-decoration:none;color:var(--accent);}
+.soulink-nav .nav-toggle{display:none;appearance:none;border:1px solid var(--stroke);
+  background:transparent;color:var(--text);border-radius:10px;padding:.4rem .55rem;cursor:pointer;}
+.soulink-nav .nav-toggle .bar{display:block;width:18px;height:2px;background:var(--text);margin:4px 0;opacity:.9}
 
+/* horizontal links (desktop) */
+.soulink-nav .nav-links{list-style:none;margin:0;padding:0;display:flex;gap:14px;flex-wrap:wrap}
+.soulink-nav .nav-links a{display:inline-block;padding:8px 10px;border-radius:10px;
+  border:1px solid transparent;text-decoration:none;color:var(--text);}
+.soulink-nav .nav-links a:hover{border-color:var(--stroke);box-shadow:0 0 0 1px var(--stroke),0 0 16px rgba(0,253,216,.18)}
+.soulink-nav .nav-links a.active{box-shadow:0 0 0 2px var(--stroke) inset,0 0 16px rgba(0,253,216,.35);color:var(--accent)}
+
+/* mobile drawer */
+@media (max-width:800px){
+  .soulink-nav .nav-toggle{display:inline-block}
+  .soulink-nav .nav{position:fixed;left:0;right:0;top:56px;display:none}
+  .soulink-nav .nav.open{display:block}
+  .soulink-nav .nav-links{flex-direction:column;gap:10px;background:#00353a;
+    border-top:1px solid var(--stroke);padding:10px 16px}
+}
+</style>
 </head>
 <body>
   <!-- NAV -->
@@ -329,6 +355,24 @@
 
   <!-- Puslapio logika -->
   <script src="results.js" defer></script>
+  <script>
+(function(){
+  const toggle = document.querySelector('.soulink-nav .nav-toggle');
+  const nav = document.querySelector('.soulink-nav .nav');
+  if(!toggle || !nav) return;
+  toggle.addEventListener('click', () => {
+    const open = nav.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  // Close drawer on wide screens or link click
+  const close = () => { nav.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); };
+  window.addEventListener('resize', () => { if (window.innerWidth > 800) close(); });
+  nav.addEventListener('click', e => { if (e.target.tagName === 'A') close(); });
+  // Ensure initial state is closed
+  close();
+})();
+</script>
+
 </body>
 
   
