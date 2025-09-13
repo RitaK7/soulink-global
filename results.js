@@ -299,29 +299,30 @@
     URL.revokeObjectURL(a.href);
   }
 
-  function render(){
-    const w = Number($('#llWeight')?.value || 1) || 1;
-    STATE.weight = Math.max(0, Math.min(2, w));
-    $('#llwLabel') && ($('#llwLabel').textContent = `${STATE.weight.toFixed(1)}×`);
+function render(){
+  const w = Number($('#llWeight')?.value || 1) || 1;
+  STATE.weight = Math.max(0, Math.min(2, w));
+  $('#llwLabel') && ($('#llwLabel').textContent = `${STATE.weight.toFixed(1)}×`);
 
-    const data = compute(STATE.weight);
-    renderInsights(data);
-    renderList('#romantic',   data.romantic);
-    renderList('#friendship', data.friendship);
-    
-  }
-  // Feed the feedback form with current context and (idempotently) wire it
-fillFeedbackContext({
-  weight: STATE.weight,
-  avg: data.avg,
-  topNames: data.top3,
-  sharedH: data.topH.map(([tag,count]) => ({ tag, count })),
-  sharedV: data.topV.map(([tag,count]) => ({ tag, count }))
-});
-setupFeedbackOnce();
+  const data = compute(STATE.weight);
+  renderInsights(data);
+  renderList('#romantic',   data.romantic);
+  renderList('#friendship', data.friendship);
+
+  // Feed the feedback form with current context
+  fillFeedbackContext({
+    weight: STATE.weight,
+    avg: data.avg,
+    topNames: data.top3,
+    sharedH: data.topH.map(([tag,count]) => ({ tag, count })),
+    sharedV: data.topV.map(([tag,count]) => ({ tag, count }))
+  });
+
+  // Wire feedback once (safe to call repeatedly)
+  setupFeedbackOnce();
+}
 
   
-
   // ========== slider / buttons ==========
   $('#llWeight') && $('#llWeight').addEventListener('input', render);
   $('#btnExport') && $('#btnExport').addEventListener('click', ()=>{
