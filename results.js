@@ -307,14 +307,16 @@
     renderInsights(data);
     renderList('#romantic',   data.romantic);
     renderList('#friendship', data.friendship);
-
-    // feed context for feedback (non-blocking)
-    fillFeedbackContext({
-      avg: data.avg, top3: data.top3,
-      hobbies: data.topH.map(([t])=>t),
-      values:  data.topV.map(([t])=>t)
-    });
+    
   }
+  fillFeedbackContext({
+  weight: currentWeight,
+  avg: insights.avg,
+  topNames: insights.topNames,     // ['Mantas','pranas','Lina']
+  sharedH: insights.sharedHobbies, // [{tag:'reading', count:3}, ...]
+  sharedV: insights.sharedValues   // [{tag:'kindness', count:2}, ...]
+});
+
 
   // ========== slider / buttons ==========
   $('#llWeight') && $('#llWeight').addEventListener('input', render);
@@ -331,106 +333,119 @@
   });
   $('#btnPrint') && $('#btnPrint').addEventListener('click', ()=> window.print());
 
-  // ========== Feedback (EmailJS-friendly, idempotent) ==========
-  function restoreDraft(){
-    try{
-      const d = JSON.parse(localStorage.getItem('soulink.soulFeedbackDraft')||'{}');
-      if (d.email) $('#fbEmail').value = d.email;
-      if (d.text)  $('#fbText').value  = d.text;
-      updateCounter();
-    }catch{}
-  }
-  function saveDraft(){
-    const d = { email: $('#fbEmail')?.value || '', text: $('#fbText')?.value || '' };
-    localStorage.setItem('soulink.soulFeedbackDraft', JSON.stringify(d));
-  }
-  function updateCounter(){
-    const t = $('#fbText')?.value || '';
-    $('#fbCount') && ($('#fbCount').textContent = `${t.length}/600`);
-  }
-  function setupStars(){
-    const box = $('#fbStars'); if(!box) return;
-    // accept any children with data-v; if missing, build 5 buttons
-    let stars = $$('[data-v]', box);
-    if (!stars.length){
-      box.innerHTML = '';
-      for (let i=1;i<=5;i++){
-        const b = document.createElement('button');
-        b.type='button'; b.setAttribute('data-v', String(i));
-        b.className='star'; b.textContent='★';
-        box.appendChild(b);
-      }
-      stars = $$('[data-v]', box);
+/* ==================== FEEDBACK (EmailJS + counter + draft) ==================== */
+
+const FEED_DRAFT_KEY = 'soulink.feedback.draft';
+
+// ⚠️ Tik PUBLIC key dėkime į front-end
+const EMAILJS = {
+  service:   'service_ifo7026',     // <-- jūsų Service ID
+  template:  'template_99hg4ni',    // <-- jūsų Template ID
+  publicKey: 'SV7ptjuNI88paiVbz'    // <-- jūsų Public Key
+};
+
+try { if (window.emailjs && EMAILJS.publicKey) emailjs.init(EMAILJS.publicKey); } catch {}
+
+// Užpildo paslėptus laukus kontekstu (kviesti render() pabaigoje)
+function fillFeedbackContext(ctx){
+  const set = (id,val)=>{ const el=document.getElementById(id); if(el) el.value = val ?? ''; };
+  set('fbWeight', ctx.weight);
+  set('fbAvg',    ctx.avg);
+  set('fbTop3',   (ctx.topNames || []).join(', '));
+  set('fbH',      (ctx.sharedH  || []).map(x=>`${x.tag}(${x.count})`).join(', '));
+  set('fbV',      (ctx.sharedV  || []).map(x=>`${x.tag}(${x.count})`).join(', '));
+  set('fbTs',     new Date().toISOString());
+}
+
+function setupFeedbackOnce(){
+  if (setupFeedbackOnce._done) return;
+  setupFeedbackOnce._done = true;
+
+  const form   = document.getElementById('feedbackForm');
+  if (!form) return;
+
+  const stars  = document.getElementById('fbStars');
+  const email  = document.getElementById('fbEmail');
+  const text   = document.getElementById('fbText');
+  const count  = document.getElementById('fbCount');
+  const status = document.getElementById('fbStatus');
+
+  // atstatom draft'ą
+  try {
+    const d = JSON.parse(localStorage.getItem(FEED_DRAFT_KEY) || '{}');
+    if (d.email)  email.value = d.email;
+    if (d.text)   text.value  = d.text;
+    if (d.rating){
+      const r = form.querySelector(`input[name="rating"][value="${d.rating}"]`);
+      if (r) r.checked = true;
     }
-    const set = (n)=> stars.forEach(s=> s.classList.toggle('active', Number(s.dataset.v)<=n));
-    box.addEventListener('click', e=>{
-      const b = e.target.closest('[data-v]'); if(!b) return;
-      box.dataset.value = String(b.dataset.v);
-      set(Number(b.dataset.v));
-    });
-    set(Number(box.dataset.value||'5')); // default 5
+  } catch {}
+
+  const saveDraft = () => {
+    const rating = form.rating?.value || '';
+    localStorage.setItem(FEED_DRAFT_KEY, JSON.stringify({
+      email: email.value.trim(),
+      text : text.value,
+      rating
+    }));
+  };
+
+  const updateCounter = () => { if (count) count.textContent = String(text.value.length); };
+  updateCounter();
+
+  text.addEventListener('input', () => { updateCounter(); saveDraft(); });
+  email.addEventListener('input', saveDraft);
+  stars?.addEventListener('change', saveDraft);
+
+  // default 5★, jei niekas nepasirinkta
+  if (!form.rating?.value) {
+    const r5 = form.querySelector('input[name="rating"][value="5"]');
+    if (r5) r5.checked = true;
   }
-  function fillFeedbackContext(ctx){
-    // stash in hidden meta fields if present (optional)
-    const t = $('#feedbackForm'); if(!t) return;
-    Object.entries(ctx||{}).forEach(([k,v])=>{
-      let input = t.querySelector(`[name="ctx_${k}"]`);
-      if(!input){ input = document.createElement('input'); input.type='hidden'; input.name=`ctx_${k}`; t.appendChild(input); }
-      input.value = Array.isArray(v) ? v.join(', ') : String(v);
-    });
-  }
-  function setupFeedbackOnce(){
-    const form = $('#feedbackForm'); if(!form) return;
-    if (form.__wired) return; form.__wired = true;
 
-    setupStars();
-    restoreDraft();
-    $('#fbText') && $('#fbText').addEventListener('input', ()=>{ updateCounter(); saveDraft(); });
-    $('#fbEmail') && $('#fbEmail').addEventListener('input', saveDraft);
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (status){ status.textContent = 'Sending…'; status.style.color = 'var(--muted)'; }
 
-    $('#fbSend') && $('#fbSend').addEventListener('click', async (e)=>{
-      e.preventDefault();
-      const rating = Number($('#fbStars')?.dataset.value || 0) || 0;
-      const email  = $('#fbEmail')?.value.trim() || '';
-      const text   = $('#fbText')?.value.trim() || '';
-      const status = $('#fbStatus'); if (status) status.textContent = 'Sending…';
+    const payload = {
+      rating : form.rating?.value || '5',
+      email  : email.value.trim(),
+      message: text.value.trim(),
+      weight : document.getElementById('fbWeight')?.value || '',
+      avg    : document.getElementById('fbAvg')?.value || '',
+      top3   : document.getElementById('fbTop3')?.value || '',
+      hobbies: document.getElementById('fbH')?.value || '',
+      values : document.getElementById('fbV')?.value || '',
+      ts     : new Date().toISOString()
+    };
 
-      const payload = { rating, email, text, at: new Date().toISOString() };
-      // prefer EmailJS if available and initialized
-      try{
-        if (window.emailjs && typeof window.emailjs.send === 'function') {
-          // service/template/user keys should already be on page (as you noted)
-          // If you expose globals EMAILJS_SERVICE / EMAILJS_TEMPLATE, use them; else send with first service.
-          const svc = window.EMAILJS_SERVICE || window.emailServiceID || '';
-          const tpl = window.EMAILJS_TEMPLATE || window.emailTemplateID || '';
-          if (svc && tpl) {
-            await window.emailjs.send(svc, tpl, payload);
-          } else {
-            // fallback: just log when keys are not present
-            console.log('Feedback (no EmailJS keys):', payload);
-          }
-        } else {
-          console.log('Feedback:', payload);
-        }
-        if (status) status.textContent = 'Thanks for your feedback! 🌟';
-        // reset but keep stars at 5 by default
-        $('#fbText') && ($('#fbText').value = '');
-        $('#fbEmail') && ($('#fbEmail').value = '');
-        $('#fbStars') && ($('#fbStars').dataset.value = '5');
-        updateCounter();
-        localStorage.removeItem('soulink.soulFeedbackDraft');
-      }catch(err){
-        console.warn(err);
-        if (status) status.textContent = 'Sorry, failed to send. Please try again.';
+    try {
+      if (window.emailjs && EMAILJS.publicKey && EMAILJS.service && EMAILJS.template){
+        await emailjs.send(EMAILJS.service, EMAILJS.template, payload);
+        if (status){ status.textContent = 'Thanks! Feedback sent 💫'; status.style.color = 'var(--accent)'; }
+        localStorage.removeItem(FEED_DRAFT_KEY);
+        text.value = ''; updateCounter();
+        const r5 = form.querySelector('input[name="rating"][value="5"]'); if (r5) r5.checked = true;
+      } else {
+        console.log('[Feedback payload] (EmailJS not configured):', payload);
+        if (status){ status.textContent = 'Saved locally (EmailJS not configured).'; status.style.color = 'var(--accent)'; }
       }
-    });
-  }
-
-  // ========== boot ==========
-  document.addEventListener('DOMContentLoaded', () => {
-    // give a sane default to slider label
-    $('#llwLabel') && ($('#llwLabel').textContent = `${(Number($('#llWeight')?.value||1)||1).toFixed(1)}×`);
-    setupFeedbackOnce();
-    render();
+    } catch (err) {
+      console.error(err);
+      if (status){ status.textContent = 'Failed to send. Please try again.'; status.style.color = '#ff9a9a'; }
+    }
   });
+}
+
+// boot (if you already have this block, keep only one)
+document.addEventListener('DOMContentLoaded', () => {
+  const w = document.getElementById('llWeight');
+  const l = document.getElementById('llwLabel');
+  if (w && l) l.textContent = `${(+w.value || 1).toFixed(1)}×`;
+
+  setupFeedbackOnce();   // safe idempotent
+  render();
+});
+
+// close the IIFE that starts at the top of the file
 })();

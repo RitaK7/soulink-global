@@ -241,8 +241,24 @@
     <section class="card" id="feedback-card" style="margin-top:1rem;">
       <h3 class="section-title">Feedback</h3>
 
-      <form id="feedbackForm" novalidate>
-        <div class="row" style="flex-direction:column; gap:.6rem;">
+       <form id="feedbackForm">
+       <div id="fbStars"> ... 5 radio inputs name="rating" value="1..5" ... </div>
+  <input id="fbEmail" type="email">
+  <textarea id="fbText" maxlength="600"></textarea>
+  <small><span id="fbCount">0</span>/600</small>
+
+  <!-- paslėpti konteksui (pildys JS) -->
+  <input type="hidden" id="fbWeight">
+  <input type="hidden" id="fbAvg">
+  <input type="hidden" id="fbTop3">
+  <input type="hidden" id="fbH">
+  <input type="hidden" id="fbV">
+  <input type="hidden" id="fbTs">
+
+  <button id="fbSend" type="submit" class="btn">Send Feedback</button>
+  <span id="fbStatus" class="hint"></span>
+</form>
+
 
           <div>
             <div class="hint" style="margin-bottom:.25rem;">Rating</div>
@@ -376,7 +392,7 @@
 </body>
 
   
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js" defer></script>
 <script>try{ emailjs.init("SV7ptjuNI88paiVbz"); }catch(e){}</script>
 <script src="results.js?v=16"></script>
 
