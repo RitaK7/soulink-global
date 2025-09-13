@@ -237,64 +237,46 @@
   <main class="container">
     <h1 class="section-title" style="font-size:1.6rem;">🏁 Results</h1>
 
-    <!-- Feedback -->
-    <section class="card" id="feedback-card" style="margin-top:1rem;">
-      <h3 class="section-title">Feedback</h3>
+   <section class="card" id="feedback-card" style="margin-top:1rem;">
+  <h3 class="section-title">Feedback</h3>
 
-       <form id="feedbackForm">
-       <div id="fbStars"> ... 5 radio inputs name="rating" value="1..5" ... </div>
-  <input id="fbEmail" type="email">
-  <textarea id="fbText" maxlength="600"></textarea>
-  <small><span id="fbCount">0</span>/600</small>
-
-  <!-- paslėpti konteksui (pildys JS) -->
-  <input type="hidden" id="fbWeight">
-  <input type="hidden" id="fbAvg">
-  <input type="hidden" id="fbTop3">
-  <input type="hidden" id="fbH">
-  <input type="hidden" id="fbV">
-  <input type="hidden" id="fbTs">
-
-  <button id="fbSend" type="submit" class="btn">Send Feedback</button>
-  <span id="fbStatus" class="hint"></span>
-</form>
-
-
-          <div>
-            <div class="hint" style="margin-bottom:.25rem;">Rating</div>
-            <div id="fbStars" class="stars" role="radiogroup" aria-label="Rate">
-              <input id="s1" type="radio" name="rating" value="1"><label for="s1">★</label>
-              <input id="s2" type="radio" name="rating" value="2"><label for="s2">★</label>
-              <input id="s3" type="radio" name="rating" value="3"><label for="s3">★</label>
-              <input id="s4" type="radio" name="rating" value="4"><label for="s4">★</label>
-              <input id="s5" type="radio" name="rating" value="5"><label for="s5">★</label>
-            </div>
-          </div>
-
-          <label style="width:100%;">Email (optional)
-            <input type="email" id="fbEmail" placeholder="you@example.com" autocomplete="email">
-          </label>
-
-          <label style="display:block; margin-top:.6rem;">Comments
-            <textarea id="fbText" rows="4" maxlength="600" placeholder="What worked well? What should we improve?"></textarea>
-            <small class="hint" style="float:right;"><span id="fbCount">0</span>/600</small>
-          </label>
-
-          <!-- Hidden context (pildo JS) -->
-          <input type="hidden" id="fbWeight">
-          <input type="hidden" id="fbAvg">
-          <input type="hidden" id="fbTop3">
-          <input type="hidden" id="fbH">
-          <input type="hidden" id="fbV">
-          <input type="hidden" id="fbTs">
-
-          <div class="row" style="margin-top:.8rem;">
-            <button class="btn" type="submit" id="fbSend">Send Feedback</button>
-            <span id="fbStatus" class="hint" style="margin-left:.6rem;"></span>
-          </div>
+  <form id="feedbackForm" novalidate>
+    <div class="row" style="flex-direction:column; gap:.6rem;">
+      <div>
+        <div class="hint" style="margin-bottom:.25rem;">Rating</div>
+        <div id="fbStars" class="stars" role="radiogroup" aria-label="Rate">
+          <input id="s1" type="radio" name="rating" value="1"><label for="s1">★</label>
+          <input id="s2" type="radio" name="rating" value="2"><label for="s2">★</label>
+          <input id="s3" type="radio" name="rating" value="3"><label for="s3">★</label>
+          <input id="s4" type="radio" name="rating" value="4"><label for="s4">★</label>
+          <input id="s5" type="radio" name="rating" value="5"><label for="s5">★</label>
         </div>
-      </form>
-    </section>
+      </div>
+
+      <label style="width:100%;">Email (optional)
+        <input type="email" id="fbEmail" placeholder="you@example.com" autocomplete="email">
+      </label>
+
+      <label style="display:block; margin-top:.6rem;">Comments
+        <textarea id="fbText" rows="4" maxlength="600" placeholder="What worked well? What should we improve?"></textarea>
+        <small class="hint" style="float:right;"><span id="fbCount">0</span>/600</small>
+      </label>
+
+      <!-- Hidden context (filled by JS) -->
+      <input type="hidden" id="fbWeight">
+      <input type="hidden" id="fbAvg">
+      <input type="hidden" id="fbTop3">
+      <input type="hidden" id="fbH">
+      <input type="hidden" id="fbV">
+      <input type="hidden" id="fbTs">
+
+      <div class="row" style="margin-top:.8rem;">
+        <button class="btn" type="submit" id="fbSend">Send Feedback</button>
+        <span id="fbStatus" class="hint" style="margin-left:.6rem;"></span>
+      </div>
+    </div>
+  </form>
+</section>
 
     <!-- Results (grid: kairė + dešinė) -->
     <section class="card" style="margin-top:1rem;">
@@ -370,7 +352,7 @@
   </script>
 
   <!-- Puslapio logika -->
-  <script src="results.js" defer></script>
+   
   <script>
 (function(){
   const toggle = document.querySelector('.soulink-nav .nav-toggle');
@@ -391,10 +373,9 @@
 
 </body>
 
-  
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js" defer></script>
-<script>try{ emailjs.init("SV7ptjuNI88paiVbz"); }catch(e){}</script>
-<script src="results.js?v=16"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>try{ emailjs.init('SV7ptjuNI88paiVbz'); }catch(e){}</script>
+<script src="results.js"></script>
 
 <script>
 (() => {
@@ -449,6 +430,4 @@
   onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
 })();
 </script>
-</<body data-page="results.html">
-
 </html>

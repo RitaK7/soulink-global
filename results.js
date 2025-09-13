@@ -2,7 +2,8 @@
 (() => {
   // ========== tiny helpers ==========
   const $  = (s, r = document) => r.querySelector(s);
-  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s, r));
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
 
   function readJSON(keys, fallback) {
     const list = Array.isArray(keys) ? keys : [keys];
@@ -309,14 +310,17 @@
     renderList('#friendship', data.friendship);
     
   }
-  fillFeedbackContext({
-  weight: currentWeight,
-  avg: insights.avg,
-  topNames: insights.topNames,     // ['Mantas','pranas','Lina']
-  sharedH: insights.sharedHobbies, // [{tag:'reading', count:3}, ...]
-  sharedV: insights.sharedValues   // [{tag:'kindness', count:2}, ...]
+  // Feed the feedback form with current context and (idempotently) wire it
+fillFeedbackContext({
+  weight: STATE.weight,
+  avg: data.avg,
+  topNames: data.top3,
+  sharedH: data.topH.map(([tag,count]) => ({ tag, count })),
+  sharedV: data.topV.map(([tag,count]) => ({ tag, count }))
 });
+setupFeedbackOnce();
 
+  
 
   // ========== slider / buttons ==========
   $('#llWeight') && $('#llWeight').addEventListener('input', render);
