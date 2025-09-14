@@ -247,24 +247,38 @@
   <h3 class="section-title">Feedback</h3>
 
   <form id="feedbackForm" novalidate>
-    <div class="row" style="flex-direction:column; gap:.6rem;">
+    <div class="row" style="flex-direction:column; gap:.6rem; width:100%;">
+
+      <!-- Stars -->
       <div>
         <div class="hint" style="margin-bottom:.25rem;">Rating</div>
         <div id="fbStars" class="stars" role="radiogroup" aria-label="Rate">
-          <input id="s1" type="radio" name="rating" value="1"><label for="s1">★</label>
-          <input id="s2" type="radio" name="rating" value="2"><label for="s2">★</label>
-          <input id="s3" type="radio" name="rating" value="3"><label for="s3">★</label>
-          <input id="s4" type="radio" name="rating" value="4"><label for="s4">★</label>
-          <input id="s5" type="radio" name="rating" value="5"><label for="s5">★</label>
+          <input id="s1" type="radio" name="rating" value="1">
+          <label for="s1" aria-label="1 star">★</label>
+
+          <input id="s2" type="radio" name="rating" value="2">
+          <label for="s2" aria-label="2 stars">★</label>
+
+          <input id="s3" type="radio" name="rating" value="3">
+          <label for="s3" aria-label="3 stars">★</label>
+
+          <input id="s4" type="radio" name="rating" value="4">
+          <label for="s4" aria-label="4 stars">★</label>
+
+          <input id="s5" type="radio" name="rating" value="5" checked>
+          <label for="s5" aria-label="5 stars">★</label>
         </div>
       </div>
 
+      <!-- Email -->
       <label style="width:100%;">Email (optional)
         <input type="email" id="fbEmail" placeholder="you@example.com" autocomplete="email">
       </label>
 
+      <!-- Comment + counter -->
       <label style="display:block; margin-top:.6rem;">Comments
-        <textarea id="fbText" rows="4" maxlength="600" placeholder="What worked well? What should we improve?"></textarea>
+        <textarea id="fbText" rows="4" maxlength="600"
+          placeholder="What worked well? What should we improve?"></textarea>
         <small class="hint" style="float:right;"><span id="fbCount">0</span>/600</small>
       </label>
 
@@ -276,6 +290,7 @@
       <input type="hidden" id="fbV">
       <input type="hidden" id="fbTs">
 
+      <!-- Submit -->
       <div class="row" style="margin-top:.8rem;">
         <button class="btn" type="submit" id="fbSend">Send Feedback</button>
         <span id="fbStatus" class="hint" style="margin-left:.6rem;"></span>
@@ -283,6 +298,7 @@
     </div>
   </form>
 </section>
+
 
     <!-- Results (grid: kairė + dešinė) -->
     <section class="card" style="margin-top:1rem;">
