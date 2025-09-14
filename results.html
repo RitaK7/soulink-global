@@ -210,7 +210,7 @@
 
 
 </head>
-<body>
+<body data-page="results.html">
   <!-- NAV -->
   <header class="soulink-nav" role="banner">
     <div class="nav-inner">
@@ -361,9 +361,9 @@
 
   <!-- Mažas hamburger JS (vietoje nav.js) -->
   <script>
-    (function(){
+    
       const t = document.querySelector('.nav-toggle');
-      const n = document.querySelector('.soulink-nav .nav');
+      const n = (function(){document.querySelector('.soulink-nav .nav');
       if (t && n) {
         t.addEventListener('click', () => {
           const open = n.classList.toggle('open');
@@ -387,13 +387,10 @@
   }
 }());
 </script>
-
-
-</body>
-
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<script>try{ emailjs.init('SV7ptjuNI88paiVbz'); }catch(e){}</script>
-<script src="results.js"></script>
+  <script>try{ emailjs.init('SV7ptjuNI88paiVbz'); }catch(e){}</script>
+  <script src="results.js"></script>
+</body>
 
 <script>
 (() => {
