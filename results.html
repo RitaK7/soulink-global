@@ -359,39 +359,46 @@
     <span>© 2025 Soulink.global | Created with love by Soulink Team</span>
   </footer>
 
-  <!-- Mažas hamburger JS (vietoje nav.js) -->
-  <script>
-    
-      const t = document.querySelector('.nav-toggle');
-      const n = (function(){document.querySelector('.soulink-nav .nav');
-      if (t && n) {
-        t.addEventListener('click', () => {
-          const open = n.classList.toggle('open');
-          t.setAttribute('aria-expanded', open ? 'true' : 'false');
-        });
-      }
-    }());
   </script>
-
-  <!-- Puslapio logika -->
-
-<script>
-(function(){
-  const t = document.querySelector('.nav-toggle');
-  const n = document.querySelector('.soulink-nav .nav');
-  if (t && n) {
-    t.addEventListener('click', () => {
-      const open = n.classList.toggle('open');
-      t.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
-  }
-}());
-</script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script>try{ emailjs.init('SV7ptjuNI88paiVbz'); }catch(e){}</script>
   <script src="results.js"></script>
-</body>
 
+   <!-- Vienas vienintelis navbar skriptas -->
+  <script>
+    (function(){
+      const toggle = document.querySelector('.soulink-nav .nav-toggle');
+      const list   = document.querySelector('.soulink-nav .nav-links');
+      const hdr    = document.querySelector('.soulink-nav');
+
+      if (toggle && list){
+        toggle.addEventListener('click', () => {
+          const open = !list.classList.contains('open');
+          list.classList.toggle('open', open);
+          toggle.setAttribute('aria-expanded', String(open));
+        });
+      }
+
+      // aktyvus link'as pagal body[data-page] ar URL
+      const pageHint = (document.body.getAttribute('data-page') || '').toLowerCase();
+      const path = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+      const current = pageHint || path;
+
+      document.querySelectorAll('.soulink-nav .nav-links a').forEach(a=>{
+        const href = (a.getAttribute('href')||'').toLowerCase();
+        if (href.endsWith(current)){
+          a.classList.add('active');
+          a.setAttribute('aria-current','page');
+        }
+      });
+
+      // švytinti linija scrollo metu
+      const onScroll = () => hdr && hdr.classList.toggle('scrolled', window.scrollY > 6);
+      onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+    })();
+  </script>
+</body>
+</html>
 <script>
 (() => {
   const $ = (s, r=document)=>r.querySelector(s);
