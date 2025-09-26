@@ -128,14 +128,14 @@
   /* ===== Feedback ===== */
   #feedback-card .row{ align-items:flex-start; }
   #fbStars{ display:flex; gap:.4rem; flex-wrap:wrap; }
-  #fbStars input{ display:none; }            /* slepiam radio burbuliukus */
+  #fbStars input{ display:none; }
   #fbStars label{
     cursor:pointer; font-size:1.6rem; line-height:1;
     color:#8a8a8a; text-shadow:0 0 6px rgba(0,0,0,.15);
     transition: transform .1s, color .15s;
   }
   #fbStars label.active{
-    color:#FFD166 !important;                         /* aktyvios – GELTONOS */
+    color:#FFD166 !important;
     text-shadow:0 0 10px rgba(255,209,102,.35) !important;
     transform: translateY(-1px);
   }
@@ -184,7 +184,7 @@
     .soulink-nav .nav-toggle{ display:inline-flex; }
     .soulink-nav .nav{ grid-column:1 / -1; width:100%; }
     .soulink-nav .nav-links{ display:none; flex-direction:column; gap:.3rem; padding-top:.6rem; }
-    .soulink-nav .nav-links.open{ display:flex; }   /* JS prideda .open */
+    .soulink-nav .nav-links.open{ display:flex; }
     .soulink-nav .nav-links a{ padding:.65rem .8rem; }
   }
 
@@ -359,12 +359,14 @@
     <span>© 2025 Soulink.global | Created with love by Soulink Team</span>
   </footer>
 
-  </script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <!-- EmailJS (PUBLIC key only) -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script>try{ emailjs.init('SV7ptjuNI88paiVbz'); }catch(e){}</script>
+
+  <!-- Results logic -->
   <script src="results.js"></script>
 
-   <!-- Vienas vienintelis navbar skriptas -->
+  <!-- Vienas vienintelis navbar skriptas -->
   <script>
     (function(){
       const toggle = document.querySelector('.soulink-nav .nav-toggle');
@@ -379,7 +381,6 @@
         });
       }
 
-      // aktyvus link'as pagal body[data-page] ar URL
       const pageHint = (document.body.getAttribute('data-page') || '').toLowerCase();
       const path = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
       const current = pageHint || path;
@@ -392,64 +393,9 @@
         }
       });
 
-      // švytinti linija scrollo metu
       const onScroll = () => hdr && hdr.classList.toggle('scrolled', window.scrollY > 6);
       onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
     })();
   </script>
 </body>
-</html>
-<script>
-(() => {
-  const $ = (s, r=document)=>r.querySelector(s);
-  const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
-
-  // open/close on mobile
-  const toggle = $('.soulink-nav .nav-toggle');
-  const list   = $('.soulink-nav .nav-links');
-  if (toggle && list){
-    toggle.addEventListener('click', () => {
-      const open = !list.classList.contains('open');
-      list.classList.toggle('open', open);
-      toggle.setAttribute('aria-expanded', String(open));
-    });
-  }
-
-  // active link (by pathname OR optional body[data-page])
-  const path = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
-  const pageHint = (document.body.getAttribute('data-page') || '').toLowerCase();
-
-  const map = {
-    'index.html':'index.html',
-    'quiz.html':'quiz.html',
-    'edit-profile.html':'edit-profile.html',
-    'my-soul.html':'my-soul.html',
-    'soul-chart.html':'soul-chart.html',
-    'soul-coach.html':'soul-coach.html',
-    'match.html':'match.html',
-    'friends.html':'friends.html',
-    'results.html':'results.html',
-    'login.html':'login.html',
-    'signup.html':'signup.html',
-    'logout.html':'logout.html'
-  };
-
-  const current = pageHint && map[pageHint] ? map[pageHint] : map[path] || 'index.html';
-  $$('.soulink-nav .nav-links a').forEach(a=>{
-    const href = (a.getAttribute('href')||'').toLowerCase();
-    if (href.endsWith(current)){
-      a.classList.add('active');
-      a.setAttribute('aria-current','page');
-    }
-  });
-
-  // teal underline when scrolled
-  const hdr = $('.soulink-nav');
-  const onScroll = () => {
-    if (!hdr) return;
-    hdr.classList.toggle('scrolled', window.scrollY > 6);
-  };
-  onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
-})();
-</script>
 </html>

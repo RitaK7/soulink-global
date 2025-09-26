@@ -4,7 +4,6 @@
   const $  = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
-
   function readJSON(keys, fallback) {
     const list = Array.isArray(keys) ? keys : [keys];
     for (const k of list) {
@@ -22,7 +21,7 @@
     if (!src) return [];
     if (Array.isArray(src)) return [...new Set(src.map(x => String(x).toLowerCase().trim()).filter(Boolean))];
     return [...new Set(String(src).toLowerCase()
-      .split(/[,|/;]+|\s{2,}|\s(?=\S{3,})/) // commas, pipes, slashes, multi-spaces
+      .split(/[,|/;]+|\s{2,}|\s(?=\S{3,})/)
       .map(t => t.trim())
       .filter(Boolean))];
   }
@@ -178,7 +177,6 @@
   }
 
   function iconLinkHTML(fr){
-    // choose best "Message" target
     if (fr.whatsapp){
       const n = digits(fr.whatsapp);
       return `<a class="icon" href="https://wa.me/${encodeURIComponent(n)}" target="_blank" rel="noopener" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>`;
@@ -213,7 +211,7 @@
       visibleCount++;
 
       const card = document.createElement('div');
-      card.className = 'friend card'; // reuse existing card styles
+      card.className = 'friend card';
       card.style.transition='opacity .18s ease, transform .18s ease'; card.style.opacity='0'; card.style.transform='scale(.98)';
 
       const scoreClass = f.final >= 75 ? 'good' : f.final >= 55 ? 'ok':'low';
@@ -246,7 +244,6 @@
       requestAnimationFrame(()=>{ card.style.opacity='1'; card.style.transform='none'; });
     }
     wrap.appendChild(frag);
-    // empty state toggle
     const empty = $('#empty');
     if (empty) empty.style.display = visibleCount ? 'none' : '';
   }
@@ -276,17 +273,16 @@
       </div>
     `;
 
-    // toggle chips
     el.addEventListener('click', (e)=>{
       const b = e.target.closest('.chip'); if(!b) return;
       const kind = b.dataset.kind, label = b.dataset.token;
-      const raw = (label || '').replace(/\s\(\d+\)$/,'').toLowerCase(); // strip "(N)"
+      const raw = (label || '').replace(/\s\(\d+\)$/,'').toLowerCase();
       if (kind==='h'){
         STATE.filterH.has(raw) ? STATE.filterH.delete(raw) : STATE.filterH.add(raw);
       } else if (kind==='v'){
         STATE.filterV.has(raw) ? STATE.filterV.delete(raw) : STATE.filterV.add(raw);
       }
-      render(); // full re-render
+      render();
     }, {once:false});
   }
 
@@ -299,30 +295,28 @@
     URL.revokeObjectURL(a.href);
   }
 
-function render(){
-  const w = Number($('#llWeight')?.value || 1) || 1;
-  STATE.weight = Math.max(0, Math.min(2, w));
-  $('#llwLabel') && ($('#llwLabel').textContent = `${STATE.weight.toFixed(1)}×`);
+  function render(){
+    const w = Number($('#llWeight')?.value || 1) || 1;
+    STATE.weight = Math.max(0, Math.min(2, w));
+    $('#llwLabel') && ($('#llwLabel').textContent = `${STATE.weight.toFixed(1)}×`);
 
-  const data = compute(STATE.weight);
-  renderInsights(data);
-  renderList('#romantic',   data.romantic);
-  renderList('#friendship', data.friendship);
+    const data = compute(STATE.weight);
+    renderInsights(data);
+    renderList('#romantic',   data.romantic);
+    renderList('#friendship', data.friendship);
 
-  // Feed the feedback form with current context
-  fillFeedbackContext({
-    weight: STATE.weight,
-    avg: data.avg,
-    topNames: data.top3,
-    sharedH: data.topH.map(([tag,count]) => ({ tag, count })),
-    sharedV: data.topV.map(([tag,count]) => ({ tag, count }))
-  });
+    // kontekstas feedback formai
+    fillFeedbackContext({
+      weight: STATE.weight,
+      avg: data.avg,
+      topNames: data.top3,
+      sharedH: data.topH.map(([tag,count]) => ({ tag, count })),
+      sharedV: data.topV.map(([tag,count]) => ({ tag, count }))
+    });
 
-  // Wire feedback once (safe to call repeatedly)
-  setupFeedbackOnce();
-}
+    setupFeedbackOnce();
+  }
 
-  
   // ========== slider / buttons ==========
   $('#llWeight') && $('#llWeight').addEventListener('input', render);
   $('#btnExport') && $('#btnExport').addEventListener('click', ()=>{
@@ -338,119 +332,116 @@ function render(){
   });
   $('#btnPrint') && $('#btnPrint').addEventListener('click', ()=> window.print());
 
-/* ==================== FEEDBACK (EmailJS + counter + draft) ==================== */
+  /* ==================== FEEDBACK (EmailJS + counter + draft) ==================== */
 
-const FEED_DRAFT_KEY = 'soulink.feedback.draft';
+  const FEED_DRAFT_KEY = 'soulink.feedback.draft';
 
-// ⚠️ Tik PUBLIC key dėkime į front-end
-const EMAILJS = {
-  service:   'service_ifo7026',     // <-- jūsų Service ID
-  template:  'template_99hg4ni',    // <-- jūsų Template ID
-  publicKey: 'SV7ptjuNI88paiVbz'    // <-- jūsų Public Key
-};
-
-try { if (window.emailjs && EMAILJS.publicKey) emailjs.init(EMAILJS.publicKey); } catch {}
-
-// Užpildo paslėptus laukus kontekstu (kviesti render() pabaigoje)
-function fillFeedbackContext(ctx){
-  const set = (id,val)=>{ const el=document.getElementById(id); if(el) el.value = val ?? ''; };
-  set('fbWeight', ctx.weight);
-  set('fbAvg',    ctx.avg);
-  set('fbTop3',   (ctx.topNames || []).join(', '));
-  set('fbH',      (ctx.sharedH  || []).map(x=>`${x.tag}(${x.count})`).join(', '));
-  set('fbV',      (ctx.sharedV  || []).map(x=>`${x.tag}(${x.count})`).join(', '));
-  set('fbTs',     new Date().toISOString());
-}
-
-function setupFeedbackOnce(){
-  if (setupFeedbackOnce._done) return;
-  setupFeedbackOnce._done = true;
-
-  const form   = document.getElementById('feedbackForm');
-  if (!form) return;
-
-  const stars  = document.getElementById('fbStars');
-  const email  = document.getElementById('fbEmail');
-  const text   = document.getElementById('fbText');
-  const count  = document.getElementById('fbCount');
-  const status = document.getElementById('fbStatus');
-
-  // atstatom draft'ą
-  try {
-    const d = JSON.parse(localStorage.getItem(FEED_DRAFT_KEY) || '{}');
-    if (d.email)  email.value = d.email;
-    if (d.text)   text.value  = d.text;
-    if (d.rating){
-      const r = form.querySelector(`input[name="rating"][value="${d.rating}"]`);
-      if (r) r.checked = true;
-    }
-  } catch {}
-
-  const saveDraft = () => {
-    const rating = form.rating?.value || '';
-    localStorage.setItem(FEED_DRAFT_KEY, JSON.stringify({
-      email: email.value.trim(),
-      text : text.value,
-      rating
-    }));
+  // ⚠️ Tik PUBLIC key dėkime į front-end
+  const EMAILJS = {
+    service:   'service_ifo7026',     // <-- jūsų Service ID
+    template:  'template_99hg4ni',    // <-- jūsų Template ID
+    publicKey: 'SV7ptjuNI88paiVbz'    // <-- jūsų Public Key
   };
 
-  const updateCounter = () => { if (count) count.textContent = String(text.value.length); };
-  updateCounter();
+  try { if (window.emailjs && EMAILJS.publicKey) emailjs.init(EMAILJS.publicKey); } catch {}
 
-  text.addEventListener('input', () => { updateCounter(); saveDraft(); });
-  email.addEventListener('input', saveDraft);
-  stars?.addEventListener('change', saveDraft);
-
-  // default 5★, jei niekas nepasirinkta
-  if (!form.rating?.value) {
-    const r5 = form.querySelector('input[name="rating"][value="5"]');
-    if (r5) r5.checked = true;
+  function fillFeedbackContext(ctx){
+    const set = (id,val)=>{ const el=document.getElementById(id); if(el) el.value = val ?? ''; };
+    set('fbWeight', ctx.weight);
+    set('fbAvg',    ctx.avg);
+    set('fbTop3',   (ctx.topNames || []).join(', '));
+    set('fbH',      (ctx.sharedH  || []).map(x=>`${x.tag}(${x.count})`).join(', '));
+    set('fbV',      (ctx.sharedV  || []).map(x=>`${x.tag}(${x.count})`).join(', '));
+    set('fbTs',     new Date().toISOString());
   }
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (status){ status.textContent = 'Sending…'; status.style.color = 'var(--muted)'; }
+  function setupFeedbackOnce(){
+    if (setupFeedbackOnce._done) return;
+    setupFeedbackOnce._done = true;
 
-    const payload = {
-      rating : form.rating?.value || '5',
-      email  : email.value.trim(),
-      message: text.value.trim(),
-      weight : document.getElementById('fbWeight')?.value || '',
-      avg    : document.getElementById('fbAvg')?.value || '',
-      top3   : document.getElementById('fbTop3')?.value || '',
-      hobbies: document.getElementById('fbH')?.value || '',
-      values : document.getElementById('fbV')?.value || '',
-      ts     : new Date().toISOString()
+    const form   = document.getElementById('feedbackForm');
+    if (!form) return;
+
+    const stars  = document.getElementById('fbStars');
+    const email  = document.getElementById('fbEmail');
+    const text   = document.getElementById('fbText');
+    const count  = document.getElementById('fbCount');
+    const status = document.getElementById('fbStatus');
+
+    // draft
+    try {
+      const d = JSON.parse(localStorage.getItem(FEED_DRAFT_KEY) || '{}');
+      if (d.email)  email.value = d.email;
+      if (d.text)   text.value  = d.text;
+      if (d.rating){
+        const r = form.querySelector(`input[name="rating"][value="${d.rating}"]`);
+        if (r) r.checked = true;
+      }
+    } catch {}
+
+    const saveDraft = () => {
+      const rating = form.rating?.value || '';
+      localStorage.setItem(FEED_DRAFT_KEY, JSON.stringify({
+        email: email.value.trim(),
+        text : text.value,
+        rating
+      }));
     };
 
-    try {
-      if (window.emailjs && EMAILJS.publicKey && EMAILJS.service && EMAILJS.template){
-        await emailjs.send(EMAILJS.service, EMAILJS.template, payload);
-        if (status){ status.textContent = 'Thanks! Feedback sent 💫'; status.style.color = 'var(--accent)'; }
-        localStorage.removeItem(FEED_DRAFT_KEY);
-        text.value = ''; updateCounter();
-        const r5 = form.querySelector('input[name="rating"][value="5"]'); if (r5) r5.checked = true;
-      } else {
-        console.log('[Feedback payload] (EmailJS not configured):', payload);
-        if (status){ status.textContent = 'Saved locally (EmailJS not configured).'; status.style.color = 'var(--accent)'; }
-      }
-    } catch (err) {
-      console.error(err);
-      if (status){ status.textContent = 'Failed to send. Please try again.'; status.style.color = '#ff9a9a'; }
+    const updateCounter = () => { if (count) count.textContent = String(text.value.length); };
+    updateCounter();
+
+    text.addEventListener('input', () => { updateCounter(); saveDraft(); });
+    email.addEventListener('input', saveDraft);
+    stars?.addEventListener('change', saveDraft);
+
+    if (!form.rating?.value) {
+      const r5 = form.querySelector('input[name="rating"][value="5"]');
+      if (r5) r5.checked = true;
     }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (status){ status.textContent = 'Sending…'; status.style.color = 'var(--muted)'; }
+
+      const payload = {
+        rating : form.rating?.value || '5',
+        email  : email.value.trim(),
+        message: text.value.trim(),
+        weight : document.getElementById('fbWeight')?.value || '',
+        avg    : document.getElementById('fbAvg')?.value || '',
+        top3   : document.getElementById('fbTop3')?.value || '',
+        hobbies: document.getElementById('fbH')?.value || '',
+        values : document.getElementById('fbV')?.value || '',
+        ts     : new Date().toISOString()
+      };
+
+      try {
+        if (window.emailjs && EMAILJS.publicKey && EMAILJS.service && EMAILJS.template){
+          await emailjs.send(EMAILJS.service, EMAILJS.template, payload);
+          if (status){ status.textContent = 'Thanks! Feedback sent 💫'; status.style.color = 'var(--accent)'; }
+          localStorage.removeItem(FEED_DRAFT_KEY);
+          text.value = ''; updateCounter();
+          const r5 = form.querySelector('input[name="rating"][value="5"]'); if (r5) r5.checked = true;
+        } else {
+          console.log('[Feedback payload] (EmailJS not configured):', payload);
+          if (status){ status.textContent = 'Saved locally (EmailJS not configured).'; status.style.color = 'var(--accent)'; }
+        }
+      } catch (err) {
+        console.error(err);
+        if (status){ status.textContent = 'Failed to send. Please try again.'; status.style.color = '#ff9a9a'; }
+      }
+    });
+  }
+
+  // boot
+  document.addEventListener('DOMContentLoaded', () => {
+    const w = document.getElementById('llWeight');
+    const l = document.getElementById('llwLabel');
+    if (w && l) l.textContent = `${(+w.value || 1).toFixed(1)}×`;
+
+    setupFeedbackOnce();
+    render();
   });
-}
 
-// boot (if you already have this block, keep only one)
-document.addEventListener('DOMContentLoaded', () => {
-  const w = document.getElementById('llWeight');
-  const l = document.getElementById('llwLabel');
-  if (w && l) l.textContent = `${(+w.value || 1).toFixed(1)}×`;
-
-  setupFeedbackOnce();   // safe idempotent
-  render();
-});
-
-// close the IIFE that starts at the top of the file
 })();
