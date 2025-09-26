@@ -414,35 +414,6 @@ input:focus, textarea:focus, select:focus{
 
   <script src="friends.js"></script>
 
-  <script>
-  // Mobile toggle and separator cleanup (non-destructive)
-  document.getElementById('navToggle')?.addEventListener('click',()=>{
-    document.getElementById('navMenu')?.classList.toggle('open');
-  });
-  (function fixNavOrder(){
-  const ul = document.getElementById('navMenu') || document.querySelector('.nav-links');
-  if(!ul) return;
-  const desired = [
-    'Home','Quiz','Edit Profile','My Soul','Soul Chart','Soul Coach',
-    'Match','Friends','Results','Log In','Sign Up','Log Out'
-  ];
-  // surenkam esamus ir išmetam dublikatus
-  const items = Array.from(ul.querySelectorAll('li'));
-  const byLabel = new Map();
-  items.forEach(li=>{
-    const label = (li.textContent || '').trim();
-    if (byLabel.has(label)) li.remove(); else byLabel.set(label, li);
-  });
-  // perrikiuojam pagal desired
-  desired.forEach(lbl => { const li = byLabel.get(lbl); if (li) ul.appendChild(li); });
-  // pažymim aktyvų Friends
-  ul.querySelectorAll('a').forEach(a=>{
-    const isActive = /friends\.html$/i.test(a.getAttribute('href')||'');
-    a.classList.toggle('active', isActive);
-    if (isActive) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
-  });
-})();
-</script>
-<script src="nav.js" defer></script>
+  <script src="nav.js" defer></script>
 </body>
 </html>

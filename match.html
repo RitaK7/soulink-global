@@ -214,24 +214,25 @@
   </nav>
 
   <!-- MOBILE NAV DRAWER -->
-  <div class="drawer" id="drawer" aria-hidden="true">
-    <div class="backdrop" id="drawerBackdrop" tabindex="-1" aria-label="Close"></div>
-    <aside class="panel" role="dialog" aria-modal="true" aria-label="Navigation">
-      <a href="index.html">Home</a>
-      <a href="quiz.html">Quiz</a>
-      <a href="edit-profile.html">Edit Profile</a>
-      <a href="my-soul.html">My Soul</a>
-      <a href="soul-chart.html">Soul Chart</a>
-      <a href="soul-coach.html">Soul Coach</a>
-      <a href="match.html" aria-current="page">Match</a>
-      <a href="friends.html">Friends</a>
-      <a href="result.html">Results</a>
-      <a href="login.html">Log In</a>
-      <a href="signup.html">Sign Up</a>
-      <a href="#" id="logoutLinkMobile">Log Out</a>
-      <button class="btn ghost" id="closeDrawer" style="margin-top:8px">Close</button>
-    </aside>
-  </div>
+<div class="drawer" id="drawer" aria-hidden="true">
+  <div class="backdrop" id="drawerBackdrop" tabindex="-1" aria-label="Close"></div>
+  <aside class="panel" role="dialog" aria-modal="true" aria-label="Navigation">
+    <a href="index.html">Home</a>
+    <a href="quiz.html">Quiz</a>
+    <a href="edit-profile.html">Edit Profile</a>
+    <a href="my-soul.html">My Soul</a>
+    <a href="soul-chart.html">Soul Chart</a>
+    <a href="soul-coach.html">Soul Coach</a>
+    <a href="match.html">Match</a>          <!-- be aria-current; nav.js pats uždės -->
+    <a href="friends.html">Friends</a>
+    <a href="results.html">Results</a>
+    <a href="login.html">Log In</a>
+    <a href="signup.html">Sign Up</a>
+    <a href="logout.html" id="logoutLinkMobile">Log Out</a> <!-- pataisytas href -->
+    <button class="btn ghost" id="closeDrawer" style="margin-top:8px">Close</button>
+  </aside>
+</div>
+
 
   <main class="container container--match">
     <h1 class="page-title">Match Lab ✨</h1>
