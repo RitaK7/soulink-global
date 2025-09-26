@@ -178,23 +178,15 @@
   .soulink-nav .nav-toggle .bar{ display:block; width:18px; height:2px; background:var(--nav-fg); }
 
   /* Vienas @media blokas – ankstinam hamburger'į iki 1200px */
- @media (max-width:1200px){
-  /* vienintelis, suvienodintas nav-links aprašas */
-.soulink-nav .nav .nav-links{
-  list-style:none; margin:0; padding:0;
-  display:flex; gap:.6rem;
-  flex-wrap: nowrap;                 /* nelaužom eilučių */
-  overflow-x: auto;                  /* švelni horiz. slinktis jei netelpa */
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+@media (max-width:1200px){
+  .soulink-nav .nav-inner{ grid-template-columns:1fr auto; }
+  .soulink-nav .nav-toggle{ display:inline-flex; }
+  .soulink-nav .nav{ grid-column:1 / -1; width:100%; }
+  .soulink-nav .nav .nav-links{ display:none; flex-direction:column; gap:.3rem; padding-top:.6rem; }
+  .soulink-nav .nav .nav-links.open{ display:flex; }
+  .soulink-nav .nav .nav-links a{ padding:.65rem .8rem; }
 }
-.soulink-nav .nav .nav-links::-webkit-scrollbar{ display:none; }
-.soulink-nav .nav .nav-links a{
-  display:inline-block; color:var(--nav-fg);
-  padding:.5rem .7rem; border-radius:10px; border:1px solid transparent;
-  transition:box-shadow .18s,transform .12s,background .18s;
-  flex:0 0 auto;                     /* nesisuspaudžia */
-}
+
 .soulink-nav .nav .nav-links a:hover{
   border-color:var(--nav-border);
   box-shadow:0 0 0 1px var(--nav-border),0 0 16px rgba(0,253,216,.18);
@@ -205,8 +197,6 @@
   color:var(--nav-fg);
   background:rgba(0,253,216,.10);
   box-shadow:0 0 0 2px var(--nav-accent) inset,0 0 18px rgba(0,253,216,.25);
-}
-
 }
 
   .soulink-nav::after{
