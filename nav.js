@@ -1,53 +1,60 @@
+// Soulink — Navbar glue (active link + mobile toggle)
+// Vizualo nekeičiam; tik logika.
+
 (function () {
-  if (window.__soulinkNavInitV3) return;
-  window.__soulinkNavInitV3 = true;
+  const root = document.querySelector('.soulink-nav');
+  if (!root) return;
 
-  const btn  = document.getElementById('navToggle');
-  const menu = document.getElementById('navMenu');
-  const mq   = () => window.innerWidth < 800;
-
-  function setOpen(open) {
-    if (!btn || !menu) return;
-    document.body.classList.toggle('nav-open', open);
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  // Mobile hamburger toggle
+  const toggleBtn = root.querySelector('.nav-toggle');
+  const linksBox  = root.querySelector('.nav .nav-links');
+  if (toggleBtn && linksBox) {
+    toggleBtn.addEventListener('click', () => {
+      linksBox.classList.toggle('open');
+    });
   }
 
-  function onResize() {
-    if (!btn || !menu) return;
-    if (mq()) {
-      btn.style.display = 'block';
-      setOpen(false); // start closed on small
-    } else {
-      btn.style.display = 'none';
-      document.body.classList.remove('nav-open');
-      menu.style.display = 'flex'; // desktop inline
-    }
-  }
+  // Aktyvus puslapis: class="active" + aria-current="page"
+  const current = (() => {
+    const url = new URL(window.location.href);
+    let path = url.pathname.split('/').pop() || 'index.html';
+    if (path === '' || path === '/') path = 'index.html';
+    if (path === 'home.html') path = 'index.html'; // tolerancija, jei kur likęs
+    return path;
+  })();
 
-  if (btn && menu) {
-    btn.addEventListener('click', () => {
-      const isOpen = document.body.classList.contains('nav-open');
-      setOpen(!isOpen);
-    });
-
-    // Close after tapping a link
-    menu.querySelectorAll('a').forEach(a => {
-      a.addEventListener('click', () => { if (mq()) setOpen(false); });
-    });
-
-    // ESC to close
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && mq()) setOpen(false);
-    });
-
-    window.addEventListener('resize', onResize);
-    onResize();
-  }
-
-  // Active link highlight
-  const current = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
-  menu?.querySelectorAll('a').forEach(a => {
-    const href = (a.getAttribute('href') || '').toLowerCase();
-    if (href === current) a.classList.add('active');
+  // Išvalom hardcodintus active/aria-current (jei buvo)
+  root.querySelectorAll('.nav .nav-links a').forEach(a => {
+    a.classList.remove('active');
+    a.removeAttribute('aria-current');
   });
+
+  // Randam atitinkamą <a> pagal href (be query/hash)
+  const activeLink = Array.from(root.querySelectorAll('.nav .nav-links a'))
+    .find(a => {
+      const href = (a.getAttribute('href') || '').split('?')[0].split('#')[0];
+      return href === current;
+    });
+
+  if (activeLink) {
+    activeLink.classList.add('active');
+    activeLink.setAttribute('aria-current', 'page');
+  }
+
+  // UX: ESC uždaro meniu mobile režime
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && linksBox && linksBox.classList.contains('open')) {
+      linksBox.classList.remove('open');
+    }
+  });
+
+  // UX: paspaudus nuorodą — uždarom mobile meniu
+  if (linksBox) {
+    linksBox.addEventListener('click', (e) => {
+      const t = e.target;
+      if (t && t.tagName === 'A' && linksBox.classList.contains('open')) {
+        linksBox.classList.remove('open');
+      }
+    });
+  }
 })();
