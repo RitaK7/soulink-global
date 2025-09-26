@@ -75,14 +75,6 @@
 
   /* ===== Layout ===== */
   .grid{ display:grid; grid-template-columns:1.1fr 1.9fr; gap:1.2rem; }
-  @media (max-width:1200px){
-  .soulink-nav .nav-inner{ grid-template-columns:1fr auto; }
-  .soulink-nav .nav-toggle{ display:inline-flex; }
-  .soulink-nav .nav{ grid-column:1 / -1; width:100%; }
-  .soulink-nav .nav-links{ display:none; flex-direction:column; gap:.3rem; padding-top:.6rem; }
-  .soulink-nav .nav-links.open{ display:flex; }
-  .soulink-nav .nav-links a{ padding:.65rem .8rem; }
-}
 
   /* ===== Match card bits ===== */
   .match-card{
@@ -150,35 +142,39 @@
     backdrop-filter:blur(8px);
     border-bottom:1px solid var(--nav-border);
   }
- .soulink-nav .nav .nav-links{
-  list-style:none; margin:0; padding:0;
-  display:flex; gap:.6rem;
-  flex-wrap: nowrap;           /* NEBE laužom eilučių */
-  overflow-x: auto;            /* jei netilps – švelniai slinksis */
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;       /* Firefox */
-}
-  .soulink-nav .nav .nav-links::-webkit-scrollbar{ display:none; } /* WebKit */
-  .soulink-nav .nav .nav-links a{ flex: 0 0 auto; }                /* nesisuspaudžia */
-  .soulink-nav .brand{ color:var(--nav-accent); font-weight:800; text-decoration:none; letter-spacing:.2px; }
+  .soulink-nav .brand{
+    color:var(--nav-accent); font-weight:800; text-decoration:none; letter-spacing:.2px;
+  }
   .soulink-nav .nav{ justify-self:end; }
-  .soulink-nav .nav-links{ list-style:none; margin:0; padding:0; display:flex; gap:.6rem; flex-wrap:wrap; }
-  .soulink-nav .nav-links a{
+
+  /* vienintelis nav-links aprašas (NEBE dubliuojam) */
+  .soulink-nav .nav .nav-links{
+    list-style:none; margin:0; padding:0;
+    display:flex; gap:.6rem;
+    flex-wrap: nowrap;                 /* nelaužom eilučių */
+    overflow-x: auto;                  /* jei netilps – slinksis horizontaliai */
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;             /* Firefox */
+  }
+  .soulink-nav .nav .nav-links::-webkit-scrollbar{ display:none; } /* WebKit */
+  .soulink-nav .nav .nav-links a{
     display:inline-block; color:var(--nav-fg);
     padding:.5rem .7rem; border-radius:10px; border:1px solid transparent;
     transition:box-shadow .18s,transform .12s,background .18s;
+    flex:0 0 auto;                     /* nesisuspaudžia */
   }
-  .soulink-nav .nav-links a:hover{
+  .soulink-nav .nav .nav-links a:hover{
     border-color:var(--nav-border);
     box-shadow:0 0 0 1px var(--nav-border),0 0 16px rgba(0,253,216,.18);
     transform:translateY(-1px);
   }
-  .soulink-nav .nav-links a.active,
-  .soulink-nav .nav-links a[aria-current="page"]{
+  .soulink-nav .nav .nav-links a.active,
+  .soulink-nav .nav .nav-links a[aria-current="page"]{
     color:var(--nav-fg);
     background:rgba(0,253,216,.10);
     box-shadow:0 0 0 2px var(--nav-accent) inset,0 0 18px rgba(0,253,216,.25);
   }
+
   .soulink-nav .nav-toggle{
     justify-self:end; width:40px; height:36px; border-radius:10px;
     background:transparent; border:1px solid var(--nav-border); color:var(--nav-fg);
@@ -186,13 +182,14 @@
   }
   .soulink-nav .nav-toggle .bar{ display:block; width:18px; height:2px; background:var(--nav-fg); }
 
-  @media (max-width:860px){
+  /* Vienas @media blokas – ankstinam hamburger'į iki 1200px */
+  @media (max-width:1200px){
     .soulink-nav .nav-inner{ grid-template-columns:1fr auto; }
     .soulink-nav .nav-toggle{ display:inline-flex; }
     .soulink-nav .nav{ grid-column:1 / -1; width:100%; }
-    .soulink-nav .nav-links{ display:none; flex-direction:column; gap:.3rem; padding-top:.6rem; }
-    .soulink-nav .nav-links.open{ display:flex; }
-    .soulink-nav .nav-links a{ padding:.65rem .8rem; }
+    .soulink-nav .nav .nav-links{ display:none; flex-direction:column; gap:.3rem; padding-top:.6rem; }
+    .soulink-nav .nav .nav-links.open{ display:flex; }
+    .soulink-nav .nav .nav-links a{ padding:.65rem .8rem; }
   }
 
   .soulink-nav::after{
@@ -203,7 +200,7 @@
   }
   .soulink-nav.scrolled::after{ opacity:.85; transform:scaleX(1); }
   @media (prefers-reduced-motion:reduce){
-    .soulink-nav .nav-links a, .soulink-nav::after{ transition:none; }
+    .soulink-nav .nav .nav-links a, .soulink-nav::after{ transition:none; }
   }
 
   /* ===== Print ===== */
