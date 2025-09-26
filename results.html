@@ -75,13 +75,14 @@
 
   /* ===== Layout ===== */
   .grid{ display:grid; grid-template-columns:1.1fr 1.9fr; gap:1.2rem; }
-  @media (max-width:1000px){ .grid{ grid-template-columns:1fr; } }
-
-  .results-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.9rem; }
-  @media (max-width:800px){ .results-grid{ grid-template-columns:1fr; } }
-
-  .insights-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.8rem; }
-  @media (max-width:900px){ .insights-grid{ grid-template-columns:1fr; } }
+  @media (max-width:1200px){
+  .soulink-nav .nav-inner{ grid-template-columns:1fr auto; }
+  .soulink-nav .nav-toggle{ display:inline-flex; }
+  .soulink-nav .nav{ grid-column:1 / -1; width:100%; }
+  .soulink-nav .nav-links{ display:none; flex-direction:column; gap:.3rem; padding-top:.6rem; }
+  .soulink-nav .nav-links.open{ display:flex; }
+  .soulink-nav .nav-links a{ padding:.65rem .8rem; }
+}
 
   /* ===== Match card bits ===== */
   .match-card{
@@ -149,10 +150,16 @@
     backdrop-filter:blur(8px);
     border-bottom:1px solid var(--nav-border);
   }
-  .soulink-nav .nav-inner{
-    max-width:1180px; margin:0 auto; padding:.6rem 1rem;
-    display:grid; grid-template-columns:auto 40px 1fr; align-items:center; gap:.8rem;
-  }
+ .soulink-nav .nav .nav-links{
+  list-style:none; margin:0; padding:0;
+  display:flex; gap:.6rem;
+  flex-wrap: nowrap;           /* NEBE laužom eilučių */
+  overflow-x: auto;            /* jei netilps – švelniai slinksis */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;       /* Firefox */
+}
+  .soulink-nav .nav .nav-links::-webkit-scrollbar{ display:none; } /* WebKit */
+  .soulink-nav .nav .nav-links a{ flex: 0 0 auto; }                /* nesisuspaudžia */
   .soulink-nav .brand{ color:var(--nav-accent); font-weight:800; text-decoration:none; letter-spacing:.2px; }
   .soulink-nav .nav{ justify-self:end; }
   .soulink-nav .nav-links{ list-style:none; margin:0; padding:0; display:flex; gap:.6rem; flex-wrap:wrap; }
@@ -230,7 +237,7 @@
           <li><a href="soul-coach.html">Soul Coach</a></li>
           <li><a href="match.html">Match</a></li>
           <li><a href="friends.html">Friends</a></li>
-          <li><a href="results.html" class="active" aria-current="page">Results</a></li>
+          <li<a href="results.html">Results</a>
           <li><a href="login.html">Log In</a></li>
           <li><a href="signup.html">Sign Up</a></li>
           <li><a href="logout.html">Log Out</a></li>
