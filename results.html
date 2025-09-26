@@ -148,21 +148,16 @@
   .soulink-nav .nav{ justify-self:end; }
 
   /* vienintelis nav-links aprašas (NEBE dubliuojam) */
-  .soulink-nav .nav .nav-links{
-    list-style:none; margin:0; padding:0;
-    display:flex; gap:.6rem;
-    flex-wrap: nowrap;                 /* nelaužom eilučių */
-    overflow-x: auto;                  /* jei netilps – slinksis horizontaliai */
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;             /* Firefox */
-  }
-  .soulink-nav .nav .nav-links::-webkit-scrollbar{ display:none; } /* WebKit */
-  .soulink-nav .nav .nav-links a{
-    display:inline-block; color:var(--nav-fg);
-    padding:.5rem .7rem; border-radius:10px; border:1px solid transparent;
-    transition:box-shadow .18s,transform .12s,background .18s;
-    flex:0 0 auto;                     /* nesisuspaudžia */
-  }
+ .soulink-nav .nav-links{
+  list-style:none; margin:0; padding:0;
+  display:flex; gap:.6rem;
+  flex-wrap: nowrap;           /* nelaužom eilučių */
+  overflow-x: auto;            /* jei netilps – slinksis horizontaliai */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+  .soulink-nav .nav-links::-webkit-scrollbar{ display:none; }
+  .soulink-nav .nav-links a{ flex: 0 0 auto; }   /* linkai nesusispaudžia */  
   .soulink-nav .nav .nav-links a:hover{
     border-color:var(--nav-border);
     box-shadow:0 0 0 1px var(--nav-border),0 0 16px rgba(0,253,216,.18);
@@ -183,14 +178,14 @@
   .soulink-nav .nav-toggle .bar{ display:block; width:18px; height:2px; background:var(--nav-fg); }
 
   /* Vienas @media blokas – ankstinam hamburger'į iki 1200px */
-  @media (max-width:1200px){
-    .soulink-nav .nav-inner{ grid-template-columns:1fr auto; }
-    .soulink-nav .nav-toggle{ display:inline-flex; }
-    .soulink-nav .nav{ grid-column:1 / -1; width:100%; }
-    .soulink-nav .nav .nav-links{ display:none; flex-direction:column; gap:.3rem; padding-top:.6rem; }
-    .soulink-nav .nav .nav-links.open{ display:flex; }
-    .soulink-nav .nav .nav-links a{ padding:.65rem .8rem; }
-  }
+ @media (max-width:1200px){
+  .soulink-nav .nav-inner{ grid-template-columns:1fr auto; }
+  .soulink-nav .nav-toggle{ display:inline-flex; }
+  .soulink-nav .nav{ grid-column:1 / -1; width:100%; }
+  .soulink-nav .nav-links{ display:none; flex-direction:column; gap:.3rem; padding-top:.6rem; }
+  .soulink-nav .nav-links.open{ display:flex; }
+  .soulink-nav .nav-links a{ padding:.65rem .8rem; }
+}
 
   .soulink-nav::after{
     content:""; position:absolute; left:0; right:0; bottom:0; height:2px;
