@@ -5,21 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Soulink – Results</title>
 
-  <!-- auth guard -->
-  <script src="auth.js" defer></script>
+  <!-- Soulink global styles (tamsi tema + neon glow) -->
+  <link rel="stylesheet" href="style.css">
 
-  <!-- global nav (NEKEIČIAM) -->
+  <!-- Global nav logic (aktyvus link’as) -->
   <script src="nav.js" defer></script>
 
-  <!-- Icons -->
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Puslapio logika (neliečiama) – žemiau body pabaigoje taip pat įkelta su defer -->
+  <!-- <script src="results.js" defer></script> -->
 
-  <!-- LOKALUS avatar/grid css (tik šiam puslapiui) -->
+  <!-- Tik lokali mini CSS šiam puslapiui (grid + avatar dydis) -->
   <style>
     .sl-list{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      grid-template-columns:repeat(auto-fit, minmax(260px,1fr));
       gap:16px;
     }
     .sl-card{ display:flex; flex-direction:column; position:relative; }
@@ -28,8 +27,6 @@
       width:56px; height:56px; border-radius:50%;
       display:inline-flex; align-items:center; justify-content:center;
       font-weight:600; font-size:22px; overflow:hidden; flex:0 0 56px;
-      box-shadow:0 0 0 2px rgba(0,253,216,.28), 0 0 10px rgba(0,253,216,.35);
-      background:#0a3f42; color:#eafff9;
     }
     .sl-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
     .sl-name{ font-weight:800; line-height:1.2; }
@@ -37,27 +34,18 @@
     .sl-badges{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 12px; }
     .sl-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; }
     .sl-score{ position:absolute; top:8px; right:8px; }
+    /* 2 kolonos desktop, 1 kolona telefone (layout kairė/dešinė) */
+    .grid{ display:grid; grid-template-columns:1.1fr 1.9fr; gap:1.2rem; }
+    @media (max-width:960px){ .grid{ grid-template-columns:1fr; } }
     @media (max-width:480px){
       .sl-avatar{ width:48px; height:48px; font-size:20px; }
       .sl-list{ grid-template-columns:1fr; }
     }
-    .sl-card.card{ background:var(--surface); border:1px solid var(--stroke); border-radius:16px; padding:1.2rem;
-      box-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(0,253,216,.06) inset; }
-    .pill{ display:inline-block; padding:.3rem .6rem; border-radius:999px; border:1px solid var(--stroke); background:rgba(0,253,216,.08); }
-    .score-ring{ position:relative; width:56px; height:56px; }
-    .score-ring svg{ width:56px; height:56px; }
-    .score-ring .ring-track{ fill:none; stroke:rgba(255,255,255,.18); stroke-width:6; }
-    .score-ring .ring-prog{ fill:none; stroke:var(--accent); stroke-width:6; stroke-linecap:round; filter:drop-shadow(0 0 6px rgba(0,253,216,.45)); }
-    .score-ring .score-num{ position:absolute; inset:0; display:grid; place-items:center; font-weight:800; }
-    .score-num small{ font-size:.7em; opacity:.9; }
-    /* layout: 2 kolonos → 1 telefone */
-    .grid{ display:grid; grid-template-columns:1.1fr 1.9fr; gap:1.2rem; }
-    @media (max-width:960px){ .grid{ grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
 
-  <!-- NAVBAR (vienodas markup) -->
+  <!-- NAVBAR (vienodas markup, vizualą duoda style.css) -->
   <nav class="navbar" role="navigation" aria-label="Main">
     <div class="nav-inner">
       <div class="brand">Soulink</div>
@@ -81,7 +69,7 @@
   </nav>
 
   <main class="container">
-    <h1 class="section-title" style="font-size:1.6rem;">🏁 Results</h1>
+    <h1 class="section-title">🏁 Results</h1>
 
     <section class="grid">
       <!-- LEFT: Feedback + Snapshot + Settings -->
@@ -146,11 +134,11 @@
     </section>
   </main>
 
-  <footer style="margin:12px 0;color:#c8f7ef;border-top:1px solid rgba(0,253,216,.28);padding-top:12px">
-    <span>© 2025 Soulink.global | Created with love by Soulink Team</span>
+  <footer class="footer-note">
+    © 2025 Soulink.global | Created with love by Soulink Team
   </footer>
 
-  <!-- logic -->
+  <!-- Puslapio logika (NEKEIČIAMA) -->
   <script src="results.js" defer></script>
 </body>
 </html>
