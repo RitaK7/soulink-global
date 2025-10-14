@@ -1,269 +1,156 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Soulink · Match Lab</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Soulink – Match</title>
 
-  <!-- ===== MATCH PAGE SCOPED FIXES (safe, isolated) ===== -->
+  <!-- auth guard: turi būti prieš kitus skriptus -->
+  <script src="auth.js"></script>
+
+  <!-- Icons (kaip kituose puslapiuose) -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
   <style>
-    /* Container & title */
-    .container.container--match{max-width:1200px;margin-inline:auto;padding-inline:clamp(16px,4vw,24px);padding-block:clamp(12px,3vw,24px)}
-    .page-title{font-size:clamp(20px,2.2vw,28px);margin:0 0 8px}
-    .page-sub{opacity:.9;margin:0 0 16px}
-
-    /* Nav color parity (Match looked white on your install) */
-    .match-page .navbar .nav-links a{color:var(--muted)}
-    .match-page .navbar .nav-links a[aria-current="page"]{
-      color:var(--fg);
-      background:rgba(0,253,216,.12);
-      border:1px solid var(--border);
-      box-shadow:0 0 18px rgba(0,253,216,.15), inset 0 0 0 1px var(--border);
-      border-radius:10px;
+    :root{
+      --bg:#003c43;
+      --surface:#074c4f;
+      --surface-2:#0a3f42;
+      --stroke:rgba(0,253,216,.28);
+      --glow:rgba(0,253,216,.35);
+      --text:#eafff9;
+      --muted:#c8f7ef;
+      --link:#9afcf0;
+      --accent:#00fdd8;
+      --border:rgba(0,253,216,.28);
     }
+    html,body{ background:var(--bg); color:var(--text); margin:0; }
+    a{ color:var(--link); text-decoration:none; }
+    a:hover{ color:var(--accent); }
+    .container{ max-width:1100px; margin:0 auto; padding:2rem 1rem; }
 
-    /* Snapshot + Filters side-by-side (desktop), stacked on mobile */
-    .layout{display:grid;gap:clamp(12px,2.4vw,18px)}
-    @media (min-width:1024px){.layout{grid-template-columns:1.1fr .9fr;align-items:start}}
+    /* Nav (paliekam kaip pas tave .navbar; vizualo nekeičiam) */
+    .navbar{ position:sticky; top:0; background:#002e30; border-bottom:1px solid var(--stroke); box-shadow:0 0 12px rgba(0,253,216,.25); z-index:50; }
+    .nav-inner{ display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.8rem 1rem; }
+    .brand{ font-weight:700; color:var(--accent); text-decoration:none; }
+    .nav-links{ list-style:none; display:flex; gap:.6rem; margin:0; padding:0; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+    .nav-links::-webkit-scrollbar{ display:none; }
+    .nav-links a{ display:inline-block; padding:.45rem .7rem; border-radius:10px; border:1px solid transparent; color:var(--text); text-decoration:none; flex:0 0 auto; }
+    .nav-links a:hover{ border-color:var(--stroke); box-shadow:0 0 0 1px var(--stroke),0 0 16px var(--glow); color:var(--accent); }
+    .nav-btn{ display:none; background:transparent; border:1px solid var(--stroke); border-radius:10px; padding:.4rem .6rem; color:var(--accent); }
 
-    /* Mobile drawer for filters (unique IDs) */
-    #filtersToggle.only-mobile{display:none}
-    #filtersPanel{position:sticky;top:84px;align-self:start}
-    @media (max-width:767px){
-      #filtersToggle.only-mobile{display:inline-flex}
-      #filtersPanel{
-        position:fixed;inset:0 0 0 auto;width:min(88vw,360px);
-        transform:translateX(100%);transition:transform .25s ease;
-        background:#082e33;z-index:60;padding:16px;box-shadow:-16px 0 40px rgba(0,0,0,.35)
-      }
-      #filtersPanel.open{transform:translateX(0)}
-    }
-    @media (prefers-reduced-motion:reduce){#filtersPanel{transition:none}}
+    /* Drawer mobilui (tavo esamas) */
+    .drawer{ position:fixed; inset:0; display:none; }
+    .drawer.open{ display:block; }
+    .drawer .backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.45); }
+    .drawer .panel{ position:absolute; top:0; left:0; bottom:0; width:280px; background:#002e30; border-right:1px solid var(--stroke); padding:14px; display:flex; flex-direction:column; gap:.35rem; }
+    .drawer .panel a{ padding:.45rem .7rem; border-radius:10px; text-decoration:none; color:var(--text); }
+    .drawer .panel a:hover{ background:rgba(0,253,216,.10); box-shadow:0 0 0 1px var(--stroke) inset; }
+    .hamburger button{ background:transparent; border:1px solid var(--stroke); color:var(--accent); border-radius:10px; padding:.4rem .6rem; cursor:pointer; }
 
-    /* Cards grid (fully responsive, no overflow) */
-    .match-page .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;align-items:start}
-    @media (max-width:380px){.match-page .cards{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}}
+    /* Kortelės ir Match puslapio smulkmenos (paliekam kaip buvo) */
+    .card{ background:var(--surface); border:1px solid var(--stroke); border-radius:16px; padding:1.2rem; box-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(0,253,216,.06) inset; }
+    .page-title{ font-size:1.6rem; font-weight:800; letter-spacing:.2px; margin:0 0 .2rem; }
+    .page-sub{ color:var(--muted); margin:.2rem 0 1rem; }
+    .segment-toggle{ display:flex; gap:.5rem; margin:.6rem 0 1rem; }
+    .seg-btn{ border:1px solid var(--stroke); border-radius:999px; padding:.4rem .8rem; background:linear-gradient(180deg, rgba(0,253,216,.08), rgba(0,253,216,.02)); font-weight:700; cursor:pointer; }
+    .seg-btn.is-active{ box-shadow:0 0 0 2px rgba(80,255,200,.25), 0 0 16px rgba(80,255,200,.25); }
+    .layout{ display:grid; grid-template-columns:1.2fr 1fr; gap:1rem; }
+    @media (max-width:960px){ .layout{ grid-template-columns:1fr; } }
+    .chips{ display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.3rem; }
+    .chip{ display:inline-block; padding:.2rem .5rem; border-radius:999px; border:1px solid var(--stroke); background:rgba(0,253,216,.08); }
+    .filters-panel h3{ margin:.2rem 0 .6rem; }
+    .page-cta{ display:flex; justify-content:space-between; margin-top:12px; }
+    .btn{ cursor:pointer; border:1px solid var(--stroke); border-radius:999px; padding:.55rem .95rem; font-weight:700; color:var(--text); background:linear-gradient(180deg, rgba(0,253,216,.08), rgba(0,253,216,.02)); box-shadow:0 0 12px rgba(0,253,216,.2); transition:transform .15s ease, box-shadow .15s ease; }
+    .btn:hover{ box-shadow:0 0 18px rgba(0,253,216,.45); transform:translateY(-1px); }
 
-    /* Chip spacing */
-    .match-page .chip{margin:4px 6px 0 0}
-
-    /* Subtle hover elevation + glow for cards */
-    .match-page .match-card{transition:transform .18s ease, box-shadow .18s ease, outline-color .18s ease}
-    .match-page .match-card:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,255,200,.08),0 0 0 1px rgba(0,255,200,.20) inset}
-
-    /* Score ring visuals (when JS injects svg) */
-    .score-ring{position:relative;width:64px;height:64px}
-    .score-ring svg{width:64px;height:64px;display:block;filter:drop-shadow(0 0 6px rgba(0,253,216,.28))}
-    .ring-track{fill:none;stroke:rgba(255,255,255,.14);stroke-width:6}
-    .ring-prog{fill:none;stroke:var(--accent,#00fdd8);stroke-width:6;stroke-linecap:round}
-    .score-num{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;font-size:14px}
-    .score-num.good{color:#b6ffe6}.score-num.ok{color:#d0fff5}.score-num.low{color:#bee;opacity:.9}
-
-    /* Gentle glow on the badge */
-    .match-page .score-num{ text-shadow:0 0 6px rgba(0,255,200,.25) }
-    @media (prefers-reduced-motion:no-preference){
-      @keyframes pulseGlow{0%,100%{filter:drop-shadow(0 0 8px rgba(0,255,200,.30))}50%{filter:drop-shadow(0 0 16px rgba(0,255,200,.42))}}
-      .match-page .score-num{animation:pulseGlow 2.2s ease-in-out infinite}
-    }
-
-    /* 1) kill stray black dots (list markers / leftover nodes) */
-    .match-page ul,.match-page li{list-style:none}
-    .match-page li::marker{content:none}
-    .match-page .corner-dot,.match-page .dot,.match-page .mini-dots,.match-page .dots,.match-page .chem-dots{display:none!important}
-
-    /* CTA row */
-    .page-cta{display:flex;gap:12px;justify-content:space-between;margin:24px 0}
-    @media(max-width:767px){.page-cta{flex-direction:column}.page-cta .btn{width:100%}}
-
-    /* Cards grid: avoid over-stretching */
-    .cards-grid{
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-   }
-
-  /* Mobile sticky filters */
-    @media (max-width: 768px){
-    #filters{ position: sticky; top: .5rem; z-index: 5; }
-   }
-
-     /* Snapshot subtle emphasis (no content changes) */
-   #snapshot.friend-mode,
-   #snapshot.romantic-mode{
-   box-shadow: 0 0 0 1px rgba(0,255,200,.18) inset;
-  }
-/* ==== Soulink · Match page (scoped) ==== */
-.match-page .is-hidden{ display:none!important; }
-
-/* Score badge – visose kortelėse vienoda padėtis */
-.match-page .match-card{ position:relative; }
-.match-page .match-card .score-badge,
-.match-page .match-card .score,
-.match-page .match-card .score-num{
-  position:absolute; top:8px; right:8px;
-}
-
-/* Kortelių grid responsyvas be „stretch“ */
-@media (max-width: 480px){
-  .match-page #matchGrid,
-  .match-page .cards,
-  .match-page .cards-grid{
-    display:grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
-@media (min-width: 481px) and (max-width: 1024px){
-  .match-page #matchGrid,
-  .match-page .cards,
-  .match-page .cards-grid{
-    display:grid;
-    grid-template-columns: repeat(2, minmax(0,1fr));
-    gap: 1rem;
-  }
-}
-/* >1024px paliekam kaip yra (nekeičiam) */
-
-/* Message/Compare – mobile stulpeliu (nekeičiant DOM) */
-@media (max-width: 480px){
-  .match-page .actions-stackable{
-    display:flex; flex-direction:column; gap:10px;
-  }
-}
-
-/* Žetonų konteinerio „fade“ vietoj karpymo (be JS „more“) */
-.match-page .chips.clamp-3,
-.match-page .tags.clamp-3{
-  --clamp-lines: 3;
-  max-height: calc(1.25em * var(--clamp-lines) + 8px);
-  overflow:hidden;
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0));
-          mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0));
-}
-
-/* Toggle glow (aktyvus) – subtiliai */
-.match-page .is-active{
-  box-shadow: 0 0 0 2px rgba(0,255,200,.28) inset, 0 0 14px rgba(0,255,200,.25);
-}
-
-/* Snapshot akcentas pagal režimą */
-.match-page #yourSnapshot.friend-mode,
-.match-page #yourSnapshot.romantic-mode,
-.match-page #snapshot.friend-mode,
-.match-page #snapshot.romantic-mode{
-  box-shadow: 0 0 0 1px rgba(0,255,200,.18) inset;
-}
-
-/* Pilki placeholder’iai Snapshot’e */
-.match-page .muted{ opacity:.7; }
-/* Soulink · Match (scoped) */
-.match-page #toggleFriendship.is-active,
-.match-page #toggleRomantic.is-active{
-  box-shadow: 0 0 0 2px rgba(80,255,200,.25), 0 0 16px rgba(80,255,200,.25);
-}
-.match-page .muted{ opacity:.7; }
-
-/* Visose kortelėse vienoda score padėtis (nekeičiant DOM) */
-.match-page .match-card{ position: relative; }
-.match-page .match-card .score-badge,
-.match-page .match-card .score,
-.match-page .match-card .score-num{
-  position:absolute; top:8px; right:8px;
-}
-/* Soulink · Match — toggle glow + score badge position (scoped) */
-.match-page #segmentToggle .seg-btn.is-active{
-  box-shadow: 0 0 0 2px rgba(80,255,200,.25), 0 0 16px rgba(80,255,200,.25);
-}
-
-.match-page .match-card{ position: relative; }
-.match-page .match-card .score-badge,
-.match-page .match-card .score,
-.match-page .match-card .score-num{
-  position: absolute; top:8px; right:8px;
-}
-/* scoped to Match */
-.match-page #segmentToggle .seg-btn.is-active{
-  box-shadow: 0 0 0 2px rgba(80,255,200,.25), 0 0 16px rgba(80,255,200,.25);
-}
-.match-page .muted{ opacity:.7; }
+    /* Match specifiniai „glow“ (palieku kaip buvo) */
+    .match-page .match-card .score-num{ position:absolute; top:8px; right:8px; }
+    .match-page #segmentToggle .seg-btn.is-active{ box-shadow:0 0 0 2px rgba(80,255,200,.25), 0 0 16px rgba(80,255,200,.25); }
+    .match-page .muted{ opacity:.7; }
   </style>
 </head>
 
 <body data-page="match" class="match-page">
-  <!-- NAVBAR (same structure/colors as other pages) -->
+
+  <!-- NAVBAR (paliekam tavo .navbar; UL tvarka vienoda visur) -->
   <nav class="navbar" role="navigation" aria-label="Main">
     <div class="nav-inner">
       <div class="brand">Soulink</div>
       <div class="nav-links" aria-label="Primary">
-    <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="quiz.html">Quiz</a></li>
-    <li><a href="edit-profile.html">Edit Profile</a></li>
-    <li><a href="my-soul.html">My Soul</a></li>
-    <li><a href="soul-chart.html">Soul Chart</a></li>
-    <li><a href="soul-coach.html">Soul Coach</a></li>
-    <li><a href="match.html">Match</a></li>
-    <li><a href="friends.html">Friends</a></li>
-    <li><a href="results.html">Results</a></li>
-    <li><a href="login.html">Log In</a></li>
-    <li><a href="signup.html">Sign Up</a></li>
-    <li><a href="logout.html">Log Out</a></li>
-   </ul>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="quiz.html">Quiz</a></li>
+          <li><a href="edit-profile.html">Edit Profile</a></li>
+          <li><a href="my-soul.html">My Soul</a></li>
+          <li><a href="soul-chart.html">Soul Chart</a></li>
+          <li><a href="soul-coach.html">Soul Coach</a></li>
+          <li><a href="match.html">Match</a></li>
+          <li><a href="friends.html">Friends</a></li>
+          <li><a href="results.html">Results</a></li>
+          <li><a href="login.html">Log In</a></li>
+          <li><a href="signup.html">Sign Up</a></li>
+          <li><a href="logout.html">Log Out</a></li>
+        </ul>
       </div>
       <div class="hamburger"><button id="openDrawer" aria-label="Open menu">☰ Menu</button></div>
     </div>
   </nav>
 
   <!-- MOBILE NAV DRAWER -->
-<div class="drawer" id="drawer" aria-hidden="true">
-  <div class="backdrop" id="drawerBackdrop" tabindex="-1" aria-label="Close"></div>
-  <aside class="panel" role="dialog" aria-modal="true" aria-label="Navigation">
-    <a href="index.html">Home</a>
-    <a href="quiz.html">Quiz</a>
-    <a href="edit-profile.html">Edit Profile</a>
-    <a href="my-soul.html">My Soul</a>
-    <a href="soul-chart.html">Soul Chart</a>
-    <a href="soul-coach.html">Soul Coach</a>
-    <a href="match.html">Match</a>          <!-- be aria-current; nav.js pats uždės -->
-    <a href="friends.html">Friends</a>
-    <a href="results.html">Results</a>
-    <a href="login.html">Log In</a>
-    <a href="signup.html">Sign Up</a>
-    <a href="logout.html" id="logoutLinkMobile">Log Out</a> <!-- pataisytas href -->
-    <button class="btn ghost" id="closeDrawer" style="margin-top:8px">Close</button>
-  </aside>
-</div>
+  <div class="drawer" id="drawer" aria-hidden="true">
+    <div class="backdrop" id="drawerBackdrop" tabindex="-1" aria-label="Close"></div>
+    <aside class="panel" role="dialog" aria-modal="true" aria-label="Navigation">
+      <a href="index.html">Home</a>
+      <a href="quiz.html">Quiz</a>
+      <a href="edit-profile.html">Edit Profile</a>
+      <a href="my-soul.html">My Soul</a>
+      <a href="soul-chart.html">Soul Chart</a>
+      <a href="soul-coach.html">Soul Coach</a>
+      <a href="match.html">Match</a>        <!-- be aria-current; nav.js pats uždės -->
+      <a href="friends.html">Friends</a>
+      <a href="results.html">Results</a>    <!-- pataisyta iš result.html -->
+      <a href="login.html">Log In</a>
+      <a href="signup.html">Sign Up</a>
+      <a href="logout.html" id="logoutLinkMobile">Log Out</a> <!-- pataisytas href -->
+      <button class="btn ghost" id="closeDrawer" style="margin-top:8px">Close</button>
+    </aside>
+  </div>
 
-
+  <!-- PAGE -->
   <main class="container container--match">
     <h1 class="page-title">Match Lab ✨</h1>
     <p class="page-sub">See who resonates with your Connection, Love Language, Hobbies and Values. Hover or tap each card for details.</p>
-    <!-- SEGMENT TOGGLE (Friendship / Romantic) -->
+
+    <!-- SEGMENT TOGGLE -->
     <div class="segment-toggle" id="segmentToggle" role="tablist" aria-label="Match segment">
-    <button type="button" class="seg-btn" data-seg="friend" aria-selected="true">🫶 Friendship</button>
-    <button type="button" class="seg-btn" data-seg="romantic" aria-selected="false">💖 Romantic</button>
-   </div>
+      <button type="button" class="seg-btn" data-seg="friend" aria-selected="true">🫶 Friendship</button>
+      <button type="button" class="seg-btn" data-seg="romantic" aria-selected="false">💖 Romantic</button>
+    </div>
 
     <!-- Snapshot + Filters -->
     <section class="layout">
-     <!-- Your Snapshot -->
-    <article id="yourSnapshot" class="card snapshot">
-    <h3>Your Snapshot</h3>
 
-    <div class="chips">
-    <span class="chip"><strong>Connection:</strong> <span id="snap-conn">–</span></span>
-    <span class="chip"><strong>Love Language:</strong> <span id="snap-ll">–</span></span>
-    </div>
+      <!-- Your Snapshot -->
+      <article id="yourSnapshot" class="card snapshot">
+        <h3>Your Snapshot</h3>
 
-    <div style="margin-top:8px">
-    <div><strong>Hobbies</strong>: <span id="snap-hobbies-text">–</span></div>
-    <div id="snap-hobbies" class="chips"></div>
-    </div>
+        <div class="chips">
+          <span class="chip"><strong>Connection:</strong> <span id="snap-conn">–</span></span>
+          <span class="chip"><strong>Love Language:</strong> <span id="snap-ll">–</span></span>
+        </div>
 
-    <div style="margin-top:8px">
-    <div><strong>Values</strong>: <span id="snap-values-text">–</span></div>
-    <div id="snap-values" class="chips"></div>
-  </div>
-  </article>
+        <div style="margin-top:8px">
+          <div><strong>Hobbies</strong>: <span id="snap-hobbies-text">–</span></div>
+          <div id="snap-hobbies" class="chips"></div>
+        </div>
+
+        <div style="margin-top:8px">
+          <div><strong>Values</strong>: <span id="snap-values-text">–</span></div>
+          <div id="snap-values" class="chips"></div>
+        </div>
+      </article>
 
       <!-- Filters (right) -->
       <aside id="filtersPanel" class="card filters-panel" aria-label="Filters">
@@ -306,42 +193,10 @@
     </footer>
   </main>
 
-  <!-- Your original renderer (kept) -->
+  <!-- Renderer -->
   <script src="match.js" defer></script>
 
-  <!-- Tiny page helpers (non-breaking) -->
-  <script>
-    // Mark "Match" active by URL
-    (function(){
-      document.querySelectorAll('.navbar .nav-links a, .topnav a').forEach(a=>{
-        const href=(a.getAttribute('href')||'').toLowerCase();
-        if(href.endsWith('match.html')) a.setAttribute('aria-current','page');
-      });
-    })();
-
-    // Mobile filters drawer
-    (function(){
-      const t=document.getElementById('filtersToggle'); // optional external toggle
-      const panel=document.getElementById('filtersPanel');
-      const close=document.getElementById('filtersCloseBtn')||document.getElementById('closeFilters');
-      if(t&&panel){
-        const toggle=()=>{ panel.classList.toggle('open'); t.setAttribute('aria-expanded', String(panel.classList.contains('open'))); };
-        t.addEventListener('click', toggle);
-        close&&close.addEventListener('click', toggle);
-      }
-    })();
-
-    // Live slider labels (uses the exact IDs you already had)
-    (function(){
-      const min=document.getElementById('f-min'), minL=document.getElementById('minlabel');
-      const w=document.getElementById('f-llw'),   wL=document.getElementById('llw-label');
-      function updMin(){ if(min&&minL) minL.textContent = (min.value||'0') + '%'; }
-      function updW(){ if(w&&wL) wL.textContent = (Number(w.value||1)).toFixed(1)+'×'; }
-      updMin(); updW();
-      min&&min.addEventListener('input', updMin);
-      w&&w.addEventListener('input', updW);
-    })();
-  </script>
+  <!-- Bendras navbar (vienintelis šefas) -->
   <script src="nav.js" defer></script>
 </body>
 </html>
