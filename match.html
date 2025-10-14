@@ -30,7 +30,7 @@
     a:hover{ color:var(--accent); }
     .container{ max-width:1100px; margin:0 auto; padding:2rem 1rem; }
 
-    /* Nav (paliekam kaip pas tave .navbar; vizualo nekeičiam) */
+    /* NAV */
     .navbar{ position:sticky; top:0; background:#002e30; border-bottom:1px solid var(--stroke); box-shadow:0 0 12px rgba(0,253,216,.25); z-index:50; }
     .nav-inner{ display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.8rem 1rem; }
     .brand{ font-weight:700; color:var(--accent); text-decoration:none; }
@@ -38,18 +38,8 @@
     .nav-links::-webkit-scrollbar{ display:none; }
     .nav-links a{ display:inline-block; padding:.45rem .7rem; border-radius:10px; border:1px solid transparent; color:var(--text); text-decoration:none; flex:0 0 auto; }
     .nav-links a:hover{ border-color:var(--stroke); box-shadow:0 0 0 1px var(--stroke),0 0 16px var(--glow); color:var(--accent); }
-    .nav-btn{ display:none; background:transparent; border:1px solid var(--stroke); border-radius:10px; padding:.4rem .6rem; color:var(--accent); }
 
-    /* Drawer mobilui (tavo esamas) */
-    .drawer{ position:fixed; inset:0; display:none; }
-    .drawer.open{ display:block; }
-    .drawer .backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.45); }
-    .drawer .panel{ position:absolute; top:0; left:0; bottom:0; width:280px; background:#002e30; border-right:1px solid var(--stroke); padding:14px; display:flex; flex-direction:column; gap:.35rem; }
-    .drawer .panel a{ padding:.45rem .7rem; border-radius:10px; text-decoration:none; color:var(--text); }
-    .drawer .panel a:hover{ background:rgba(0,253,216,.10); box-shadow:0 0 0 1px var(--stroke) inset; }
-    .hamburger button{ background:transparent; border:1px solid var(--stroke); color:var(--accent); border-radius:10px; padding:.4rem .6rem; cursor:pointer; }
-
-    /* Kortelės ir Match puslapio smulkmenos (paliekam kaip buvo) */
+    /* kortelės ir smulkmenos (palieku tavo stilistiką) */
     .card{ background:var(--surface); border:1px solid var(--stroke); border-radius:16px; padding:1.2rem; box-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(0,253,216,.06) inset; }
     .page-title{ font-size:1.6rem; font-weight:800; letter-spacing:.2px; margin:0 0 .2rem; }
     .page-sub{ color:var(--muted); margin:.2rem 0 1rem; }
@@ -65,16 +55,13 @@
     .btn{ cursor:pointer; border:1px solid var(--stroke); border-radius:999px; padding:.55rem .95rem; font-weight:700; color:var(--text); background:linear-gradient(180deg, rgba(0,253,216,.08), rgba(0,253,216,.02)); box-shadow:0 0 12px rgba(0,253,216,.2); transition:transform .15s ease, box-shadow .15s ease; }
     .btn:hover{ box-shadow:0 0 18px rgba(0,253,216,.45); transform:translateY(-1px); }
 
-    /* Match specifiniai „glow“ (palieku kaip buvo) */
-    .match-page .match-card .score-num{ position:absolute; top:8px; right:8px; }
-    .match-page #segmentToggle .seg-btn.is-active{ box-shadow:0 0 0 2px rgba(80,255,200,.25), 0 0 16px rgba(80,255,200,.25); }
     .match-page .muted{ opacity:.7; }
   </style>
 </head>
 
 <body data-page="match" class="match-page">
 
-  <!-- NAVBAR (paliekam tavo .navbar; UL tvarka vienoda visur) -->
+  <!-- NAVBAR -->
   <nav class="navbar" role="navigation" aria-label="Main">
     <div class="nav-inner">
       <div class="brand">Soulink</div>
@@ -108,12 +95,12 @@
       <a href="my-soul.html">My Soul</a>
       <a href="soul-chart.html">Soul Chart</a>
       <a href="soul-coach.html">Soul Coach</a>
-      <a href="match.html">Match</a>        <!-- be aria-current; nav.js pats uždės -->
+      <a href="match.html">Match</a>
       <a href="friends.html">Friends</a>
-      <a href="results.html">Results</a>    <!-- pataisyta iš result.html -->
+      <a href="results.html">Results</a>
       <a href="login.html">Log In</a>
       <a href="signup.html">Sign Up</a>
-      <a href="logout.html" id="logoutLinkMobile">Log Out</a> <!-- pataisytas href -->
+      <a href="logout.html" id="logoutLinkMobile">Log Out</a>
       <button class="btn ghost" id="closeDrawer" style="margin-top:8px">Close</button>
     </aside>
   </div>
@@ -196,7 +183,7 @@
   <!-- Renderer -->
   <script src="match.js" defer></script>
 
-  <!-- Bendras navbar (vienintelis šefas) -->
+  <!-- Bendras navbar -->
   <script src="nav.js" defer></script>
 </body>
 </html>
