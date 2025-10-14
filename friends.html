@@ -4,416 +4,205 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Soulink – Friends & Matches</title>
-  <!-- auth guard: turi būti prieš kitus skriptus -->
+
+  <!-- auth guard -->
   <script src="auth.js"></script>
 
-
-  <!-- Global nav + icons -->
-  <script src="nav.js?v=3" defer></script>
+  <!-- global nav + icons -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
-  <!-- Local styles -->
   <style>
-:root{
-  --bg:#003c43;
-  --surface:#074c4f;     /* kortelės */
-  --surface-2:#0a3f42;   /* draugo kortelės */
-  --stroke:rgba(0,253,216,.28);
-  --glow:rgba(0,253,216,.35);
-  --text:#eafff9;
-  --muted:#c8f7ef;
-  --link:#9afcf0;
-  --accent:#00fdd8;
-}
+  :root{
+    --bg:#003c43; --surface:#074c4f; --surface-2:#0a3f42;
+    --stroke:rgba(0,253,216,.28); --glow:rgba(0,253,216,.35);
+    --text:#eafff9; --muted:#c8f7ef; --link:#9afcf0; --accent:#00fdd8;
+  }
+  html,body{ background:var(--bg); color:var(--text); margin:0; }
+  a{ color:var(--link); text-decoration:none; } a:hover{ color:var(--accent); }
+  .container{ max-width:980px; margin:0 auto; padding:2rem 1rem; }
 
-html,body{ background:var(--bg); color:var(--text); }
-a{ color:var(--link); text-decoration:none; }
-a:hover{ color:var(--accent); }
+  /* NAV vienodas */
+  .navbar{position:sticky;top:0;background:#002e30;border-bottom:1px solid var(--stroke);box-shadow:0 0 12px rgba(0,253,216,.25);z-index:50}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 1rem}
+  .brand{font-weight:700;color:var(--accent);text-decoration:none}
+  .nav-links{list-style:none;display:flex;gap:.6rem;margin:0;padding:0;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .nav-links::-webkit-scrollbar{display:none}
+  .nav-links a{display:inline-block;padding:.45rem .7rem;border-radius:10px;border:1px solid transparent;color:var(--text);flex:0 0 auto}
+  .nav-links a:hover{border-color:var(--stroke);box-shadow:0 0 0 1px var(--stroke),0 0 16px var(--glow);color:var(--accent)}
 
-.container{ max-width:980px; margin:0 auto; padding:2rem 1rem; }
-.grid{ display:grid; grid-template-columns:1.2fr 1.8fr; gap:1.2rem; }
-@media (max-width:960px){ .grid{ grid-template-columns:1fr; } }
+  .card{ background:var(--surface); border:1px solid var(--stroke); border-radius:16px; padding:1.2rem; box-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(0,253,216,.06) inset; }
+  .section-title{ margin:.2rem 0 .6rem; font-weight:800; letter-spacing:.2px; }
+  .row{ display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
+  .btn{ cursor:pointer; border:1px solid var(--stroke); border-radius:999px; padding:.55rem .95rem; font-weight:700; color:var(--text); background:linear-gradient(180deg, rgba(0,253,216,.08), rgba(0,253,216,.02)); box-shadow:0 0 12px rgba(0,253,216,.2); transition:transform .15s ease, box-shadow .15s ease; }
+  .btn:hover{ box-shadow:0 0 18px rgba(0,253,216,.45); transform:translateY(-1px); }
 
-.card{
-  background:var(--surface);
-  border:1px solid var(--stroke);
-  border-radius:16px; padding:1.2rem;
-  box-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(0,253,216,.06) inset;
-}
-.section-title{ color:var(--text); margin:.2rem 0 .6rem; font-weight:800; letter-spacing:.2px; }
+  .friends-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:.9rem; }
+  @media (max-width:720px){ .friends-grid{ grid-template-columns:1fr; } }
 
-.row{ display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
-.btn{
-  cursor:pointer; border:1px solid var(--stroke); border-radius:999px;
-  padding:.55rem .95rem; font-weight:700; color:var(--text);
-  background:linear-gradient(180deg, rgba(0,253,216,.08), rgba(0,253,216,.02));
-  box-shadow:0 0 12px rgba(0,253,216,.2); transition:transform .15s ease, box-shadow .15s ease;
-}
-.btn:hover{ box-shadow:0 0 18px rgba(0,253,216,.45); transform:translateY(-1px); }
+  .friend{ background:var(--surface-2); border:1px solid var(--stroke); border-radius:14px; padding:.9rem; box-shadow:0 6px 18px rgba(0,0,0,.35); }
+  .friend-head{ display:flex; align-items:center; justify-content:space-between; gap:.6rem; }
+  .friend-meta{ display:flex; align-items:center; gap:.6rem; min-width:0; }
+  .friend-meta .avatar{ width:44px; height:44px; border-radius:999px; object-fit:cover; flex:0 0 auto; box-shadow:0 0 0 2px var(--stroke), 0 0 10px var(--glow); }
+  .friend-meta .name{ font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .score{ display:inline-block; min-width:2.6rem; text-align:center; padding:.2rem .5rem; border-radius:999px; border:1px solid var(--stroke); background:rgba(0,253,216,.08); }
+  .score.good{ color:var(--accent); } .score.ok{ color:#b5fff5; } .score.low{ color:#9fd7d0; }
 
-.friends-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:.9rem; }
-@media (max-width:720px){ .friends-grid{ grid-template-columns:1fr; } }
+  input, textarea, select{ width:100%; background:#002f31; color:var(--text); border:1px solid var(--stroke); border-radius:10px; padding:.55rem .6rem; box-shadow:0 0 0 1px rgba(0,253,216,.04) inset; }
+  input::placeholder, textarea::placeholder{ color:rgba(233,255,249,.55); }
+  input:focus, textarea:focus, select:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(0,253,216,.35); }
 
-.friend{
-  background:var(--surface-2);
-  border:1px solid var(--stroke);
-  border-radius:14px; padding:.9rem;
-  box-shadow:0 6px 18px rgba(0,0,0,.35);
-}
-.friend-head{ display:flex; align-items:center; justify-content:space-between; gap:.6rem; }
-.friend-meta{ display:flex; align-items:center; gap:.6rem; min-width:0; }
-.friend-meta .avatar{
-  width:44px; height:44px; border-radius:999px; object-fit:cover; flex:0 0 auto;
-  box-shadow:0 0 0 2px var(--stroke), 0 0 10px var(--glow);
-}
-.friend-meta .name{ font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .social-icons{ display:flex; gap:.5rem; flex-wrap:wrap; }
+  .social-icons .icon{ display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:50%; background:rgba(0,253,216,.08); box-shadow:0 0 12px rgba(0,253,216,.45), 0 0 0 1px rgba(0,253,216,.2) inset; color:var(--accent); text-decoration:none; transition:transform .15s ease, box-shadow .15s ease, filter .2s; }
+  .social-icons .icon .bi{ font-size:1.1rem; line-height:1; }
+  .social-icons .icon:hover{ transform:translateY(-2px); filter:brightness(1.15); box-shadow:0 0 20px rgba(0,253,216,.65), 0 0 0 1px rgba(0,253,216,.4) inset; }
+  .social-icons [hidden]{ display:none !important; }
 
-.score{
-  display:inline-block; min-width:2.6rem; text-align:center;
-  padding:.2rem .5rem; border-radius:999px; border:1px solid var(--stroke);
-  background:rgba(0,253,216,.08);
-}
-.score.good{ color:var(--accent); }
-.score.ok{ color:#b5fff5; }
-.score.low{ color:#9fd7d0; }
-
-input, textarea, select{
-  width:100%; background:#002f31; color:var(--text);
-  border:1px solid var(--stroke); border-radius:10px; padding:.55rem .6rem;
-  box-shadow:0 0 0 1px rgba(0,253,216,.04) inset;
-}
-input::placeholder, textarea::placeholder{ color:rgba(233,255,249,.55); }
-input:focus, textarea:focus, select:focus{
-  outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(0,253,216,.35);
-}
-
-/* Social icons (WOW glow) */
-.social-icons{ display:flex; gap:.5rem; flex-wrap:wrap; }
-.social-icons .icon{
-  display:inline-flex; align-items:center; justify-content:center;
-  width:38px; height:38px; border-radius:50%;
-  background:rgba(0,253,216,.08);
-  box-shadow:0 0 12px rgba(0,253,216,.45), 0 0 0 1px rgba(0,253,216,.2) inset;
-  color:var(--accent); text-decoration:none;
-  transition:transform .15s ease, box-shadow .15s ease, filter .2s;
-}
-.social-icons .icon .bi{ font-size:1.1rem; line-height:1; }
-.social-icons .icon:hover{
-  transform:translateY(-2px); filter:brightness(1.15);
-  box-shadow:0 0 20px rgba(0,253,216,.65), 0 0 0 1px rgba(0,253,216,.4) inset;
-}
-.social-icons [hidden]{ display:none !important; }
-
-.hint{ color:var(--muted); }
-/* Cards grid: consistent, non-stretched layout */
-.cards-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); }
-
-
-/* Mobile sticky filters (if Friends has a filters bar) */
-@media (max-width: 768px){
-  #filters{ position: sticky; top: .5rem; z-index: 5; }
-}
-/* ——— Friends: toolbar / chips / sort / toast (scoped) ——— */
-#friendsToolbar{display:flex;flex-wrap:wrap;gap:.5rem;margin:.6rem 0 1rem;align-items:center}
-#friendsToolbar .chip{display:inline-flex;align-items:center;gap:.4rem;border:1px solid var(--stroke);border-radius:999px;padding:.4rem .7rem;cursor:pointer}
-#friendsToolbar input[type="search"]{min-width:220px}
-#friendsSort .chip[aria-pressed="true"]{box-shadow:0 0 0 2px var(--stroke),0 0 16px rgba(0,253,216,.25);background:rgba(0,253,216,.08)}
-/* collapse/expand for long tag lists */
-.collapsible{overflow:hidden;transition:max-height .25s ease}
-.more-toggle{cursor:pointer;font-weight:700;margin-left:.5rem;color:var(--link)}
-/* hide card when pending removal */
-.friend.is-hidden{opacity:.15;filter:saturate(.6)}
-/* toast(s) bottom-right; full-width on mobile */
-#friendsToasts{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:10px;z-index:1000;}
-.toast{background:#02464d;color:#fff;border:1px solid var(--stroke);border-radius:12px;padding:10px 12px;display:flex;gap:.6rem;align-items:center;box-shadow:0 10px 24px rgba(0,0,0,.35)}
-.toast .undo{background:transparent;border:1px solid rgba(255,255,255,.7);color:#fff;padding:6px 10px;border-radius:12px;cursor:pointer}
-@media(max-width:480px){#friendsToasts{left:8px;right:8px} .toast{width:100%}}
-/* tiny copy button */
-.copy-btn{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--stroke);border-radius:8px;padding:2px 6px;margin-left:6px;cursor:pointer}
-.copy-btn .bi{font-size:.9rem}
-/* Navbar (vienodas visur) */
-.navbar{position:sticky;top:0;background:#002e30;border-bottom:1px solid var(--stroke);box-shadow:0 0 12px rgba(0,253,216,.25);z-index:50}
-.nav-inner{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 1rem}
-.brand{font-weight:700;color:var(--accent);text-decoration:none}
-.nav-links{list-style:none;display:flex;flex-wrap:wrap;gap:.6rem;margin:0;padding:0}
-.nav-links a{display:inline-block;padding:.45rem .7rem;border-radius:10px;border:1px solid transparent;color:var(--text);text-decoration:none}
-.nav-links a:hover{border-color:var(--stroke);box-shadow:0 0 0 1px var(--stroke),0 0 16px var(--glow);color:var(--accent)}
-.nav-links a.active,.nav-links a[aria-current="page"]{background:var(--accent);color:#00343a;border-color:transparent;box-shadow:0 0 0 2px var(--accent) inset,0 0 18px rgba(0,253,216,.35)}
-.nav-btn{display:none;background:transparent;border:1px solid var(--stroke);border-radius:10px;padding:.4rem .6rem;color:var(--accent)}
-@media (max-width:900px){
-  .nav-btn{display:block}
-  .nav-links{display:none}
-  .nav-links.open{display:flex;flex-direction:column;align-items:flex-start}
-}
-/* NAV — same glow + no separators */
-.navbar{position:sticky;top:0;background:#002e30;border-bottom:1px solid var(--stroke);box-shadow:0 0 12px rgba(0,253,216,.25);z-index:50}
-.nav-inner{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 1rem}
-.brand{font-weight:700;color:var(--accent);text-decoration:none}
-.nav-links{list-style:none;display:flex;flex-wrap:wrap;gap:.6rem;margin:0;padding:0}
-.nav-links li{list-style:none}                        /* hide any markers */
-.nav-links li::before{content:none !important}        /* kill CSS separators, if any */
-.nav-links a{display:inline-block;padding:.45rem .7rem;border-radius:10px;border:1px solid transparent;color:var(--text);text-decoration:none}
-.nav-links a:hover{border-color:var(--stroke);box-shadow:0 0 0 1px var(--stroke),0 0 16px rgba(0,253,216,.25);color:var(--accent)}
-.nav-links a.active,.nav-links a[aria-current="page"]{background:var(--accent);color:#00343a;border-color:transparent;box-shadow:0 0 0 2px var(--accent) inset,0 0 18px rgba(0,253,216,.35)}
-.nav-btn{display:none;background:transparent;border:1px solid var(--stroke);border-radius:10px;padding:.4rem .6rem;color:var(--accent)}
-@media (max-width:900px){.nav-btn{display:block}.nav-links{display:none}.nav-links.open{display:flex;flex-direction:column;align-items:flex-start}}
-
-/* Cards grid + spacing + stack rules */
-.friends-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
-@media (max-width:720px){.friends-grid{grid-template-columns:1fr}}   /* phone: 1 col */
-@media (min-width:721px) and (max-width:1024px){.friends-grid{grid-template-columns:repeat(2,minmax(0,1fr))}} /* tablet: 2 cols */
-
-/* Score always top-right */
-.friend{position:relative}
-.friend .score{position:absolute;top:8px;right:8px}
-
-/* Actions ≥44px for a11y */
-.friend .btn{min-height:44px}
-
-/* Chips wrap and compact mode */
-.friend .chips{display:flex;flex-wrap:wrap;gap:.35rem}
-.friend .chip{display:inline-flex;align-items:center;padding:.25rem .55rem;border-radius:999px;border:1px solid var(--stroke)}
-.collapsible{overflow:hidden;transition:max-height .25s ease}
-.more-toggle{cursor:pointer;font-weight:700;margin-left:.5rem;color:var(--link)}
-
-/* Toast (Undo) */
-#friendsToasts{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:10px;z-index:1000}
-.toast{background:#02464d;color:#fff;border:1px solid var(--stroke);border-radius:12px;padding:10px 12px;display:flex;gap:.6rem;align-items:center;box-shadow:0 10px 24px rgba(0,0,0,.35)}
-.toast .undo{background:transparent;border:1px solid rgba(255,255,255,.7);color:#fff;padding:6px 10px;border-radius:12px;cursor:pointer}
-@media(max-width:480px){#friendsToasts{left:8px;right:8px}.toast{width:100%}}
-</style>
-
+  .hint{ color:var(--muted); }
+  </style>
 </head>
 <body>
-  <!-- Navbar -->
-<nav class="navbar">
-  <div class="container nav-inner">
-    <a href="index.html" class="brand">Soulink</a>
-    <button id="navToggle" class="nav-btn" aria-label="Toggle navigation">☰</button>
-    <ul class="nav-links">
-  <li><a href="index.html">Home</a></li>
-  <li><a href="quiz.html">Quiz</a></li>
-  <li><a href="edit-profile.html">Edit Profile</a></li>
-  <li><a href="my-soul.html">My Soul</a></li>
-  <li><a href="soul-chart.html">Soul Chart</a></li>
-  <li><a href="soul-coach.html">Soul Coach</a></li>
-  <li><a href="match.html">Match</a></li>
-  <li><a href="friends.html">Friends</a></li>
-  <li><a href="results.html">Results</a></li>
-  <li><a href="login.html">Log In</a></li>
-  <li><a href="signup.html">Sign Up</a></li>
-  <li><a href="logout.html">Log Out</a></li>
-</ul>
 
-  </div>
-</nav>
+  <!-- NAVBAR -->
+  <nav class="navbar" role="navigation" aria-label="Main">
+    <div class="nav-inner">
+      <div class="brand">Soulink</div>
+      <div class="nav-links" aria-label="Primary">
+        <ul class="nav-links" id="navMenu">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="quiz.html">Quiz</a></li>
+          <li><a href="edit-profile.html">Edit Profile</a></li>
+          <li><a href="my-soul.html">My Soul</a></li>
+          <li><a href="soul-chart.html">Soul Chart</a></li>
+          <li><a href="soul-coach.html">Soul Coach</a></li>
+          <li><a href="match.html">Match</a></li>
+          <li><a href="friends.html">Friends</a></li>
+          <li><a href="results.html">Results</a></li>
+          <li><a href="login.html">Log In</a></li>
+          <li><a href="signup.html">Sign Up</a></li>
+          <li><a href="logout.html">Log Out</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
 
   <main class="container">
-    <h1 class="section-title" style="font-size:1.6rem;">🤝 Friends & Matches</h1>
+    <!-- Snapshot -->
+    <section class="card" id="snapshot">
+      <h2 class="section-title">Your Snapshot</h2>
+      <div class="row">
+        <div><b>Name: </b><span id="snapshot-name">–</span></div>
+        <div><b>Connection: </b><span id="snapshot-connection">–</span></div>
+        <div><b>Love Language: </b><span id="snapshot-loveLanguage">–</span></div>
+      </div>
+      <div style="margin-top:.4rem"><b>Hobbies:</b> <span id="snapshot-hobbies">–</span></div>
+      <div style="margin-top:.2rem"><b>Values:</b>  <span id="snapshot-values">–</span></div>
 
-    <div class="grid">
-      <!-- Left: snapshot -->
-      <section class="card">
-        <h3 class="section-title">Your Snapshot</h3>
-        <p><strong>Name:</strong> <span id="me-name">–</span></p>
-        <p><strong>Connection:</strong> <span id="me-ct">–</span></p>
-        <p><strong>Love Language:</strong> <span id="me-ll">–</span></p>
-        <p><strong>Hobbies:</strong> <span id="me-hobbies">–</span></p>
-        <p><strong>Values:</strong> <span id="me-values">–</span></p>
+      <!-- alternatyvūs ID (jei kiti puslapiai skaito) -->
+      <div hidden>
+        <span id="me-name"></span><span id="me-ct"></span><span id="me-ll"></span>
+        <span id="me-hobbies"></span><span id="me-values"></span>
+      </div>
+    </section>
 
-        <div class="row" style="margin-top:.8rem;">
-          <a class="btn" href="edit-profile.html">Edit Profile</a>
-          <button id="exportFriends" class="btn" type="button">Export Friends JSON</button>
-          <button id="importFriends" class="btn" type="button">Import JSON</button>
-          <input id="importFile" type="file" accept="application/json" style="display:none;">
+    <!-- Add form -->
+    <section class="card" style="margin-top:1rem">
+      <h2 class="section-title">Add Friend</h2>
+      <form id="add-form">
+        <div class="row">
+          <input id="f-name" placeholder="Name *" required>
+          <input id="f-ct" placeholder="Connection (Friendship / Romantic / Both)">
+          <input id="f-ll" placeholder="Love Language">
         </div>
-      </section>
-
-      <!-- Right: form + list -->
-      <section>
-        <form id="add-form" class="card" novalidate>
-          <h3 class="section-title">Add Friend / Candidate</h3>
-
-          <label for="f-photo">Photo URL (optional)</label>
-          <input id="f-photo" type="url" placeholder="https://.../avatar.jpg" />
-
-          <div class="row" style="gap:.8rem;">
-            <div style="flex:1;">
-              <label for="f-name">Name</label>
-              <input id="f-name" type="text" placeholder="Name" required />
-            </div>
-            <div style="flex:1;">
-              <label for="f-ct">Connection</label>
-              <select id="f-ct">
-                <option value="">Any</option>
-                <option>Romantic</option>
-                <option>Friendship</option>
-                <option>Both</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="row" style="gap:.8rem; margin-top:.6rem;">
-            <div style="flex:1;">
-              <label for="f-ll">Love Language</label>
-              <select id="f-ll">
-                <option value="">Unknown</option>
-                <option>Words of Affirmation</option>
-                <option>Acts of Service</option>
-                <option>Receiving Gifts</option>
-                <option>Quality Time</option>
-                <option>Physical Touch</option>
-              </select>
-            </div>
-          </div>
-
-          <div style="margin-top:.6rem;">
-            <label for="f-hobbies">Hobbies (comma separated)</label>
-            <input id="f-hobbies" type="text" placeholder="e.g., Traveling, Reading, Meditation" />
-          </div>
-
-          <div style="margin-top:.6rem;">
-            <label for="f-values">Values (comma separated)</label>
-            <input id="f-values" type="text" placeholder="e.g., Honesty, Kindness, Creativity" />
-          </div>
-
-          <div style="margin-top:.6rem;">
-            <label for="f-contact">Contact (email / phone / @handle / link)</label>
-            <input id="f-contact" type="text" placeholder="e.g., anna@email.com, +3706..., @anna, https://link" />
-          </div>
-
-          <div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem; margin-top:.6rem;">
-            <label>
-              <div class="label-text">WhatsApp</div>
-              <input id="f-whatsapp" type="text" placeholder="+3706..., 3706..., arba numeris">
-            </label>
-            <label>
-              <div class="label-text">Instagram</div>
-              <input id="f-instagram" type="text" placeholder="@vardas arba https://instagram.com/vardas">
-            </label>
-            <label>
-              <div class="label-text">Facebook</div>
-              <input id="f-facebook" type="text" placeholder="profilo nuoroda arba vartotojo vardas">
-            </label>
-            <label>
-              <div class="label-text">Email</div>
-              <input id="f-email" type="email" placeholder="name@example.com">
-            </label>
-          </div>
-
-          <!-- Live preview of what will be clickable -->
-          <div class="social-icons" id="contactPreview" style="margin-top:.6rem;">
-            <a class="icon wa" aria-label="WhatsApp" hidden><i class="bi bi-whatsapp"></i></a>
-            <a class="icon ig" aria-label="Instagram" hidden><i class="bi bi-instagram"></i></a>
-            <a class="icon fb" aria-label="Facebook" hidden><i class="bi bi-facebook"></i></a>
-            <a class="icon em" aria-label="Email" hidden><i class="bi bi-envelope"></i></a>
-          </div>
-
-          <div style="margin-top:.6rem;">
-            <label for="f-notes">Notes (optional)</label>
-            <textarea id="f-notes" rows="2" placeholder="How you met, vibe, etc."></textarea>
-          </div>
-
-          <div class="row" style="margin-top:.8rem;">
-            <button class="btn" type="submit">Add</button>
-            <button id="clearAll" class="btn" type="button">Clear All</button>
-          </div>
-        </form>
-
-        <div class="card">
-          <h3 class="section-title">Your Inner Circle</h3>
-          <div id="friends-list" class="friends-grid"></div>
-          <p id="empty-note" class="hint" style="opacity:.8; display:none;">No friends yet. Add someone above ✨</p>
+        <div class="row">
+          <input id="f-hobbies" placeholder="Hobbies (comma separated)">
+          <input id="f-values"  placeholder="Values (comma separated)">
+        </div>
+        <div class="row">
+          <input id="f-contact" placeholder="Contact (URL, @instagram, email or phone)">
+          <input id="f-photo"   placeholder="Photo URL (optional)">
         </div>
 
-        <!-- Edit modal -->
-        <div id="editModal" class="modal" hidden>
-          <div class="modal-box card">
-            <h3 class="section-title">Edit Friend</h3>
-            <form id="edit-form" class="grid">
-              <label>Name
-                <input id="e-name" type="text" required />
-              </label>
-
-              <label>Connection
-                <select id="e-ct">
-                  <option value="">—</option>
-                  <option>Friendship</option>
-                  <option>Romantic</option>
-                  <option>Both</option>
-                </select>
-              </label>
-
-              <label>Love Language
-                <select id="e-ll">
-                  <option value="">—</option>
-                  <option>Words of Affirmation</option>
-                  <option>Acts of Service</option>
-                  <option>Receiving Gifts</option>
-                  <option>Quality Time</option>
-                  <option>Physical Touch</option>
-                </select>
-              </label>
-
-              <label>Hobbies (comma separated)
-                <input id="e-hobbies" type="text" placeholder="e.g., Traveling, Reading" />
-              </label>
-
-              <label>Values (comma separated)
-                <input id="e-values" type="text" placeholder="e.g., Honesty, Kindness" />
-              </label>
-
-              <label>Contact
-                <input id="e-contact" type="text" placeholder="email / phone / @handle / link" />
-              </label>
-
-              <label>Notes
-                <textarea id="e-notes" rows="3" placeholder="How you met, vibe, etc."></textarea>
-              </label>
-
-              <label>Photo URL
-                <input id="e-photo" type="url" placeholder="https://.../avatar.jpg">
-              </label>
-
-              <div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-                <label>WhatsApp
-                  <input id="e-whatsapp" type="text" placeholder="+3706..., 3706..., arba numeris">
-                </label>
-                <label>Instagram
-                  <input id="e-instagram" type="text" placeholder="@vardas arba https://instagram.com/vardas">
-                </label>
-                <label>Facebook
-                  <input id="e-facebook" type="text" placeholder="profilo nuoroda arba vartotojo vardas">
-                </label>
-                <label>Email
-                  <input id="e-email" type="email" placeholder="name@example.com">
-                </label>
-              </div>
-
-              <div class="row" style="margin-top:.8rem;">
-                <button type="submit" class="btn">Save</button>
-                <button type="button" id="editCancel" class="btn">Cancel</button>
-              </div>
-            </form>
-          </div>
+        <div class="row">
+          <input id="f-whatsapp"  placeholder="WhatsApp phone">
+          <input id="f-instagram" placeholder="Instagram (@handle or URL)">
+          <input id="f-facebook"  placeholder="Facebook (profile/page)">
+          <input id="f-email"     placeholder="Email">
         </div>
 
-      </section>
-    </div>
+        <div id="contactPreview" class="social-icons" style="margin:.4rem 0">
+          <a class="icon wa" href="#" hidden title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+          <a class="icon ig" href="#" hidden title="Instagram"><i class="bi bi-instagram"></i></a>
+          <a class="icon fb" href="#" hidden title="Facebook"><i class="bi bi-facebook"></i></a>
+          <a class="icon em" href="#" hidden title="Email"><i class="bi bi-envelope"></i></a>
+        </div>
 
-    <nav class="row" style="justify-content:space-between; margin-top:1.2rem;">
-      <a class="btn" href="soul-coach.html">← Back: Soul Coach</a>
-      <a class="btn" href="results.html"> Next: Results →</a>
-    </nav>
-  </main>
+        <textarea id="f-notes" rows="2" placeholder="Notes (optional)"></textarea>
 
-  <footer>
+        <div class="row" style="justify-content:space-between;margin-top:.6rem">
+          <div>
+            <button type="button" id="clearAll" class="btn">Clear All</button>
+          </div>
+          <div class="row">
+            <button type="button" id="exportFriends" class="btn">Export JSON</button>
+            <button type="button" id="importFriends" class="btn">Import JSON</button>
+            <input type="file" id="importFile" accept="application/json" hidden>
+            <button class="btn" type="submit">Add Friend</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- List -->
+    <section class="card" style="margin-top:1rem">
+      <h2 class="section-title">Friends</h2>
+      <p id="empty-note" class="hint" style="display:none">No friends yet. Add your first friend above.</p>
+      <div id="friends-list" class="friends-grid"></div>
+    </section>
+
+    <!-- Edit Modal -->
+    <section id="editModal" hidden class="card" style="margin-top:1rem">
+      <h2 class="section-title">Edit Friend</h2>
+      <form id="edit-form">
+        <div class="row">
+          <input id="e-name" placeholder="Name *" required>
+          <input id="e-ct" placeholder="Connection">
+          <input id="e-ll" placeholder="Love Language">
+        </div>
+        <div class="row">
+          <input id="e-hobbies" placeholder="Hobbies (comma separated)">
+          <input id="e-values"  placeholder="Values (comma separated)">
+        </div>
+        <div class="row">
+          <input id="e-contact" placeholder="Contact">
+          <input id="e-photo"   placeholder="Photo URL">
+        </div>
+
+        <div class="row">
+          <input id="e-whatsapp"  placeholder="WhatsApp phone">
+          <input id="e-instagram" placeholder="Instagram">
+          <input id="e-facebook"  placeholder="Facebook">
+          <input id="e-email"     placeholder="Email">
+        </div>
+
+        <textarea id="e-notes" rows="2" placeholder="Notes"></textarea>
+
+        <div class="row" style="justify-content:flex-end;margin-top:.6rem">
+          <button type="button" id="editCancel" class="btn">Cancel</button>
+          <button type="submit" class="btn">Save</button>
+        </div>
+      </form>
+    </section>
+
+    <footer style="margin:12px 0;color:#c8f7ef;border-top:1px solid var(--stroke);padding-top:12px">
       <span>© 2025 Soulink.global | Created with love by Soulink Team</span>
     </footer>
+  </main>
 
-  <script src="friends.js"></script>
+  <!-- puslapio logika -->
+  <script src="friends.js" defer></script>
 
+  <!-- bendras navbar -->
   <script src="nav.js" defer></script>
 </body>
 </html>

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Soulink – Match</title>
 
-  <!-- auth guard: turi būti prieš kitus skriptus -->
+  <!-- auth guard (turi būti virš kitų skriptų) -->
   <script src="auth.js"></script>
 
   <!-- Icons (kaip kituose puslapiuose) -->
@@ -14,15 +14,9 @@
 
   <style>
     :root{
-      --bg:#003c43;
-      --surface:#074c4f;
-      --surface-2:#0a3f42;
-      --stroke:rgba(0,253,216,.28);
-      --glow:rgba(0,253,216,.35);
-      --text:#eafff9;
-      --muted:#c8f7ef;
-      --link:#9afcf0;
-      --accent:#00fdd8;
+      --bg:#003c43; --surface:#074c4f; --surface-2:#0a3f42;
+      --stroke:rgba(0,253,216,.28); --glow:rgba(0,253,216,.35);
+      --text:#eafff9; --muted:#c8f7ef; --link:#9afcf0; --accent:#00fdd8;
       --border:rgba(0,253,216,.28);
     }
     html,body{ background:var(--bg); color:var(--text); margin:0; }
@@ -30,16 +24,25 @@
     a:hover{ color:var(--accent); }
     .container{ max-width:1100px; margin:0 auto; padding:2rem 1rem; }
 
-    /* NAV */
+    /* NAV (.navbar – vizualo nekeičiu) */
     .navbar{ position:sticky; top:0; background:#002e30; border-bottom:1px solid var(--stroke); box-shadow:0 0 12px rgba(0,253,216,.25); z-index:50; }
     .nav-inner{ display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.8rem 1rem; }
     .brand{ font-weight:700; color:var(--accent); text-decoration:none; }
     .nav-links{ list-style:none; display:flex; gap:.6rem; margin:0; padding:0; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
     .nav-links::-webkit-scrollbar{ display:none; }
-    .nav-links a{ display:inline-block; padding:.45rem .7rem; border-radius:10px; border:1px solid transparent; color:var(--text); text-decoration:none; flex:0 0 auto; }
+    .nav-links a{ display:inline-block; padding:.45rem .7rem; border-radius:10px; border:1px solid transparent; color:var(--text); flex:0 0 auto; }
     .nav-links a:hover{ border-color:var(--stroke); box-shadow:0 0 0 1px var(--stroke),0 0 16px var(--glow); color:var(--accent); }
 
-    /* kortelės ir smulkmenos (palieku tavo stilistiką) */
+    /* Drawer mobilui (kaip turėjai) */
+    .drawer{ position:fixed; inset:0; display:none; }
+    .drawer.open{ display:block; }
+    .drawer .backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.45); }
+    .drawer .panel{ position:absolute; top:0; left:0; bottom:0; width:280px; background:#002e30; border-right:1px solid var(--stroke); padding:14px; display:flex; flex-direction:column; gap:.35rem; }
+    .drawer .panel a{ padding:.45rem .7rem; border-radius:10px; color:var(--text); }
+    .drawer .panel a:hover{ background:rgba(0,253,216,.10); box-shadow:0 0 0 1px var(--stroke) inset; }
+    .hamburger button{ background:transparent; border:1px solid var(--stroke); color:var(--accent); border-radius:10px; padding:.4rem .6rem; cursor:pointer; }
+
+    /* Kortelės (palieku) */
     .card{ background:var(--surface); border:1px solid var(--stroke); border-radius:16px; padding:1.2rem; box-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(0,253,216,.06) inset; }
     .page-title{ font-size:1.6rem; font-weight:800; letter-spacing:.2px; margin:0 0 .2rem; }
     .page-sub{ color:var(--muted); margin:.2rem 0 1rem; }
@@ -54,12 +57,9 @@
     .page-cta{ display:flex; justify-content:space-between; margin-top:12px; }
     .btn{ cursor:pointer; border:1px solid var(--stroke); border-radius:999px; padding:.55rem .95rem; font-weight:700; color:var(--text); background:linear-gradient(180deg, rgba(0,253,216,.08), rgba(0,253,216,.02)); box-shadow:0 0 12px rgba(0,253,216,.2); transition:transform .15s ease, box-shadow .15s ease; }
     .btn:hover{ box-shadow:0 0 18px rgba(0,253,216,.45); transform:translateY(-1px); }
-
-    .match-page .muted{ opacity:.7; }
   </style>
 </head>
-
-<body data-page="match" class="match-page">
+<body class="match-page">
 
   <!-- NAVBAR -->
   <nav class="navbar" role="navigation" aria-label="Main">
@@ -105,71 +105,47 @@
     </aside>
   </div>
 
-  <!-- PAGE -->
-  <main class="container container--match">
+  <main class="container">
     <h1 class="page-title">Match Lab ✨</h1>
-    <p class="page-sub">See who resonates with your Connection, Love Language, Hobbies and Values. Hover or tap each card for details.</p>
+    <p class="page-sub">See who resonates with your Connection, Love Language, Hobbies and Values.</p>
 
     <!-- SEGMENT TOGGLE -->
-    <div class="segment-toggle" id="segmentToggle" role="tablist" aria-label="Match segment">
-      <button type="button" class="seg-btn" data-seg="friend" aria-selected="true">🫶 Friendship</button>
+    <div id="segmentToggle" class="segment-toggle" role="tablist" aria-label="Match segment">
+      <button type="button" class="seg-btn" data-seg="friend"   aria-selected="true">🫶 Friendship</button>
       <button type="button" class="seg-btn" data-seg="romantic" aria-selected="false">💖 Romantic</button>
     </div>
 
-    <!-- Snapshot + Filters -->
+    <!-- Filters -->
     <section class="layout">
-
-      <!-- Your Snapshot -->
       <article id="yourSnapshot" class="card snapshot">
-        <h3>Your Snapshot</h3>
-
-        <div class="chips">
-          <span class="chip"><strong>Connection:</strong> <span id="snap-conn">–</span></span>
-          <span class="chip"><strong>Love Language:</strong> <span id="snap-ll">–</span></span>
-        </div>
-
-        <div style="margin-top:8px">
-          <div><strong>Hobbies</strong>: <span id="snap-hobbies-text">–</span></div>
-          <div id="snap-hobbies" class="chips"></div>
-        </div>
-
-        <div style="margin-top:8px">
-          <div><strong>Values</strong>: <span id="snap-values-text">–</span></div>
-          <div id="snap-values" class="chips"></div>
-        </div>
+        <h3>Snapshot</h3>
+        <div class="chips"><span class="chip"><b>Connection:</b> <span id="me-ct">–</span></span>
+          <span class="chip"><b>Love Language:</b> <span id="me-ll">–</span></span></div>
+        <div style="margin-top:8px"><b>Hobbies:</b> <span id="me-hobbies">–</span></div>
+        <div style="margin-top:8px"><b>Values:</b>  <span id="me-values">–</span></div>
       </article>
 
-      <!-- Filters (right) -->
       <aside id="filtersPanel" class="card filters-panel" aria-label="Filters">
         <h3>Filters</h3>
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-          <input id="f-q" class="input" type="search" placeholder="Search name, notes, socials…" style="flex:1;min-width:0">
-        </div>
-
-        <label style="display:block;margin:.4rem 0 .2rem">Connection</label>
-        <select id="f-conn" class="input" style="width:100%">
-          <option value="any">Any</option>
+        <input id="f-search" type="search" placeholder="Search name, notes, socials…" style="width:100%;margin-bottom:.6rem">
+        <label>Connection</label>
+        <select id="f-ct" style="width:100%;margin-bottom:.6rem">
+          <option value="Any">Any</option>
           <option>Friendship</option>
           <option>Romantic</option>
           <option>Both</option>
         </select>
-
-        <label style="display:block;margin:.6rem 0 .2rem">Min score <small id="minlabel">0%</small></label>
+        <label>Min score <small id="minLabel">0%</small></label>
         <input id="f-min" type="range" min="0" max="100" step="1" value="0" style="width:100%">
-
-        <label style="display:block;margin:.6rem 0 .2rem">Love Language weight <small id="llw-label">1.0×</small></label>
+        <label style="margin-top:.6rem">Love Language weight <small id="llw-label">1.0×</small></label>
         <input id="f-llw" type="range" min="0.2" max="2.0" step="0.1" value="1.0" style="width:100%">
-
-        <div style="margin-top:10px">
-          <button id="filtersReset" class="btn ghost">Reset</button>
-        </div>
+        <div style="margin-top:10px"><button id="filtersReset" class="btn ghost" type="button">Reset</button></div>
       </aside>
     </section>
 
-    <!-- Cards -->
+    <!-- Results -->
     <section id="results" class="cards" aria-live="polite"></section>
 
-    <!-- Bottom CTA -->
     <div class="page-cta">
       <a class="btn ghost" href="soul-coach.html">← Back: Soul Coach</a>
       <a class="btn" href="friends.html" style="background:var(--accent);color:#003136">Next → Friends</a>
@@ -180,7 +156,7 @@
     </footer>
   </main>
 
-  <!-- Renderer -->
+  <!-- Puslapio logika -->
   <script src="match.js" defer></script>
 
   <!-- Bendras navbar -->
