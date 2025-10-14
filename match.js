@@ -1,255 +1,221 @@
-/* Soulink · Match page — paliekam tavo scoring/render idėją, tik harden’ai */
+/* Soulink · Match — kortelės su normaliu turiniu ir mažu avataru */
 (() => {
-  const $ = s => document.querySelector(s);
+  const $  = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+  // ===== Helpers =====
   const READ = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
-  const LS_ME = 'soulQuiz';
-  const LS_FRIENDS = 'friends';
+  const digits = s => String(s||'').replace(/\D/g,'');
   const escapeHTML = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const normList = v => Array.isArray(v) ? v.filter(Boolean) : (typeof v === 'string' ? v.split(/[,;\n]/).map(s=>s.trim()).filter(Boolean) : []);
+  const toList = v => Array.isArray(v) ? v
+                    : typeof v === 'string' ? v.split(/[,;|/]\s*|\s{2,}|\n/).map(s=>s.trim()).filter(Boolean)
+                    : [];
 
-  // Icons (tik kosmetika)
-  const hobbyIco = t => { const s=(t||'').toLowerCase();
-    if(s.includes('music'))return'🎵'; if(s.includes('read'))return'📚';
-    if(s.includes('medit'))return'🧘'; if(s.includes('travel'))return'✈️';
-    if(s.includes('cook'))return'🍳'; if(s.includes('art'))return'🎨';
-    if(s.includes('dance'))return'💃'; if(s.includes('garden'))return'🌿';
-    return '✨';
-  };
-  const valueIco = t => { const s=(t||'').toLowerCase();
-    if(s.includes('honest'))return'💎'; if(s.includes('kind'))return'❤️';
-    if(s.includes('loyal'))return'🛡️'; if(s.includes('freedom'))return'🌞';
-    if(s.includes('growth')||s.includes('adventure'))return'🌱'; return '⭐';
-  };
+  // avatar (nuotrauka arba inicialas, MAX 56px – dydį valdo CSS .sl-avatar)
+  function avatarHTML(name, photo){
+    if (photo && /^https?:|^data:image/i.test(photo)) {
+      return `<span class="sl-avatar"><img src="${escapeHTML(photo)}" alt=""></span>`;
+    }
+    const ch = String(name||'?').trim().charAt(0).toUpperCase() || '?';
+    return `<span class="sl-avatar" aria-hidden="true">${escapeHTML(ch)}</span>`;
+  }
 
-  // jaccard
+  // žiedinis score badge (56x56)
+  function ringHTML(p){
+    const C = 2*Math.PI*32, off = C*(1 - Math.max(0, Math.min(1, p/100)));
+    return `<div class="sl-score score-ring" title="Compatibility">
+      <svg viewBox="0 0 76 76" aria-hidden="true">
+        <circle class="ring-track" cx="38" cy="38" r="32"></circle>
+        <circle class="ring-prog" cx="38" cy="38" r="32" stroke-dasharray="${C}" stroke-dashoffset="${off}"></circle>
+      </svg>
+      <div class="score-num">${p}<small>%</small></div>
+    </div>`;
+  }
+
+  // ===== Data (suderinamumas) =====
+  function getMe(){
+    const q = READ('soulink.soulQuiz') || READ('soulQuiz') || {};
+    return {
+      name: q.name || '',
+      ct:   q.connectionType || q.connection || 'Both',
+      ll:   Array.isArray(q.loveLanguages) ? (q.loveLanguages[0]||'')
+           : (q.loveLanguage || ''),
+      hobbies: toList(q.hobbies),
+      values:  toList(q.values),
+    };
+  }
+  function loadFriends(){
+    const stacks = [
+      READ('soulink.friends.list'),
+      READ('soulink.friends'),
+      READ('soulFriends')
+    ].filter(Array.isArray);
+    const flat = stacks.flat();
+    // dedupe pagal vardą (case-insensitive)
+    const map = new Map();
+    flat.forEach(f=>{
+      const key = (f?.name||'').trim().toLowerCase();
+      if (!map.has(key)) map.set(key, f);
+    });
+    return Array.from(map.values());
+  }
+
+  // ===== Scoring (tavo logikos nekeičiu, tik „sutvarkyta“) =====
+  const sameLL = (a,b) => (a && b && a.trim().toLowerCase() === b.trim().toLowerCase()) ? 1 : 0;
   function jaccard(a,b){
-    const A=new Set(normList(a).map(x=>x.toLowerCase()));
-    const B=new Set(normList(b).map(x=>x.toLowerCase()));
+    const A=new Set(toList(a).map(x=>x.toLowerCase()));
+    const B=new Set(toList(b).map(x=>x.toLowerCase()));
     if(!A.size && !B.size) return 0;
     let inter=0; A.forEach(x=>{ if(B.has(x)) inter++; });
     return inter/(A.size+B.size-inter);
   }
-
-  // data
-  function me(){
-    const m = READ(LS_ME) || {};
-    return {
-      name: m.name || '',
-      ct:   m.connectionType || m.ct || '',
-      ll:   (Array.isArray(m.loveLanguages)? m.loveLanguages[0] : (m.loveLanguage||'')),
-      hobbies: m.hobbies || [],
-      values:  m.values || [],
-    };
-  }
-  function friends(){
-    const list = READ(LS_FRIENDS);
-    return Array.isArray(list) ? list : [];
-  }
-
-  // scoring (palieku formulę iš ankstesnio varianto)
-  function llMatch(a,b){ if(!a||!b) return 0; return a.trim().toLowerCase()===b.trim().toLowerCase()?1:0; }
-  function ctMatch(desired,candidate){
-    if(!desired||desired==='Any') return 1;
-    if(!candidate) return 0;
-    if(candidate==='Both' || desired==='Both') return 1;
-    return desired.toLowerCase()===candidate.toLowerCase()?1:0;
-  }
   function score(me,f,w=1){
-    const sLL=25*llMatch(me.ll,f.ll)*w;
-    const sCT=15*ctMatch(me.ct,f.ct);
-    const sH =30*jaccard(me.hobbies,f.hobbies);
-    const sV =30*jaccard(me.values,f.values);
-    let total=sLL+sCT+sH+sV;
-    const info=(f.ll?1:0)+(normList(f.hobbies).length?1:0)+(normList(f.values).length?1:0);
-    if(info<=1) total*=0.8;
-    return Math.max(0,Math.min(100,Math.round(total)));
+    const sLL = 25 * sameLL(me.ll,f.ll) * w;
+    const sCT = 15 * (
+      (me.ct==='Any'||!me.ct)?1:
+      (f.ct==='Both'||me.ct==='Both')?1:
+      (String(me.ct).toLowerCase()===String(f.ct).toLowerCase()?1:0)
+    );
+    const sH  = 30 * jaccard(me.hobbies,f.hobbies);
+    const sV  = 30 * jaccard(me.values,f.values);
+    return Math.max(0,Math.min(100,Math.round(sLL+sCT+sH+sV)));
   }
 
-  // helpers
-  const digits = s => String(s||'').replace(/\D/g,'');
-  function avatarFor(name, photo){
-    if(photo) return photo;
-    const t = (name||'?').trim().charAt(0).toUpperCase() || '?';
-    const svg = encodeURIComponent(
-      `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'>
-         <rect width='100%' height='100%' rx='40' fill='#0a6a6f'/>
-         <text x='50%' y='54%' text-anchor='middle' font-size='36' fill='#bff' font-family='system-ui'>${t}</text>
-       </svg>`);
-    return 'data:image/svg+xml;utf8,'+svg;
+  // ===== Render =====
+  const listEl = $('#matchList');
+
+  function subline(f){
+    const ct = f.ct || 'Unknown';
+    const ll = f.ll || 'Unknown';
+    return `${escapeHTML(ct)} • ${escapeHTML(ll)}`;
   }
-  function listChips(title, list, iconFn){
-    const arr = normList(list); if(!arr.length) return '';
-    const chips = arr.slice(0,12).map(v=>`<span class="chip"><span class="ico">${iconFn(v)}</span><span>${escapeHTML(v)}</span></span>`).join('');
-    return `<div class="row" style="margin-top:.25rem"><b>${title}:</b> ${chips}</div>`;
+  function chips(title, arr){
+    const list = toList(arr);
+    if(!list.length) return '';
+    return `<div class="sl-badges"><b style="margin-right:4px">${title}:</b> ${
+      list.slice(0,12).map(v=>`<span class="pill">${escapeHTML(v)}</span>`).join(' ')
+    }</div>`;
   }
-  function messageLinkHTML(f){
-    if(f.whatsapp && digits(f.whatsapp)) return `<a class="btn" href="https://wa.me/${digits(f.whatsapp)}" target="_blank" rel="noopener">Message</a>`;
-    if(f.instagram){
+  function messageBtn(f){
+    if (f.whatsapp && digits(f.whatsapp)) return `<a class="btn" href="https://wa.me/${digits(f.whatsapp)}" target="_blank" rel="noopener">Message</a>`;
+    if (f.instagram){
       const u=/^https?:\/\//i.test(f.instagram)?f.instagram:`https://instagram.com/${f.instagram.replace(/^@/,'')}`;
       return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
     }
-    if(f.facebook){
+    if (f.facebook){
       const u=/^https?:\/\//i.test(f.facebook)?f.facebook:`https://facebook.com/${f.facebook.replace(/^@/,'')}`;
       return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
     }
-    if(f.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) return `<a class="btn" href="mailto:${f.email}">Message</a>`;
+    if (f.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) return `<a class="btn" href="mailto:${f.email}">Message</a>`;
     return `<a class="btn" href="friends.html">Message</a>`;
   }
-  const compareLinkHTML = f => `<a class="btn" href="friends.html">Compare →</a>`;
-
-  // ring badge
-  function ringSVG(pct=0){
-    const CIRC=2*Math.PI*32;
-    const off =CIRC*(1-Math.max(0,Math.min(1,pct/100)));
-    return `
-      <div class="score-ring" title="Compatibility">
-        <svg viewBox="0 0 76 76" aria-hidden="true">
-          <circle class="ring-track" cx="38" cy="38" r="32"></circle>
-          <circle class="ring-prog"  cx="38" cy="38" r="32" stroke-dasharray="${CIRC}" stroke-dashoffset="${off}"></circle>
-        </svg>
-        <div class="score-num">${pct}<small>%</small></div>
-      </div>`;
-  }
-
-  // render
-  const resultsEl = document.querySelector('#results') || document.querySelector('.cards');
-  const emptyEl   = document.querySelector('#empty');
 
   function render(){
-    const m = me();
-    $('#me-ct')      && ($('#me-ct').textContent = m.ct || '–');
-    $('#me-ll')      && ($('#me-ll').textContent = m.ll || '–');
-    $('#me-hobbies') && ($('#me-hobbies').textContent = normList(m.hobbies).join(', ') || '–');
-    $('#me-values')  && ($('#me-values').textContent  = normList(m.values).join(', ')  || '–');
+    if(!listEl) return;
+    const me = getMe();
+    const friends = loadFriends();
 
-    const list = friends();
-    if(!list.length){ if(resultsEl) resultsEl.innerHTML=''; if(emptyEl) emptyEl.style.display='block'; return; }
+    // fill snapshot „header’iui“, jei turi atskirą bloką
+    $('#me-ct')      && ($('#me-ct').textContent = me.ct || '—');
+    $('#me-ll')      && ($('#me-ll').textContent = me.ll || '—');
+    $('#me-hobbies') && ($('#me-hobbies').textContent = toList(me.hobbies).join(', ') || '—');
+    $('#me-values')  && ($('#me-values').textContent  = toList(me.values).join(', ')  || '—');
 
-    const q         = ($('#f-search')?.value||'').trim().toLowerCase();
-    const desiredCT = $('#f-ct')?.value || 'Any';
-    const minScore  = parseInt($('#f-min')?.value||'0',10) || 0;
-    const weightLL  = parseFloat($('#f-llw')?.value||'1') || 1;
+    // filters
+    const q = ($('#f-search')?.value||'').trim().toLowerCase();
+    const wantCT = $('#f-ct')?.value || 'Any';
+    const min = parseInt($('#f-min')?.value||'0',10);
+    const w   = parseFloat($('#f-llw')?.value||'1') || 1;
 
-    let rows = list.map(f=>({f,s:score(m,f,weightLL)}));
+    let rows = friends.map(f => ({ f, s: score(me,f,w) }));
 
-    if(q){
+    if (q){
       rows = rows.filter(({f})=>{
-        const hay=[
+        const hay = [
           f.name,f.ct,f.ll,f.contact,f.notes,f.whatsapp,f.instagram,f.facebook,f.email,
-          ...(Array.isArray(f.hobbies)?f.hobbies:[String(f.hobbies||'')]),
-          ...(Array.isArray(f.values)?f.values:[String(f.values||'')]),
+          ...toList(f.hobbies), ...toList(f.values)
         ].join(' ').toLowerCase();
         return hay.includes(q);
       });
     }
-    rows = rows.filter(({f,s}) => ctMatch(desiredCT||'Any',f.ct) && s>=minScore);
+    rows = rows.filter(({f,s})=>{
+      const okCT = (wantCT==='Any'||!wantCT) ? true
+                 : (f.ct==='Both'||wantCT==='Both') ? true
+                 : String(f.ct||'').toLowerCase()===String(wantCT).toLowerCase();
+      return okCT && s>=min;
+    });
+
     rows.sort((a,b)=> b.s - a.s || String(a.f.name||'').localeCompare(String(b.f.name||'')));
 
-    if(!resultsEl) return;
-    resultsEl.innerHTML='';
-    if(!rows.length){ emptyEl && (emptyEl.style.display='block'); return; }
-    emptyEl && (emptyEl.style.display='none');
-
+    // render
+    listEl.innerHTML='';
     rows.forEach(({f,s})=>{
-      const hobbies = normList(f.hobbies);
-      const values  = normList(f.values);
-      const card=document.createElement('div');
-      card.className='match-card';
-      card.dataset.connection = (String(f.ct || 'both').toLowerCase().includes('romantic')
-        ? 'romantic'
-        : String(f.ct || 'both').toLowerCase().includes('friend') ? 'friendship' : 'both');
+      const card = document.createElement('article');
+      card.className = 'sl-card card';
+      const avatar = avatarHTML(f.name, f.photo);
+      const H = chips('Hobbies', f.hobbies);
+      const V = chips('Values',  f.values);
 
-      card.innerHTML=`
-        <div class="head">
-          <div class="meta">
-            <img class="avatar" src="${avatarFor(f.name,f.photo)}" alt="">
-            <div style="min-width:0;">
-              <div class="name">${escapeHTML(f.name||'—')}</div>
-              <div class="hint">${escapeHTML(f.ct||'—')} · ${escapeHTML(f.ll||'—')}</div>
-            </div>
+      card.innerHTML = `
+        <div class="sl-head">
+          ${avatar}
+          <div style="min-width:0">
+            <div class="sl-name">${escapeHTML(f.name || '—')}</div>
+            <div class="sl-sub">${subline(f)}</div>
           </div>
-          ${ringSVG(s)}
+          ${ringHTML(s)}
         </div>
-        ${hobbies.length ? `<div class="row" style="margin-top:.25rem"><b>Hobbies:</b> ${hobbies.slice(0,12).map(v=>`<span class="chip"><span class="ico">${hobbyIco(v)}</span><span>${escapeHTML(v)}</span></span>`).join('')}</div>` : ''}
-        ${values.length  ? `<div class="row" style="margin-top:.25rem"><b>Values:</b>  ${values.slice(0,12).map(v=>`<span class="chip"><span class="ico">${valueIco(v)}</span><span>${escapeHTML(v)}</span></span>`).join('')}</div>` : ''}
-        ${f.contact ? `<div style="margin-top:.4rem"><b>Contact:</b> ${escapeHTML(f.contact)}</div>` : ''}
-        ${f.notes   ? `<div style="margin-top:.2rem"><i>${escapeHTML(f.notes)}</i></div>` : ''}
-        <div class="row" style="margin-top:.6rem">
+        ${H}${V}
+        ${f.notes ? `<div style="margin:.2rem 0 .4rem"><i>${escapeHTML(f.notes)}</i></div>` : ''}
+        <div class="sl-actions">
           <a class="btn" href="friends.html">Edit in Friends</a>
-          ${messageLinkHTML(f)}
-          ${compareLinkHTML(f)}
+          ${messageBtn(f)}
         </div>
       `;
-      resultsEl.appendChild(card);
+      listEl.appendChild(card);
     });
 
-    hideStrayDots();
+    // UI labels
+    $('#minLabel') && ($('#minLabel').textContent = (parseInt($('#f-min')?.value||'0',10)||0)+'%');
+    $('#llw-label')&& ($('#llw-label').textContent= (parseFloat($('#f-llw')?.value||'1')||1).toFixed(1)+'×');
   }
 
-  // pašalinam „juodus taškelius“
-  function looksLikeDot(el){
-    const txtEmpty=!el.textContent.trim();
-    const cs=getComputedStyle(el);
-    const r=el.getBoundingClientRect(), w=r.width, h=r.height;
-    const small=w>6&&w<=20&&h>6&&h<=20;
-    const roundish=(parseFloat(cs.borderRadius||'0')>=Math.min(w,h)*0.45)||(cs.borderRadius&&cs.borderRadius.endsWith('%'));
-    return txtEmpty&&small&&roundish;
-  }
-  function hideStrayDots(){
-    const root = resultsEl || document.body;
-    if(!root) return;
-    root.querySelectorAll('.match-card').forEach(card=>{
-      card.querySelectorAll(':scope *').forEach(node=>{
-        const kids = [...node.children];
-        if(kids.length>=3 && kids.length<=8 && kids.every(looksLikeDot)){
-          node.style.display='none';
-        }
-      });
-    });
-  }
-
-  // live labels
-  (function liveLabels(){
-    const r=document.getElementById('f-min'), lab=document.getElementById('minLabel');
-    if(r&&lab){ const upd=()=>lab.textContent=r.value+'%'; upd(); r.addEventListener('input',upd); }
-    const w=document.getElementById('f-llw'), wlab=document.getElementById('llw-label');
-    if(w&&wlab){ const upd=()=>wlab.textContent=(+w.value).toFixed(1)+'×'; upd(); w.addEventListener('input',upd); }
-  })();
-
-  document.addEventListener('DOMContentLoaded', render);
+  // events
   ['#f-search','#f-ct','#f-min','#f-llw'].forEach(sel=>{
     document.querySelector(sel)?.addEventListener('input',render);
     document.querySelector(sel)?.addEventListener('change',render);
   });
-  document.getElementById('filtersReset')?.addEventListener('click',()=>{
-    const ids=['f-search','f-ct','f-min','f-llw'];
-    const vals=['','Any','0','1.0'];
-    ids.forEach((id,i)=>{ const el=document.getElementById(id); if(el) el.value=vals[i]; });
-    document.getElementById('minLabel')&&(document.getElementById('minLabel').textContent='0%');
-    document.getElementById('llw-label')&&(document.getElementById('llw-label').textContent='1.0×');
+  $('#filtersReset')?.addEventListener('click', ()=>{
+    const pairs = [['f-search',''],['f-ct','Any'],['f-min','0'],['f-llw','1.0']];
+    pairs.forEach(([id,val])=>{ const el=document.getElementById(id); if(el) el.value=val; });
     render();
   });
 
-  // Segment toggle (friend/romantic) – minimal, nekeičia ID
-  (function matchConnectionFilter(){
-    const btnFriend   = document.querySelector('.seg-btn[data-seg="friend"]');
-    const btnRomantic = document.querySelector('.seg-btn[data-seg="romantic"]');
+  // segment toggle (Friendship/Romantic) – pritaikom display pagal data
+  (function segments(){
+    const F = document.querySelector('.seg-btn[data-seg="friend"]');
+    const R = document.querySelector('.seg-btn[data-seg="romantic"]');
     let state = { friend:false, romantic:false };
-    const save = () => localStorage.setItem('soulMatchConnFilter', JSON.stringify(state));
     const paint = () => {
-      btnFriend  && (btnFriend.classList.toggle('is-active', state.friend));
-      btnRomantic&& (btnRomantic.classList.toggle('is-active', state.romantic));
-      document.querySelectorAll('.match-card').forEach(card=>{
-        const t=(card.dataset.connection||'both');
+      F && F.classList.toggle('is-active', state.friend);
+      R && R.classList.toggle('is-active', state.romantic);
+      // kortelės neturi explicit data – filtruojam pagal f.ct tekste subline
+      // (čia tik papildomas vizualinis filtras po skaičiavimo)
+      $$('#matchList .sl-card').forEach(card=>{
+        const txt = card.querySelector('.sl-sub')?.textContent?.toLowerCase() || '';
+        const isFriend   = /friend/.test(txt) || /both/.test(txt);
+        const isRomantic = /romantic/.test(txt) || /both/.test(txt);
         const show = state.friend===state.romantic ? true
-                    : state.friend ? (t==='friendship'||t==='both')
-                    : state.romantic ? (t==='romantic'||t==='both') : true;
+                    : state.friend ? isFriend
+                    : state.romantic ? isRomantic
+                    : true;
         card.style.display = show ? '' : 'none';
       });
     };
-    btnFriend  && btnFriend.addEventListener('click', ()=>{ state.friend=!state.friend; paint(); save(); });
-    btnRomantic&& btnRomantic.addEventListener('click', ()=>{ state.romantic=!state.romantic; paint(); save(); });
-    try{ const s=JSON.parse(localStorage.getItem('soulMatchConnFilter')||'{}'); if('friend' in s) state=s; }catch{}
+    F && F.addEventListener('click', ()=>{ state.friend   = !state.friend;   paint(); });
+    R && R.addEventListener('click', ()=>{ state.romantic = !state.romantic; paint(); });
     paint();
   })();
+
+  document.addEventListener('DOMContentLoaded', render);
 })();

@@ -5,63 +5,58 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Soulink – Match</title>
 
-  <!-- auth guard (turi būti virš kitų skriptų) -->
-  <script src="auth.js"></script>
+  <!-- auth guard (visada virš kitų skriptų) -->
+  <script src="auth.js" defer></script>
+
+  <!-- global nav logika (NEKEIČIAM) -->
+  <script src="nav.js" defer></script>
 
   <!-- Icons (kaip kituose puslapiuose) -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
+  <!-- LOKALUS avatar/grid css (tik šiam puslapiui) -->
   <style>
-    :root{
-      --bg:#003c43; --surface:#074c4f; --surface-2:#0a3f42;
-      --stroke:rgba(0,253,216,.28); --glow:rgba(0,253,216,.35);
-      --text:#eafff9; --muted:#c8f7ef; --link:#9afcf0; --accent:#00fdd8;
-      --border:rgba(0,253,216,.28);
+    /* Lokalus – tik šiam puslapiui */
+    .sl-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
     }
-    html,body{ background:var(--bg); color:var(--text); margin:0; }
-    a{ color:var(--link); text-decoration:none; }
-    a:hover{ color:var(--accent); }
-    .container{ max-width:1100px; margin:0 auto; padding:2rem 1rem; }
-
-    /* NAV (.navbar – vizualo nekeičiu) */
-    .navbar{ position:sticky; top:0; background:#002e30; border-bottom:1px solid var(--stroke); box-shadow:0 0 12px rgba(0,253,216,.25); z-index:50; }
-    .nav-inner{ display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.8rem 1rem; }
-    .brand{ font-weight:700; color:var(--accent); text-decoration:none; }
-    .nav-links{ list-style:none; display:flex; gap:.6rem; margin:0; padding:0; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
-    .nav-links::-webkit-scrollbar{ display:none; }
-    .nav-links a{ display:inline-block; padding:.45rem .7rem; border-radius:10px; border:1px solid transparent; color:var(--text); flex:0 0 auto; }
-    .nav-links a:hover{ border-color:var(--stroke); box-shadow:0 0 0 1px var(--stroke),0 0 16px var(--glow); color:var(--accent); }
-
-    /* Drawer mobilui (kaip turėjai) */
-    .drawer{ position:fixed; inset:0; display:none; }
-    .drawer.open{ display:block; }
-    .drawer .backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.45); }
-    .drawer .panel{ position:absolute; top:0; left:0; bottom:0; width:280px; background:#002e30; border-right:1px solid var(--stroke); padding:14px; display:flex; flex-direction:column; gap:.35rem; }
-    .drawer .panel a{ padding:.45rem .7rem; border-radius:10px; color:var(--text); }
-    .drawer .panel a:hover{ background:rgba(0,253,216,.10); box-shadow:0 0 0 1px var(--stroke) inset; }
-    .hamburger button{ background:transparent; border:1px solid var(--stroke); color:var(--accent); border-radius:10px; padding:.4rem .6rem; cursor:pointer; }
-
-    /* Kortelės (palieku) */
-    .card{ background:var(--surface); border:1px solid var(--stroke); border-radius:16px; padding:1.2rem; box-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(0,253,216,.06) inset; }
-    .page-title{ font-size:1.6rem; font-weight:800; letter-spacing:.2px; margin:0 0 .2rem; }
-    .page-sub{ color:var(--muted); margin:.2rem 0 1rem; }
-    .segment-toggle{ display:flex; gap:.5rem; margin:.6rem 0 1rem; }
-    .seg-btn{ border:1px solid var(--stroke); border-radius:999px; padding:.4rem .8rem; background:linear-gradient(180deg, rgba(0,253,216,.08), rgba(0,253,216,.02)); font-weight:700; cursor:pointer; }
-    .seg-btn.is-active{ box-shadow:0 0 0 2px rgba(80,255,200,.25), 0 0 16px rgba(80,255,200,.25); }
-    .layout{ display:grid; grid-template-columns:1.2fr 1fr; gap:1rem; }
-    @media (max-width:960px){ .layout{ grid-template-columns:1fr; } }
-    .chips{ display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.3rem; }
-    .chip{ display:inline-block; padding:.2rem .5rem; border-radius:999px; border:1px solid var(--stroke); background:rgba(0,253,216,.08); }
-    .filters-panel h3{ margin:.2rem 0 .6rem; }
-    .page-cta{ display:flex; justify-content:space-between; margin-top:12px; }
-    .btn{ cursor:pointer; border:1px solid var(--stroke); border-radius:999px; padding:.55rem .95rem; font-weight:700; color:var(--text); background:linear-gradient(180deg, rgba(0,253,216,.08), rgba(0,253,216,.02)); box-shadow:0 0 12px rgba(0,253,216,.2); transition:transform .15s ease, box-shadow .15s ease; }
-    .btn:hover{ box-shadow:0 0 18px rgba(0,253,216,.45); transform:translateY(-1px); }
+    .sl-card { display:flex; flex-direction:column; position:relative; }
+    .sl-head { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+    .sl-avatar {
+      width:56px; height:56px; border-radius:50%;
+      display:inline-flex; align-items:center; justify-content:center;
+      font-weight:600; font-size:22px; overflow:hidden; flex:0 0 56px;
+      box-shadow:0 0 0 2px rgba(0,253,216,.28), 0 0 10px rgba(0,253,216,.35);
+      background:#0a3f42; color:#eafff9;
+    }
+    .sl-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .sl-name{ font-weight:800; line-height:1.2; }
+    .sl-sub{ opacity:.9; font-size:.95rem; }
+    .sl-badges{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 12px; }
+    .sl-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; }
+    .sl-score{ position:absolute; top:8px; right:8px; }
+    @media (max-width:480px){
+      .sl-avatar{ width:48px; height:48px; font-size:20px; }
+      .sl-list{ grid-template-columns:1fr; }
+    }
+    /* kortelę laikom prie tavo brand stiliaus */
+    .sl-card.card{ background:var(--surface); border:1px solid var(--stroke); border-radius:16px; padding:1.2rem;
+      box-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(0,253,216,.06) inset; }
+    .pill{ display:inline-block; padding:.3rem .6rem; border-radius:999px; border:1px solid var(--stroke); background:rgba(0,253,216,.08); }
+    .score-ring{ position:relative; width:56px; height:56px; }
+    .score-ring svg{ width:56px; height:56px; }
+    .score-ring .ring-track{ fill:none; stroke:rgba(255,255,255,.18); stroke-width:6; }
+    .score-ring .ring-prog{ fill:none; stroke:var(--accent); stroke-width:6; stroke-linecap:round; filter:drop-shadow(0 0 6px rgba(0,253,216,.45)); }
+    .score-ring .score-num{ position:absolute; inset:0; display:grid; place-items:center; font-weight:800; }
+    .score-num small{ font-size:.7em; opacity:.9; }
   </style>
 </head>
 <body class="match-page">
 
-  <!-- NAVBAR -->
+  <!-- NAVBAR (vienodas markup) -->
   <nav class="navbar" role="navigation" aria-label="Main">
     <div class="nav-inner">
       <div class="brand">Soulink</div>
@@ -81,85 +76,52 @@
           <li><a href="logout.html">Log Out</a></li>
         </ul>
       </div>
-      <div class="hamburger"><button id="openDrawer" aria-label="Open menu">☰ Menu</button></div>
     </div>
   </nav>
-
-  <!-- MOBILE NAV DRAWER -->
-  <div class="drawer" id="drawer" aria-hidden="true">
-    <div class="backdrop" id="drawerBackdrop" tabindex="-1" aria-label="Close"></div>
-    <aside class="panel" role="dialog" aria-modal="true" aria-label="Navigation">
-      <a href="index.html">Home</a>
-      <a href="quiz.html">Quiz</a>
-      <a href="edit-profile.html">Edit Profile</a>
-      <a href="my-soul.html">My Soul</a>
-      <a href="soul-chart.html">Soul Chart</a>
-      <a href="soul-coach.html">Soul Coach</a>
-      <a href="match.html">Match</a>
-      <a href="friends.html">Friends</a>
-      <a href="results.html">Results</a>
-      <a href="login.html">Log In</a>
-      <a href="signup.html">Sign Up</a>
-      <a href="logout.html" id="logoutLinkMobile">Log Out</a>
-      <button class="btn ghost" id="closeDrawer" style="margin-top:8px">Close</button>
-    </aside>
-  </div>
 
   <main class="container">
     <h1 class="page-title">Match Lab ✨</h1>
     <p class="page-sub">See who resonates with your Connection, Love Language, Hobbies and Values.</p>
 
-    <!-- SEGMENT TOGGLE -->
+    <!-- SEGMENT TOGGLE (paliekam ID/klases) -->
     <div id="segmentToggle" class="segment-toggle" role="tablist" aria-label="Match segment">
       <button type="button" class="seg-btn" data-seg="friend"   aria-selected="true">🫶 Friendship</button>
       <button type="button" class="seg-btn" data-seg="romantic" aria-selected="false">💖 Romantic</button>
     </div>
 
-    <!-- Filters -->
-    <section class="layout">
-      <article id="yourSnapshot" class="card snapshot">
-        <h3>Snapshot</h3>
-        <div class="chips"><span class="chip"><b>Connection:</b> <span id="me-ct">–</span></span>
-          <span class="chip"><b>Love Language:</b> <span id="me-ll">–</span></span></div>
-        <div style="margin-top:8px"><b>Hobbies:</b> <span id="me-hobbies">–</span></div>
-        <div style="margin-top:8px"><b>Values:</b>  <span id="me-values">–</span></div>
-      </article>
-
-      <aside id="filtersPanel" class="card filters-panel" aria-label="Filters">
-        <h3>Filters</h3>
-        <input id="f-search" type="search" placeholder="Search name, notes, socials…" style="width:100%;margin-bottom:.6rem">
+    <!-- FILTERS (ID kaip nurodei) -->
+    <section class="card" id="filtersPanel" aria-label="Filters" style="margin-bottom:16px">
+      <div class="row" style="gap:8px; align-items:center;">
+        <input id="f-search" type="search" placeholder="Search name, notes, socials…" style="flex:1;min-width:0">
         <label>Connection</label>
-        <select id="f-ct" style="width:100%;margin-bottom:.6rem">
+        <select id="f-ct">
           <option value="Any">Any</option>
           <option>Friendship</option>
           <option>Romantic</option>
           <option>Both</option>
         </select>
         <label>Min score <small id="minLabel">0%</small></label>
-        <input id="f-min" type="range" min="0" max="100" step="1" value="0" style="width:100%">
-        <label style="margin-top:.6rem">Love Language weight <small id="llw-label">1.0×</small></label>
-        <input id="f-llw" type="range" min="0.2" max="2.0" step="0.1" value="1.0" style="width:100%">
-        <div style="margin-top:10px"><button id="filtersReset" class="btn ghost" type="button">Reset</button></div>
-      </aside>
+        <input id="f-min" type="range" min="0" max="100" step="1" value="0" style="width:160px">
+        <label style="margin-left:8px;">LL weight <small id="llw-label">1.0×</small></label>
+        <input id="f-llw" type="range" min="0.2" max="2.0" step="0.1" value="1.0" style="width:160px">
+        <button id="filtersReset" type="button" class="btn">Reset</button>
+      </div>
     </section>
 
-    <!-- Results -->
-    <section id="results" class="cards" aria-live="polite"></section>
+    <!-- KORTELIŲ GRID -->
+    <section id="matchList" class="sl-list" aria-live="polite"></section>
 
-    <div class="page-cta">
+    <div class="page-cta" style="display:flex;justify-content:space-between;margin-top:12px;">
       <a class="btn ghost" href="soul-coach.html">← Back: Soul Coach</a>
       <a class="btn" href="friends.html" style="background:var(--accent);color:#003136">Next → Friends</a>
     </div>
 
-    <footer style="margin-top:12px;color:var(--muted);border-top:1px solid var(--border);padding-top:12px">
+    <footer style="margin-top:12px;color:var(--muted);border-top:1px solid rgba(0,253,216,.28);padding-top:12px">
       © 2025 Soulink.global | Created with love by Soulink Team
     </footer>
   </main>
 
-  <!-- Puslapio logika -->
+  <!-- puslapio logika -->
   <script src="match.js" defer></script>
-
-  <!-- Bendras navbar -->
-  <script src="nav.js" defer></script>
 </body>
 </html>
