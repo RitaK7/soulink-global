@@ -1,11 +1,11 @@
-// Soulink · Results — normalios kortelės + mažas avataras + overview
+// Soulink · Results — Polish v2: bullets off, score pill, grid spacing, Message visibility, slider label
 (() => {
   const $  = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
   // ===== Helpers =====
   const READ = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
-  const escapeHTML = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const esc  = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const digits = s => String(s||'').replace(/\D/g,'');
   const uniq = a => [...new Set(a)];
   const toList = v => Array.isArray(v) ? v
@@ -40,24 +40,13 @@
 
   function avatarHTML(name, photo){
     if (photo && /^https?:|^data:image/i.test(photo)) {
-      return `<span class="sl-avatar"><img src="${escapeHTML(photo)}" alt=""></span>`;
+      return `<span class="sl-avatar"><img src="${esc(photo)}" alt=""></span>`;
     }
     const ch = String(name||'?').trim().charAt(0).toUpperCase() || '?';
-    return `<span class="sl-avatar" aria-hidden="true">${escapeHTML(ch)}</span>`;
+    return `<span class="sl-avatar" aria-hidden="true">${esc(ch)}</span>`;
   }
 
-  function ringHTML(p){
-    const C=2*Math.PI*32, off=C*(1-Math.max(0,Math.min(1,p/100)));
-    return `<div class="sl-score score-ring" title="Compatibility">
-      <svg viewBox="0 0 76 76" aria-hidden="true">
-        <circle class="ring-track" cx="38" cy="38" r="32"></circle>
-        <circle class="ring-prog" cx="38" cy="38" r="32" stroke-dasharray="${C}" stroke-dashoffset="${off}"></circle>
-      </svg>
-      <div class="score-num">${p}<small>%</small></div>
-    </div>`;
-  }
-
-  // scoring
+  // scoring (neliečiam logikos)
   const sameLL=(a,b)=> (a&&b&&a.trim().toLowerCase()===b.trim().toLowerCase())?1:0;
   const jaccard=(A,B)=>{
     const a=new Set(A||[]), b=new Set(B||[]);
@@ -65,11 +54,11 @@
     let inter=0; a.forEach(x=>{ if(b.has(x)) inter++; });
     return inter/(a.size+b.size-inter);
   };
-  function score(me,f,w=1){
-    const sLL=25*sameLL(me.ll,f.ll)*w;
-    const sCT=15*((me.ct==='Any'||!me.ct)?1:(f.ct==='Both'||me.ct==='Both')?1:String(me.ct).toLowerCase()===String(f.ct).toLowerCase()?1:0);
-    const sH =30*jaccard(me.hobbies,f.hobbies);
-    const sV =30*jaccard(me.values,f.values);
+  function score(me,fr,w=1){
+    const sLL=25*sameLL(me.ll,fr.ll)*w;
+    const sCT=15*((me.ct==='Any'||!me.ct)?1:(fr.ct==='Both'||me.ct==='Both')?1:String(me.ct).toLowerCase()===String(fr.ct).toLowerCase()?1:0);
+    const sH =30*jaccard(me.hobbies,fr.hobbies);
+    const sV =30*jaccard(me.values, fr.values);
     return Math.max(0,Math.min(100,Math.round(sLL+sCT+sH+sV)));
   }
 
@@ -82,19 +71,29 @@
       ll: f.ll || f.loveLanguage || '',
       hobbies: uniq(toList(f.hobbies).map(x=>x.toLowerCase())),
       values:  uniq(toList(f.values).map(x=>x.toLowerCase())),
-      photo: f.photo || ''
+      photo: f.photo || '',
+      whatsapp: f.whatsapp, instagram: f.instagram, facebook: f.facebook, email: f.email, contact: f.contact, notes: f.notes
     };
   }
 
-  function subline(f){ return `${escapeHTML(f.ct||'Unknown')} • ${escapeHTML(f.ll||'Unknown')}`; }
+  // subline – BE "•"
+  const subline = f => `${esc(f.ct || 'Unknown')} — ${esc(f.ll || 'Unknown')}`;
+
   function chips(title, arr){
     const list = toList(arr);
     if(!list.length) return '';
-    return `<div class="sl-badges"><b style="margin-right:4px">${title}:</b> ${
-      list.slice(0,12).map(v=>`<span class="pill">${escapeHTML(v)}</span>`).join(' ')
+    return `<div class="sl-badges"><b style="margin-right:4px">${esc(title)}:</b> ${
+      list.slice(0,12).map(v=>`<span class="pill">${esc(v)}</span>`).join(' ')
     }</div>`;
   }
+
+  // Message tik jei yra kontaktas
+  function hasContact(f){
+    const any = !!(f.whatsapp || f.instagram || f.facebook || f.email || f.contact);
+    return any || (typeof f.contact==='string' && /^@|https?:\/\//i.test(f.contact));
+  }
   function messageBtn(f){
+    if (!hasContact(f)) return '';
     if (f.whatsapp && digits(f.whatsapp)) return `<a class="btn" href="https://wa.me/${digits(f.whatsapp)}" target="_blank" rel="noopener">Message</a>`;
     if (f.instagram){
       const u=/^https?:\/\//i.test(f.instagram)?f.instagram:`https://instagram.com/${f.instagram.replace(/^@/,'')}`;
@@ -105,22 +104,31 @@
       return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
     }
     if (f.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) return `<a class="btn" href="mailto:${f.email}">Message</a>`;
-    return `<a class="btn" href="friends.html">Message</a>`;
+    if (f.contact){
+      const v=f.contact.trim();
+      if (/^https?:\/\//i.test(v)) return `<a class="btn" href="${esc(v)}" target="_blank" rel="noopener">Message</a>`;
+      if (/^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(v)) return `<a class="btn" href="mailto:${esc(v)}">Message</a>`;
+      if (/^\+?\d[\d\s-]{6,}$/.test(v)) return `<a class="btn" href="https://wa.me/${digits(v)}" target="_blank" rel="noopener">Message</a>`;
+      if (/^@?[\w.]{2,}$/i.test(v)) return `<a class="btn" href="https://instagram.com/${esc(v.replace(/^@/,''))}" target="_blank" rel="noopener">Message</a>`;
+    }
+    return '';
   }
 
   function cardHTML(f, s, includeCompare=true){
+    const cls = s>=75 ? 'good' : s>=55 ? 'ok' : 'low';
     return `
     <article class="sl-card card">
+      <span class="score ${cls} score-badge">${s}%</span>
       <div class="sl-head">
         ${avatarHTML(f.name, f.photo)}
         <div style="min-width:0">
-          <div class="sl-name">${escapeHTML(f.name)}</div>
+          <div class="sl-name">${esc(f.name)}</div>
           <div class="sl-sub">${subline(f)}</div>
         </div>
-        ${ringHTML(s)}
       </div>
       ${chips('Hobbies', f.hobbies)}
       ${chips('Values',  f.values)}
+      ${f.notes ? `<div style="margin:.2rem 0 .4rem"><i>${esc(f.notes)}</i></div>` : ''}
       <div class="sl-actions">
         <a class="btn" href="friends.html">Edit in Friends</a>
         ${messageBtn(f)}
@@ -129,7 +137,6 @@
     </article>`;
   }
 
-  // compute + render
   function render(weight=1){
     const ME = me();
     $('#me-name')    && ($('#me-name').textContent = ME.name);
@@ -138,19 +145,15 @@
     $('#me-hobbies') && ($('#me-hobbies').textContent = (ME.hobbies.join(', ') || '—'));
     $('#me-values')  && ($('#me-values').textContent  = (ME.values.join(', ')  || '—'));
 
-    const friends = mergeFriends().map(normalizeFriend).map(f=>{
-      return { ...f, score: score(ME, f, weight),
-        whatsapp: f.whatsapp, instagram: f.instagram, facebook: f.facebook, email: f.email, contact:f.contact, notes:f.notes };
-    });
-
-    // overview
+    const friends = mergeFriends().map(normalizeFriend).map(f=>({ ...f, score: score(ME,f,weight) }));
     const all = friends.slice().sort((a,b)=> b.score - a.score || a.name.localeCompare(b.name));
     const avg = all.length ? Math.round(all.reduce((s,x)=>s+x.score,0)/all.length) : 0;
     const top3 = all.slice(0,3).map(x=>x.name);
+
     $('#topOverview') && ($('#topOverview').innerHTML =
       `<span><b>Average score:</b> ${avg}%</span>${top3.length?` · <span><b>Top matches:</b> ${top3.join(', ')}</span>`:''}`);
 
-    // shared hobbies/values (su ME)
+    // shared su ME
     const SH = new Map(), SV = new Map();
     all.forEach(f=>{
       f.hobbies.forEach(h=>{ if(ME.hobbies.includes(h)) SH.set(h,(SH.get(h)||0)+1); });
@@ -159,11 +162,10 @@
     const topH=[...SH.entries()].sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k);
     const topV=[...SV.entries()].sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k);
     $('#insights') && ($('#insights').innerHTML =
-      (topH.length? `<div><b>Shared Hobbies</b> ${topH.map(t=>`<span class="pill">${escapeHTML(t)}</span>`).join(' ')}</div>`:'') +
-      (topV.length? `<div><b>Shared Values</b> ${topV.map(t=>`<span class="pill">${escapeHTML(t)}</span>`).join(' ')}</div>`:'')
+      (topH.length? `<div><b>Shared Hobbies</b> ${topH.map(t=>`<span class="pill">${esc(t)}</span>`).join(' ')}</div>`:'') +
+      (topV.length? `<div><b>Shared Values</b> ${topV.map(t=>`<span class="pill">${esc(t)}</span>`).join(' ')}</div>`:'')
     );
 
-    // lists (Romantic / Friendship / Both patenka į abu)
     const rom = all.filter(f=>/romantic/i.test(f.ct)||/both/i.test(f.ct));
     const fri = all.filter(f=>/friend/i.test(f.ct)||/both/i.test(f.ct));
 
@@ -173,20 +175,22 @@
     const has = rom.length + fri.length > 0;
     $('#empty') && ($('#empty').style.display = has ? 'none' : 'block');
 
-    // label
-    $('#llw-label') && ($('#llw-label').textContent = weight.toFixed(1) + '×');
+    // slider label live
+    const lab = $('#llw-label'); if(lab){ lab.textContent = `${(weight||1).toFixed(1)}×`; }
   }
 
-  // feedback stars
+  // feedback / export / print – kaip buvo
   (function feedback(){
     const stars = $('#fbStars'); if(!stars) return;
-    for(let i=1;i<=5;i++){
-      const id=`fb-s-${i}`;
-      const input=document.createElement('input');
-      input.type='radio'; input.name='fb-stars'; input.id=id; input.value=String(i); input.hidden=true;
-      const label=document.createElement('label'); label.setAttribute('for',id); label.textContent='★'; label.title=`Rate ${i}`;
-      input.addEventListener('change',()=>{ [...stars.querySelectorAll('label')].forEach((L,idx)=> L.classList.toggle('active', idx < i)); });
-      stars.append(input,label);
+    if (!stars.querySelector('input')){
+      for(let i=1;i<=5;i++){
+        const id=`fb-s-${i}`;
+        const input=document.createElement('input');
+        input.type='radio'; input.name='fb-stars'; input.id=id; input.value=String(i); input.hidden=true;
+        const label=document.createElement('label'); label.setAttribute('for',id); label.textContent='★'; label.title=`Rate ${i}`;
+        input.addEventListener('change',()=>{ [...stars.querySelectorAll('label')].forEach((L,idx)=> L.classList.toggle('active', idx < i)); });
+        stars.append(input,label);
+      }
     }
     $('#fbSend')?.addEventListener('click', ()=>{
       const n = +(stars.querySelector('input[name="fb-stars"]:checked')?.value||0);
@@ -205,7 +209,7 @@
 
   // settings slider
   const slider = $('#llWeight');
-  function run(){ render(parseFloat(slider?.value||'1')||1); }
+  const run = ()=> render(parseFloat(slider?.value||'1')||1);
   slider?.addEventListener('input', run);
 
   document.addEventListener('DOMContentLoaded', run);

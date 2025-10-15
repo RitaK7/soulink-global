@@ -1,4 +1,4 @@
-/* Soulink · Match — kortelės su normaliu turiniu ir mažu avataru */
+/* Soulink · Match — Polish v2: bullets off, score pill, grid spacing, Message visibility, slider label */
 (() => {
   const $  = sel => document.querySelector(sel);
   const $$ = sel => Array.from(document.querySelectorAll(sel));
@@ -6,40 +6,27 @@
   // ===== Helpers =====
   const READ = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
   const digits = s => String(s||'').replace(/\D/g,'');
-  const escapeHTML = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const toList = v => Array.isArray(v) ? v
                     : typeof v === 'string' ? v.split(/[,;|/]\s*|\s{2,}|\n/).map(s=>s.trim()).filter(Boolean)
                     : [];
 
-  // avatar (nuotrauka arba inicialas, MAX 56px – dydį valdo CSS .sl-avatar)
+  // avatar (mažas – dydį riboja CSS .sl-avatar)
   function avatarHTML(name, photo){
     if (photo && /^https?:|^data:image/i.test(photo)) {
-      return `<span class="sl-avatar"><img src="${escapeHTML(photo)}" alt=""></span>`;
+      return `<span class="sl-avatar"><img src="${esc(photo)}" alt=""></span>`;
     }
     const ch = String(name||'?').trim().charAt(0).toUpperCase() || '?';
-    return `<span class="sl-avatar" aria-hidden="true">${escapeHTML(ch)}</span>`;
+    return `<span class="sl-avatar" aria-hidden="true">${esc(ch)}</span>`;
   }
 
-  // žiedinis score badge (56x56)
-  function ringHTML(p){
-    const C = 2*Math.PI*32, off = C*(1 - Math.max(0, Math.min(1, p/100)));
-    return `<div class="sl-score score-ring" title="Compatibility">
-      <svg viewBox="0 0 76 76" aria-hidden="true">
-        <circle class="ring-track" cx="38" cy="38" r="32"></circle>
-        <circle class="ring-prog" cx="38" cy="38" r="32" stroke-dasharray="${C}" stroke-dashoffset="${off}"></circle>
-      </svg>
-      <div class="score-num">${p}<small>%</small></div>
-    </div>`;
-  }
-
-  // ===== Data (suderinamumas) =====
+  // ===== Data (suderinamai) =====
   function getMe(){
     const q = READ('soulink.soulQuiz') || READ('soulQuiz') || {};
     return {
       name: q.name || '',
       ct:   q.connectionType || q.connection || 'Both',
-      ll:   Array.isArray(q.loveLanguages) ? (q.loveLanguages[0]||'')
-           : (q.loveLanguage || ''),
+      ll:   Array.isArray(q.loveLanguages) ? (q.loveLanguages[0]||'') : (q.loveLanguage||''),
       hobbies: toList(q.hobbies),
       values:  toList(q.values),
     };
@@ -51,7 +38,6 @@
       READ('soulFriends')
     ].filter(Array.isArray);
     const flat = stacks.flat();
-    // dedupe pagal vardą (case-insensitive)
     const map = new Map();
     flat.forEach(f=>{
       const key = (f?.name||'').trim().toLowerCase();
@@ -60,7 +46,7 @@
     return Array.from(map.values());
   }
 
-  // ===== Scoring (tavo logikos nekeičiu, tik „sutvarkyta“) =====
+  // ===== Scoring (logikos nekeičiam) =====
   const sameLL = (a,b) => (a && b && a.trim().toLowerCase() === b.trim().toLowerCase()) ? 1 : 0;
   function jaccard(a,b){
     const A=new Set(toList(a).map(x=>x.toLowerCase()));
@@ -81,22 +67,29 @@
     return Math.max(0,Math.min(100,Math.round(sLL+sCT+sH+sV)));
   }
 
-  // ===== Render =====
-  const listEl = $('#matchList');
-
+  // subline – BE "•" simbolio (naudojam brūkšnį)
   function subline(f){
     const ct = f.ct || 'Unknown';
     const ll = f.ll || 'Unknown';
-    return `${escapeHTML(ct)} • ${escapeHTML(ll)}`;
+    return `${esc(ct)} — ${esc(ll)}`;
   }
+
   function chips(title, arr){
     const list = toList(arr);
     if(!list.length) return '';
-    return `<div class="sl-badges"><b style="margin-right:4px">${title}:</b> ${
-      list.slice(0,12).map(v=>`<span class="pill">${escapeHTML(v)}</span>`).join(' ')
+    return `<div class="sl-badges"><b style="margin-right:4px">${esc(title)}:</b> ${
+      list.slice(0,12).map(v=>`<span class="pill">${esc(v)}</span>`).join(' ')
     }</div>`;
   }
+
+  // Message – tik jei YRA bent vienas kontaktas
+  function hasContact(f){
+    const any = !!(f.whatsapp || f.instagram || f.facebook || f.email || f.contact);
+    // papildomai: @handle tekste
+    return any || (typeof f.contact==='string' && /^@|https?:\/\//i.test(f.contact));
+  }
   function messageBtn(f){
+    if (!hasContact(f)) return '';
     if (f.whatsapp && digits(f.whatsapp)) return `<a class="btn" href="https://wa.me/${digits(f.whatsapp)}" target="_blank" rel="noopener">Message</a>`;
     if (f.instagram){
       const u=/^https?:\/\//i.test(f.instagram)?f.instagram:`https://instagram.com/${f.instagram.replace(/^@/,'')}`;
@@ -107,19 +100,23 @@
       return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
     }
     if (f.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) return `<a class="btn" href="mailto:${f.email}">Message</a>`;
-    return `<a class="btn" href="friends.html">Message</a>`;
+    if (f.contact){
+      // jei yra URL / @handle / email / tel. – bandome su „contactLink“ logika
+      const v = f.contact.trim();
+      if (/^https?:\/\//i.test(v)) return `<a class="btn" href="${esc(v)}" target="_blank" rel="noopener">Message</a>`;
+      if (/^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(v)) return `<a class="btn" href="mailto:${esc(v)}">Message</a>`;
+      if (/^\+?\d[\d\s-]{6,}$/.test(v)) return `<a class="btn" href="https://wa.me/${digits(v)}" target="_blank" rel="noopener">Message</a>`;
+      if (/^@?[\w.]{2,}$/i.test(v)) return `<a class="btn" href="https://instagram.com/${esc(v.replace(/^@/,''))}" target="_blank" rel="noopener">Message</a>`;
+    }
+    return '';
   }
+
+  const listEl = $('#matchList');
 
   function render(){
     if(!listEl) return;
     const me = getMe();
     const friends = loadFriends();
-
-    // fill snapshot „header’iui“, jei turi atskirą bloką
-    $('#me-ct')      && ($('#me-ct').textContent = me.ct || '—');
-    $('#me-ll')      && ($('#me-ll').textContent = me.ll || '—');
-    $('#me-hobbies') && ($('#me-hobbies').textContent = toList(me.hobbies).join(', ') || '—');
-    $('#me-values')  && ($('#me-values').textContent  = toList(me.values).join(', ')  || '—');
 
     // filters
     const q = ($('#f-search')?.value||'').trim().toLowerCase();
@@ -147,26 +144,29 @@
 
     rows.sort((a,b)=> b.s - a.s || String(a.f.name||'').localeCompare(String(b.f.name||'')));
 
-    // render
     listEl.innerHTML='';
     rows.forEach(({f,s})=>{
       const card = document.createElement('article');
       card.className = 'sl-card card';
-      const avatar = avatarHTML(f.name, f.photo);
+
       const H = chips('Hobbies', f.hobbies);
       const V = chips('Values',  f.values);
 
+      // score pill (viršutinis dešinys kampas)
+      const scoreCls = s>=75 ? 'good' : s>=55 ? 'ok' : 'low';
+      const scorePill = `<span class="score ${scoreCls} score-badge">${s}%</span>`;
+
       card.innerHTML = `
+        ${scorePill}
         <div class="sl-head">
-          ${avatar}
+          ${avatarHTML(f.name, f.photo)}
           <div style="min-width:0">
-            <div class="sl-name">${escapeHTML(f.name || '—')}</div>
+            <div class="sl-name">${esc(f.name || '—')}</div>
             <div class="sl-sub">${subline(f)}</div>
           </div>
-          ${ringHTML(s)}
         </div>
         ${H}${V}
-        ${f.notes ? `<div style="margin:.2rem 0 .4rem"><i>${escapeHTML(f.notes)}</i></div>` : ''}
+        ${f.notes ? `<div style="margin:.2rem 0 .4rem"><i>${esc(f.notes)}</i></div>` : ''}
         <div class="sl-actions">
           <a class="btn" href="friends.html">Edit in Friends</a>
           ${messageBtn(f)}
@@ -175,9 +175,9 @@
       listEl.appendChild(card);
     });
 
-    // UI labels
-    $('#minLabel') && ($('#minLabel').textContent = (parseInt($('#f-min')?.value||'0',10)||0)+'%');
-    $('#llw-label')&& ($('#llw-label').textContent= (parseFloat($('#f-llw')?.value||'1')||1).toFixed(1)+'×');
+    // live labels
+    const minEl = $('#minLabel'); if(minEl){ const v = parseInt($('#f-min')?.value||'0',10)||0; minEl.textContent = `${v}%`; }
+    const llwEl = $('#llw-label'); if(llwEl){ const v = parseFloat($('#f-llw')?.value||'1')||1; llwEl.textContent = `${v.toFixed(1)}×`; }
   }
 
   // events
@@ -186,12 +186,13 @@
     document.querySelector(sel)?.addEventListener('change',render);
   });
   $('#filtersReset')?.addEventListener('click', ()=>{
-    const pairs = [['f-search',''],['f-ct','Any'],['f-min','0'],['f-llw','1.0']];
-    pairs.forEach(([id,val])=>{ const el=document.getElementById(id); if(el) el.value=val; });
+    [['f-search',''],['f-ct','Any'],['f-min','0'],['f-llw','1.0']].forEach(([id,val])=>{
+      const el=document.getElementById(id); if(el) el.value=val;
+    });
     render();
   });
 
-  // segment toggle (Friendship/Romantic) – pritaikom display pagal data
+  // segment toggle (Friendship/Romantic) – papildomas filtravimas vaizde
   (function segments(){
     const F = document.querySelector('.seg-btn[data-seg="friend"]');
     const R = document.querySelector('.seg-btn[data-seg="romantic"]');
@@ -199,12 +200,10 @@
     const paint = () => {
       F && F.classList.toggle('is-active', state.friend);
       R && R.classList.toggle('is-active', state.romantic);
-      // kortelės neturi explicit data – filtruojam pagal f.ct tekste subline
-      // (čia tik papildomas vizualinis filtras po skaičiavimo)
       $$('#matchList .sl-card').forEach(card=>{
-        const txt = card.querySelector('.sl-sub')?.textContent?.toLowerCase() || '';
-        const isFriend   = /friend/.test(txt) || /both/.test(txt);
-        const isRomantic = /romantic/.test(txt) || /both/.test(txt);
+        const t = card.querySelector('.sl-sub')?.textContent?.toLowerCase() || '';
+        const isFriend   = /friend/.test(t) || /both/.test(t);
+        const isRomantic = /romantic/.test(t) || /both/.test(t);
         const show = state.friend===state.romantic ? true
                     : state.friend ? isFriend
                     : state.romantic ? isRomantic
@@ -212,8 +211,8 @@
         card.style.display = show ? '' : 'none';
       });
     };
-    F && F.addEventListener('click', ()=>{ state.friend   = !state.friend;   paint(); });
-    R && R.addEventListener('click', ()=>{ state.romantic = !state.romantic; paint(); });
+    F && F.addEventListener('click', ()=>{ state.friend=!state.friend; paint(); });
+    R && R.addEventListener('click', ()=>{ state.romantic=!state.romantic; paint(); });
     paint();
   })();
 

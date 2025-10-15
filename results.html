@@ -5,47 +5,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Soulink – Results</title>
 
-  <!-- Soulink global styles (tamsi tema + neon glow) -->
+  <!-- Soulink global styles -->
   <link rel="stylesheet" href="style.css">
 
-  <!-- Global nav logic (aktyvus link’as) -->
+  <!-- Global nav -->
   <script src="nav.js" defer></script>
 
-  <!-- Puslapio logika (neliečiama) – žemiau body pabaigoje taip pat įkelta su defer -->
-  <!-- <script src="results.js" defer></script> -->
-
-  <!-- Tik lokali mini CSS šiam puslapiui (grid + avatar dydis) -->
+  <!-- LOKALUS mini CSS tik šiam puslapiui (grid, avatar, score pill, list bullets) -->
   <style>
-    .sl-list{
-      display:grid;
-      grid-template-columns:repeat(auto-fit, minmax(260px,1fr));
-      gap:16px;
-    }
-    .sl-card{ display:flex; flex-direction:column; position:relative; }
-    .sl-head{ display:flex; align-items:center; gap:12px; margin-bottom:8px; }
-    .sl-avatar{
-      width:56px; height:56px; border-radius:50%;
-      display:inline-flex; align-items:center; justify-content:center;
-      font-weight:600; font-size:22px; overflow:hidden; flex:0 0 56px;
-    }
-    .sl-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
-    .sl-name{ font-weight:800; line-height:1.2; }
-    .sl-sub{ opacity:.9; font-size:.95rem; }
-    .sl-badges{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 12px; }
-    .sl-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; }
-    .sl-score{ position:absolute; top:8px; right:8px; }
-    /* 2 kolonos desktop, 1 kolona telefone (layout kairė/dešinė) */
+    /* layout: 2 kolonos → 1 telefone */
     .grid{ display:grid; grid-template-columns:1.1fr 1.9fr; gap:1.2rem; }
     @media (max-width:960px){ .grid{ grid-template-columns:1fr; } }
-    @media (max-width:480px){
-      .sl-avatar{ width:48px; height:48px; font-size:20px; }
-      .sl-list{ grid-template-columns:1fr; }
+
+    /* list grid */
+    .sl-list{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(280px,1fr));
+      gap:16px;
     }
+    @media (max-width:480px){ .sl-list{ grid-template-columns:1fr; } }
+
+    /* kortelės */
+    .sl-card{ position:relative; display:flex; flex-direction:column; }
+    .sl-head{ display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+    .sl-badges{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 12px; }
+    .sl-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; }
+
+    .sl-avatar{ width:56px; height:56px; border-radius:50%; overflow:hidden; flex:0 0 56px;
+      display:inline-flex; align-items:center; justify-content:center; font-weight:600; font-size:22px; }
+    .sl-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+    @media (max-width:480px){ .sl-avatar{ width:48px; height:48px; font-size:20px; } }
+
+    .sl-name{ font-weight:800; line-height:1.2; }
+    .sl-sub{ opacity:.9; font-size:.95rem; }
+
+    .score-badge{ position:absolute; top:8px; right:8px; }
+
+    /* bullets off kortelėse */
+    .card ul, .card li{ list-style:none; padding-left:0; margin-left:0; }
+    .card li::marker{ content:""; }
   </style>
 </head>
 <body>
 
-  <!-- NAVBAR (vienodas markup, vizualą duoda style.css) -->
+  <!-- NAVBAR -->
   <nav class="navbar" role="navigation" aria-label="Main">
     <div class="nav-inner">
       <div class="brand">Soulink</div>
@@ -138,7 +141,7 @@
     © 2025 Soulink.global | Created with love by Soulink Team
   </footer>
 
-  <!-- Puslapio logika (NEKEIČIAMA) -->
+  <!-- Puslapio logika -->
   <script src="results.js" defer></script>
 </body>
 </html>
