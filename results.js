@@ -1,4 +1,4 @@
-// Soulink · Results — Polish v2: bullets off, score pill, grid spacing, Message visibility, slider label
+// Soulink · Results — Polish v3: score pill, message visibility, filter contacts from Values, live slider label, bullets off, sticky left
 (() => {
   const $  = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
@@ -11,6 +11,12 @@
   const toList = v => Array.isArray(v) ? v
                     : typeof v === 'string' ? v.split(/[,;|/]\s*|\s{2,}|\n/).map(s=>s.trim()).filter(Boolean)
                     : [];
+
+  const isHandle   = v => /^@[\w.]{2,}$/i.test(v || '');
+  const isEmail    = v => /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(v || '');
+  const isURL      = v => /^https?:\/\//i.test(v || '');
+  const isPhone    = v => /^\+?\d[\d\s-]{6,}$/.test(v || '');
+  const looksContact = v => isHandle(v) || isEmail(v) || isURL(v) || isPhone(v);
 
   function mergeFriends() {
     const stacks = [
@@ -76,11 +82,11 @@
     };
   }
 
-  // subline – BE "•"
+  // subline – be "•"
   const subline = f => `${esc(f.ct || 'Unknown')} — ${esc(f.ll || 'Unknown')}`;
 
   function chips(title, arr){
-    const list = toList(arr);
+    let list = toList(arr).filter(Boolean).filter(v => !looksContact(v));
     if(!list.length) return '';
     return `<div class="sl-badges"><b style="margin-right:4px">${esc(title)}:</b> ${
       list.slice(0,12).map(v=>`<span class="pill">${esc(v)}</span>`).join(' ')
@@ -89,8 +95,7 @@
 
   // Message tik jei yra kontaktas
   function hasContact(f){
-    const any = !!(f.whatsapp || f.instagram || f.facebook || f.email || f.contact);
-    return any || (typeof f.contact==='string' && /^@|https?:\/\//i.test(f.contact));
+    return !!(f.whatsapp || f.instagram || f.facebook || f.email || f.contact);
   }
   function messageBtn(f){
     if (!hasContact(f)) return '';
@@ -103,13 +108,13 @@
       const u=/^https?:\/\//i.test(f.facebook)?f.facebook:`https://facebook.com/${f.facebook.replace(/^@/,'')}`;
       return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
     }
-    if (f.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) return `<a class="btn" href="mailto:${f.email}">Message</a>`;
+    if (f.email && isEmail(f.email)) return `<a class="btn" href="mailto:${esc(f.email)}">Message</a>`;
     if (f.contact){
       const v=f.contact.trim();
-      if (/^https?:\/\//i.test(v)) return `<a class="btn" href="${esc(v)}" target="_blank" rel="noopener">Message</a>`;
-      if (/^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(v)) return `<a class="btn" href="mailto:${esc(v)}">Message</a>`;
-      if (/^\+?\d[\d\s-]{6,}$/.test(v)) return `<a class="btn" href="https://wa.me/${digits(v)}" target="_blank" rel="noopener">Message</a>`;
-      if (/^@?[\w.]{2,}$/i.test(v)) return `<a class="btn" href="https://instagram.com/${esc(v.replace(/^@/,''))}" target="_blank" rel="noopener">Message</a>`;
+      if (isURL(v))  return `<a class="btn" href="${esc(v)}" target="_blank" rel="noopener">Message</a>`;
+      if (isEmail(v))return `<a class="btn" href="mailto:${esc(v)}">Message</a>`;
+      if (isPhone(v))return `<a class="btn" href="tel:${digits(v)}">Message</a>`;
+      if (isHandle(v))return `<a class="btn" href="https://instagram.com/${esc(v.replace(/^@/,''))}" target="_blank" rel="noopener">Message</a>`;
     }
     return '';
   }
@@ -179,7 +184,7 @@
     const lab = $('#llw-label'); if(lab){ lab.textContent = `${(weight||1).toFixed(1)}×`; }
   }
 
-  // feedback / export / print – kaip buvo
+  // feedback/print/export – palikta kaip turėjai; čia tik star UI ir send saugojimas
   (function feedback(){
     const stars = $('#fbStars'); if(!stars) return;
     if (!stars.querySelector('input')){

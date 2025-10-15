@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Soulink – Match</title>
 
-  <!-- Soulink global styles (tamsi teal + neon glow) -->
+  <!-- Soulink global styles -->
   <link rel="stylesheet" href="style.css">
 
   <!-- Global nav (aktyvus link’as tvarkomas nav.js) -->
   <script src="nav.js" defer></script>
 
-  <!-- LOKALUS mini CSS tik šiam puslapiui (grid, avatar, score pill, list bullets) -->
+  <!-- Lokalus mini CSS (grid, avatar, score pill, bullets, mobile filters collapse) -->
   <style>
-    /* grid */
+    /* Grid */
     .sl-list{
       display:grid;
       grid-template-columns:repeat(auto-fit, minmax(280px,1fr));
@@ -21,13 +21,14 @@
     }
     @media (max-width:480px){ .sl-list{ grid-template-columns:1fr; } }
 
-    /* kortelės vidiniai tarpai */
-    .sl-card{ position:relative; display:flex; flex-direction:column; }
+    /* Kortelės ir tarpai */
+    .card{ position:relative; } /* kad score-badge prisirištų */
+    .sl-card{ display:flex; flex-direction:column; }
     .sl-head{ display:flex; align-items:center; gap:12px; margin-bottom:8px; }
     .sl-badges{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 12px; }
     .sl-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; }
 
-    /* avatar (dydį ribojam čia; glow ateina iš style.css .card/.avatar jei turite) */
+    /* Avatar dydis (glow/brand ateina iš style.css) */
     .sl-avatar{ width:56px; height:56px; border-radius:50%; overflow:hidden; flex:0 0 56px;
       display:inline-flex; align-items:center; justify-content:center; font-weight:600; font-size:22px; }
     .sl-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
@@ -36,17 +37,25 @@
     .sl-name{ font-weight:800; line-height:1.2; }
     .sl-sub{ opacity:.9; font-size:.95rem; }
 
-    /* score pill viršuje dešinėje */
+    /* Score kapsulė viršuje dešinėje */
     .score-badge{ position:absolute; top:8px; right:8px; }
 
-    /* nuimame juodus taškus, jei kur nors ateina <ul>/<li> */
+    /* Juodų taškų naikinimas kortelėse */
     .card ul, .card li{ list-style:none; padding-left:0; margin-left:0; }
     .card li::marker{ content:""; }
+
+    /* Mobile filters collapse (ID nekeičiami) */
+    #filtersToggle{ display:none; margin:8px 0; }
+    @media (max-width:480px){
+      #filtersToggle{ display:inline-flex; }
+      #filtersPanel{ display:none; }
+      #filtersPanel.open{ display:block; }
+    }
   </style>
 </head>
 <body class="match-page">
 
-  <!-- NAVBAR (markup vienodas) -->
+  <!-- NAVBAR -->
   <nav class="navbar" role="navigation" aria-label="Main">
     <div class="nav-inner">
       <div class="brand">Soulink</div>
@@ -78,6 +87,9 @@
       <button type="button" class="seg-btn" data-seg="friend" aria-selected="true">🫶 Friendship</button>
       <button type="button" class="seg-btn" data-seg="romantic" aria-selected="false">💖 Romantic</button>
     </div>
+
+    <!-- Mobile "Filters" trigger -->
+    <button id="filtersToggle" class="btn" type="button" aria-expanded="false" aria-controls="filtersPanel">Filters</button>
 
     <!-- Filters (ID paliekami) -->
     <section class="card" id="filtersPanel" aria-label="Filters" style="margin-bottom:16px">
@@ -111,7 +123,7 @@
     </footer>
   </main>
 
-  <!-- Puslapio logika (NEKEIČIAMA) -->
+  <!-- Puslapio logika -->
   <script src="match.js" defer></script>
 </body>
 </html>
