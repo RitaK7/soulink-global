@@ -261,3 +261,7 @@
   $('#btnExport')?.addEventListener('click', exportJSON);
   $('#btnPrint') ?.addEventListener('click', () => window.print());
 })();
+const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+const a = document.createElement('a');
+a.href = URL.createObjectURL(blob);
+a.download = `soulink-results-${new Date().toISOString().slice(0,10)}.json`;
