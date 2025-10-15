@@ -240,3 +240,24 @@
 
   document.addEventListener('DOMContentLoaded', run);
 })();
+// === Results: Export & Print wiring (safe add-on) ===
+(() => {
+  const $ = s => document.querySelector(s);
+  const READ = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+
+  function exportJSON(){
+    const payload = {
+      me: READ('soulink.soulQuiz') || READ('soulQuiz') || {},
+      friends: (READ('soulink.friends.list') || READ('soulink.friends') || READ('soulFriends') || [])
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `soulink-results-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  $('#btnExport')?.addEventListener('click', exportJSON);
+  $('#btnPrint') ?.addEventListener('click', () => window.print());
+})();
