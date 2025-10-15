@@ -257,6 +257,11 @@
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
   }
+  const t = document.createElement('div');
+t.className = 'toast'; t.textContent = 'Results exported ✔';
+Object.assign(t.style,{position:'fixed',right:'16px',bottom:'16px',padding:'10px 14px',borderRadius:'10px',background:'#003c43',color:'#00fdd8',boxShadow:'0 0 12px rgba(0,253,216,.35)'});
+document.body.appendChild(t); setTimeout(()=>t.remove(), 1600);
+
 
   $('#btnExport')?.addEventListener('click', exportJSON);
   $('#btnPrint') ?.addEventListener('click', () => window.print());
