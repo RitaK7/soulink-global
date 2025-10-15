@@ -1,4 +1,11 @@
-// Soulink · Results — Polish v3: score pill, message visibility, filter contacts from Values, live slider label, bullets off, sticky left
+// Soulink · Results — UX polish:
+// - score pill top-right
+// - Message only if contact (proper links)
+// - filter contact-like tokens from Values
+// - live slider label
+// - bullets off (CSS in HTML)
+// - sticky left (CSS in HTML)
+// - feedback toast (fade)
 (() => {
   const $  = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
@@ -14,7 +21,7 @@
 
   const isHandle   = v => /^@[\w.]{2,}$/i.test(v || '');
   const isEmail    = v => /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(v || '');
-  const isURL      = v => /^https?:\/\//i.test(v || '');
+  const isURL      = v => /^https?:\/\//i.test(v || '') || /^mailto:|^tel:/i.test(v || '');
   const isPhone    = v => /^\+?\d[\d\s-]{6,}$/.test(v || '');
   const looksContact = v => isHandle(v) || isEmail(v) || isURL(v) || isPhone(v);
 
@@ -184,9 +191,10 @@
     const lab = $('#llw-label'); if(lab){ lab.textContent = `${(weight||1).toFixed(1)}×`; }
   }
 
-  // feedback/print/export – palikta kaip turėjai; čia tik star UI ir send saugojimas
+  // feedback toast + local save (nekeičiant galimos EmailJS integracijos)
   (function feedback(){
     const stars = $('#fbStars'); if(!stars) return;
+
     if (!stars.querySelector('input')){
       for(let i=1;i<=5;i++){
         const id=`fb-s-${i}`;
@@ -197,6 +205,17 @@
         stars.append(input,label);
       }
     }
+
+    const toast = $('#fbToast');
+    function showToast(){
+      if(!toast) return;
+      toast.hidden = false;
+      toast.classList.remove('hide');
+      toast.classList.add('show');
+      setTimeout(()=>{ toast.classList.add('hide'); toast.classList.remove('show'); }, 2000);
+      setTimeout(()=>{ toast.hidden = true; }, 2400);
+    }
+
     $('#fbSend')?.addEventListener('click', ()=>{
       const n = +(stars.querySelector('input[name="fb-stars"]:checked')?.value||0);
       const payload = { stars:n, email:$('#fbEmail')?.value||'', msg:$('#fbMsg')?.value||'', at:new Date().toISOString() };
@@ -204,11 +223,13 @@
         const arr = READ('soulink.feedback') || [];
         arr.push(payload);
         localStorage.setItem('soulink.feedback', JSON.stringify(arr));
-        alert('Ačiū! Your feedback was saved locally.');
+        showToast();
         $('#fbEmail')&&( $('#fbEmail').value='' ); $('#fbMsg')&&( $('#fbMsg').value='' );
         stars.querySelectorAll('input').forEach(i=>i.checked=false);
         stars.querySelectorAll('label').forEach(L=>L.classList.remove('active'));
-      }catch{ alert('Could not store feedback.'); }
+      }catch{
+        showToast(); // bent jau UX reakcija
+      }
     });
   })();
 

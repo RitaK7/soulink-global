@@ -1,4 +1,11 @@
-/* Soulink · Match — Polish v3: score pill, message visibility, filter contacts from Values, live slider label, bullets off, mobile filters collapse */
+/* Soulink · Match — UX polish:
+   - score pill top-right
+   - Message only if contact (proper links)
+   - filter contact-like tokens from Values
+   - live slider label
+   - bullets off (CSS in HTML)
+   - mobile filters collapse + spacing
+*/
 (() => {
   const $  = sel => document.querySelector(sel);
   const $$ = sel => Array.from(document.querySelectorAll(sel));
@@ -11,14 +18,14 @@
                     : typeof v === 'string' ? v.split(/[,;|/]\s*|\s{2,}|\n/).map(s=>s.trim()).filter(Boolean)
                     : [];
 
-  // kontaktų detekcija (kad neišmestume į Values ir kad Message logika būtų tiksli)
+  // kontaktų atpažinimas
   const isHandle   = v => /^@[\w.]{2,}$/i.test(v || '');
   const isEmail    = v => /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(v || '');
-  const isURL      = v => /^https?:\/\//i.test(v || '');
+  const isURL      = v => /^https?:\/\//i.test(v || '') || /^mailto:|^tel:/i.test(v || '');
   const isPhone    = v => /^\+?\d[\d\s-]{6,}$/.test(v || '');
   const looksContact = v => isHandle(v) || isEmail(v) || isURL(v) || isPhone(v);
 
-  // avatar (mažas – dydį riboja CSS .sl-avatar)
+  // avatar
   function avatarHTML(name, photo){
     if (photo && /^https?:|^data:image/i.test(photo)) {
       return `<span class="sl-avatar"><img src="${esc(photo)}" alt=""></span>`;
@@ -74,14 +81,10 @@
     return Math.max(0,Math.min(100,Math.round(sLL+sCT+sH+sV)));
   }
 
-  // subline – be "•" simbolio
-  function subline(f){
-    const ct = f.ct || 'Unknown';
-    const ll = f.ll || 'Unknown';
-    return `${esc(ct)} — ${esc(ll)}`;
-  }
+  // subline – be "•"
+  const subline = f => `${esc(f.ct || 'Unknown')} — ${esc(f.ll || 'Unknown')}`;
 
-  // Hobbies/Values – pašalinam kontaktus
+  // Hobbies/Values – pašalinam kontaktinius įrašus
   function chips(title, arr){
     let list = toList(arr).filter(Boolean).filter(v => !looksContact(v));
     if(!list.length) return '';
@@ -96,7 +99,6 @@
   }
   function messageBtn(f){
     if (!hasContact(f)) return '';
-    // pirmenybė specifiniams laukams
     if (f.whatsapp && digits(f.whatsapp)) return `<a class="btn" href="https://wa.me/${digits(f.whatsapp)}" target="_blank" rel="noopener">Message</a>`;
     if (f.instagram){
       const u=/^https?:\/\//i.test(f.instagram)?f.instagram:`https://instagram.com/${f.instagram.replace(/^@/,'')}`;
@@ -107,8 +109,6 @@
       return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
     }
     if (f.email && isEmail(f.email)) return `<a class="btn" href="mailto:${esc(f.email)}">Message</a>`;
-
-    // contact – heuristika
     if (f.contact){
       const v=f.contact.trim();
       if (isURL(v))  return `<a class="btn" href="${esc(v)}" target="_blank" rel="noopener">Message</a>`;

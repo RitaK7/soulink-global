@@ -11,13 +11,13 @@
   <!-- Global nav -->
   <script src="nav.js" defer></script>
 
-  <!-- Lokalus mini CSS (grid, avatar, score pill, bullets, sticky left) -->
+  <!-- Lokalus mini CSS (grid, avatar, score pill, bullets, sticky left, toast) -->
   <style>
     /* Layout: 2 kolonos → 1 telefone */
     .grid{ display:grid; grid-template-columns:1.1fr 1.9fr; gap:1.2rem; }
     @media (max-width:960px){ .grid{ grid-template-columns:1fr; } }
 
-    /* Sticky kairė (desktop) */
+    /* Sticky kairė (desktop ≥1024px), mobil. išjungta */
     @media (min-width:1024px){
       .sticky-left{ position:sticky; top:88px; }
     }
@@ -51,6 +51,21 @@
     /* Bullets off kortelėse */
     .card ul, .card li{ list-style:none; padding-left:0; margin-left:0; }
     .card li::marker{ content:""; }
+
+    /* Toast (feedback) */
+    .toast{
+      position:relative;
+      margin-top:.6rem;
+      padding:.5rem .75rem;
+      border:1px solid var(--stroke);
+      border-radius:10px;
+      background:rgba(0,253,216,.08);
+      color:var(--text);
+      opacity:0;
+      transition:opacity .4s ease;
+    }
+    .toast.show{ opacity:1; }
+    .toast.hide{ opacity:0; }
   </style>
 </head>
 <body>
@@ -97,6 +112,8 @@
           <div class="row" style="margin-top:.8rem">
             <button id="fbSend" class="btn" type="button">Send Feedback</button>
           </div>
+          <!-- Toast: UX reakcija po siuntimo -->
+          <div id="fbToast" class="toast" aria-live="polite" hidden>💫 Thank you for your feedback!</div>
         </section>
 
         <!-- Your Snapshot -->

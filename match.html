@@ -8,12 +8,12 @@
   <!-- Soulink global styles -->
   <link rel="stylesheet" href="style.css">
 
-  <!-- Global nav (aktyvus link’as tvarkomas nav.js) -->
+  <!-- Global nav (aktyvumo logika) -->
   <script src="nav.js" defer></script>
 
-  <!-- Lokalus mini CSS (grid, avatar, score pill, bullets, mobile filters collapse) -->
+  <!-- Lokalus mini CSS (grid, avatar, score pill, bullets, mobile spacing/collapse) -->
   <style>
-    /* Grid */
+    /* Grid: 3–4 desktop, 2 tablet, 1 phone */
     .sl-list{
       display:grid;
       grid-template-columns:repeat(auto-fit, minmax(280px,1fr));
@@ -22,13 +22,12 @@
     @media (max-width:480px){ .sl-list{ grid-template-columns:1fr; } }
 
     /* Kortelės ir tarpai */
-    .card{ position:relative; } /* kad score-badge prisirištų */
+    .card{ position:relative; } /* score-badge kotvoms */
     .sl-card{ display:flex; flex-direction:column; }
     .sl-head{ display:flex; align-items:center; gap:12px; margin-bottom:8px; }
     .sl-badges{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 12px; }
     .sl-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; }
 
-    /* Avatar dydis (glow/brand ateina iš style.css) */
     .sl-avatar{ width:56px; height:56px; border-radius:50%; overflow:hidden; flex:0 0 56px;
       display:inline-flex; align-items:center; justify-content:center; font-weight:600; font-size:22px; }
     .sl-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
@@ -50,6 +49,10 @@
       #filtersToggle{ display:inline-flex; }
       #filtersPanel{ display:none; }
       #filtersPanel.open{ display:block; }
+      /* papildomas tarpelis tarp filtrų ir kortelių */
+      #filtersPanel.open + #matchList,
+      #filtersToggle + #filtersPanel + #matchList,
+      #filtersToggle + #matchList{ margin-top:16px; }
     }
   </style>
 </head>
@@ -82,7 +85,7 @@
     <h1 class="page-title">Match Lab ✨</h1>
     <p class="page-sub">See who resonates with your Connection, Love Language, Hobbies and Values.</p>
 
-    <!-- Segment toggle (ID paliekami) -->
+    <!-- Segment toggle -->
     <div id="segmentToggle" class="segment-toggle" role="tablist" aria-label="Match segment">
       <button type="button" class="seg-btn" data-seg="friend" aria-selected="true">🫶 Friendship</button>
       <button type="button" class="seg-btn" data-seg="romantic" aria-selected="false">💖 Romantic</button>
@@ -110,7 +113,7 @@
       </div>
     </section>
 
-    <!-- Kortelių grid (Match sąrašas) -->
+    <!-- Kortelių grid -->
     <section id="matchList" class="sl-list" aria-live="polite"></section>
 
     <div class="page-cta" style="display:flex;justify-content:space-between;margin-top:12px;">
