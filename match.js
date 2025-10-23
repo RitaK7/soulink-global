@@ -1,3 +1,42 @@
+
+// --- Contact sanitation utils (CG5) ---
+const CONTACT_PATTERNS = [
+  /(^|[\s,;])@[\w._-]+/i,
+  /\bmailto:[^\s]+/i,
+  /\bhttps?:\/\/[^\s]+/i,
+  /\b(instagram|facebook|t\.me|wa\.me|linkedin)\.com\/[^\s]+/i,
+  /\b(?:tel:|\+?\d[\d\s().\-]{6,})/i
+];
+
+function isContactToken(s=""){
+  if (!s || typeof s !== "string") return false;
+  return CONTACT_PATTERNS.some(rx => rx.test(s.trim()));
+}
+function stripContactTokens(arr=[]) {
+  return (Array.isArray(arr)?arr:[])
+    .map(v => typeof v==="string" ? v.trim() : "")
+    .filter(v => v && !isContactToken(v));
+}
+function firstContactHref(obj={}) {
+  const fields = [
+    obj.email, obj.whatsapp, obj.phone, obj.instagram, obj.facebook, obj.telegram, obj.url, obj.contact,
+    ...(Array.isArray(obj.values)?obj.values:[]),
+    ...(Array.isArray(obj.hobbies)?obj.hobbies:[])
+  ].filter(Boolean);
+  for (const f of fields) {
+    if (typeof f !== "string") continue;
+    const v = f.trim();
+    if (/^mailto:/i.test(v) || /\S+@\S+\.\S+/.test(v)) return v.startsWith("mailto:")? v : `mailto:${v}`;
+    if (/^tel:/i.test(v) || /^\+?\d[\d\s().\-]{6,}$/.test(v)) return v.startsWith("tel:")? v : `tel:${v.replace(/[^\d+]/g,"")}`;
+    if (/wa\.me\//i.test(v)) return v.startsWith("http")? v : `https://${v}`;
+    if (/instagram\.com\//i.test(v)) return v.startsWith("http")? v : `https://${v}`;
+    if (/^@/.test(v)) return `https://instagram.com/${v.slice(1)}`;
+    if (/facebook\.com\//i.test(v)) return v.startsWith("http")? v : `https://${v}`;
+    if (/^https?:\/\//i.test(v)) return v;
+  }
+  return "";
+}
+
 /* Soulink · Match — UX polish:
    - score pill top-right
    - Message only if contact (proper links)
@@ -236,3 +275,26 @@
 
   document.addEventListener('DOMContentLoaded', render);
 })();
+
+
+// --- Message button toggle (CG5) ---
+function applyMessageButtons(root=document){
+  root.querySelectorAll('.card').forEach(card=>{
+    const btn = card.querySelector('.btn-message');
+    if (!btn) return;
+    const data = card.getAttribute('data-friend');
+    try{
+      const obj = data ? JSON.parse(data) : {};
+      const href = firstContactHref(obj);
+      if (href){
+        btn.classList.remove('is-hidden');
+        btn.setAttribute('href', href);
+        if (/^https?:\/\//.test(href)) btn.setAttribute('target','_blank');
+      } else {
+        btn.classList.add('is-hidden');
+        btn.removeAttribute('href');
+      }
+    }catch{}
+  });
+}
+document.addEventListener('DOMContentLoaded', ()=> applyMessageButtons(document));
