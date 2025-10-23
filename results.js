@@ -1,3 +1,42 @@
+
+// --- Contact sanitation utils (CG5) ---
+const CONTACT_PATTERNS = [
+  /(^|[\s,;])@[\w._-]+/i,
+  /\bmailto:[^\s]+/i,
+  /\bhttps?:\/\/[^\s]+/i,
+  /\b(instagram|facebook|t\.me|wa\.me|linkedin)\.com\/[^\s]+/i,
+  /\b(?:tel:|\+?\d[\d\s().\-]{6,})/i
+];
+
+function isContactToken(s=""){
+  if (!s || typeof s !== "string") return false;
+  return CONTACT_PATTERNS.some(rx => rx.test(s.trim()));
+}
+function stripContactTokens(arr=[]) {
+  return (Array.isArray(arr)?arr:[])
+    .map(v => typeof v==="string" ? v.trim() : "")
+    .filter(v => v && !isContactToken(v));
+}
+function firstContactHref(obj={}) {
+  const fields = [
+    obj.email, obj.whatsapp, obj.phone, obj.instagram, obj.facebook, obj.telegram, obj.url, obj.contact,
+    ...(Array.isArray(obj.values)?obj.values:[]),
+    ...(Array.isArray(obj.hobbies)?obj.hobbies:[])
+  ].filter(Boolean);
+  for (const f of fields) {
+    if (typeof f !== "string") continue;
+    const v = f.trim();
+    if (/^mailto:/i.test(v) || /\S+@\S+\.\S+/.test(v)) return v.startsWith("mailto:")? v : `mailto:${v}`;
+    if (/^tel:/i.test(v) || /^\+?\d[\d\s().\-]{6,}$/.test(v)) return v.startsWith("tel:")? v : `tel:${v.replace(/[^\d+]/g,"")}`;
+    if (/wa\.me\//i.test(v)) return v.startsWith("http")? v : `https://${v}`;
+    if (/instagram\.com\//i.test(v)) return v.startsWith("http")? v : `https://${v}`;
+    if (/^@/.test(v)) return `https://instagram.com/${v.slice(1)}`;
+    if (/facebook\.com\//i.test(v)) return v.startsWith("http")? v : `https://${v}`;
+    if (/^https?:\/\//i.test(v)) return v;
+  }
+  return "";
+}
+
 // Soulink · Results — UX polish:
 // - score pill top-right
 // - Message only if contact (proper links)
@@ -240,7 +279,70 @@
 
   document.addEventListener('DOMContentLoaded', run);
 })();
-// === Results: Export & Print wiring (safe add-on) ===
+
+
+// --- Live LL Weight label + persist (CG5) ---
+document.addEventListener('DOMContentLoaded', ()=>{
+  const sl = document.querySelector('#f-llw');
+  const out = document.querySelector('#llw-label');
+  try{
+    const saved = localStorage.getItem('soulink.settings.llWeight');
+    if (saved && sl){ sl.value = parseFloat(saved); }
+  }catch{}
+  if (sl && out){
+    const render = ()=>{ out.textContent = `${parseFloat(sl.value).toFixed(1)}×`; };
+    sl.addEventListener('input', ()=>{ render(); try{ localStorage.setItem('soulink.settings.llWeight', sl.value);}catch{} });
+    render();
+  }
+});
+
+
+// --- Feedback handler (CG5) ---
+document.addEventListener('DOMContentLoaded', ()=>{
+  const form = document.querySelector('#feedbackForm');
+  const btn = document.querySelector('#btnSendFeedback');
+  if(!form || !btn) return;
+
+  function toast(msg, ok=true){
+    const t = document.createElement('div');
+    t.className = 'toast'; t.textContent = msg;
+    Object.assign(t.style,{position:'fixed',right:'16px',bottom:'16px',padding:'10px 14px',borderRadius:'10px',background: ok?'#003c43':'#5a2d2d',color:'#00fdd8',boxShadow:'0 0 12px rgba(0,253,216,.35)',zIndex:9999});
+    document.body.appendChild(t); setTimeout(()=>t.remove(), 2200);
+  }
+
+  async function sendFeedback(e){
+    e.preventDefault();
+    const email = (form.querySelector('input[name="email"]')||{}).value||"";
+    const text  = (form.querySelector('textarea[name="message"]')||{}).value||"";
+    if (!text || text.length>600){ toast('Please write a short message (≤600 chars).', false); return; }
+    btn.disabled = true; const old = btn.textContent; btn.textContent = 'Sending…';
+    try{
+      if (window.emailjs && emailjs.send){
+        await emailjs.send('service_XXX','template_YYY',{ email, message: text });
+      } else {
+        const arr = JSON.parse(localStorage.getItem('soulink.feedback')||'[]');
+        arr.push({ ts: Date.now(), email, message: text });
+        localStorage.setItem('soulink.feedback', JSON.stringify(arr));
+      }
+      toast('💫 Thank you for your feedback!', true);
+      form.reset();
+    } catch(err){
+      try{
+        const arr = JSON.parse(localStorage.getItem('soulink.feedback')||'[]');
+        arr.push({ ts: Date.now(), email, message: text, note: 'fallback-save' });
+        localStorage.setItem('soulink.feedback', JSON.stringify(arr));
+      }catch{}
+      toast('We received your message locally. Thank you!', true);
+    } finally {
+      btn.disabled = false; btn.textContent = old;
+    }
+  }
+  form.addEventListener('submit', sendFeedback);
+  btn.addEventListener('click', sendFeedback);
+});
+
+
+// === Results: Export & Print wiring (CG5) ===
 (() => {
   const $ = s => document.querySelector(s);
   const READ = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
@@ -250,23 +352,14 @@
       me: READ('soulink.soulQuiz') || READ('soulQuiz') || {},
       friends: (READ('soulink.friends.list') || READ('soulink.friends') || READ('soulFriends') || [])
     };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = `soulink-results-${new Date().toISOString().slice(0,10)}.json`;
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
   }
-  const t = document.createElement('div');
-t.className = 'toast'; t.textContent = 'Results exported ✔';
-Object.assign(t.style,{position:'fixed',right:'16px',bottom:'16px',padding:'10px 14px',borderRadius:'10px',background:'#003c43',color:'#00fdd8',boxShadow:'0 0 12px rgba(0,253,216,.35)'});
-document.body.appendChild(t); setTimeout(()=>t.remove(), 1600);
-
 
   $('#btnExport')?.addEventListener('click', exportJSON);
   $('#btnPrint') ?.addEventListener('click', () => window.print());
 })();
-const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
-const a = document.createElement('a');
-a.href = URL.createObjectURL(blob);
-a.download = `soulink-results-${new Date().toISOString().slice(0,10)}.json`;

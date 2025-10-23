@@ -13,11 +13,6 @@
 
   <!-- Lokalus mini CSS (grid, avatar, score pill, bullets, sticky left, toast) -->
   <style>
-    @media print{
-    header, nav, .filters, .footer, .toast{ display:none !important; }
-    .container{ box-shadow:none !important; background:#fff !important; }
-    .card{ break-inside: avoid; page-break-inside: avoid; }
-  }
     /* Layout: 2 kolonos → 1 telefone */
     .grid{ display:grid; grid-template-columns:1.1fr 1.9fr; gap:1.2rem; }
     @media (max-width:960px){ .grid{ grid-template-columns:1fr; } }
