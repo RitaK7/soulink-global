@@ -1,16 +1,14 @@
-/* Soulink Beta Access Guard – auth.js
-   Naudoja sessionStorage raktą "soulinkBeta" (true) po sėkmingo login.
-   Jei rakto nėra – meta į login/index.
+/* Soulink Beta Access Guard – auth.js (patched)
+   Uses sessionStorage key "soulinkBeta" ("true") after successful login.
+   If the key is missing – redirects to login.html.
 */
 
-// ✅ Nustatyk savo login puslapio kelią (pakeisk jei reikia)
-// LOGIN puslapis:
-const BETA_LOGIN_PAGE = "beta-login.html";
+const BETA_LOGIN_PAGE = "login.html";
 
-// PUSLAPIAI, kurie neprivalo beta rakto:
 const PUBLIC_PAGES = new Set([
-  "index.html",        // 👈 paliekam viešą Home
-  BETA_LOGIN_PAGE,     // 👈 login visada viešas
+  "index.html",
+  BETA_LOGIN_PAGE,
+  "signup.html",
   "privacy.html",
   "terms.html",
   "404.html",
@@ -18,27 +16,23 @@ const PUBLIC_PAGES = new Set([
   "sitemap.xml"
 ]);
 
-// Helper: gauti dabartinį failo pavadinimą (be query/hash)
 function currentPageName() {
   try {
     const path = window.location.pathname.split("/").pop() || "index.html";
-    return path.toLowerCase();
+    return path.toLowerCase().split("?")[0].split("#")[0];
   } catch {
     return "index.html";
   }
 }
 
-// Ar puslapis viešas?
 function isPublicPage() {
   return PUBLIC_PAGES.has(currentPageName());
 }
 
-// Ar prisijungęs prie beta?
 function hasBetaAccess() {
   return sessionStorage.getItem("soulinkBeta") === "true";
 }
 
-// Priverstinis patikrinimas ir nukreipimas
 (function enforceBetaAccess() {
   if (isPublicPage()) return;
   if (!hasBetaAccess()) {
@@ -53,17 +47,15 @@ function hasBetaAccess() {
   }
 })();
 
-
-// 🔓 Logout util (naudok iš bet kurio puslapio)
 window.soulinkLogout = function () {
   try {
     sessionStorage.removeItem("soulinkBeta");
+    sessionStorage.removeItem("soulinkBetaStartedAt");
   } finally {
     window.location.replace(BETA_LOGIN_PAGE);
   }
 };
 
-// ⏳ (Pasirinktinai) laiko limitas sesijai – pvz., 12 val.
 (function sessionTimeout(hours = 12) {
   const KEY = "soulinkBetaStartedAt";
   const now = Date.now();
