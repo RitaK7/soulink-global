@@ -1,365 +1,363 @@
+// results.js — Soulink Results / Feedback / Snapshot / Export
+// Šita versija pritaikyta prie dabartinio results.html:
+//
+//  Feedback blokas:
+//    #fbStars   – žvaigždutės (JS sudeda automatiškai)
+//    #fbEmail   – email (optional)
+//    #fbMsg     – tekstas (būtinas)
+//    #fbSend    – mygtukas
+//    #fbToast   – mažas toast pranešimas (success/error)
+//
+//  Snapshot:
+//    #me-name, #me-ct, #me-ll, #me-hobbies, #me-values
+//
+//  Settings:
+//    #llWeight, #llw-label, #btnExport, #btnPrint
+//
+//  Match list:
+//    #romantic, #friendship, #empty (šiuo metu tik tuščia būsena)
 
-// --- Contact sanitation utils (CG5) ---
-const CONTACT_PATTERNS = [
-  /(^|[\s,;])@[\w._-]+/i,
-  /\bmailto:[^\s]+/i,
-  /\bhttps?:\/\/[^\s]+/i,
-  /\b(instagram|facebook|t\.me|wa\.me|linkedin)\.com\/[^\s]+/i,
-  /\b(?:tel:|\+?\d[\d\s().\-]{6,})/i
-];
+(function () {
+  if (typeof window === "undefined" || typeof document === "undefined") return;
 
-function isContactToken(s=""){
-  if (!s || typeof s !== "string") return false;
-  return CONTACT_PATTERNS.some(rx => rx.test(s.trim()));
-}
-function stripContactTokens(arr=[]) {
-  return (Array.isArray(arr)?arr:[])
-    .map(v => typeof v==="string" ? v.trim() : "")
-    .filter(v => v && !isContactToken(v));
-}
-function firstContactHref(obj={}) {
-  const fields = [
-    obj.email, obj.whatsapp, obj.phone, obj.instagram, obj.facebook, obj.telegram, obj.url, obj.contact,
-    ...(Array.isArray(obj.values)?obj.values:[]),
-    ...(Array.isArray(obj.hobbies)?obj.hobbies:[])
-  ].filter(Boolean);
-  for (const f of fields) {
-    if (typeof f !== "string") continue;
-    const v = f.trim();
-    if (/^mailto:/i.test(v) || /\S+@\S+\.\S+/.test(v)) return v.startsWith("mailto:")? v : `mailto:${v}`;
-    if (/^tel:/i.test(v) || /^\+?\d[\d\s().\-]{6,}$/.test(v)) return v.startsWith("tel:")? v : `tel:${v.replace(/[^\d+]/g,"")}`;
-    if (/wa\.me\//i.test(v)) return v.startsWith("http")? v : `https://${v}`;
-    if (/instagram\.com\//i.test(v)) return v.startsWith("http")? v : `https://${v}`;
-    if (/^@/.test(v)) return `https://instagram.com/${v.slice(1)}`;
-    if (/facebook\.com\//i.test(v)) return v.startsWith("http")? v : `https://${v}`;
-    if (/^https?:\/\//i.test(v)) return v;
-  }
-  return "";
-}
-
-// Soulink · Results — UX polish:
-// - score pill top-right
-// - Message only if contact (proper links)
-// - filter contact-like tokens from Values
-// - live slider label
-// - bullets off (CSS in HTML)
-// - sticky left (CSS in HTML)
-// - feedback toast (fade)
-(() => {
-  const $  = (s, r=document) => r.querySelector(s);
-  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
   // ===== Helpers =====
-  const READ = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
-  const esc  = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const digits = s => String(s||'').replace(/\D/g,'');
-  const uniq = a => [...new Set(a)];
-  const toList = v => Array.isArray(v) ? v
-                    : typeof v === 'string' ? v.split(/[,;|/]\s*|\s{2,}|\n/).map(s=>s.trim()).filter(Boolean)
-                    : [];
 
-  const isHandle   = v => /^@[\w.]{2,}$/i.test(v || '');
-  const isEmail    = v => /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(v || '');
-  const isURL      = v => /^https?:\/\//i.test(v || '') || /^mailto:|^tel:/i.test(v || '');
-  const isPhone    = v => /^\+?\d[\d\s-]{6,}$/.test(v || '');
-  const looksContact = v => isHandle(v) || isEmail(v) || isURL(v) || isPhone(v);
-
-  function mergeFriends() {
-    const stacks = [
-      READ('soulink.friends.list'),
-      READ('soulink.friends'),
-      READ('soulFriends')
-    ].filter(Array.isArray);
-    const flat = stacks.flat();
-    const map = new Map();
-    flat.forEach(f=>{
-      const key=(f?.name||'').trim().toLowerCase();
-      if(!map.has(key)) map.set(key,f);
-    });
-    return Array.from(map.values());
+  function normaliseText(v) {
+    return (v == null ? "" : String(v)).trim();
   }
 
-  function me(){
-    const q = READ('soulink.soulQuiz') || READ('soulQuiz') || {};
-    return {
-      name: q.name || '—',
-      ct:   q.connectionType || q.connection || 'Both',
-      ll:   Array.isArray(q.loveLanguages)?(q.loveLanguages[0]||''):(q.loveLanguage||''),
-      hobbies: uniq(toList(q.hobbies).map(x=>x.toLowerCase())),
-      values:  uniq(toList(q.values).map(x=>x.toLowerCase()))
-    };
+  function toArray(v) {
+    if (!v && v !== 0) return [];
+    return Array.isArray(v) ? v : [v];
   }
 
-  function avatarHTML(name, photo){
-    if (photo && /^https?:|^data:image/i.test(photo)) {
-      return `<span class="sl-avatar"><img src="${esc(photo)}" alt=""></span>`;
+  function safeGetSoulData() {
+    let data = {};
+    try {
+      if (typeof getSoulData === "function") {
+        try {
+          data = getSoulData({ ensureShape: true }) || {};
+        } catch (e) {
+          data = getSoulData() || {};
+        }
+      } else if (typeof localStorage !== "undefined") {
+        const primary = localStorage.getItem("soulink.soulQuiz");
+        const legacy = localStorage.getItem("soulQuiz");
+        const raw = primary || legacy;
+        data = raw ? JSON.parse(raw) : {};
+      }
+    } catch (err) {
+      console.warn("[Soulink Results] failed to read soul data", err);
+      data = {};
     }
-    const ch = String(name||'?').trim().charAt(0).toUpperCase() || '?';
-    return `<span class="sl-avatar" aria-hidden="true">${esc(ch)}</span>`;
+    if (!data || typeof data !== "object") return {};
+    return data;
   }
 
-  // scoring (neliečiam logikos)
-  const sameLL=(a,b)=> (a&&b&&a.trim().toLowerCase()===b.trim().toLowerCase())?1:0;
-  const jaccard=(A,B)=>{
-    const a=new Set(A||[]), b=new Set(B||[]);
-    if(!a.size && !b.size) return 0;
-    let inter=0; a.forEach(x=>{ if(b.has(x)) inter++; });
-    return inter/(a.size+b.size-inter);
+  function hasAnyCoreData(data) {
+    if (!data || typeof data !== "object") return false;
+    if (normaliseText(data.name)) return true;
+    if (normaliseText(data.connectionType)) return true;
+    if (normaliseText(data.loveLanguage)) return true;
+    if (toArray(data.loveLanguages || data.loveLanguage || []).length) return true;
+    if (toArray(data.hobbies || data.interests || []).length) return true;
+    if (toArray(data.values || []).length) return true;
+    if (normaliseText(data.about || data.aboutMe)) return true;
+    return false;
+  }
+
+  // Toast helper (naudoja #fbToast)
+  function showToast(el, message, tone) {
+    if (!el) {
+      console.log("[Soulink Results toast]", message);
+      return;
+    }
+    el.textContent = message || "";
+    el.hidden = false;
+    el.classList.remove("is-error", "is-success", "is-info", "show", "hide");
+    if (tone === "error") el.classList.add("is-error");
+    else if (tone === "success") el.classList.add("is-success");
+    else if (tone === "info") el.classList.add("is-info");
+    // parodyti
+    void el.offsetWidth; // reflow hack
+    el.classList.add("show");
+
+    // paslėpti po kelių sekundžių
+    setTimeout(() => {
+      el.classList.remove("show");
+      el.classList.add("hide");
+    }, 3000);
+  }
+
+  // ===== DOM cache =====
+
+  const ui = {
+    // feedback
+    fbStars: $("#fbStars"),
+    fbEmail: $("#fbEmail"),
+    fbMsg: $("#fbMsg"),
+    fbSend: $("#fbSend"),
+    fbToast: $("#fbToast"),
+
+    // snapshot
+    meName: $("#me-name"),
+    meCt: $("#me-ct"),
+    meLl: $("#me-ll"),
+    meHobbies: $("#me-hobbies"),
+    meValues: $("#me-values"),
+
+    // settings
+    llWeight: $("#llWeight"),
+    llwLabel: $("#llw-label"),
+    btnExport: $("#btnExport"),
+    btnPrint: $("#btnPrint"),
+
+    // matches
+    romantic: $("#romantic"),
+    friendship: $("#friendship"),
+    empty: $("#empty"),
   };
-  function score(me,fr,w=1){
-    const sLL=25*sameLL(me.ll,fr.ll)*w;
-    const sCT=15*((me.ct==='Any'||!me.ct)?1:(fr.ct==='Both'||me.ct==='Both')?1:String(me.ct).toLowerCase()===String(fr.ct).toLowerCase()?1:0);
-    const sH =30*jaccard(me.hobbies,fr.hobbies);
-    const sV =30*jaccard(me.values, fr.values);
-    return Math.max(0,Math.min(100,Math.round(sLL+sCT+sH+sV)));
-  }
 
-  function normalizeFriend(f){
-    const ctRaw = String(f.ct || f.connection || '').toLowerCase();
-    const ct = /rom/.test(ctRaw) ? 'Romantic' : /friend/.test(ctRaw) ? 'Friendship' : /both|any/.test(ctRaw) ? 'Both' : (f.ct||'');
-    return {
-      name: f.name || '—',
-      ct,
-      ll: f.ll || f.loveLanguage || '',
-      hobbies: uniq(toList(f.hobbies).map(x=>x.toLowerCase())),
-      values:  uniq(toList(f.values).map(x=>x.toLowerCase())),
-      photo: f.photo || '',
-      whatsapp: f.whatsapp, instagram: f.instagram, facebook: f.facebook, email: f.email, contact: f.contact, notes: f.notes
-    };
-  }
+  let soulSnapshot = {};
+  let fbRating = 0;
 
-  // subline – be "•"
-  const subline = f => `${esc(f.ct || 'Unknown')} — ${esc(f.ll || 'Unknown')}`;
+  // ===== Snapshot =====
 
-  function chips(title, arr){
-    let list = toList(arr).filter(Boolean).filter(v => !looksContact(v));
-    if(!list.length) return '';
-    return `<div class="sl-badges"><b style="margin-right:4px">${esc(title)}:</b> ${
-      list.slice(0,12).map(v=>`<span class="pill">${esc(v)}</span>`).join(' ')
-    }</div>`;
-  }
+  function renderSnapshot() {
+    const soul = soulSnapshot;
+    const hasData = hasAnyCoreData(soul);
 
-  // Message tik jei yra kontaktas
-  function hasContact(f){
-    return !!(f.whatsapp || f.instagram || f.facebook || f.email || f.contact);
-  }
-  function messageBtn(f){
-    if (!hasContact(f)) return '';
-    if (f.whatsapp && digits(f.whatsapp)) return `<a class="btn" href="https://wa.me/${digits(f.whatsapp)}" target="_blank" rel="noopener">Message</a>`;
-    if (f.instagram){
-      const u=/^https?:\/\//i.test(f.instagram)?f.instagram:`https://instagram.com/${f.instagram.replace(/^@/,'')}`;
-      return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
+    if (!hasData) {
+      if (ui.meName) ui.meName.textContent = "—";
+      if (ui.meCt) ui.meCt.textContent = "—";
+      if (ui.meLl) ui.meLl.textContent = "—";
+      if (ui.meHobbies) ui.meHobbies.textContent = "—";
+      if (ui.meValues) ui.meValues.textContent = "—";
+      return;
     }
-    if (f.facebook){
-      const u=/^https?:\/\//i.test(f.facebook)?f.facebook:`https://facebook.com/${f.facebook.replace(/^@/,'')}`;
-      return `<a class="btn" href="${u}" target="_blank" rel="noopener">Message</a>`;
-    }
-    if (f.email && isEmail(f.email)) return `<a class="btn" href="mailto:${esc(f.email)}">Message</a>`;
-    if (f.contact){
-      const v=f.contact.trim();
-      if (isURL(v))  return `<a class="btn" href="${esc(v)}" target="_blank" rel="noopener">Message</a>`;
-      if (isEmail(v))return `<a class="btn" href="mailto:${esc(v)}">Message</a>`;
-      if (isPhone(v))return `<a class="btn" href="tel:${digits(v)}">Message</a>`;
-      if (isHandle(v))return `<a class="btn" href="https://instagram.com/${esc(v.replace(/^@/,''))}" target="_blank" rel="noopener">Message</a>`;
-    }
-    return '';
+
+    if (ui.meName) ui.meName.textContent = normaliseText(soul.name) || "—";
+    if (ui.meCt) ui.meCt.textContent = normaliseText(soul.connectionType) || "—";
+
+    // Love language
+    const loveList = toArray(soul.loveLanguages || soul.loveLanguage || []);
+    const primaryLove =
+      normaliseText(soul.loveLanguage) || normaliseText(loveList[0]) || "";
+    if (ui.meLl) ui.meLl.textContent = primaryLove || "—";
+
+    // Hobbies & values
+    const hobbies = toArray(soul.hobbies || soul.interests || []).map(normaliseText).filter(Boolean);
+    const values = toArray(soul.values || []).map(normaliseText).filter(Boolean);
+
+    if (ui.meHobbies) ui.meHobbies.textContent = hobbies.length ? hobbies.join(", ") : "—";
+    if (ui.meValues) ui.meValues.textContent = values.length ? values.join(", ") : "—";
   }
 
-  function cardHTML(f, s, includeCompare=true){
-    const cls = s>=75 ? 'good' : s>=55 ? 'ok' : 'low';
-    return `
-    <article class="sl-card card">
-      <span class="score ${cls} score-badge">${s}%</span>
-      <div class="sl-head">
-        ${avatarHTML(f.name, f.photo)}
-        <div style="min-width:0">
-          <div class="sl-name">${esc(f.name)}</div>
-          <div class="sl-sub">${subline(f)}</div>
-        </div>
-      </div>
-      ${chips('Hobbies', f.hobbies)}
-      ${chips('Values',  f.values)}
-      ${f.notes ? `<div style="margin:.2rem 0 .4rem"><i>${esc(f.notes)}</i></div>` : ''}
-      <div class="sl-actions">
-        <a class="btn" href="friends.html">Edit in Friends</a>
-        ${messageBtn(f)}
-        ${includeCompare ? `<a class="btn" href="friends.html">Compare →</a>` : ''}
-      </div>
-    </article>`;
+  // ===== Feedback (stars + EmailJS) =====
+
+  let emailJsReady = false;
+  let emailJsInitTried = false;
+
+  function tryInitEmailJs() {
+    if (emailJsInitTried) return emailJsReady;
+    emailJsInitTried = true;
+
+    if (typeof emailjs === "undefined" || !emailjs || typeof emailjs.init !== "function") {
+      console.warn("[Soulink Results] EmailJS not available on this page.");
+      emailJsReady = false;
+      return false;
+    }
+    try {
+      emailjs.init("UYuKR_3UnPjeqJFL7");
+      emailJsReady = true;
+    } catch (err) {
+      console.warn("[Soulink Results] EmailJS init failed", err);
+      emailJsReady = false;
+    }
+    return emailJsReady;
   }
 
-  function render(weight=1){
-    const ME = me();
-    $('#me-name')    && ($('#me-name').textContent = ME.name);
-    $('#me-ct')      && ($('#me-ct').textContent   = ME.ct || '—');
-    $('#me-ll')      && ($('#me-ll').textContent   = ME.ll || '—');
-    $('#me-hobbies') && ($('#me-hobbies').textContent = (ME.hobbies.join(', ') || '—'));
-    $('#me-values')  && ($('#me-values').textContent  = (ME.values.join(', ')  || '—'));
+  function initStars() {
+    if (!ui.fbStars) return;
+    ui.fbStars.innerHTML = "";
 
-    const friends = mergeFriends().map(normalizeFriend).map(f=>({ ...f, score: score(ME,f,weight) }));
-    const all = friends.slice().sort((a,b)=> b.score - a.score || a.name.localeCompare(b.name));
-    const avg = all.length ? Math.round(all.reduce((s,x)=>s+x.score,0)/all.length) : 0;
-    const top3 = all.slice(0,3).map(x=>x.name);
+    const maxStars = 5;
+    for (let i = 1; i <= maxStars; i++) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "chip";
+      btn.setAttribute("aria-label", `Rate ${i} out of 5`);
+      btn.dataset.value = String(i);
+      btn.textContent = "★";
+      btn.addEventListener("click", () => {
+        fbRating = i;
+        // update vizualiai
+        $$("#fbStars button").forEach((b) => {
+          const val = Number(b.dataset.value || "0");
+          b.classList.toggle("active", val <= fbRating);
+        });
+      });
+      ui.fbStars.appendChild(btn);
+    }
+  }
 
-    $('#topOverview') && ($('#topOverview').innerHTML =
-      `<span><b>Average score:</b> ${avg}%</span>${top3.length?` · <span><b>Top matches:</b> ${top3.join(', ')}</span>`:''}`);
+  function initFeedback() {
+    if (!ui.fbSend || !ui.fbMsg) return;
 
-    // shared su ME
-    const SH = new Map(), SV = new Map();
-    all.forEach(f=>{
-      f.hobbies.forEach(h=>{ if(ME.hobbies.includes(h)) SH.set(h,(SH.get(h)||0)+1); });
-      f.values.forEach(v=>{ if(ME.values.includes(v))  SV.set(v,(SV.get(v)||0)+1); });
+    ui.fbSend.addEventListener("click", (ev) => {
+      ev.preventDefault();
+
+      const email = ui.fbEmail ? normaliseText(ui.fbEmail.value) : "";
+      const msg = normaliseText(ui.fbMsg.value);
+      const name =
+        normaliseText(soulSnapshot.name) ||
+        "Soulink user";
+
+      if (!msg) {
+        showToast(ui.fbToast, "Please enter your comments before sending.", "error");
+        return;
+      }
+
+      // Jei EmailJS nėra – necrashinam, tik parodom sėkmę (vietinis feedback)
+      const ready = tryInitEmailJs();
+      if (!ready || typeof emailjs === "undefined" || typeof emailjs.send !== "function") {
+        console.info("[Soulink Results] EmailJS not present, simulating success.");
+        ui.fbMsg.value = "";
+        showToast(ui.fbToast, "Thank you for your feedback! 💚", "success");
+        return;
+      }
+
+      const templateParams = {
+        from_name: name,
+        from_email: email || "no-email-given",
+        message: msg,
+        rating: fbRating ? String(fbRating) : "not given",
+        soul_love_language: normaliseText(soulSnapshot.loveLanguage),
+        soul_connection_type: normaliseText(soulSnapshot.connectionType),
+      };
+
+      showToast(ui.fbToast, "Sending your feedback…", "info");
+
+      emailjs
+        .send("service_3j9h9ei", "template_99hg4ni", templateParams)
+        .then(() => {
+          if (ui.fbMsg) ui.fbMsg.value = "";
+          if (ui.fbEmail) ui.fbEmail.value = "";
+          fbRating = 0;
+          $$("#fbStars button").forEach((b) => b.classList.remove("active"));
+
+          showToast(ui.fbToast, "Thank you for your feedback! 💚", "success");
+        })
+        .catch((err) => {
+          console.error("[Soulink Results] feedback send failed", err);
+          showToast(
+            ui.fbToast,
+            "We could not send your feedback right now. Please try again later.",
+            "error"
+          );
+        });
     });
-    const topH=[...SH.entries()].sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k);
-    const topV=[...SV.entries()].sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k);
-    $('#insights') && ($('#insights').innerHTML =
-      (topH.length? `<div><b>Shared Hobbies</b> ${topH.map(t=>`<span class="pill">${esc(t)}</span>`).join(' ')}</div>`:'') +
-      (topV.length? `<div><b>Shared Values</b> ${topV.map(t=>`<span class="pill">${esc(t)}</span>`).join(' ')}</div>`:'')
-    );
-
-    const rom = all.filter(f=>/romantic/i.test(f.ct)||/both/i.test(f.ct));
-    const fri = all.filter(f=>/friend/i.test(f.ct)||/both/i.test(f.ct));
-
-    $('#romantic')  && ($('#romantic').innerHTML  = rom.map(f=>cardHTML(f,f.score,true)).join(''));
-    $('#friendship')&& ($('#friendship').innerHTML = fri.map(f=>cardHTML(f,f.score,true)).join(''));
-
-    const has = rom.length + fri.length > 0;
-    $('#empty') && ($('#empty').style.display = has ? 'none' : 'block');
-
-    // slider label live
-    const lab = $('#llw-label'); if(lab){ lab.textContent = `${(weight||1).toFixed(1)}×`; }
   }
 
-  // feedback toast + local save (nekeičiant galimos EmailJS integracijos)
-  (function feedback(){
-    const stars = $('#fbStars'); if(!stars) return;
+  // ===== Settings: weight + export + print/pdf =====
 
-    if (!stars.querySelector('input')){
-      for(let i=1;i<=5;i++){
-        const id=`fb-s-${i}`;
-        const input=document.createElement('input');
-        input.type='radio'; input.name='fb-stars'; input.id=id; input.value=String(i); input.hidden=true;
-        const label=document.createElement('label'); label.setAttribute('for',id); label.textContent='★'; label.title=`Rate ${i}`;
-        input.addEventListener('change',()=>{ [...stars.querySelectorAll('label')].forEach((L,idx)=> L.classList.toggle('active', idx < i)); });
-        stars.append(input,label);
-      }
+  function initSettings() {
+    if (ui.llWeight && ui.llwLabel) {
+      const updateLabel = () => {
+        const v = Number(ui.llWeight.value || "1");
+        ui.llwLabel.textContent = v.toFixed(1) + "×";
+      };
+      ui.llWeight.addEventListener("input", updateLabel);
+      updateLabel();
     }
 
-    const toast = $('#fbToast');
-    function showToast(){
-      if(!toast) return;
-      toast.hidden = false;
-      toast.classList.remove('hide');
-      toast.classList.add('show');
-      setTimeout(()=>{ toast.classList.add('hide'); toast.classList.remove('show'); }, 2000);
-      setTimeout(()=>{ toast.hidden = true; }, 2400);
+    if (ui.btnExport) {
+      ui.btnExport.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        try {
+          const payload = {
+            generatedAt: new Date().toISOString(),
+            soul: soulSnapshot,
+          };
+          const json = JSON.stringify(payload, null, 2);
+          const blob = new Blob([json], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "soulink-results.json";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch (err) {
+          console.error("[Soulink Results] export JSON failed", err);
+          showToast(ui.fbToast, "Could not export JSON. Please try again.", "error");
+        }
+      });
     }
 
-    $('#fbSend')?.addEventListener('click', ()=>{
-      const n = +(stars.querySelector('input[name="fb-stars"]:checked')?.value||0);
-      const payload = { stars:n, email:$('#fbEmail')?.value||'', msg:$('#fbMsg')?.value||'', at:new Date().toISOString() };
-      try{
-        const arr = READ('soulink.feedback') || [];
-        arr.push(payload);
-        localStorage.setItem('soulink.feedback', JSON.stringify(arr));
-        showToast();
-        $('#fbEmail')&&( $('#fbEmail').value='' ); $('#fbMsg')&&( $('#fbMsg').value='' );
-        stars.querySelectorAll('input').forEach(i=>i.checked=false);
-        stars.querySelectorAll('label').forEach(L=>L.classList.remove('active'));
-      }catch{
-        showToast(); // bent jau UX reakcija
-      }
-    });
-  })();
+    if (ui.btnPrint) {
+      ui.btnPrint.addEventListener("click", (ev) => {
+        ev.preventDefault();
 
-  // settings slider
-  const slider = $('#llWeight');
-  const run = ()=> render(parseFloat(slider?.value||'1')||1);
-  slider?.addEventListener('input', run);
+        // Jei html2pdf yra – bandome PDF, jei ne – window.print
+        const main = document.querySelector("main") || document.body;
 
-  document.addEventListener('DOMContentLoaded', run);
-})();
-
-
-// --- Live LL Weight label + persist (CG5) ---
-document.addEventListener('DOMContentLoaded', ()=>{
-  const sl = document.querySelector('#f-llw');
-  const out = document.querySelector('#llw-label');
-  try{
-    const saved = localStorage.getItem('soulink.settings.llWeight');
-    if (saved && sl){ sl.value = parseFloat(saved); }
-  }catch{}
-  if (sl && out){
-    const render = ()=>{ out.textContent = `${parseFloat(sl.value).toFixed(1)}×`; };
-    sl.addEventListener('input', ()=>{ render(); try{ localStorage.setItem('soulink.settings.llWeight', sl.value);}catch{} });
-    render();
-  }
-});
-
-
-// --- Feedback handler (CG5) ---
-document.addEventListener('DOMContentLoaded', ()=>{
-  const form = document.querySelector('#feedbackForm');
-  const btn = document.querySelector('#btnSendFeedback');
-  if(!form || !btn) return;
-
-  function toast(msg, ok=true){
-    const t = document.createElement('div');
-    t.className = 'toast'; t.textContent = msg;
-    Object.assign(t.style,{position:'fixed',right:'16px',bottom:'16px',padding:'10px 14px',borderRadius:'10px',background: ok?'#003c43':'#5a2d2d',color:'#00fdd8',boxShadow:'0 0 12px rgba(0,253,216,.35)',zIndex:9999});
-    document.body.appendChild(t); setTimeout(()=>t.remove(), 2200);
-  }
-
-  async function sendFeedback(e){
-    e.preventDefault();
-    const email = (form.querySelector('input[name="email"]')||{}).value||"";
-    const text  = (form.querySelector('textarea[name="message"]')||{}).value||"";
-    if (!text || text.length>600){ toast('Please write a short message (≤600 chars).', false); return; }
-    btn.disabled = true; const old = btn.textContent; btn.textContent = 'Sending…';
-    try{
-      if (window.emailjs && emailjs.send){
-        await emailjs.send('service_XXX','template_YYY',{ email, message: text });
-      } else {
-        const arr = JSON.parse(localStorage.getItem('soulink.feedback')||'[]');
-        arr.push({ ts: Date.now(), email, message: text });
-        localStorage.setItem('soulink.feedback', JSON.stringify(arr));
-      }
-      toast('💫 Thank you for your feedback!', true);
-      form.reset();
-    } catch(err){
-      try{
-        const arr = JSON.parse(localStorage.getItem('soulink.feedback')||'[]');
-        arr.push({ ts: Date.now(), email, message: text, note: 'fallback-save' });
-        localStorage.setItem('soulink.feedback', JSON.stringify(arr));
-      }catch{}
-      toast('We received your message locally. Thank you!', true);
-    } finally {
-      btn.disabled = false; btn.textContent = old;
+        if (typeof html2pdf === "function") {
+          try {
+            const opt = {
+              margin: 10,
+              filename: "soulink-results.pdf",
+              image: { type: "jpeg", quality: 0.98 },
+              html2canvas: { scale: 2, useCORS: true },
+              jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+            };
+            html2pdf().set(opt).from(main).save();
+          } catch (err) {
+            console.error("[Soulink Results] html2pdf failed, fallback to print()", err);
+            window.print();
+          }
+        } else {
+          window.print();
+        }
+      });
     }
   }
-  form.addEventListener('submit', sendFeedback);
-  btn.addEventListener('click', sendFeedback);
-});
 
+  // ===== Matches (šiuo metu tik tuščia žinutė) =====
 
-// === Results: Export & Print wiring (CG5) ===
-(() => {
-  const $ = s => document.querySelector(s);
-  const READ = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
-
-  function exportJSON(){
-    const payload = {
-      me: READ('soulink.soulQuiz') || READ('soulQuiz') || {},
-      friends: (READ('soulink.friends.list') || READ('soulink.friends') || READ('soulFriends') || [])
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `soulink-results-${new Date().toISOString().slice(0,10)}.json`;
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
+  function initMatches() {
+    // Kol kas neatkūrinėjam suderinamumo logikos – paliekam draugišką "No friends yet".
+    if (ui.empty) {
+      ui.empty.style.display = "block";
+    }
+    // Jei ateityje skaitysim localStorage["soulink.friends.list"], čia bus renderis.
   }
 
-  $('#btnExport')?.addEventListener('click', exportJSON);
-  $('#btnPrint') ?.addEventListener('click', () => window.print());
+  // ===== Init =====
+
+  function init() {
+    try {
+      soulSnapshot = safeGetSoulData();
+      renderSnapshot();
+      initStars();
+      initFeedback();
+      initSettings();
+      initMatches();
+      // bandome iš anksto paruošti EmailJS (jei scriptas yra)
+      tryInitEmailJs();
+    } catch (err) {
+      console.error("[Soulink Results] init failed", err);
+      showToast(ui.fbToast, "Something went wrong. Please refresh the page.", "error");
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 })();
