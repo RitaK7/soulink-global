@@ -1,208 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Soulink – Friends & Matches</title>
+  <head>
+    <meta charset="utf-8" />
+    <title>Soulink — Friends</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Soulink Soul Friends — a gentle space to keep track of souls you feel resonant with for friendship, collaboration or soft support."
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="soulink-bg">
+    <header class="topnav" data-active="Friends" aria-label="Primary navigation">
+      <div class="topnav-inner">
+        <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">
+          <span class="brand-mark">☾</span>
+          <span class="brand-text">Soulink</span>
+        </a>
 
-  <!-- auth guard -->
-  <script src="auth.js"></script>
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-label="Toggle navigation"
+          aria-expanded="false"
+        >
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+        </button>
 
-  <!-- global nav + icons -->
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
-  <style>
-  :root{
-    --bg:#003c43; --surface:#074c4f; --surface-2:#0a3f42;
-    --stroke:rgba(0,253,216,.28); --glow:rgba(0,253,216,.35);
-    --text:#eafff9; --muted:#c8f7ef; --link:#9afcf0; --accent:#00fdd8;
-  }
-  html,body{ background:var(--bg); color:var(--text); margin:0; }
-  a{ color:var(--link); text-decoration:none; } a:hover{ color:var(--accent); }
-  .container{ max-width:980px; margin:0 auto; padding:2rem 1rem; }
-
-  /* NAV vienodas */
-  .navbar{position:sticky;top:0;background:#002e30;border-bottom:1px solid var(--stroke);box-shadow:0 0 12px rgba(0,253,216,.25);z-index:50}
-  .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 1rem}
-  .brand{font-weight:700;color:var(--accent);text-decoration:none}
-  .nav-links{list-style:none;display:flex;gap:.6rem;margin:0;padding:0;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-  .nav-links::-webkit-scrollbar{display:none}
-  .nav-links a{display:inline-block;padding:.45rem .7rem;border-radius:10px;border:1px solid transparent;color:var(--text);flex:0 0 auto}
-  .nav-links a:hover{border-color:var(--stroke);box-shadow:0 0 0 1px var(--stroke),0 0 16px var(--glow);color:var(--accent)}
-
-  .card{ background:var(--surface); border:1px solid var(--stroke); border-radius:16px; padding:1.2rem; box-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(0,253,216,.06) inset; }
-  .section-title{ margin:.2rem 0 .6rem; font-weight:800; letter-spacing:.2px; }
-  .row{ display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
-  .btn{ cursor:pointer; border:1px solid var(--stroke); border-radius:999px; padding:.55rem .95rem; font-weight:700; color:var(--text); background:linear-gradient(180deg, rgba(0,253,216,.08), rgba(0,253,216,.02)); box-shadow:0 0 12px rgba(0,253,216,.2); transition:transform .15s ease, box-shadow .15s ease; }
-  .btn:hover{ box-shadow:0 0 18px rgba(0,253,216,.45); transform:translateY(-1px); }
-
-  .friends-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:.9rem; }
-  @media (max-width:720px){ .friends-grid{ grid-template-columns:1fr; } }
-
-  .friend{ background:var(--surface-2); border:1px solid var(--stroke); border-radius:14px; padding:.9rem; box-shadow:0 6px 18px rgba(0,0,0,.35); }
-  .friend-head{ display:flex; align-items:center; justify-content:space-between; gap:.6rem; }
-  .friend-meta{ display:flex; align-items:center; gap:.6rem; min-width:0; }
-  .friend-meta .avatar{ width:44px; height:44px; border-radius:999px; object-fit:cover; flex:0 0 auto; box-shadow:0 0 0 2px var(--stroke), 0 0 10px var(--glow); }
-  .friend-meta .name{ font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .score{ display:inline-block; min-width:2.6rem; text-align:center; padding:.2rem .5rem; border-radius:999px; border:1px solid var(--stroke); background:rgba(0,253,216,.08); }
-  .score.good{ color:var(--accent); } .score.ok{ color:#b5fff5; } .score.low{ color:#9fd7d0; }
-
-  input, textarea, select{ width:100%; background:#002f31; color:var(--text); border:1px solid var(--stroke); border-radius:10px; padding:.55rem .6rem; box-shadow:0 0 0 1px rgba(0,253,216,.04) inset; }
-  input::placeholder, textarea::placeholder{ color:rgba(233,255,249,.55); }
-  input:focus, textarea:focus, select:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(0,253,216,.35); }
-
-  .social-icons{ display:flex; gap:.5rem; flex-wrap:wrap; }
-  .social-icons .icon{ display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:50%; background:rgba(0,253,216,.08); box-shadow:0 0 12px rgba(0,253,216,.45), 0 0 0 1px rgba(0,253,216,.2) inset; color:var(--accent); text-decoration:none; transition:transform .15s ease, box-shadow .15s ease, filter .2s; }
-  .social-icons .icon .bi{ font-size:1.1rem; line-height:1; }
-  .social-icons .icon:hover{ transform:translateY(-2px); filter:brightness(1.15); box-shadow:0 0 20px rgba(0,253,216,.65), 0 0 0 1px rgba(0,253,216,.4) inset; }
-  .social-icons [hidden]{ display:none !important; }
-
-  .hint{ color:var(--muted); }
-  </style>
-</head>
-<body>
-
-  <!-- NAVBAR -->
-  <nav class="navbar" role="navigation" aria-label="Main">
-    <div class="nav-inner">
-      <div class="brand">Soulink</div>
-      <div class="nav-links" aria-label="Primary">
-        <ul class="nav-links" id="navMenu">
-          <li><a href="index.html">Home</a></li>
-          <li><a href="quiz.html">Quiz</a></li>
-          <li><a href="edit-profile.html">Edit Profile</a></li>
-          <li><a href="my-soul.html">My Soul</a></li>
-          <li><a href="soul-chart.html">Soul Chart</a></li>
-          <li><a href="soul-coach.html">Soul Coach</a></li>
-          <li><a href="match.html">Match</a></li>
-          <li><a href="friends.html">Friends</a></li>
-          <li><a href="results.html">Results</a></li>
-          <li><a href="login.html">Log In</a></li>
-          <li><a href="signup.html">Sign Up</a></li>
-          <li><a href="logout.html">Log Out</a></li>
-        </ul>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" data-page="Home">Home</a>
+          <a href="quiz.html" data-page="Quiz">Quiz</a>
+          <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
+          <a href="my-soul.html" data-page="My Soul">My Soul</a>
+          <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
+          <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
+          <a href="match.html" data-page="Match">Match</a>
+          <a href="friends.html" data-page="Friends" aria-current="page">Friends</a>
+          <a href="results.html" data-page="Results">Results</a>
+          <a href="login.html" data-page="Login">Login</a>
+          <a href="signup.html" data-page="Sign Up">Sign Up</a>
+        </nav>
       </div>
-    </div>
-  </nav>
+    </header>
 
-  <main class="container">
-    <!-- Snapshot -->
-    <section class="card" id="snapshot">
-      <h2 class="section-title">Your Snapshot</h2>
-      <div class="row">
-        <div><b>Name: </b><span id="snapshot-name">–</span></div>
-        <div><b>Connection: </b><span id="snapshot-connection">–</span></div>
-        <div><b>Love Language: </b><span id="snapshot-loveLanguage">–</span></div>
-      </div>
-      <div style="margin-top:.4rem"><b>Hobbies:</b> <span id="snapshot-hobbies">–</span></div>
-      <div style="margin-top:.2rem"><b>Values:</b>  <span id="snapshot-values">–</span></div>
-
-      <!-- alternatyvūs ID (jei kiti puslapiai skaito) -->
-      <div hidden>
-        <span id="me-name"></span><span id="me-ct"></span><span id="me-ll"></span>
-        <span id="me-hobbies"></span><span id="me-values"></span>
-      </div>
-    </section>
-
-    <!-- Add form -->
-    <section class="card" style="margin-top:1rem">
-      <h2 class="section-title">Add Friend</h2>
-      <form id="add-form">
-        <div class="row">
-          <input id="f-name" placeholder="Name *" required>
-          <input id="f-ct" placeholder="Connection (Friendship / Romantic / Both)">
-          <input id="f-ll" placeholder="Love Language">
-        </div>
-        <div class="row">
-          <input id="f-hobbies" placeholder="Hobbies (comma separated)">
-          <input id="f-values"  placeholder="Values (comma separated)">
-        </div>
-        <div class="row">
-          <input id="f-contact" placeholder="Contact (URL, @instagram, email or phone)">
-          <input id="f-photo"   placeholder="Photo URL (optional)">
-        </div>
-
-        <div class="row">
-          <input id="f-whatsapp"  placeholder="WhatsApp phone">
-          <input id="f-instagram" placeholder="Instagram (@handle or URL)">
-          <input id="f-facebook"  placeholder="Facebook (profile/page)">
-          <input id="f-email"     placeholder="Email">
-        </div>
-
-        <div id="contactPreview" class="social-icons" style="margin:.4rem 0">
-          <a class="icon wa" href="#" hidden title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
-          <a class="icon ig" href="#" hidden title="Instagram"><i class="bi bi-instagram"></i></a>
-          <a class="icon fb" href="#" hidden title="Facebook"><i class="bi bi-facebook"></i></a>
-          <a class="icon em" href="#" hidden title="Email"><i class="bi bi-envelope"></i></a>
-        </div>
-
-        <textarea id="f-notes" rows="2" placeholder="Notes (optional)"></textarea>
-
-        <div class="row" style="justify-content:space-between;margin-top:.6rem">
-          <div>
-            <button type="button" id="clearAll" class="btn">Clear All</button>
+    <main class="page">
+      <div class="page-inner">
+        <section class="page-hero glass-card">
+          <div class="page-hero-text">
+            <h1 class="page-title">Soul Friends</h1>
+            <p class="page-subtitle">
+              A gentle space to keep track of souls you feel resonant with — for friendship,
+              collaboration or soft support.
+            </p>
           </div>
-          <div class="row">
-            <button type="button" id="exportFriends" class="btn">Export JSON</button>
-            <button type="button" id="importFriends" class="btn">Import JSON</button>
-            <input type="file" id="importFile" accept="application/json" hidden>
-            <button class="btn" type="submit">Add Friend</button>
+        </section>
+
+        <section
+          id="friendsEmpty"
+          class="info-banner info-banner-soft"
+          hidden
+          aria-live="polite"
+        >
+          No data yet — please complete your Soulink Quiz and add at least one soul friend.
+        </section>
+
+        <section class="friends-user-section">
+          <article class="glass-card friends-user-card">
+            <header class="friends-user-header">
+              <h2 class="friends-user-title">Your Base Soul</h2>
+              <p class="friends-user-subtitle">
+                This is the energy we use as a reference for how your friendships may feel.
+              </p>
+            </header>
+            <div class="friends-user-body">
+              <div class="friends-user-row">
+                <span class="friends-label">Name</span>
+                <span id="friendsUserName" class="friends-value">beautiful soul</span>
+              </div>
+              <div class="friends-user-row">
+                <span class="friends-label">Connection Type</span>
+                <span id="friendsUserConn" class="friends-value">not set yet</span>
+              </div>
+              <div class="friends-user-row">
+                <span class="friends-label">Primary Love Language</span>
+                <span id="friendsUserLove" class="friends-value">not defined yet</span>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="friends-grid-section">
+          <h2 class="section-title">Saved Soul Friends</h2>
+          <p class="section-subtitle">
+            These are the souls you’ve saved in your circle — people who feel like resonance,
+            soft support or true friendship.
+          </p>
+
+          <div id="friendsList" class="friends-grid">
+            <!-- Friends cards will be rendered here by friends.js -->
           </div>
-        </div>
-      </form>
-    </section>
+        </section>
+      </div>
+    </main>
 
-    <!-- List -->
-    <section class="card" style="margin-top:1rem">
-      <h2 class="section-title">Friends</h2>
-      <p id="empty-note" class="hint" style="display:none">No friends yet. Add your first friend above.</p>
-      <div id="friends-list" class="friends-grid"></div>
-    </section>
-
-    <!-- Edit Modal -->
-    <section id="editModal" hidden class="card" style="margin-top:1rem">
-      <h2 class="section-title">Edit Friend</h2>
-      <form id="edit-form">
-        <div class="row">
-          <input id="e-name" placeholder="Name *" required>
-          <input id="e-ct" placeholder="Connection">
-          <input id="e-ll" placeholder="Love Language">
-        </div>
-        <div class="row">
-          <input id="e-hobbies" placeholder="Hobbies (comma separated)">
-          <input id="e-values"  placeholder="Values (comma separated)">
-        </div>
-        <div class="row">
-          <input id="e-contact" placeholder="Contact">
-          <input id="e-photo"   placeholder="Photo URL">
-        </div>
-
-        <div class="row">
-          <input id="e-whatsapp"  placeholder="WhatsApp phone">
-          <input id="e-instagram" placeholder="Instagram">
-          <input id="e-facebook"  placeholder="Facebook">
-          <input id="e-email"     placeholder="Email">
-        </div>
-
-        <textarea id="e-notes" rows="2" placeholder="Notes"></textarea>
-
-        <div class="row" style="justify-content:flex-end;margin-top:.6rem">
-          <button type="button" id="editCancel" class="btn">Cancel</button>
-          <button type="submit" class="btn">Save</button>
-        </div>
-      </form>
-    </section>
-
-    <footer style="margin:12px 0;color:#c8f7ef;border-top:1px solid var(--stroke);padding-top:12px">
-      <span>© 2025 Soulink.global | Created with love by Soulink Team</span>
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <p>Soulink.global — conscious matching for hearts &amp; souls.</p>
+        <p>Created with love and ChatGPT as a co-creator.</p>
+      </div>
     </footer>
-  </main>
 
-  <!-- puslapio logika -->
-  <script src="friends.js" defer></script>
-
-  <!-- bendras navbar -->
-  <script src="nav.js" defer></script>
-</body>
+    <!-- Shared scripts -->
+    <script src="auth.js"></script>
+    <script src="data-helpers.js" defer></script>
+    <script src="nav.js" defer></script>
+    <script src="friends.js" defer></script>
+  </body>
 </html>

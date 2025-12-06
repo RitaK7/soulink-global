@@ -1,310 +1,388 @@
-(() => {
-// ---------- helpers ----------
-const $  = sel => document.querySelector(sel);
-const $$ = sel => Array.from(document.querySelectorAll(sel));
-const LS_KEY = 'soulFriends';
-const LEGACY_KEYS = ['friends', 'friendsList']; // senesni raktai
+// friends.js — Soulink "Friends" page
+// View-only: reads soul profile + saved friends and renders them.
+// Never writes to localStorage (only reads soulink.friends.list).
 
-function escapeHTML(str=''){
-  return str.replace(/[&<>"']/g, c => (
-    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
-  ));
-}
-const digits = s => (s||'').toString().replace(/\D+/g,'');
+(function () {
+  if (typeof window === "undefined" || typeof document === "undefined") return;
 
-// ---------- storage + migration ----------
-function readJSON(key){
-  try { return JSON.parse(localStorage.getItem(key)); }
-  catch { return null; }
-}
-function loadFriends(){
-  const cur = readJSON(LS_KEY);
-  if (Array.isArray(cur)) return cur;
+  const $ = (sel, root = document) => root.querySelector(sel);
 
-  for (const k of LEGACY_KEYS){
-    const legacy = readJSON(k);
-    if (Array.isArray(legacy) && legacy.length){
-      localStorage.setItem(LS_KEY, JSON.stringify(legacy));
-      return legacy;
+  // ===================== Helpers =====================
+
+  function normaliseText(v) {
+    return (v == null ? "" : String(v)).trim();
+  }
+
+  function toArray(v) {
+    if (v == null) return [];
+    return Array.isArray(v) ? v : [v];
+  }
+
+  function safeGetSoulData() {
+    let data = {};
+    try {
+      if (typeof getSoulData === "function") {
+        try {
+          data = getSoulData({ ensureShape: true }) || {};
+        } catch (e) {
+          data = getSoulData() || {};
+        }
+      } else if (typeof localStorage !== "undefined") {
+        const primary = localStorage.getItem("soulink.soulQuiz");
+        const legacy = localStorage.getItem("soulQuiz");
+        const raw = primary || legacy;
+        data = raw ? JSON.parse(raw) : {};
+      }
+    } catch (err) {
+      console.warn("Friends: failed to read soul data", err);
+      data = {};
+    }
+    if (!data || typeof data !== "object") return {};
+    return data;
+  }
+
+  function hasAnyCoreData(soul) {
+    if (!soul || typeof soul !== "object") return false;
+    if (normaliseText(soul.name)) return true;
+    if (normaliseText(soul.connectionType)) return true;
+    if (normaliseText(soul.loveLanguage)) return true;
+    if (toArray(soul.loveLanguages || []).length) return true;
+    if (toArray(soul.values || []).length) return true;
+    if (toArray(soul.hobbies || soul.interests || []).length) return true;
+    if (normaliseText(soul.about) || normaliseText(soul.aboutMe)) return true;
+    return false;
+  }
+
+  function pickPrimaryLoveLanguage(soul) {
+    const primary = normaliseText(soul.loveLanguage);
+    if (primary) return primary;
+    const list = toArray(soul.loveLanguages || []);
+    if (list.length) return normaliseText(list[0]);
+    return "";
+  }
+
+  function normalisedSet(arr) {
+    const set = new Set();
+    toArray(arr).forEach((item) => {
+      const norm = normaliseText(item).toLowerCase();
+      if (norm) set.add(norm);
+    });
+    return set;
+  }
+
+  function overlapList(baseArr, otherArr) {
+    const baseSet = normalisedSet(baseArr);
+    const result = [];
+    toArray(otherArr).forEach((item) => {
+      const norm = normaliseText(item).toLowerCase();
+      if (norm && baseSet.has(norm)) {
+        result.push(normaliseText(item));
+      }
+    });
+    return result;
+  }
+
+  const FRIENDS_KEY = "soulink.friends.list";
+
+  function safeGetFriendsList() {
+    if (typeof localStorage === "undefined") return [];
+    try {
+      const raw = localStorage.getItem(FRIENDS_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed;
+    } catch (e) {
+      console.warn("Friends: failed to read friends list", e);
+      return [];
     }
   }
-  return [];
-}
-function saveFriends(list){
-  localStorage.setItem(LS_KEY, JSON.stringify(list || []));
-}
 
-// ---------- avatar ----------
-function avatarFor(f){
-  const url = (f.photo || '').trim();
-  if (/^https?:\/\//i.test(url) || url.startsWith('data:image')) return url;
+  function buildContactLink(contactRaw) {
+    const c = normaliseText(contactRaw);
+    if (!c) return null;
 
-  const ch = (f.name || '?').trim().charAt(0).toUpperCase() || 'S';
-  const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
-       <rect width="100%" height="100%" fill="#064a4a"/>
-       <text x="50%" y="58%" font-size="42" font-family="system-ui"
-             text-anchor="middle" fill="#00fdd8">${ch}</text>
-     </svg>`;
-  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
-}
+    const lower = c.toLowerCase();
 
-// ---------- single contact (legacy) ----------
-function contactLink(c){
-  if (!c) return null;
-  const v = c.trim();
-  if (/^https?:\/\//i.test(v)) return v;
-  if (/^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(v)) return `mailto:${v}`;
-  if (/^\+?\d[\d\s-]{6,}$/.test(v)) return `https://wa.me/${v.replace(/\D/g,'')}`;
-  if (/^@?[\w.]{2,}$/i.test(v)) return `https://instagram.com/${v.replace(/^@/, '')}`;
-  return null;
-}
+    // Already a full link
+    if (
+      lower.startsWith("mailto:") ||
+      lower.startsWith("http://") ||
+      lower.startsWith("https://") ||
+      lower.startsWith("tel:")
+    ) {
+      return { href: c, label: "Message" };
+    }
 
-// ---------- normalize friend ----------
-function normFriend(f){
-  return {
-    name:    (f.name||'').trim(),
-    photo:   (f.photo||'').trim(),
-    ct:      (f.ct||'').trim(),
-    ll:      (f.ll||'').trim(),
-    hobbies: (f.hobbies||'').split(',').map(x=>x.trim()).filter(Boolean),
-    values:  (f.values||'').split(',').map(x=>x.trim()).filter(Boolean),
-    contact: (f.contact||'').trim(),
-    notes:   (f.notes||'').trim(),
-    whatsapp:(f.whatsapp||'').trim(),
-    instagram:(f.instagram||'').trim(),
-    facebook:(f.facebook||'').trim(),
-    email:(f.email||'').trim(),
+    // Plain email
+    if (c.includes("@") && !lower.includes("http://") && !lower.includes("https://")) {
+      return { href: "mailto:" + c, label: "Email" };
+    }
+
+    // Instagram full URL
+    if (lower.includes("instagram.com")) {
+      let href = c;
+      if (!lower.startsWith("http://") && !lower.startsWith("https://")) {
+        href = "https://" + c.replace(/^\/*/, "");
+      }
+      return { href, label: "Instagram" };
+    }
+
+    // Instagram handle: "ig:handle" or "@handle"
+    if (lower.startsWith("ig:") || c[0] === "@") {
+      let handle = c;
+      if (lower.startsWith("ig:")) {
+        handle = c.slice(3);
+      }
+      if (handle[0] === "@") {
+        handle = handle.slice(1);
+      }
+      if (!handle) return null;
+      return {
+        href: "https://instagram.com/" + encodeURIComponent(handle),
+        label: "Instagram",
+      };
+    }
+
+    // Phone number
+    const digitsOnly = c.replace(/[\s\-]/g, "");
+    if (/^\+?\d{7,}$/.test(digitsOnly)) {
+      return { href: "tel:" + digitsOnly, label: "Call" };
+    }
+
+    return null;
+  }
+
+  // ===================== DOM cache =====================
+
+  const ui = {
+    friendsEmpty: $("#friendsEmpty"),
+    friendsList: $("#friendsList"),
+    friendsUserName: $("#friendsUserName"),
+    friendsUserConn: $("#friendsUserConn"),
+    friendsUserLove: $("#friendsUserLove"),
   };
-}
 
-// ---------- demo scoring for Friends list ----------
-function scoreWithMe(_f){
-  return Math.floor(Math.random()*41) + 60; // 60–100
-}
+  // ===================== Rendering =====================
 
-// ---------- build social icon links ----------
-function buildSocialIcons(f){
-  const items = [];
-  if (f.whatsapp){
-    const num = digits(f.whatsapp);
-    if (num) items.push(`<a class="icon wa" href="https://wa.me/${num}" target="_blank" rel="noopener" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>`);
-  }
-  if (f.instagram){
-    const h = /^https?:\/\//i.test(f.instagram) ? f.instagram : `https://instagram.com/${f.instagram.replace(/^@/,'')}`;
-    items.push(`<a class="icon ig" href="${h}" target="_blank" rel="noopener" title="Instagram"><i class="bi bi-instagram"></i></a>`);
-  }
-  if (f.facebook){
-    const h = /^https?:\/\//i.test(f.facebook) ? f.facebook : `https://facebook.com/${f.facebook.replace(/^@/,'')}`;
-    items.push(`<a class="icon fb" href="${h}" target="_blank" rel="noopener" title="Facebook"><i class="bi bi-facebook"></i></a>`);
-  }
-  if (f.email && /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(f.email)){
-    items.push(`<a class="icon em" href="mailto:${f.email}" title="Email"><i class="bi bi-envelope"></i></a>`);
-  }
-  return items.length ? `<div class="social-icons" style="margin:.5rem 0 .2rem;">${items.join('')}</div>` : '';
-}
-
-// ---------- render ----------
-const listEl  = $('#friends-list');
-const emptyEl = $('#empty-note');
-
-function render(list = loadFriends()){
-  if (!listEl) return;
-  listEl.innerHTML = '';
-
-  if (!list.length){
-    if (emptyEl) emptyEl.style.display = 'block';
-    return;
-  }
-  if (emptyEl) emptyEl.style.display = 'none';
-
-  list.forEach((f, i) => {
-    const card = document.createElement('div');
-    card.className = 'friend';
-
-    const score = scoreWithMe(f);
-    const cls = score >= 75 ? 'good' : score >= 55 ? 'ok' : 'low';
-    const msg = contactLink(f.contact);
-
-    const lines = [];
-    if (f.ct) lines.push(`<div><b>Connection:</b> ${escapeHTML(f.ct)}</div>`);
-    if (f.ll) lines.push(`<div><b>Love Language:</b> ${escapeHTML(f.ll)}</div>`);
-    if ((f.hobbies||[]).length) lines.push(`<div><b>Hobbies:</b> ${escapeHTML(f.hobbies.join(', '))}</div>`);
-    if ((f.values||[]).length)  lines.push(`<div><b>Values:</b> ${escapeHTML(f.values.join(', '))}</div>`);
-    if (f.contact) {
-      const a = msg ? ` <a class="btn btn-ghost btn-xs" href="${msg}" target="_blank" rel="noopener">Message</a>` : '';
-      lines.push(`<div><b>Contact:</b> ${escapeHTML(f.contact)}${a}</div>`);
+  function renderBaseSummary(soul) {
+    if (ui.friendsUserName) {
+      const name = normaliseText(soul.name);
+      ui.friendsUserName.textContent = name || "beautiful soul";
     }
-    if (f.notes) lines.push(`<div><i>${escapeHTML(f.notes)}</i></div>`);
 
-    const img = `<img class="avatar" src="${avatarFor(f)}" alt="">`;
-    const icons = buildSocialIcons(f);
+    if (ui.friendsUserConn) {
+      const conn = normaliseText(soul.connectionType);
+      ui.friendsUserConn.textContent = conn || "not set yet";
+    }
 
-    card.innerHTML = `
-      <div class="friend-head">
-        <div class="friend-meta">
-          ${img}
-          <span class="name">${escapeHTML(f.name || '--')}</span>
-        </div>
-        <span class="score ${cls}" title="Compatibility">${score}%</span>
-      </div>
-      <div class="friend-body">
-        ${icons}
-        ${lines.join('') || '<div><i>No extra details.</i></div>'}
-      </div>
-      <div class="friend-actions" style="display:flex; gap:.5rem;">
-        <button type="button" class="btn btn-ghost" data-edit="${i}">Edit</button>
-        <button type="button" class="btn btn-ghost" data-rm="${i}">Remove</button>
-      </div>
-    `;
-    listEl.appendChild(card);
-  });
-}
+    if (ui.friendsUserLove) {
+      const love = pickPrimaryLoveLanguage(soul);
+      ui.friendsUserLove.textContent = love || "not defined yet";
+    }
+  }
 
-// delegated actions
-listEl?.addEventListener('click', (e) => {
-  const btn = e.target.closest('[data-edit],[data-rm]');
-  if (!btn) return;
-  e.preventDefault();
+  function createFriendCard(friend, baseSoul) {
+    const card = document.createElement("article");
+    card.className = "glass-card friends-card";
 
-  if (btn.hasAttribute('data-edit')) {
-    openEdit(+btn.getAttribute('data-edit'));
+    const header = document.createElement("header");
+    header.className = "friends-card-header";
+
+    const title = document.createElement("h3");
+    title.className = "friends-card-title";
+    title.textContent = normaliseText(friend.name) || "Soul friend";
+
+    const subtitle = document.createElement("p");
+    subtitle.className = "friends-card-subtitle";
+
+    const conn = normaliseText(friend.connectionType);
+    const love = pickPrimaryLoveLanguage(friend);
+    const subtitleParts = [];
+    if (conn) subtitleParts.push(conn);
+    if (love) subtitleParts.push(love);
+    subtitle.textContent = subtitleParts.join(" • ") || "Friendship connection";
+
+    header.appendChild(title);
+    header.appendChild(subtitle);
+
+    const body = document.createElement("div");
+    body.className = "friends-card-body";
+
+    const baseValues = (baseSoul && baseSoul.values) || [];
+    const baseHobbies =
+      (baseSoul && (baseSoul.hobbies || baseSoul.interests)) || [];
+
+    const friendValues = toArray(friend.values || []);
+    const friendHobbies = toArray(friend.hobbies || friend.interests || []);
+
+    const sharedValues = overlapList(baseValues, friendValues);
+    const sharedHobbies = overlapList(baseHobbies, friendHobbies);
+
+    if (sharedValues.length) {
+      const row = document.createElement("div");
+      row.className = "friends-chip-row";
+
+      const labelSpan = document.createElement("span");
+      labelSpan.className = "friends-chip-label";
+      labelSpan.textContent = "Shared values:";
+      row.appendChild(labelSpan);
+
+      sharedValues.forEach((val) => {
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = val;
+        row.appendChild(chip);
+      });
+
+      body.appendChild(row);
+    }
+
+    if (sharedHobbies.length) {
+      const row = document.createElement("div");
+      row.className = "friends-chip-row";
+
+      const labelSpan = document.createElement("span");
+      labelSpan.className = "friends-chip-label";
+      labelSpan.textContent = "Shared passions:";
+      row.appendChild(labelSpan);
+
+      sharedHobbies.forEach((h) => {
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = h;
+        row.appendChild(chip);
+      });
+
+      body.appendChild(row);
+    }
+
+    const snippet = document.createElement("p");
+    snippet.className = "friends-snippet";
+
+    const baseName = normaliseText(baseSoul && baseSoul.name) || "You";
+    const friendName = normaliseText(friend.name) || "this soul";
+    const firstValue = sharedValues[0];
+    const firstHobby = sharedHobbies[0];
+
+    let text = "";
+
+    if (firstValue && firstHobby) {
+      text =
+        baseName +
+        " and " +
+        friendName +
+        " both value " +
+        firstValue +
+        " and enjoy " +
+        firstHobby +
+        " — this friendship can feel naturally supportive and alive.";
+    } else if (firstValue) {
+      text =
+        baseName +
+        " and " +
+        friendName +
+        " share the value of " +
+        firstValue +
+        ", which gives your connection a deep sense of trust.";
+    } else if (firstHobby) {
+      text =
+        baseName +
+        " and " +
+        friendName +
+        " both enjoy " +
+        firstHobby +
+        ", making it easy to create gentle, shared moments together.";
+    } else {
+      text =
+        "This soul sits in your circle for a reason — stay curious, honest and kind, and let the friendship reveal its own rhythm.";
+    }
+
+    snippet.textContent = text;
+    body.appendChild(snippet);
+
+    const contactLink = buildContactLink(friend.contact);
+    if (contactLink) {
+      const actions = document.createElement("div");
+      actions.className = "friends-card-actions";
+
+      const btn = document.createElement("a");
+      btn.className = "friends-message-btn";
+      btn.href = contactLink.href;
+      btn.target = "_blank";
+      btn.rel = "noopener noreferrer";
+      btn.textContent = contactLink.label || "Message";
+
+      actions.appendChild(btn);
+      body.appendChild(actions);
+    }
+
+    card.appendChild(header);
+    card.appendChild(body);
+    return card;
+  }
+
+  function renderFriends(friendsArray, baseSoul) {
+    if (!ui.friendsList) return;
+
+    ui.friendsList.innerHTML = "";
+
+    const friends = Array.isArray(friendsArray) ? friendsArray : [];
+    if (!friends.length) {
+      if (ui.friendsEmpty) {
+        ui.friendsEmpty.hidden = false;
+        ui.friendsEmpty.textContent =
+          "No saved soul friends yet — you can use this space to remember the people who truly feel like your circle.";
+      }
+      return;
+    }
+
+    friends.forEach((friend) => {
+      const card = createFriendCard(friend || {}, baseSoul || {});
+      ui.friendsList.appendChild(card);
+    });
+  }
+
+  // ===================== Init =====================
+
+  function init() {
+    try {
+      const soul = safeGetSoulData();
+      const hasSoul = hasAnyCoreData(soul);
+      const friends = safeGetFriendsList();
+      const hasFriends = Array.isArray(friends) && friends.length > 0;
+
+      if (!hasSoul && !hasFriends) {
+        if (ui.friendsEmpty) {
+          ui.friendsEmpty.hidden = false;
+          ui.friendsEmpty.textContent =
+            "Please complete your Soulink Quiz and add at least one soul friend to see this space come alive.";
+        }
+        return;
+      }
+
+      if (ui.friendsEmpty) {
+        ui.friendsEmpty.hidden = true;
+      }
+
+      if (hasSoul) {
+        renderBaseSummary(soul);
+      }
+
+      renderFriends(friends, soul);
+    } catch (err) {
+      console.error("Friends: init failed", err);
+      if (ui.friendsEmpty) {
+        ui.friendsEmpty.hidden = false;
+        ui.friendsEmpty.textContent =
+          "We could not load your Friends data. Please refresh the page or try again later.";
+      }
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
   } else {
-    const i = +btn.getAttribute('data-rm');
-    const arr = loadFriends();
-    arr.splice(i, 1);
-    saveFriends(arr);
-    render(arr);
+    init();
   }
-});
-
-// add
-$('#add-form')?.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const f = normFriend({
-    name:    $('#f-name')?.value,
-    ct:      $('#f-ct')?.value,
-    ll:      $('#f-ll')?.value,
-    hobbies: $('#f-hobbies')?.value,
-    values:  $('#f-values')?.value,
-    contact: $('#f-contact')?.value,
-    notes:   $('#f-notes')?.value,
-    photo:   $('#f-photo')?.value,
-    whatsapp: $('#f-whatsapp')?.value,
-    instagram: $('#f-instagram')?.value,
-    facebook: $('#f-facebook')?.value,
-    email: $('#f-email')?.value,
-  });
-  if (!f.name){ alert('Please enter a name.'); return; }
-
-  const arr = loadFriends();
-  if (arr.some(x => (x.name||'').toLowerCase() === f.name.toLowerCase()) &&
-      !confirm(`"${f.name}" already exists. Add anyway?`)) return;
-
-  arr.push(f);
-  saveFriends(arr);
-  e.target.reset();
-  updatePreviewIcons();
-  render(arr);
-});
-
-// clear
-$('#clearAll')?.addEventListener('click', () => {
-  if (confirm('Clear all friends?')){
-    saveFriends([]);
-    render([]);
-  }
-});
-
-// export / import
-$('#exportFriends')?.addEventListener('click', () => {
-  const arr = loadFriends();
-  const blob = new Blob([JSON.stringify(arr,null,2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'soulink-friends.json'; a.click();
-  URL.revokeObjectURL(url);
-});
-$('#importFriends')?.addEventListener('click', () => { $('#importFile')?.click(); });
-$('#importFile')?.addEventListener('change', (e) => {
-  const file = e.target.files?.[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try{
-      const arr = JSON.parse(reader.result);
-      if (!Array.isArray(arr)) throw new Error('Invalid JSON');
-      saveFriends(arr);
-      render(arr);
-    }catch{ alert('Invalid JSON file.'); }
-  };
-  reader.readAsText(file);
-});
-
-// EDIT modal
-const modal = $('#editModal'); let editIdx = -1;
-function setVal(sel, val){ const el=document.querySelector(sel); if(!el){ console.warn('Missing:',sel); return false; } el.value=val??''; return true; }
-function openEdit(i){
-  const arr = loadFriends(); const f = arr[i]; if (!f) return;
-  editIdx = i;
-  const ok =
-    setVal('#e-name', f.name) & setVal('#e-ct', f.ct) & setVal('#e-ll', f.ll) &
-    setVal('#e-hobbies', (f.hobbies||[]).join(', ')) & setVal('#e-values', (f.values||[]).join(', ')) &
-    setVal('#e-contact', f.contact) & setVal('#e-notes', f.notes) & setVal('#e-photo', f.photo) &
-    setVal('#e-whatsapp', f.whatsapp||'') & setVal('#e-instagram', f.instagram||'') &
-    setVal('#e-facebook', f.facebook||'') & setVal('#e-email', f.email||'');
-  if (!ok){ alert('Edit form is missing fields. Refresh the page.'); return; }
-  modal.hidden = false;
-}
-$('#editCancel')?.addEventListener('click', () => { modal.hidden = true; editIdx = -1; });
-$('#edit-form')?.addEventListener('submit', (e) => {
-  e.preventDefault(); if (editIdx < 0) return;
-  const arr = loadFriends();
-  arr[editIdx] = normFriend({
-    name:$('#e-name')?.value, photo:$('#e-photo')?.value, ct:$('#e-ct')?.value, ll:$('#e-ll')?.value,
-    hobbies:$('#e-hobbies')?.value, values:$('#e-values')?.value, contact:$('#e-contact')?.value, notes:$('#e-notes')?.value,
-    whatsapp:$('#e-whatsapp')?.value, instagram:$('#e-instagram')?.value, facebook:$('#e-facebook')?.value, email:$('#e-email')?.value
-  });
-  modal.hidden = true; editIdx = -1; saveFriends(arr); render(arr);
-});
-
-// Snapshot
-function fillSnapshot(){
-  const me = readJSON('soulQuiz') || {};
-  const getText = (v, fallback='–') => Array.isArray(v) ? (v.join(', ')||fallback) : (v||fallback);
-  const setTxt = (sels, val) => (Array.isArray(sels)?sels:[sels]).forEach(s=>{ const el=document.querySelector(s); if(el) el.textContent=val; });
-
-  setTxt(['#snapshot-name','#me-name'], me.name || '–');
-  setTxt(['#snapshot-connection','#me-ct'], me.connectionType || '–');
-  setTxt(['#snapshot-loveLanguage','#me-ll'], me.loveLanguage || '–');
-  setTxt(['#snapshot-hobbies','#me-hobbies'], getText(me.hobbies));
-  setTxt(['#snapshot-values','#me-values'],  getText(me.values));
-}
-
-// Live contact preview
-function updatePreviewIcons(){
-  const wrap = $('#contactPreview'); if (!wrap) return;
-  const w  = $('#f-whatsapp')?.value?.trim(); const ig = $('#f-instagram')?.value?.trim();
-  const fb = $('#f-facebook')?.value?.trim(); const em = $('#f-email')?.value?.trim();
-
-  const waA = wrap.querySelector('.wa'), igA = wrap.querySelector('.ig');
-  const fbA = wrap.querySelector('.fb'), emA = wrap.querySelector('.em');
-
-  if (w && digits(w)){ waA.removeAttribute('hidden'); waA.href='https://wa.me/'+digits(w); waA.target='_blank'; waA.rel='noopener'; }
-  else waA.setAttribute('hidden','');
-
-  if (ig){ igA.removeAttribute('hidden'); igA.href=/^https?:\/\//i.test(ig)?ig:'https://instagram.com/'+ig.replace(/^@/,''); igA.target='_blank'; igA.rel='noopener'; }
-  else igA.setAttribute('hidden','');
-
-  if (fb){ fbA.removeAttribute('hidden'); fbA.href=/^https?:\/\//i.test(fb)?fb:'https://facebook.com/'+fb.replace(/^@/,''); fbA.target='_blank'; fbA.rel='noopener'; }
-  else fbA.setAttribute('hidden','');
-
-  if (em && /^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(em)){ emA.removeAttribute('hidden'); emA.href='mailto:'+em; }
-  else emA.setAttribute('hidden','');
-}
-['#f-whatsapp','#f-instagram','#f-facebook','#f-email'].forEach(sel => {
-  $(sel)?.addEventListener('input', updatePreviewIcons);
-});
-
-// init
-fillSnapshot(); render(); updatePreviewIcons();
 })();
