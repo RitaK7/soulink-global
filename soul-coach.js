@@ -1,617 +1,882 @@
-// soul-coach.js — magical polish v9
-(() => {
-  const KEY = 'soulQuiz';
-  const COACH = 'soulCoach';
+// soul-coach.js — Soulink "Soul Coach" page
+// View-only: reads soul profile and generates gentle coaching tips.
+// Never writes to localStorage or calls patchSoulData/saveSoulData.
 
-  const $ = (s,r=document)=>r.querySelector(s);
-  const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
-  const reduceMotion = matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+(function () {
+  if (typeof window === "undefined" || typeof document === "undefined") return;
 
-  // ---------- storage ----------
-  const getProfile = () => { try{ return JSON.parse(localStorage.getItem(KEY)||'{}'); }catch{ return {}; } };
-  const getCoach = () => { try{ return JSON.parse(localStorage.getItem(COACH)||'{}'); }catch{ return {}; } };
-  const setCoach = v => localStorage.setItem(COACH, JSON.stringify(v));
-  const todayISO = ()=>{ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-  // ---------- helpers ----------
-  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-  const sumDigits = s => String(s).replace(/\D/g,'').split('').reduce((a,b)=>a+ +b,0);
-  const reduceNum = n => { while(![11,22,33].includes(n) && n>9) n = sumDigits(String(n)); return n; };
-  const lifePathFrom = iso => (DATE_RE.test(iso||'') ? String(reduceNum(sumDigits(iso))) : '–');
-  const westZodiacFrom = iso => {
-    if(!DATE_RE.test(iso||''))return '–';
-    const [,m,d]=iso.split('-').map(Number);
-    const R=(fm,fd,tm,td)=>(m>fm||m===fm&&d>=fd)&&(m<tm||m===tm&&d<=td);
-    if(R(3,21,4,19))return'Aries'; if(R(4,20,5,20))return'Taurus'; if(R(5,21,6,20))return'Gemini'; if(R(6,21,7,22))return'Cancer';
-    if(R(7,23,8,22))return'Leo'; if(R(8,23,9,22))return'Virgo'; if(R(9,23,10,22))return'Libra'; if(R(10,23,11,21))return'Scorpio';
-    if(R(11,22,12,21))return'Sagittarius'; if(m===12&&d>=22||m===1&&d<=19)return'Capricorn'; if(R(1,20,2,18))return'Aquarius'; return'Pisces';
-  };
+  // ===================== Helpers =====================
 
-  // ---------- nav ----------
-  function wireNav(){
-    const nav=$('.navbar');
-    const onScroll=()=> nav?.classList[scrollY>6?'add':'remove']('scrolled');
-    onScroll(); addEventListener('scroll', onScroll, {passive:true});
-    $('#openDrawer')?.addEventListener('click', ()=>{$('#drawer').classList.add('open'); document.body.classList.add('no-scroll');});
-    $('#closeDrawer')?.addEventListener('click', ()=>{$('#drawer').classList.remove('open'); document.body.classList.remove('no-scroll');});
-    $('#drawerBackdrop')?.addEventListener('click', ()=>{$('#drawer').classList.remove('open'); document.body.classList.remove('no-scroll');});
-    $('#logoutLink')?.addEventListener('click', e=>{e.preventDefault(); localStorage.clear(); location.href='index.html';});
-    $('#logoutLinkMobile')?.addEventListener('click', e=>{e.preventDefault(); localStorage.clear(); location.href='index.html';});
-    addEventListener('keydown', e=>{ if(e.key==='Escape') $('#closeDrawer')?.click(); });
+  function normaliseText(v) {
+    return (v == null ? "" : String(v)).trim();
   }
 
-  // ---------- tooltips ----------
-  function wireTooltips(){
-    const root = document.body; let balloon=null, anchor=null;
-    function show(a){
-      const tip=a.getAttribute('data-tip'); if(!tip)return;
-      if(!balloon){ balloon=document.createElement('div'); balloon.className='tooltip'; root.appendChild(balloon); }
-      balloon.textContent=tip; anchor=a;
-      const r=a.getBoundingClientRect();
-      balloon.style.left=(r.left+scrollX+10)+'px';
-      balloon.style.top=(r.top+scrollY+24)+'px';
-      balloon.classList.add('show'); a.setAttribute('aria-describedby','tooltip');
-    }
-    function hide(){ balloon?.classList.remove('show'); anchor?.removeAttribute('aria-describedby'); anchor=null; }
-    $$('[data-tip]').forEach(a=>{
-      a.addEventListener('mouseenter', ()=>show(a));
-      a.addEventListener('focus', ()=>show(a));
-      a.addEventListener('mouseleave', hide);
-      a.addEventListener('blur', hide);
-      a.addEventListener('click', e=>{ e.preventDefault(); show(a); setTimeout(hide, 1200); });
-    });
+  function toArray(v) {
+    if (v == null) return [];
+    return Array.isArray(v) ? v : [v];
   }
 
-  // ---------- particles ----------
-  function makeStars(canvas){
-    if(!canvas || reduceMotion) return;
-    const DPR = devicePixelRatio||1, ctx=canvas.getContext('2d');
-    function resize(){ canvas.width=canvas.clientWidth*DPR; canvas.height=canvas.clientHeight*DPR; }
-    resize(); addEventListener('resize', resize);
-    const N = canvas.classList.contains('bg-stars') ? (innerWidth<560? 20: 40) : (canvas.clientWidth<560? 16: 30);
-    const stars = Array.from({length:N},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:(Math.random()*1.2+0.6)*DPR,a:Math.random()*1}));
-    (function tick(){
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      for(const s of stars){
-        s.a += 0.02 + Math.random()*0.015;
-        const f=(Math.sin(s.a)+1)/2;
-        ctx.beginPath(); ctx.fillStyle=`rgba(0,253,216,${0.08+0.28*f})`;
-        ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+  function safeGetSoulData() {
+    let data = {};
+    try {
+      if (typeof getSoulData === "function") {
+        try {
+          data = getSoulData({ ensureShape: true }) || {};
+        } catch (e) {
+          data = getSoulData() || {};
+        }
+      } else if (typeof localStorage !== "undefined") {
+        const primary = localStorage.getItem("soulink.soulQuiz");
+        const legacy = localStorage.getItem("soulQuiz");
+        const raw = primary || legacy;
+        data = raw ? JSON.parse(raw) : {};
       }
-      if(!reduceMotion) requestAnimationFrame(tick);
-    })();
+    } catch (err) {
+      console.warn("Soul Coach: failed to read soul data", err);
+      data = {};
+    }
+    if (!data || typeof data !== "object") return {};
+    return data;
   }
 
-  // ---------- typewriter ----------
-  function typeInto(el, text, dur=[800,1200], underlineEl=null){
-    if(!el) return;
-    if(reduceMotion){ el.textContent=text; if(underlineEl){ underlineEl.classList.add('show'); underlineEl.textContent=text; } return; }
-    const ms = Math.floor(dur[0] + Math.random()*(dur[1]-dur[0]));
-    const steps = Math.max(16, Math.ceil(text.length/2));
-    const chunk = Math.ceil(text.length/steps);
-    let i=0;
-    if(underlineEl){ underlineEl.classList.remove('show'); underlineEl.textContent=''; }
-    el.textContent='';
-    const id=setInterval(()=>{
-      i+=chunk; const out=text.slice(0, Math.min(i,text.length));
-      el.textContent = out;
-      if(underlineEl) underlineEl.textContent = out;
-      if(i>=text.length){ clearInterval(id); underlineEl && underlineEl.classList.add('show'); }
-    }, Math.max(12, Math.floor(ms/steps)));
+  function hasAnyCoreData(soul) {
+    if (!soul || typeof soul !== "object") return false;
+    if (normaliseText(soul.name)) return true;
+    if (normaliseText(soul.connectionType)) return true;
+    if (normaliseText(soul.loveLanguage)) return true;
+    if (toArray(soul.loveLanguages || soul.loveLanguage || []).length) return true;
+    if (toArray(soul.values || []).length) return true;
+    if (toArray(soul.hobbies || soul.interests || []).length) return true;
+    if (normaliseText(soul.about) || normaliseText(soul.aboutMe)) return true;
+    if (normaliseText(soul.zodiac)) return true;
+    if (normaliseText(soul.chineseZodiac)) return true;
+    if (soul.lifePathNumber != null) return true;
+    return false;
   }
 
-  // ---------- copy lib ----------
-  const LL_ACTION = {
-    "Acts of Service": "Offer a tiny act of help to someone today.",
-    "Quality Time": "Give someone your undivided 10 minutes—no phone, just presence.",
-    "Receiving Gifts": "Leave a small note or token of appreciation.",
-    "Physical Touch": "Give a warm hug (with consent) or a gentle hand on the shoulder.",
-    "Words of Affirmation": "Send one sincere message of appreciation."
+  function pickPrimaryLoveLanguage(soul) {
+    const primary = normaliseText(soul.loveLanguage);
+    if (primary) return primary;
+    const list = toArray(soul.loveLanguages || []);
+    if (list.length) return normaliseText(list[0]);
+    return "";
+  }
+
+  function canonicalLoveKey(labelRaw) {
+    const label = normaliseText(labelRaw).toLowerCase();
+    if (!label) return "";
+    if (label.includes("affirmation") || label.includes("words")) return "words";
+    if (label.includes("quality")) return "quality";
+    if (label.includes("service")) return "service";
+    if (label.includes("touch")) return "touch";
+    if (label.includes("gift")) return "gifts";
+    return "other";
+  }
+
+  // Some profiles may already have zodiac fields; if not, we can attempt a light fallback from birthday.
+  function deriveZodiacFallback(soul) {
+    const zodiacExisting = normaliseText(soul.zodiac);
+    const chineseExisting = normaliseText(soul.chineseZodiac);
+    let lifePathExisting = soul.lifePathNumber;
+
+    function computeFromBirthday(birthdayRaw) {
+      const raw = normaliseText(birthdayRaw);
+      if (!raw) return {};
+
+      let year, month, day;
+
+      // New: explicit European formats DD.MM.YYYY or DD/MM/YYYY
+      const euMatch = raw.match(/^(\d{2})[./](\d{2})[./](\d{4})$/);
+      if (euMatch) {
+        day = Number(euMatch[1]);
+        month = Number(euMatch[2]);
+        year = Number(euMatch[3]);
+      } else if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+        // Existing: ISO YYYY-MM-DD
+        const parts = raw.split("-");
+        year = Number(parts[0]);
+        month = Number(parts[1]);
+        day = Number(parts[2]);
+      } else {
+        // Fallback: digits only, assume YYYYMMDD (existing behavior)
+        const digits = raw.replace(/[^\d]/g, "");
+        if (/^\d{8}$/.test(digits)) {
+          year = Number(digits.slice(0, 4));
+          month = Number(digits.slice(4, 6));
+          day = Number(digits.slice(6, 8));
+        } else {
+          return {};
+        }
+      }
+
+      const dt = new Date(Date.UTC(year, month - 1, day));
+      if (isNaN(dt.getTime())) return {};
+
+      function zodiacSign(mo, da) {
+        const md = mo * 100 + da;
+        if (md >= 321 && md <= 419) return "Aries";
+        if (md >= 420 && md <= 520) return "Taurus";
+        if (md >= 521 && md <= 620) return "Gemini";
+        if (md >= 621 && md <= 722) return "Cancer";
+        if (md >= 723 && md <= 822) return "Leo";
+        if (md >= 823 && md <= 922) return "Virgo";
+        if (md >= 923 && md <= 1022) return "Libra";
+        if (md >= 1023 && md <= 1121) return "Scorpio";
+        if (md >= 1122 && md <= 1221) return "Sagittarius";
+        if (md >= 1222 || md <= 119) return "Capricorn";
+        if (md >= 120 && md <= 218) return "Aquarius";
+        if (md >= 219 && md <= 320) return "Pisces";
+        return "";
+      }
+
+      function chineseZodiac(y) {
+        const animals = [
+          "Rat",
+          "Ox",
+          "Tiger",
+          "Rabbit",
+          "Dragon",
+          "Snake",
+          "Horse",
+          "Goat",
+          "Monkey",
+          "Rooster",
+          "Dog",
+          "Pig",
+        ];
+        const idx = (y - 1900) % 12;
+        return animals[(idx + 12) % 12];
+      }
+
+      function lifePath(yyyy, mm, dd) {
+        const digitsAll =
+          String(yyyy) +
+          String(mm).padStart(2, "0") +
+          String(dd).padStart(2, "0");
+        const sumDigits = (s) =>
+          s.split("").reduce((acc, ch) => acc + Number(ch || 0), 0);
+        let n = sumDigits(digitsAll);
+        const isMaster = (x) => x === 11 || x === 22 || x === 33;
+        while (n > 9 && !isMaster(n)) {
+          n = sumDigits(String(n));
+        }
+        return n;
+      }
+
+      return {
+        zodiac: zodiacSign(month, day),
+        chineseZodiac: chineseZodiac(year),
+        lifePathNumber: lifePath(year, month, day),
+      };
+    }
+
+    let zodiac = zodiacExisting;
+    let chineseZodiac = chineseExisting;
+    let lifePathNumber = lifePathExisting;
+
+    if (!zodiac || !chineseZodiac || lifePathNumber == null) {
+      const fromBirthday = computeFromBirthday(soul.birthday);
+      if (!zodiac) zodiac = normaliseText(fromBirthday.zodiac) || zodiacExisting;
+      if (!chineseZodiac)
+        chineseZodiac =
+          normaliseText(fromBirthday.chineseZodiac) || chineseExisting;
+      if (lifePathNumber == null && fromBirthday.lifePathNumber != null) {
+        lifePathNumber = fromBirthday.lifePathNumber;
+      }
+    }
+
+    return { zodiac, chineseZodiac, lifePathNumber };
+  }
+
+  function joinSentences(sentences) {
+    return sentences.filter(Boolean).join(" ");
+  }
+
+  // ===================== DOM cache =====================
+
+  const ui = {
+    coachEmpty: $("#coachEmpty"),
+
+    coachName: $("#coachName"),
+    coachConn: $("#coachConn"),
+    coachLovePrimary: $("#coachLovePrimary"),
+
+    coachLoveAdvice: $("#coachLoveAdvice"),
+    coachZodiacAdvice: $("#coachZodiacAdvice"),
+    coachChineseAdvice: $("#coachChineseAdvice"),
+    coachLifePathAdvice: $("#coachLifePathAdvice"),
+    coachValuesAdvice: $("#coachValuesAdvice"),
+    coachNextSteps: $("#coachNextSteps"),
+
+    btnRefresh: $("#coachRefresh"),
+    btnModeLove: $("#coachModeLove"),
+    btnModeFriend: $("#coachModeFriend"),
   };
-  const HOBBY_HOOKS = [
-    {k:/meditat/i, add:" Then gift yourself 10 calm breaths."},
-    {k:/travel/i,  add:" Plan a micro-adventure for this week."},
-    {k:/read/i,    add:" End the day with 5 pages of reading."}
-  ];
-  const INSIGHT_POOL = [
-    "Your compassion is your quiet power. Today, let it soften how you speak to yourself.",
-    "You refuel through simple rituals. Keep them small, keep them daily—consistency becomes glow.",
-    "When you act from honesty, the right people feel safe near you. That’s your magnet.",
-    "Your courage whispers, not shouts. Follow the whisper; it knows the way.",
-    "Balance Heart and Spirit, and the mind relaxes into clarity.",
-    "Your presence is medicine—offer it gently to yourself first.",
-    "Tiny, loving actions compound into a radiant life."
-  ];
-  const ICONS = ["🌱","💫","🌍","🕊️","✨","🌞","🌙"];
 
-  function buildAction(p){
-    const ll = Array.isArray(p.loveLanguages)? p.loveLanguages[0] : (p.loveLanguage||'');
-    let base = LL_ACTION[ll] || "Take a mindful pause and breathe slowly.";
-    const h = (Array.isArray(p.hobbies)? p.hobbies : []).join(' ').toLowerCase();
-    for(const hook of HOBBY_HOOKS){ if(hook.k.test(h)){ base = base.replace(/\.*$/,'') + hook.add; break; } }
-    const v = (Array.isArray(p.values)? p.values : []).map(s=>s.toLowerCase());
-    if(v.includes('compassion')) base += " Let compassion guide your tone.";
-    if(v.includes('honesty'))    base += " Speak gently—and honestly.";
-    return base;
-  }
-  function buildInsights(p){
-    const name = p.name || 'You';
-    const vals = Array.isArray(p.values)? p.values.slice(0,3) : [];
-    const lls = Array.isArray(p.loveLanguages)? p.loveLanguages : (p.loveLanguage?[p.loveLanguage]:[]);
-    const hobs = Array.isArray(p.hobbies)? p.hobbies.slice(0,3) : [];
-    const one = lls[0] ? `${name} feels most loved through ${lls[0].toLowerCase()}.` : `${name} is learning the language of care.`;
-    const two = vals.length ? `Your compass leans on ${vals.join(', ').toLowerCase()}.` : '';
-    const three = hobs.length ? `Daily joys like ${hobs.join(', ').toLowerCase()} keep your light steady.` : '';
-    const pick = INSIGHT_POOL[Math.floor(Math.random()*INSIGHT_POOL.length)];
-    return [one, two, three].filter(Boolean).join(' ') + ' ' + pick;
-  }
+  // ===================== State =====================
 
-  // ---------- Essentials ----------
-  function fillEssentials(p){
-    const set=(id,val)=>{ const el=$(id.startsWith('#')?id:'#'+id); if(el) el.textContent = val ?? '–'; };
-    set('c-name', p.name||'–');
-    set('c-ct', p.connectionType||'–');
-    set('c-ll', Array.isArray(p.loveLanguages)? p.loveLanguages[0] : (p.loveLanguage||'–'));
-    set('c-bd', p.birthday||'–');
-    set('c-west', p.zodiac||p.westernZodiac||westZodiacFrom(p.birthday));
-    set('c-life', p.lifePath||lifePathFrom(p.birthday));
-  }
+  let soulData = {};
+  let coachMode = "love"; // "love" | "friend"
 
-  // ---------- Streak + ring + intensity ----------
-  const CIRC = 2*Math.PI*20;
-  function ensureCoach(){
-    const c=getCoach();
-    if(!c.streak) c.streak={count:0,lastDoneDate:null};
-    setCoach(c); return c;
-  }
-  function streakTier(count){
-    if(count>=21) return 3;
-    if(count>=7)  return 2;
-    if(count>=1)  return 1;
-    return 0;
-  }
-  function updateStreakUI(){
-    const {streak}=ensureCoach();
-    $('#streakCount').textContent = streak.count||0;
-    // progress over 7
-    const frac = Math.max(0, Math.min(1, (streak.count % 7)/7));
-    const prog = $('.ring .prog');
-    prog.style.strokeDasharray = CIRC;
-    prog.style.strokeDashoffset = CIRC * (1 - frac);
-    // intensity tiers
-    const badge = $('#streakBadge');
-    badge.dataset.tier = String(streakTier(streak.count||0));
-    // button state
-    $('#btnDoneToday').disabled = (streak.lastDoneDate === todayISO());
-    $('#btnDoneToday').textContent = $('#btnDoneToday').disabled ? 'Already logged today' : 'Mark done today';
-  }
-  function markDone(){
-    const today=todayISO(); const state=ensureCoach(); const s=state.streak;
-    if(s.lastDoneDate===today) return;
-    const y=new Date(); y.setDate(y.getDate()-1);
-    const yISO=`${y.getFullYear()}-${String(y.getMonth()+1).padStart(2,'0')}-${String(y.getDate()).padStart(2,'0')}`;
-    if(s.lastDoneDate && s.lastDoneDate!==today && s.lastDoneDate!==yISO) s.count=0;
-    s.count=(s.count||0)+1; s.lastDoneDate=today;
-    setCoach({...state, streak:s});
-    const badge=$('#streakBadge'); // flame burst
-    badge.classList.remove('burst'); void badge.offsetWidth; badge.classList.add('burst');
-    updateStreakUI(); toast('Logged today 🔥');
-  }
+  function setMode(mode) {
+    if (mode !== "love" && mode !== "friend") return;
+    coachMode = mode;
 
-  // ---------- Tasks with icons ----------
-  function taskIcon(text=''){
-    const t=text.toLowerCase();
-    if(/meditat|breath|still/i.test(t)) return '🧘';
-    if(/gratitude|thank/i.test(t))     return '💌';
-    if(/walk|run|gym|workout/i.test(t))return '🏃';
-    if(/read|book/i.test(t))           return '📚';
-    if(/journal|reflect|write/i.test(t))return '🖊️';
-    if(/service|help/i.test(t))        return '🤝';
-    if(/connect|friend|message/i.test(t))return '💬';
-    if(/nature|garden|hike|sun/i.test(t))return '🌿';
-    return '✨';
-  }
-  function ensureTasks(profile){
-    const state = getCoach();
-    if(!Array.isArray(state.tasks) || !state.tasks.length){
-      const seed = [];
-      const ll = Array.isArray(profile.loveLanguages)? profile.loveLanguages[0] : (profile.loveLanguage||'');
-      if(ll) seed.push(`Practice your love language: ${ll}`);
-      if(profile.connectionType) seed.push(`Nurture a ${String(profile.connectionType).toLowerCase()} connection`);
-      seed.push("Reflect for 5 minutes: what felt good today?");
-      const vals=(profile.values||[]).slice(0,3); vals.forEach(v=> seed.push(`Small act aligned with ${v}`));
-      const out = seed.slice(0,6).map((t,i)=>({id:String(Date.now()+i), text:t, done:false, createdAt:Date.now()}));
-      setCoach({...state, tasks: out});
+    // Optional visual state
+    if (ui.btnModeLove) {
+      ui.btnModeLove.classList.toggle("active", mode === "love");
+      ui.btnModeLove.setAttribute("aria-pressed", mode === "love" ? "true" : "false");
+    }
+    if (ui.btnModeFriend) {
+      ui.btnModeFriend.classList.toggle("active", mode === "friend");
+      ui.btnModeFriend.setAttribute("aria-pressed", mode === "friend" ? "true" : "false");
     }
   }
-  function saveTasks(arr){ const s=getCoach(); setCoach({...s, tasks:[...arr]}); }
-function renderTasks(){
-  const box = $('#tasks'); box.innerHTML = '';
-  const state = getCoach();
-  const list = state.tasks || [];
-  const hideDone = !!state.hideDone;
 
-  list.forEach((t) => {
-    const row = document.createElement('div');
-    row.className = 'task-row';
-    row.innerHTML = `
-      <label style="display:flex;align-items:center;gap:10px;flex:1 1 auto;">
-        <input type="checkbox" ${t.done?'checked':''}
-               data-id="${t.id}"
-               aria-label="Mark ‘${String(t.text).replace(/"/g,'&quot;')}’ done">
-        <span class="task-ico">${taskIcon(t.text)}</span>
-        <span class="task-text" style="flex:1">${t.text}</span>
-      </label>
-      <button class="btn" data-del="${t.id}">Remove</button>`;
-    box.appendChild(row);
+  function partnerWord() {
+    return coachMode === "friend" ? "friend" : "partner";
+  }
 
-    // pradinė būsena
-    row.classList.toggle('is-done', !!t.done);
-    if (hideDone && t.done) row.style.display = 'none';
+  function connectionWord() {
+    return coachMode === "friend" ? "friendships" : "relationships";
+  }
 
-    // checkbox – tik pažymim, NIEKO nenaikinam
-    const cb = row.querySelector('input[type="checkbox"]');
-    cb.addEventListener('change', ()=>{
-      const arr = getCoach().tasks || [];
-      const it = arr.find(x => x.id === t.id);
-      if (it){ it.done = cb.checked; saveTasks(arr); }
-      row.classList.toggle('is-done', cb.checked);
-      if (getCoach().hideDone) row.style.display = cb.checked ? 'none' : '';
+  // ===================== Advice generators =====================
+
+  function renderLoveAdvice(soul) {
+    if (!ui.coachLoveAdvice) return;
+
+    const primaryLabel = pickPrimaryLoveLanguage(soul);
+    const key = canonicalLoveKey(primaryLabel);
+
+    if (!primaryLabel && !key) {
+      ui.coachLoveAdvice.textContent =
+        "Your heart has its own unique love language. Begin by noticing when you feel most seen and nourished — is it words, time, support, touch or thoughtful surprises?";
+      return;
+    }
+
+    const pWord = partnerWord();
+    const cWord = connectionWord();
+
+    let text = "";
+
+    switch (key) {
+      case "words":
+        text = joinSentences([
+          `Your primary love language seems to be Words of Affirmation.`,
+          `You open up when your ${pWord} or ${cWord} reflect back what they appreciate about you.`,
+          `Intentionally invite honest, gentle conversations and share appreciation out loud — it creates a soft, safe field for your soul.`,
+        ]);
+        break;
+      case "quality":
+        text = joinSentences([
+          `Your soul thrives on Quality Time.`,
+          `You feel most connected when someone is fully present with you — no phone, no rush, just shared moments.`,
+          `Protect time for one-on-one presence with your ${pWord} and say clearly: “Time together is how I feel loved.”`,
+        ]);
+        break;
+      case "service":
+        text = joinSentences([
+          `Acts of Service are a key love language for you.`,
+          `When someone quietly helps, supports your daily life or takes a task off your shoulders, your nervous system relaxes.`,
+          `Choose ${connectionWord()} where support is mutual — where both of you naturally look for ways to make each other’s path lighter.`,
+        ]);
+        break;
+      case "touch":
+        text = joinSentences([
+          `Physical Touch carries a deep meaning for your soul.`,
+          `Hugs, holding hands or a gentle touch on the shoulder can say more than a paragraph of words.`,
+          `Create agreements around consent and comfort so that touch becomes a safe, grounding ritual with the right ${pWord} or friends around you.`,
+        ]);
+        break;
+      case "gifts":
+        text = joinSentences([
+          `Thoughtful Gifts and tangible symbols of care speak strongly to you.`,
+          `For you it’s not about price — it’s about being seen and remembered.`,
+          `Share with your ${pWord} or close friends how much small, meaningful surprises nourish you, and also practice gifting them in your own heartfelt way.`,
+        ]);
+        break;
+      default:
+        text = joinSentences([
+          `Your way of giving and receiving love is multi-layered.`,
+          `You may resonate with more than one love language, which makes you sensitive and adaptable in ${connectionWord()}.`,
+          `Notice what consistently makes you feel safe, alive and respected — that is the compass your Soul Coach wants you to follow.`,
+        ]);
+        break;
+    }
+
+    ui.coachLoveAdvice.textContent = text;
+  }
+
+  function renderZodiacAdvice(soul, zodiac) {
+    if (!ui.coachZodiacAdvice) return;
+
+    const sign = normaliseText(zodiac || soul.zodiac);
+    if (!sign) {
+      ui.coachZodiacAdvice.textContent =
+        "Your zodiac energy is a unique blend. Even without a specific sign here, trust the parts of you that feel fiery, earthy, airy or watery — they all have wisdom for your path.";
+      return;
+    }
+
+    const pWord = partnerWord();
+    const cWord = connectionWord();
+    const lower = sign.toLowerCase();
+
+    let text = "";
+
+    if (lower === "aries") {
+      text = joinSentences([
+        `As an Aries soul, you carry bold, pioneering fire.`,
+        `You thrive in ${connectionWord()} that allow honesty, directness and a sense of adventure.`,
+        `Choose people who can handle your truth and movement — and remember to also listen deeply, so your fire warms instead of burns.`,
+      ]);
+    } else if (lower === "taurus") {
+      text = joinSentences([
+        `Taurus energy in your chart brings stability and sensuality.`,
+        `You blossom in ${connectionWord()} where you feel safe, well-fed emotionally and physically, and not rushed.`,
+        `Honor your need for comfort and loyalty — your ${pWord} should feel like a soft place to land, not another battlefield.`,
+      ]);
+    } else if (lower === "gemini") {
+      text = joinSentences([
+        `Gemini energy makes your mind curious and your heart responsive to conversation.`,
+        `You connect through words, ideas and playful banter.`,
+        `Seek ${connectionWord()} where you can talk about both the light and the deep topics — your soul needs mental stimulation and kindness together.`,
+      ]);
+    } else if (lower === "cancer") {
+      text = joinSentences([
+        `Cancer energy gives you a strong, sensitive heart.`,
+        `You need emotional safety more than drama.`,
+        `Choose ${connectionWord()} with people who respect your feelings, your family energy and your cycles — your sensitivity is a gift, not a weakness.`,
+      ]);
+    } else if (lower === "leo") {
+      text = joinSentences([
+        `Leo energy in you wants to shine and be seen.`,
+        `You thrive when your ${pWord} or friends genuinely celebrate your light.`,
+        `Just remember: your warmth is strongest when you also shine your spotlight on others, appreciating their brilliance too.`,
+      ]);
+    } else if (lower === "virgo") {
+      text = joinSentences([
+        `Virgo energy brings discernment and a desire to improve things.`,
+        `You notice details in ${connectionWord()} others might overlook.`,
+        `Use this wisely: communicate with kindness, offer support without trying to fix people, and allow yourself to be imperfect and loved as you are.`,
+      ]);
+    } else if (lower === "libra") {
+      text = joinSentences([
+        `Libra energy in your soul loves harmony and beauty in ${connectionWord()}.`,
+        `You care about fairness, balance and mutual respect.`,
+        `Practice expressing your own needs clearly, not only keeping peace for everyone else — true harmony includes your truth too.`,
+      ]);
+    } else if (lower === "scorpio") {
+      text = joinSentences([
+        `Scorpio energy makes you deep, intuitive and transformation-oriented.`,
+        `Superficial ${connectionWord()} will never satisfy you for long.`,
+        `Choose people who can handle raw honesty, emotional depth and evolution — and remember to balance intensity with moments of softness and play.`,
+      ]);
+    } else if (lower === "sagittarius") {
+      text = joinSentences([
+        `Sagittarius energy brings freedom, meaning and exploration.`,
+        `You need ${connectionWord()} that allow growth, learning and a sense of expansion.`,
+        `Stay loyal to your truth, and choose companions who are excited to walk new paths with you rather than limit your horizon.`,
+      ]);
+    } else if (lower === "capricorn") {
+      text = joinSentences([
+        `Capricorn energy gives you strength, responsibility and long-term vision.`,
+        `You value reliability and shared goals.`,
+        `Let your ${pWord} or close friends see both your strong side and your softer, more vulnerable self — this balance deepens trust and intimacy.`,
+      ]);
+    } else if (lower === "aquarius") {
+      text = joinSentences([
+        `Aquarius energy makes you unique, future-oriented and community-minded.`,
+        `You thrive in ${connectionWord()} where authenticity and shared ideals matter more than strict traditions.`,
+        `Allow yourself to be fully “different” and attract those who love you exactly that way.`,
+      ]);
+    } else if (lower === "pisces") {
+      text = joinSentences([
+        `Pisces energy gives you compassion, intuition and spiritual depth.`,
+        `You often feel the emotions of others as if they were your own.`,
+        `Create clear energetic boundaries in ${connectionWord()} so you can stay kind without losing yourself — your sensitivity is sacred.`,
+      ]);
+    } else {
+      text = joinSentences([
+        `Your zodiac sign, ${sign}, brings its own flavor of wisdom and challenge.`,
+        `Notice where your natural tendencies support healthy ${connectionWord()} and where they pull you into old patterns.`,
+        `Awareness itself becomes your Soul Coach here.`,
+      ]);
+    }
+
+    ui.coachZodiacAdvice.textContent = text;
+  }
+
+  function renderChineseAdvice(soul, chineseZodiac) {
+    if (!ui.coachChineseAdvice) return;
+
+    const sign = normaliseText(chineseZodiac || soul.chineseZodiac);
+    if (!sign) {
+      ui.coachChineseAdvice.textContent =
+        "Your Chinese zodiac energy adds an extra layer of flavor to your personality. Even if it’s not named here, trust that your instincts, loyalty and courage are guiding your choices.";
+      return;
+    }
+
+    const cWord = connectionWord();
+    const lower = sign.toLowerCase();
+    let text = "";
+
+    if (lower === "rat") {
+      text = joinSentences([
+        `As a Rat in Chinese astrology, you carry sharp instincts and resourcefulness.`,
+        `Use your clever mind to build ${cWord} where both hearts feel practically supported and emotionally safe.`,
+      ]);
+    } else if (lower === "ox") {
+      text = joinSentences([
+        `Ox energy gives you endurance and reliability.`,
+        `You are the steady presence others can lean on — just remember to let them support you too.`,
+      ]);
+    } else if (lower === "tiger") {
+      text = joinSentences([
+        `Tiger energy makes you brave and passionate.`,
+        `Channel your intensity into protecting what matters rather than fighting what doesn’t deserve your energy.`,
+      ]);
+    } else if (lower === "rabbit") {
+      text = joinSentences([
+        `Rabbit energy brings gentleness, sensitivity and a love of comfort.`,
+        `Build ${cWord} that feel calm, aesthetically pleasing and emotionally kind.`,
+      ]);
+    } else if (lower === "dragon") {
+      text = joinSentences([
+        `Dragon energy is powerful and visionary.`,
+        `You’re here to create big things — choose ${cWord} that celebrate your dreams rather than shrink them.`,
+      ]);
+    } else if (lower === "snake") {
+      text = joinSentences([
+        `Snake energy gives you depth, intuition and the ability to shed old skins.`,
+        `Allow yourself to transform out of old relational patterns and step into a wiser version of love and friendship.`,
+      ]);
+    } else if (lower === "horse") {
+      text = joinSentences([
+        `Horse energy makes you free-spirited and restless when confined.`,
+        `You need movement, adventure and open skies in your ${cWord} — not cages.`,
+      ]);
+    } else if (lower === "goat" || lower === "sheep") {
+      text = joinSentences([
+        `Goat energy brings creativity and tenderness.`,
+        `You flourish in environments that are emotionally supportive and aesthetically soft.`,
+      ]);
+    } else if (lower === "monkey") {
+      text = joinSentences([
+        `Monkey energy makes you playful, witty and adaptable.`,
+        `Bring humor into your ${cWord}, but remember to also show your serious, committed side when it matters.`,
+      ]);
+    } else if (lower === "rooster") {
+      text = joinSentences([
+        `Rooster energy gives you confidence and a love for honesty.`,
+        `Be proud of who you are, while staying open to feedback that helps your ${cWord} grow.`,
+      ]);
+    } else if (lower === "dog") {
+      text = joinSentences([
+        `Dog energy in you is all about loyalty and protection.`,
+        `You are a devoted ${partnerWord()} and friend — just make sure your devotion is received with respect, not taken for granted.`,
+      ]);
+    } else if (lower === "pig" || lower === "boar") {
+      text = joinSentences([
+        `Pig energy brings generosity, kindness and enjoyment of life.`,
+        `Create ${cWord} where good food, laughter and emotional honesty are part of your shared rituals.`,
+      ]);
+    } else {
+      text = joinSentences([
+        `Your Chinese zodiac sign, ${sign}, offers its own style of courage and growth.`,
+        `Trust that you can use this energy to attract souls who respect your heart and your boundaries.`,
+      ]);
+    }
+
+    ui.coachChineseAdvice.textContent = text;
+  }
+
+  function renderLifePathAdvice(soul, lifePathNumberRaw) {
+    if (!ui.coachLifePathAdvice) return;
+
+    let n = lifePathNumberRaw;
+    if (n == null) n = soul.lifePathNumber;
+    if (typeof n === "string") n = parseInt(n, 10);
+    if (!Number.isFinite(n)) {
+      ui.coachLifePathAdvice.textContent =
+        "Your life path carries a unique lesson about love, connection and self-worth. Even without a specific number here, notice the repeating themes that life keeps inviting you to grow through.";
+      return;
+    }
+
+    const cWord = connectionWord();
+    let text = "";
+
+    switch (n) {
+      case 1:
+        text = joinSentences([
+          `Life Path 1: the path of the Pioneer.`,
+          `You are here to learn healthy independence and leadership in ${cWord}.`,
+          `Balance your strong will with openness to collaboration and emotional vulnerability.`,
+        ]);
+        break;
+      case 2:
+        text = joinSentences([
+          `Life Path 2: the path of the Peacemaker.`,
+          `You are deeply tuned into others and value harmony.`,
+          `Your lesson is to honor your own needs while still being the gentle, intuitive soul you are.`,
+        ]);
+        break;
+      case 3:
+        text = joinSentences([
+          `Life Path 3: the path of the Creative Communicator.`,
+          `You bring light, humor and artistic energy into ${cWord}.`,
+          `Use your voice to express truth, not just to entertain, and allow your emotions to be seen.`,
+        ]);
+        break;
+      case 4:
+        text = joinSentences([
+          `Life Path 4: the path of the Builder.`,
+          `You’re here to create stable foundations, both materially and emotionally.`,
+          `Choose ${cWord} that respect structure, reliability and long-term vision.`,
+        ]);
+        break;
+      case 5:
+        text = joinSentences([
+          `Life Path 5: the path of Freedom and Change.`,
+          `You need space, variety and adventure.`,
+          `Your soul lesson is to choose freedom with responsibility — not running from commitment, but designing ${cWord} that feel spacious, not restrictive.`,
+        ]);
+        break;
+      case 6:
+        text = joinSentences([
+          `Life Path 6: the path of the Healer and Caregiver.`,
+          `You are naturally nurturing and responsible.`,
+          `Remember to care for yourself as much as you care for others, and avoid taking on roles that feel like “parenting” everyone around you.`,
+        ]);
+        break;
+      case 7:
+        text = joinSentences([
+          `Life Path 7: the path of the Seeker.`,
+          `You need depth, inner space and spiritual meaning.`,
+          `Choose ${cWord} where quiet, reflection and soulful conversations are honored, not judged.`,
+        ]);
+        break;
+      case 8:
+        text = joinSentences([
+          `Life Path 8: the path of Power and Manifestation.`,
+          `You are learning to balance material success with heart-centered integrity.`,
+          `In ${cWord}, stay aware of control dynamics — use your power to uplift, not to dominate.`,
+        ]);
+        break;
+      case 9:
+        text = joinSentences([
+          `Life Path 9: the path of the Old Soul.`,
+          `You carry compassion and a sense of global, collective love.`,
+          `Your lesson is to practice healthy boundaries while still keeping your heart open to humanity.`,
+        ]);
+        break;
+      case 11:
+        text = joinSentences([
+          `Life Path 11: the path of the Intuitive Light-Bringer.`,
+          `Your sensitivity and intuition are amplified.`,
+          `You’re here to bring spiritual awareness into human ${cWord}, grounding your visions into daily life.`,
+        ]);
+        break;
+      case 22:
+        text = joinSentences([
+          `Life Path 22: the Master Builder.`,
+          `You are capable of building big, tangible manifestations of love, community or service.`,
+          `Stay anchored in your heart so your ambitions stay aligned with your soul.`,
+        ]);
+        break;
+      case 33:
+        text = joinSentences([
+          `Life Path 33: the Master Teacher of Compassion.`,
+          `Your energy can feel intense and highly loving.`,
+          `Your work is to channel that love in healthy ways, not through sacrifice, but through conscious, balanced giving.`,
+        ]);
+        break;
+      default:
+        text = joinSentences([
+          `Your life path number, ` + n + `, carries its own sacred curriculum.`,
+          `Trust that your repeated life patterns are showing you where to heal, forgive and grow in ${cWord}.`,
+        ]);
+        break;
+    }
+
+    ui.coachLifePathAdvice.textContent = text;
+  }
+
+  function renderValuesHobbiesAdvice(soul) {
+    if (!ui.coachValuesAdvice) return;
+
+    const values = toArray(soul.values || []).map(normaliseText).filter(Boolean);
+    const hobbies = toArray(soul.hobbies || soul.interests || [])
+      .map(normaliseText)
+      .filter(Boolean);
+
+    const cWord = connectionWord();
+    const pieces = [];
+
+    if (!values.length && !hobbies.length) {
+      ui.coachValuesAdvice.textContent =
+        "Your values and passions are the map for your connections. Take a quiet moment to write down what matters most to you and what lights you up — then let people into that authentic world.";
+      return;
+    }
+
+    // Values
+    if (values.length) {
+      const lowerValues = values.map((v) => v.toLowerCase());
+
+      if (lowerValues.some((v) => v.includes("honesty") || v.includes("integrity"))) {
+        pieces.push(
+          `Honesty and integrity matter deeply to you. Protect yourself from dynamics where truth is blurred or hidden — your nervous system needs transparency to relax.`
+        );
+      }
+      if (lowerValues.some((v) => v.includes("loyal"))) {
+        pieces.push(
+          `Loyalty is one of your core values. Choose ${cWord} where promises and actions match, and where both sides show up even when it’s not convenient.`
+        );
+      }
+      if (
+        lowerValues.some(
+          (v) => v.includes("freedom") || v.includes("independence") || v.includes("autonomy")
+        )
+      ) {
+        pieces.push(
+          `Freedom and personal space are essential for you. Communicate your need for autonomy early, so you don’t feel trapped later.`
+        );
+      }
+      if (lowerValues.some((v) => v.includes("family"))) {
+        pieces.push(
+          `Family and close bonds matter to your heart. You’re happiest when your ${cWord} can blend with your sense of home and belonging.`
+        );
+      }
+      if (
+        lowerValues.some(
+          (v) => v.includes("spiritual") || v.includes("growth") || v.includes("evolution")
+        )
+      ) {
+        pieces.push(
+          `Spiritual growth and inner evolution are important to you. Seek souls who are open to reflection, healing and conscious communication.`
+        );
+      }
+
+      if (!pieces.length) {
+        pieces.push(
+          `Your values — ` + values.join(", ") + ` — are your inner compass. Let them guide who you give your time, energy and heart to.`
+        );
+      }
+    }
+
+    // Hobbies / lifestyle
+    if (hobbies.length) {
+      const lowerH = hobbies.map((v) => v.toLowerCase());
+
+      if (
+        lowerH.some(
+          (v) =>
+            v.includes("hiking") ||
+            v.includes("nature") ||
+            v.includes("forest") ||
+            v.includes("garden") ||
+            v.includes("outdoor")
+        )
+      ) {
+        pieces.push(
+          `Nature is a medicine for your soul. Regular time outside — even simple walks — will keep you grounded and clear about which ${cWord} truly nourish you.`
+        );
+      }
+      if (
+        lowerH.some(
+          (v) =>
+            v.includes("yoga") ||
+            v.includes("dance") ||
+            v.includes("gym") ||
+            v.includes("fitness") ||
+            v.includes("movement")
+        )
+      ) {
+        pieces.push(
+          `Your body is a big part of your emotional balance. Movement, stretching or dancing help you process feelings instead of holding them inside.`
+        );
+      }
+      if (
+        lowerH.some(
+          (v) =>
+            v.includes("art") ||
+            v.includes("design") ||
+            v.includes("paint") ||
+            v.includes("draw") ||
+            v.includes("music") ||
+            v.includes("sing") ||
+            v.includes("write")
+        )
+      ) {
+        pieces.push(
+          `Your creativity is sacred. Protect time for your art, music or writing — the right ${cWord} will respect and even celebrate this part of you.`
+        );
+      }
+      if (lowerH.some((v) => v.includes("travel") || v.includes("adventure"))) {
+        pieces.push(
+          `Exploration and travel feed your spirit. Design ${cWord} that allow shared adventures and new experiences, so you don’t feel stuck.`
+        );
+      }
+
+      if (!pieces.length) {
+        pieces.push(
+          `Your interests — ` +
+            hobbies.join(", ") +
+            ` — are not random. They show the environments and rhythms where your heart feels most alive. Bring more of them into your daily life.`
+        );
+      }
+    }
+
+    // Safe DOM building: no innerHTML with user content
+    ui.coachValuesAdvice.textContent = "";
+    pieces.forEach((sentence) => {
+      if (!sentence) return;
+      const p = document.createElement("p");
+      p.textContent = sentence;
+      ui.coachValuesAdvice.appendChild(p);
     });
+  }
 
-    // Remove su Undo
-    row.querySelector('[data-del]').addEventListener('click', ()=>{
-      const arr = getCoach().tasks || [];
-      const i = arr.findIndex(x => x.id === t.id);
-      if (i > -1){
-        const removed = arr.splice(i,1)[0];
-        saveTasks(arr);
-        row.remove();
-        showToast(`Removed: “${removed.text}”`, {
-          actionLabel: 'Undo',
-          onAction: () => {
-            const arr2 = getCoach().tasks || [];
-            arr2.splice(i,0,removed);
-            saveTasks(arr2);
-            renderTasks();
-          }
+  function renderNextSteps(soul) {
+    if (!ui.coachNextSteps) return;
+
+    const pWord = partnerWord();
+    const cWord = connectionWord();
+    const primaryLove = pickPrimaryLoveLanguage(soul) || "your natural way of receiving love";
+
+    const steps = [];
+
+    steps.push(
+      `• This week, create one intentional moment with a ` +
+        pWord +
+        ` or close ` +
+        (coachMode === "friend" ? "friend" : "person") +
+        ` where you honor ` +
+        primaryLove +
+        `.`
+    );
+
+    steps.push(
+      `• Write down your top 3 values and check: are they present in your current ` +
+        cWord +
+        `? If not, what small shift could you make?`
+    );
+
+    const aboutText = normaliseText(soul.about || soul.aboutMe);
+    if (aboutText) {
+      steps.push(
+        `• Re-read your own “About me” text and update one sentence so it reflects who you are now, not who you were in the past.`
+      );
+    } else {
+      steps.push(
+        `• Take 10 minutes to write a gentle “About me” paragraph just for yourself, describing how you want to feel in ${cWord}.`
+      );
+    }
+
+    // Safe DOM building: no innerHTML with user content
+    ui.coachNextSteps.textContent = "";
+    steps.forEach((step) => {
+      if (!step) return;
+      const p = document.createElement("p");
+      p.textContent = step;
+      ui.coachNextSteps.appendChild(p);
+    });
+  }
+
+  function renderHeader(soul) {
+    if (ui.coachName) {
+      const name = normaliseText(soul.name);
+      ui.coachName.textContent = name || "beautiful soul";
+    }
+
+    if (ui.coachConn) {
+      const conn = normaliseText(soul.connectionType);
+      ui.coachConn.textContent = conn || "connection type not set yet";
+    }
+
+    if (ui.coachLovePrimary) {
+      const primaryLove = pickPrimaryLoveLanguage(soul);
+      ui.coachLovePrimary.textContent = primaryLove || "not defined yet";
+    }
+  }
+
+  // ===================== Render orchestration =====================
+
+  function renderAll() {
+    const soul = soulData || {};
+    const derived = deriveZodiacFallback(soul);
+
+    renderHeader(soul);
+    renderLoveAdvice(soul);
+    renderZodiacAdvice(soul, derived.zodiac);
+    renderChineseAdvice(soul, derived.chineseZodiac);
+    renderLifePathAdvice(soul, derived.lifePathNumber);
+    renderValuesHobbiesAdvice(soul);
+    renderNextSteps(soul);
+  }
+
+  // ===================== Init =====================
+
+  function init() {
+    try {
+      soulData = safeGetSoulData();
+      const hasData = hasAnyCoreData(soulData);
+
+      if (!hasData) {
+        if (ui.coachEmpty) {
+          ui.coachEmpty.hidden = false;
+          ui.coachEmpty.textContent =
+            "No soul data yet — please complete your Soulink Quiz and Edit Profile first.";
+        }
+        // We still safely exit; advice blocks may stay empty.
+      } else if (ui.coachEmpty) {
+        ui.coachEmpty.hidden = true;
+      }
+
+      // Default mode
+      setMode("love");
+
+      // Initial render (only if there is some data; but safe either way)
+      renderAll();
+
+      // Optional controls
+      if (ui.btnRefresh) {
+        ui.btnRefresh.addEventListener("click", function (e) {
+          e.preventDefault();
+          // Refresh data snapshot in case something changed
+          soulData = safeGetSoulData();
+          renderAll();
         });
       }
-    });
-  });
 
-  applyHideToggleUI();
-}
-
-   function applyHideToggleUI(){
-   const st = getCoach(); const on = !!st.hideDone;
-   const tgl = $('#toggleDone');
-   if (tgl) tgl.checked = on;
-
-   if (on) { $('#tasks')?.querySelectorAll('.task-row.is-done').forEach(r=> r.style.display='none'); }
-   else    { $('#tasks')?.querySelectorAll('.task-row').forEach(r=> r.style.display=''); }
- }
-   $('#toggleDone')?.addEventListener('change', (e)=>{
-  const s = getCoach();
-  setCoach({ ...s, hideDone: !!e.target.checked });
-  renderTasks();
-});
-  
- function bindAddTask(){
-  $('#add-task')?.addEventListener('submit', e=>{
-    e.preventDefault();
-    const v = ($('#task-input')?.value||'').trim();
-    if(!v) return;
-    const arr = getCoach().tasks || [];
-    arr.push({ id:String(Date.now()), text:v, done:false, createdAt:Date.now() });
-    saveTasks(arr);
-    $('#task-input').value='';
-    renderTasks();
-  });
-
-  // Enter -> Add
-  $('#task-input')?.addEventListener('keydown', e=>{
-    if(e.key==='Enter'){ e.preventDefault(); $('#add-task')?.dispatchEvent(new Event('submit',{cancelable:true})); }
-  });
-
-  // Reset -> tik nuima varneles
-  $('#resetTasks')?.addEventListener('click', (e)=>{
-    e.preventDefault();
-    const s = getCoach();
-    const arr = (s.tasks || []).map(t => ({ ...t, done:false }));
-    saveTasks(arr);
-    renderTasks();
-  });
-}
-
-
-  // ---------- Action + Insights ----------
-  function renderActionAndInsight(p, forceNew=false){
-    const act = buildAction(p);
-    typeInto($('#coach-action'), act, [800,1200], $('#actionGlow'));
-
-    // „Daily Insight“: 3 kulkos su ikonėlėmis
-    const ul = $('#coach-insights'); ul.innerHTML='';
-    const picks = [...INSIGHT_POOL].sort(()=>Math.random()-0.5).slice(0,3);
-    picks.forEach((txt,i)=>{
-      const li=document.createElement('li'); li.innerHTML=`<span>${ICONS[i%ICONS.length]}</span> ${txt}`;
-      ul.appendChild(li); setTimeout(()=> li.classList.add('show'), 60+ i*90);
-    });
-
-    // pagrindinis (tiperiuojamas) įkvėpimo tekstas
-    const st=getCoach(); const last=st.lastInsightAt? new Date(st.lastInsightAt):null; const now=new Date();
-    const shouldNew=forceNew || !last || (now-last)>=24*3600*1000;
-    const insight = shouldNew ? buildInsights(p) : ($('#insightText')?.textContent || buildInsights(p));
-    typeInto($('#insightText'), insight, [1400,1800]);
-    if(shouldNew) setCoach({...st, lastInsightAt:new Date().toISOString()});
-  }
-
-  // ---------- Export PNG (glowing „My Growth Path“) ----------
-  function exportPNG(){
-    const p=getProfile(); const s=getCoach();
-    const action=($('#coach-action')?.textContent||'').trim() || '—';
-    const tasks=(s.tasks||[]).filter(t=>!t.done).slice(0,3).map(t=> t.text);
-    const name=p.name||'My';
-    const W=1400,H=900, pad=52, DPR=Math.max(2,Math.floor(devicePixelRatio||2));
-    const cvs=document.createElement('canvas'); cvs.width=W*DPR; cvs.height=H*DPR;
-    const ctx=cvs.getContext('2d'); ctx.scale(DPR,DPR);
-
-    // bg gradient + žvaigždutės
-    const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#022e33'); g.addColorStop(1,'#053c42'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    for(let i=0;i<90;i++){ const x=Math.random()*W, y=Math.random()*H, r=Math.random()*1.3+0.4, a=0.12+Math.random()*0.25;
-      ctx.beginPath(); ctx.fillStyle=`rgba(0,253,216,${a})`; ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); }
-
-    // header
-    ctx.fillStyle='#00fdd8'; ctx.font='800 40px system-ui'; ctx.fillText('Soulink · My Growth Path 🌟', pad, 70);
-    ctx.strokeStyle='rgba(0,253,216,.6)'; ctx.lineWidth=2; ctx.shadowColor='rgba(0,253,216,.7)'; ctx.shadowBlur=12;
-    line(pad,88,W-pad,88); ctx.shadowBlur=0;
-
-    // Essentials
-    ctx.fillStyle='#00fdd8'; ctx.font='700 20px system-ui'; ctx.fillText('Essentials', pad, 130);
-    ctx.fillStyle='#eaf8f6'; ctx.font='16px system-ui';
-    const wes=p.zodiac||p.westernZodiac||westZodiacFrom(p.birthday);
-    const lp=p.lifePath||lifePathFrom(p.birthday);
-    const ll=Array.isArray(p.loveLanguages)?p.loveLanguages[0]:(p.loveLanguage||'-');
-    const rows=[`Name: ${p.name||'-'}`, `Connection: ${p.connectionType||'-'}`, `Love Language: ${ll}`, `Birth Date: ${p.birthday||'-'}`, `Western Zodiac: ${wes||'-'}`, `Life Path: ${lp||'-'}`];
-    let y=156; rows.forEach(t=>{ ctx.fillText(t,pad,y); y+=24; });
-
-    // divider
-    ctx.strokeStyle='rgba(0,253,216,.35)'; ctx.shadowColor='rgba(0,253,216,.55)'; ctx.shadowBlur=10; line(pad,y+6,W-pad,y+6); ctx.shadowBlur=0;
-
-    // Action box
-    const boxX=pad, boxY=y+24, boxW=W-pad*2, boxH=150;
-    ctx.strokeStyle='rgba(0,253,216,.55)'; ctx.fillStyle='rgba(0,253,216,.09)'; roundRect(ctx, boxX, boxY, boxW, boxH, 16, true, true);
-    ctx.fillStyle='#00fdd8'; ctx.font='700 20px system-ui'; ctx.fillText("Today's Action", boxX+16, boxY+32);
-    ctx.fillStyle='#eaf8f6'; ctx.font='18px system-ui'; wrap(ctx, action, boxX+16, boxY+60, boxW-32, 26);
-
-    // Tasks
-    let tx=pad, ty= boxY+boxH+36;
-    ctx.fillStyle='#00fdd8'; ctx.font='700 20px system-ui'; ctx.fillText('Top Tasks', tx, ty); ty+=10;
-    ctx.fillStyle='#eaf8f6'; ctx.font='18px system-ui';
-    tasks.forEach((t,i)=>{ ty+=28; checkbox(ctx, tx, ty-16); wrap(ctx, `${taskIcon(t)} ${t}`, tx+32, ty, 620, 26); });
-
-    // divider
-    ctx.strokeStyle='rgba(0,253,216,.35)'; ctx.shadowColor='rgba(0,253,216,.55)'; ctx.shadowBlur=10; line(pad,ty+12,W-pad,ty+12); ctx.shadowBlur=0;
-
-    // Insight footer
-    const insight = ($('#insightText')?.textContent||'').trim() || "Your week's energy: Balance between Heart and Spirit.";
-    ctx.fillStyle='#bde5df'; ctx.font='18px system-ui'; wrap(ctx, insight, pad, H-80, W-pad*2, 26);
-
-    // save
-    const a=document.createElement('a'); a.href=cvs.toDataURL('image/png',1.0);
-    a.download=`coach-plan-${String(name).replace(/\s+/g,'-').toLowerCase()}.png`; a.click();
-
-    function line(x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
-    function roundRect(ctx,x,y,w,h,r,fill,stroke){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); if(fill) ctx.fill(); if(stroke) ctx.stroke(); }
-    function wrap(ctx,text,x,y,maxW,lh){ const words=(text||'').split(' '); let line='', yy=y; for(let i=0;i<words.length;i++){ const test=line+words[i]+' '; if(ctx.measureText(test).width>maxW && i>0){ ctx.fillText(line,x,yy); line=words[i]+' '; yy+=lh; } else line=test; } ctx.fillText(line,x,yy); return yy+lh; }
-    function checkbox(ctx,x,y){ ctx.strokeStyle='#00fdd8'; ctx.lineWidth=2; ctx.strokeRect(x,y,18,18); }
-  }
-
-  // ---------- toast ----------
-  function toast(msg){
-    let n=$('#toast'); if(!n){ n=document.createElement('div'); n.id='toast';
-      n.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);padding:10px 14px;border-radius:10px;background:#0a3;box-shadow:0 8px 30px rgba(0,0,0,.25);color:#fff;z-index:9999;opacity:0;transition:.2s'; document.body.appendChild(n); }
-    n.textContent=msg; n.style.opacity='1'; setTimeout(()=> n.style.opacity='0', 1200);
-    const ann=$('#ann'); if(ann) ann.textContent=msg;
-  }
-  function showToast(message, {actionLabel, onAction} = {}){
-  let el = document.getElementById('toast-action');
-  if(!el){
-    el = document.createElement('div');
-    el.id = 'toast-action';
-    el.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);padding:10px 14px;border-radius:10px;background:#0a3;box-shadow:0 8px 30px rgba(0,0,0,.25);color:#fff;z-index:9999;display:flex;gap:10px;align-items:center;opacity:0;transition:.2s';
-    const btn = document.createElement('button'); btn.className='btn'; btn.style.cssText='background:transparent;border:1px solid rgba(255,255,255,.6);color:#fff';
-    btn.id='toast-action-btn'; el.appendChild(document.createElement('span'));
-    el.appendChild(btn);
-    document.body.appendChild(el);
-  }
-  el.firstElementChild.textContent = message;
-  const btn = document.getElementById('toast-action-btn');
-  if(actionLabel && typeof onAction === 'function'){
-    btn.textContent = actionLabel; btn.style.display='inline-block';
-    btn.onclick = () => { onAction(); el.style.opacity='0'; };
-  } else {
-    btn.style.display='none'; btn.onclick=null;
-  }
-  el.style.opacity='1'; setTimeout(()=> el.style.opacity='0', actionLabel ? 4000 : 1600);
-  const ann = document.getElementById('ann'); if(ann) ann.textContent = message;
-}
-
-
-  // ---------- init ----------
-  document.addEventListener('DOMContentLoaded', ()=>{
-    document.body.classList.add('coach-page'); // ← pridėta
-    wireNav(); wireTooltips();
-    wireNav(); wireTooltips();
-    // stars
-    makeStars($('#bgStars')); makeStars($('#actionCard .stars')); makeStars($('#insightsCard .stars'));
-
-    const p=getProfile(); fillEssentials(p);
-
-    // streak
-    updateStreakUI();
-    $('#btnDoneToday')?.addEventListener('click', markDone);
-
-    // tasks
-    ensureTasks(p); renderTasks(); bindAddTask();
-
-    // action + insight
-    renderActionAndInsight(p, true);
-    $('#newAction')?.addEventListener('click', ()=>{ renderActionAndInsight(p, true); toast('New suggestion ✨'); });
-
-    // export
-    $('#exportCoach')?.addEventListener('click', e=>{ e.preventDefault(); exportPNG(); });
-  });
-})();
-/* =========================================================
-   Soulink · Soul Coach — Growth Tasks (scoped to #tasksList)
-   Storage: soulink.coach.tasks (array of Task), soulink.coach.ui
-   ========================================================= */
-(() => {
-  const LIST = document.getElementById('tasksList');
-  if (!LIST) return;                       // jei šio bloko nėra puslapyje – nieko nedarom
-  const INPUT = document.getElementById('addTaskInput');
-  const BTN_ADD = document.getElementById('addTaskBtn');
-  const BTN_RESET = document.getElementById('resetBtn');
-  const TOGGLE_HIDE = document.getElementById('hideDone'); // neprivalomas
-
-  const STORAGE_KEY = 'soulink.coach.tasks';
-  const UI_KEY = 'soulink.coach.ui';
-
-  /** @type {{id:string,text:string,done:boolean}[]} */
-  let tasks = [];
-  /** @type {{hideDone?:boolean}} */
-  let ui = { hideDone:false };
-
-  /** paskutinis pašalintas (Undo) */
-  let lastRemoved = null; // {task, index, timerId}
-
-  // ---------- helpers ----------
-  const uid = () => Math.random().toString(36).slice(2,9);
-  const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-
-  const load = () => {
-    try { tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') || []; }
-    catch { tasks = []; }
-    try { ui = Object.assign({hideDone:false}, JSON.parse(localStorage.getItem(UI_KEY) || '{}') || {}); }
-    catch { ui = {hideDone:false}; }
-  };
-  const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-  const saveUI = () => localStorage.setItem(UI_KEY, JSON.stringify(ui));
-
-  // ---------- render ----------
-  function render(){
-    const hide = !!ui.hideDone;
-    LIST.innerHTML = '';
-    tasks.forEach(t => {
-      const li = document.createElement('li');
-      li.className = 'task' + (t.done ? ' done' : '');
-      li.dataset.id = t.id;
-      li.innerHTML = `
-        <label>
-          <input type="checkbox" ${t.done ? 'checked' : ''} aria-label="Mark ‘${esc(t.text)}’ done">
-          <span class="task-text">${esc(t.text)}</span>
-        </label>
-        <button class="remove-btn" type="button">Remove</button>
-      `;
-      if (hide && t.done) li.style.display = 'none';
-      LIST.appendChild(li);
-    });
-    // sync toggle if exists
-    if (TOGGLE_HIDE) TOGGLE_HIDE.checked = !!ui.hideDone;
-  }
-
-  // ---------- toast with Undo ----------
-  function ensureToast(){
-    let el = document.getElementById('coachToast');
-    if (!el){
-      el = document.createElement('div');
-      el.id = 'coachToast';
-      el.innerHTML = `<span class="toast-text"></span><button class="toast-action" type="button"></button>`;
-      document.body.appendChild(el);
-    }
-    return el;
-  }
-  function showToast(text, {actionLabel, onAction} = {}){
-    const t = ensureToast();
-    t.querySelector('.toast-text').textContent = text;
-    const btn = t.querySelector('.toast-action');
-    if (actionLabel && typeof onAction === 'function'){
-      btn.textContent = actionLabel;
-      btn.style.display = 'inline-block';
-      btn.onclick = () => { onAction(); hideToast(); };
-    } else {
-      btn.style.display = 'none';
-      btn.onclick = null;
-    }
-    t.classList.add('show');
-    clearTimeout(showToast._timer);
-    showToast._timer = setTimeout(hideToast, actionLabel ? 3500 : 1600);
-  }
-  function hideToast(){
-    const t = document.getElementById('coachToast');
-    if (t) t.classList.remove('show');
-  }
-
-  // ---------- actions ----------
-  function addTask(){
-    const text = (INPUT?.value || '').trim();
-    if (!text) return;
-    tasks.unshift({ id:uid(), text, done:false });
-    save(); render();
-    INPUT.value = '';
-  }
-  function toggleDone(id, checked){
-    const it = tasks.find(x => x.id === id);
-    if (!it) return;
-    it.done = !!checked;
-    save(); render();
-  }
-  function removeTask(id){
-    const index = tasks.findIndex(x => x.id === id);
-    if (index < 0) return;
-    // įsimenam prieš render
-    lastRemoved = { task: tasks[index], index };
-    tasks.splice(index, 1);
-    save(); render();
-    // vienas toast su Undo
-    showToast(`Removed: “${lastRemoved.task.text}”`, {
-      actionLabel: 'Undo',
-      onAction: () => {
-        if (!lastRemoved) return;
-        tasks.splice(lastRemoved.index, 0, lastRemoved.task);
-        save(); render();
-        lastRemoved = null;
+      if (ui.btnModeLove && ui.btnModeFriend) {
+        ui.btnModeLove.addEventListener("click", function (e) {
+          e.preventDefault();
+          setMode("love");
+          renderAll();
+        });
+        ui.btnModeFriend.addEventListener("click", function (e) {
+          e.preventDefault();
+          setMode("friend");
+          renderAll();
+        });
       }
-    });
+    } catch (err) {
+      console.error("Soul Coach: init failed", err);
+      if (ui.coachEmpty) {
+        ui.coachEmpty.hidden = false;
+        ui.coachEmpty.textContent =
+          "We could not load your Soul Coach data. Please refresh the page or try again later.";
+      }
+    }
   }
-  function resetTasks(){
-    tasks = tasks.map(t => ({ ...t, done:false }));
-    save(); render();
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
   }
-
-  // ---------- wiring (delegated) ----------
-  LIST.addEventListener('change', (e) => {
-    const cb = e.target.closest('input[type="checkbox"]');
-    if (!cb) return;
-    const row = cb.closest('.task');
-    if (!row) return;
-    toggleDone(row.dataset.id, cb.checked);
-  });
-  LIST.addEventListener('click', (e) => {
-    const btn = e.target.closest('.remove-btn');
-    if (!btn) return;
-    const row = btn.closest('.task');
-    if (!row) return;
-    removeTask(row.dataset.id);
-  });
-
-  BTN_ADD && BTN_ADD.addEventListener('click', addTask);
-  INPUT && INPUT.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); addTask(); } });
-  BTN_RESET && BTN_RESET.addEventListener('click', (e)=>{ e.preventDefault(); resetTasks(); });
-  TOGGLE_HIDE && TOGGLE_HIDE.addEventListener('change', (e)=>{ ui.hideDone = !!e.target.checked; saveUI(); render(); });
-
-  // ---------- boot ----------
-  load(); render();
 })();
-
