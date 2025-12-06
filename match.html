@@ -1,132 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Soulink – Match</title>
+  <head>
+    <meta charset="utf-8" />
+    <title>Soulink — Match Lab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Soulink Match Lab — a gentle, AI-inspired playground to explore compatibility based on love language, values and passions."
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="soulink-bg">
+    <header class="topnav" data-active="Match" aria-label="Primary navigation">
+      <div class="topnav-inner">
+        <a
+          href="index.html"
+          class="brand"
+          data-page="Home"
+          aria-label="Soulink Home"
+        >
+          <span class="brand-mark">☾</span>
+          <span class="brand-text">Soulink</span>
+        </a>
 
-  <!-- Soulink global styles -->
-  <link rel="stylesheet" href="style.css">
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-label="Toggle navigation"
+          aria-expanded="false"
+        >
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+        </button>
 
-  <!-- Global nav (aktyvumo logika) -->
-  <script src="nav.js" defer></script>
-
-  <!-- Lokalus mini CSS (grid, avatar, score pill, bullets, mobile spacing/collapse) -->
-  <style>
-    /* Grid: 3–4 desktop, 2 tablet, 1 phone */
-    .sl-list{
-      display:grid;
-      grid-template-columns:repeat(auto-fit, minmax(280px,1fr));
-      gap:16px;
-    }
-    @media (max-width:480px){ .sl-list{ grid-template-columns:1fr; } }
-
-    /* Kortelės ir tarpai */
-    .card{ position:relative; } /* score-badge kotvoms */
-    .sl-card{ display:flex; flex-direction:column; }
-    .sl-head{ display:flex; align-items:center; gap:12px; margin-bottom:8px; }
-    .sl-badges{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 12px; }
-    .sl-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; }
-
-    .sl-avatar{ width:56px; height:56px; border-radius:50%; overflow:hidden; flex:0 0 56px;
-      display:inline-flex; align-items:center; justify-content:center; font-weight:600; font-size:22px; }
-    .sl-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
-    @media (max-width:480px){ .sl-avatar{ width:48px; height:48px; font-size:20px; } }
-
-    .sl-name{ font-weight:800; line-height:1.2; }
-    .sl-sub{ opacity:.9; font-size:.95rem; }
-
-    /* Score kapsulė viršuje dešinėje */
-    .score-badge{ position:absolute; top:8px; right:8px; }
-
-    /* Juodų taškų naikinimas kortelėse */
-    .card ul, .card li{ list-style:none; padding-left:0; margin-left:0; }
-    .card li::marker{ content:""; }
-
-    /* Mobile filters collapse (ID nekeičiami) */
-    #filtersToggle{ display:none; margin:8px 0; }
-    @media (max-width:480px){
-      #filtersToggle{ display:inline-flex; }
-      #filtersPanel{ display:none; }
-      #filtersPanel.open{ display:block; }
-      /* papildomas tarpelis tarp filtrų ir kortelių */
-      #filtersPanel.open + #matchList,
-      #filtersToggle + #filtersPanel + #matchList,
-      #filtersToggle + #matchList{ margin-top:16px; }
-    }
-  </style>
-</head>
-<body class="match-page">
-
-  <!-- NAVBAR -->
-  <nav class="navbar" role="navigation" aria-label="Main">
-    <div class="nav-inner">
-      <div class="brand">Soulink</div>
-      <div class="nav-links" aria-label="Primary">
-        <ul class="nav-links">
-          <li><a href="index.html">Home</a></li>
-          <li><a href="quiz.html">Quiz</a></li>
-          <li><a href="edit-profile.html">Edit Profile</a></li>
-          <li><a href="my-soul.html">My Soul</a></li>
-          <li><a href="soul-chart.html">Soul Chart</a></li>
-          <li><a href="soul-coach.html">Soul Coach</a></li>
-          <li><a href="match.html">Match</a></li>
-          <li><a href="friends.html">Friends</a></li>
-          <li><a href="results.html">Results</a></li>
-          <li><a href="login.html">Log In</a></li>
-          <li><a href="signup.html">Sign Up</a></li>
-          <li><a href="logout.html">Log Out</a></li>
-        </ul>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" data-page="Home">Home</a>
+          <a href="quiz.html" data-page="Quiz">Quiz</a>
+          <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
+          <a href="my-soul.html" data-page="My Soul">My Soul</a>
+          <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
+          <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
+          <a href="match.html" data-page="Match" aria-current="page">Match</a>
+          <a href="friends.html" data-page="Friends">Friends</a>
+          <a href="results.html" data-page="Results">Results</a>
+          <a href="login.html" data-page="Login">Login</a>
+          <a href="signup.html" data-page="Sign Up">Sign Up</a>
+        </nav>
       </div>
-    </div>
-  </nav>
+    </header>
 
-  <main class="container">
-    <h1 class="page-title">Match Lab ✨</h1>
-    <p class="page-sub">See who resonates with your Connection, Love Language, Hobbies and Values.</p>
+    <main class="page">
+      <div class="page-inner">
+        <!-- Hero -->
+        <section class="page-hero glass-card">
+          <div class="page-hero-text">
+            <h1 class="page-title">Match Lab</h1>
+            <p class="page-subtitle">
+              AI-inspired compatibility playground — see how your love language,
+              values and passions resonate with different soul vibes.
+            </p>
+          </div>
+        </section>
 
-    <!-- Segment toggle -->
-    <div id="segmentToggle" class="segment-toggle" role="tablist" aria-label="Match segment">
-      <button type="button" class="seg-btn" data-seg="friend" aria-selected="true">🫶 Friendship</button>
-      <button type="button" class="seg-btn" data-seg="romantic" aria-selected="false">💖 Romantic</button>
-    </div>
+        <!-- No data banner -->
+        <section
+          id="matchEmpty"
+          class="info-banner info-banner-soft"
+          hidden
+          aria-live="polite"
+        >
+          Please complete your Soulink Quiz and Edit Profile to unlock Match Lab.
+        </section>
 
-    <!-- Mobile "Filters" trigger -->
-    <button id="filtersToggle" class="btn" type="button" aria-expanded="false" aria-controls="filtersPanel">Filters</button>
+        <!-- Base soul summary -->
+        <section class="match-user-section">
+          <article class="glass-card match-user-card">
+            <header class="match-user-header">
+              <h2 class="match-user-title">Your Base Soul</h2>
+              <p class="match-user-subtitle">
+                This is the energy we use as a reference for all compatibility
+                calculations.
+              </p>
+            </header>
+            <div class="match-user-body">
+              <div class="match-user-row">
+                <span class="match-label">Name</span>
+                <span id="matchUserName" class="match-value">beautiful soul</span>
+              </div>
+              <div class="match-user-row">
+                <span class="match-label">Connection Type</span>
+                <span id="matchUserConn" class="match-value">not set yet</span>
+              </div>
+              <div class="match-user-row">
+                <span class="match-label">Primary Love Language</span>
+                <span id="matchUserLove" class="match-value">not defined yet</span>
+              </div>
+            </div>
+          </article>
+        </section>
 
-    <!-- Filters (ID paliekami) -->
-    <section class="card" id="filtersPanel" aria-label="Filters" style="margin-bottom:16px">
-      <div class="row" style="gap:8px; align-items:center;">
-        <input id="f-search" type="search" placeholder="Search name, notes, socials…" style="flex:1;min-width:0">
-        <label>Connection</label>
-        <select id="f-ct">
-          <option value="Any">Any</option>
-          <option>Friendship</option>
-          <option>Romantic</option>
-          <option>Both</option>
-        </select>
-        <label>Min score <small id="minLabel">0%</small></label>
-        <input id="f-min" type="range" min="0" max="100" step="1" value="0" style="width:160px">
-        <label style="margin-left:8px;">LL weight <small id="llw-label">1.0×</small></label>
-        <input id="f-llw" type="range" min="0.2" max="2.0" step="0.1" value="1.0" style="width:160px">
-        <button id="filtersReset" type="button" class="btn">Reset</button>
+        <!-- Matches grid -->
+        <section class="match-grid-section">
+          <h2 class="section-title">Potential Matches</h2>
+          <p class="section-subtitle">
+            These are example energies generated for you to feel how different
+            combinations of values and love languages could resonate.
+          </p>
+
+          <div id="matchList" class="match-grid">
+            <!-- match cards will be rendered here by match.js -->
+          </div>
+        </section>
       </div>
-    </section>
+    </main>
 
-    <!-- Kortelių grid -->
-    <section id="matchList" class="sl-list" aria-live="polite"></section>
-
-    <div class="page-cta" style="display:flex;justify-content:space-between;margin-top:12px;">
-      <a class="btn ghost" href="soul-coach.html">← Back: Soul Coach</a>
-      <a class="btn" href="friends.html" style="background:var(--accent);color:#003136">Next → Friends</a>
-    </div>
-
-    <footer class="footer-note">
-      © 2025 Soulink.global | Created with love by Soulink Team
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <p>Soulink.global — conscious matching for hearts &amp; souls.</p>
+        <p>Created with love and ChatGPT as a co-creator.</p>
+      </div>
     </footer>
-  </main>
 
-  <!-- Puslapio logika -->
-  <script src="match.js" defer></script>
-</body>
+    <!-- Shared scripts -->
+    <script src="auth.js"></script>
+    <script src="data-helpers.js" defer></script>
+    <script src="nav.js" defer></script>
+    <script src="match.js" defer></script>
+  </body>
 </html>
