@@ -1,701 +1,281 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Soulink · Edit Profile</title>
-<style>
-  :root{
-    --bg:#003c43; --fg:#eaf8f6; --muted:#bde5df; --accent:#00fdd8;
-    --card:#014a52; --border:rgba(0,253,216,.35);
-    --shadow:0 0 0 1px var(--border), 0 10px 30px rgba(0,253,216,.06), 0 0 40px rgba(0,253,216,.04) inset;
-    --maxw:1100px;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Arial,sans-serif}
-  a{color:var(--accent);text-decoration:none}
-  img{max-width:100%;height:auto}
-  .container{max-width:var(--maxw);margin:0 auto;padding:24px}
+  <head>
+    <meta charset="utf-8" />
+    <title>Soulink — Edit Profile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Soulink Edit Profile — fine-tune your soul data that powers My Soul, Soul Chart, Match and Friends."
+    />
 
-  /* NAVBAR (same vibe) */
-  .navbar{position:sticky;top:0;z-index:50;background:rgba(0,60,67,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
-  .navbar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transform:scaleX(.2);transition:opacity .25s,transform .25s}
-  .navbar.scrolled::after{opacity:.9;transform:scaleX(1)}
-  .nav-inner{display:flex;justify-content:space-between;align-items:center;padding:10px 16px}
-  .brand{font-weight:800;color:var(--accent)}
-  .nav-links{display:flex;gap:14px;flex-wrap:wrap}
-  .nav-links a{padding:8px 10px;border-radius:10px;border:1px solid transparent;transition:box-shadow .15s,border-color .15s}
-  .nav-links a:hover{border-color:var(--border);box-shadow:0 0 0 1px var(--border),0 0 16px rgba(0,253,216,.18)}
-  .nav-links a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .hamburger{display:none}
-  .hamburger button{appearance:none;background:transparent;border:1px solid var(--border);color:var(--fg);padding:8px 10px;border-radius:10px;cursor:pointer}
-  @media(max-width:800px){.nav-links{display:none}.hamburger{display:block}}
+    <link rel="stylesheet" href="style.css" />
 
-  /* DRAWER */
-  .drawer{position:fixed;inset:0;display:none;z-index:100}
-  .drawer.open{display:block}
-  .drawer .backdrop{position:absolute;inset:0;background:rgba(0,60,67,.96)}
-  .drawer .panel{position:absolute;top:0;right:0;width:min(82vw,360px);height:100%;background:#003c43;border-left:1px solid var(--border);padding:18px;transform:translateX(100%);transition:transform .25s}
-  .drawer.open .panel{transform:translateX(0)}
-  @media (prefers-reduced-motion: reduce){.drawer .panel{transition:none}}
-  body.no-scroll{overflow:hidden}
-  .drawer .panel a{display:block;padding:14px 12px;border-radius:12px;min-height:44px}
-  .drawer .panel a:hover{background:rgba(0,253,216,.08);box-shadow:0 0 0 1px var(--border),0 0 14px rgba(0,253,216,.18)}
+    <script src="auth.js" defer></script>
+    <script src="data-helpers.js" defer></script>
+    <script src="nav.js" defer></script>
+    <script src="edit-profile.js" defer></script>
+  </head>
 
-  /* LAYOUT */
-  .grid{display:grid;grid-template-columns:1fr;gap:18px}
-  @media(min-width:980px){.grid{grid-template-columns:1.2fr .8fr}}
+  <body class="soulink-bg">
+    <!-- NAVIGATION -->
+    <header class="topnav" data-active="Edit Profile" aria-label="Primary navigation">
+      <div class="topnav-inner">
+        <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">
+          <span class="brand-mark">☾</span>
+          <span class="brand-text">Soulink</span>
+        </a>
 
-  .card{background:linear-gradient(180deg,rgba(1,74,82,.74),rgba(1,74,82,.56));border:1px solid var(--border);box-shadow:var(--shadow);border-radius:18px;padding:18px}
-  .card h2{margin:0 0 8px}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  @media(max-width:760px){.row{grid-template-columns:1fr}}
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-label="Toggle navigation"
+          aria-expanded="false"
+        >
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+        </button>
 
-  label{display:block;font-weight:600;margin:6px 0 6px}
-  input[type="text"], input[type="file"], textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:rgba(0,253,216,.06);color:var(--fg)}
-  textarea{min-height:110px;resize:vertical}
-  .hint{color:var(--muted);font-size:.9rem;margin-top:6px}
-
-  .chips{display:flex;flex-wrap:wrap;gap:10px}
-  .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:rgba(0,253,216,.06);min-height:44px;cursor:pointer}
-  .chip[aria-pressed="true"]{background:rgba(0,253,216,.16);box-shadow:inset 0 0 22px rgba(0,253,216,.12)}
-  .chip.gem{background:rgba(0,253,216,.1);box-shadow:inset 0 0 18px rgba(0,253,216,.08)}
-  .ico{width:1.1rem;display:inline-block;text-align:center}
-
-  .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
-  .btn{appearance:none;border:none;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700;min-height:44px}
-  .btn.primary{background:var(--accent);color:#003136}
-  .btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--border)}
-  .btn.outline{background:transparent;color:var(--fg);border:1px solid var(--border)}
-  .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  @media(max-width:760px){.actions{flex-direction:column}.actions .btn{width:100%}}
-
-  /* PHOTO grid */
-  .photos{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-  @media(max-width:760px){.photos{grid-template-columns:1fr}}
-  .ph{position:relative;border:1px dashed var(--border);border-radius:14px;padding:10px;display:grid;gap:8px}
-  .ph.main{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset, 0 0 20px rgba(0,253,216,.25)}
-  .thumb{width:100%;aspect-ratio:1/1;border-radius:12px;object-fit:cover;background:rgba(0,253,216,.06);border:1px solid var(--border)}
-  .star{position:absolute;top:8px;right:8px;appearance:none;border:1px solid var(--border);background:rgba(0,253,216,.08);color:var(--fg);border-radius:999px;padding:4px 8px;cursor:pointer;font-size:.9rem}
-  .star:hover{box-shadow:0 0 0 1px var(--border),0 0 14px rgba(0,253,216,.18)}
-
-  /* PREVIEW */
-  .preview .avatar{position:relative;width:96px;height:96px}
-  .preview .avatar img{width:96px;height:96px;border-radius:999px;object-fit:cover;border:1px solid var(--border);box-shadow:0 0 0 3px rgba(0,253,216,.08)}
-  .preview .avatar::before{content:"";position:absolute;inset:-8px;border-radius:999px;border:1px solid rgba(0,253,216,.25);box-shadow:0 0 36px rgba(0,253,216,.24),0 0 0 2px rgba(0,253,216,.18);animation:pulse 2.6s ease-in-out infinite}
-  @keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
-  @media (prefers-reduced-motion: reduce){.preview .avatar::before{animation:none}}
-  .tag{font-size:.85rem;padding:6px 10px;border-radius:999px;background:rgba(0,253,216,.08);border:1px solid var(--border);display:inline-block;margin-right:6px;margin-top:6px}
-  .list-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-  .empty{color:var(--muted)}
-  .about-quote{margin-top:12px;background:rgba(0,253,216,.05);border:1px solid var(--border);border-radius:12px;padding:12px 14px;position:relative}
-  .about-quote::before{content:"❝";position:absolute;left:10px;top:6px;opacity:.9}
-  .about-quote::after{content:"❞";position:absolute;right:10px;bottom:6px;opacity:.9}
-
-  footer{margin:40px 0 16px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:.95rem}
-
-  /* Mobile tweak: preview under form full width */
-  @media(max-width:768px){
-    .grid{grid-template-columns:1fr}
-    .preview{margin-top:6px}
-  }
-</style>
-</head>
-<body>
-  <!-- NAVBAR -->
-  <nav class="navbar" role="navigation" aria-label="Main">
-    <div class="nav-inner">
-      <div class="brand">Soulink</div>
-      <div class="nav-links" aria-label="Primary">
-       <ul class="nav-links">
-       <li><a href="index.html">Home</a></li>
-       <li><a href="quiz.html">Quiz</a></li>
-       <li><a href="edit-profile.html">Edit Profile</a></li>
-       <li><a href="my-soul.html">My Soul</a></li>
-       <li><a href="soul-chart.html">Soul Chart</a></li>
-       <li><a href="soul-coach.html">Soul Coach</a></li>
-       <li><a href="match.html">Match</a></li>
-       <li><a href="friends.html">Friends</a></li>
-       <li><a href="results.html">Results</a></li>
-       <li><a href="login.html">Log In</a></li>
-       <li><a href="signup.html">Sign Up</a></li>
-       <li><a href="logout.html">Log Out</a></li>
-     </ul>
-
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" data-page="Home">Home</a>
+          <a href="quiz.html" data-page="Quiz">Quiz</a>
+          <a href="edit-profile.html" data-page="Edit Profile" aria-current="page">Edit Profile</a>
+          <a href="my-soul.html" data-page="My Soul">My Soul</a>
+          <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
+          <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
+          <a href="match.html" data-page="Match">Match</a>
+          <a href="friends.html" data-page="Friends">Friends</a>
+          <a href="results.html" data-page="Results">Results</a>
+          <a href="login.html" data-page="Login">Login</a>
+          <a href="signup.html" data-page="Sign Up">Sign Up</a>
+        </nav>
       </div>
-      <div class="hamburger"><button id="openDrawer" aria-label="Open menu">☰ Menu</button></div>
-    </div>
-  </nav>
+    </header>
 
-  <!-- MOBILE DRAWER -->
-  <div class="drawer" id="drawer" aria-hidden="true">
-    <div class="backdrop" id="drawerBackdrop" tabindex="-1" aria-label="Close"></div>
-    <aside class="panel" role="dialog" aria-modal="true" aria-label="Navigation">
-      <a href="index.html">Home</a>
-      <a href="quiz.html">Quiz</a>
-      <a href="edit-profile.html" aria-current="page">Edit Profile</a>
-      <a href="my-soul.html">My Soul</a>
-      <a href="soul-chart.html">Soul Chart</a>
-      <a href="soul-coach.html">Soul Coach</a>
-      <a href="match.html">Match</a>
-      <a href="friends.html">Friends</a>
-      <a href="results.html">Results</a>
-      <a href="login.html">Log In</a>
-      <a href="signup.html">Sign Up</a>
-      <a href="#" id="logoutLinkMobile">Log Out</a>
-      <button class="btn ghost" id="closeDrawer" style="margin-top:8px">Close</button>
-    </aside>
-  </div>
+    <!-- MAIN -->
+    <main class="page">
+      <div class="page-inner">
+        <!-- HERO -->
+        <section class="page-hero glass-card">
+          <div class="page-hero-text">
+            <h1 class="page-title">Edit Profile</h1>
+            <p class="page-subtitle">
+              Fine-tune your soul data that powers My Soul, Soul Chart, Match and Friends.
+            </p>
+          </div>
+        </section>
 
-  <div class="container">
-    <div class="grid">
-      <!-- LEFT: EDIT FORM -->
-      <section class="card">
-        <h2>🛠️ Edit Profile</h2>
-        <div class="row" style="margin-top:10px">
-          <div>
-            <label for="name">Name</label>
-            <input id="name" type="text" placeholder="Your name" />
-          </div>
-          <div>
-            <label for="country">Country</label>
-            <input id="country" type="text" placeholder="Country" />
-          </div>
-        </div>
+        <!-- GRID LAYOUT -->
+        <div class="page-grid page-grid-2col">
+          <!-- LEFT COLUMN — FORM -->
+          <section class="glass-card card">
+            <h2>🛠️ Edit Profile</h2>
 
-        <div class="row" style="margin-top:10px">
-          <div>
-            <label for="birthday">Birth date</label>
-            <input id="birthday" type="text" inputmode="numeric" pattern="[0-9\-]*" placeholder="1972-11-22" aria-describedby="birthdayHint" />
-            <div id="birthdayHint" class="hint">Example: 1993-02-24 (or type 19930224)</div>
-          </div>
-          <div>
-            <label for="connection">Connection Type</label>
-            <div id="connectionChips" class="chips"></div>
-          </div>
-        </div>
-
-        <div style="margin-top:10px">
-          <label>Love Languages <small class="hint">Choose one or more. The first becomes your Primary.</small></label>
-          <div id="loveChips" class="chips"></div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <div>
-            <label>Your Gender Identity</label>
-            <div id="genderIdChips" class="chips"></div>
-            <div id="genderSelfMount"></div>
-          </div>
-          <div>
-            <label>Who you want to connect with</label>
-            <div id="connectWithChips" class="chips"></div>
-            <div id="connectWithCustomMount"></div>
-          </div>
-        </div>
-
-        <div style="margin-top:10px">
-          <label>Orientation</label>
-          <div id="orientationChips" class="chips"></div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <div>
-            <label>Hobbies</label>
-            <div id="hobbyChips" class="chips"></div>
-            <input id="hobbyInput" type="text" placeholder="Add custom hobby… (Enter)" style="margin-top:8px" />
-          </div>
-          <div>
-            <label>Values</label>
-            <div id="valueChips" class="chips"></div>
-            <input id="valueInput" type="text" placeholder="Add custom value… (Enter)" style="margin-top:8px" />
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <div>
-            <label for="boundaries">Boundaries</label>
-            <textarea id="boundaries" placeholder="What behaviors are not aligned with your soul? 🌑"></textarea>
-          </div>
-          <div>
-            <label for="aboutMe">About Me</label>
-            <textarea id="aboutMe" placeholder="Tell us about your soul journey… ✨"></textarea>
-          </div>
-        </div>
-
-        <div style="margin-top:10px">
-          <label>Profile Photos</label>
-          <div class="photos">
-            <div class="ph" id="ph1">
-              <button class="star" id="main1" aria-label="Set as Main">⭐</button>
-              <img id="thumb1" class="thumb" alt="Photo 1 preview">
-              <input id="file1" type="file" accept="image/*">
-              <div class="actions">
-                <button class="btn ghost" id="remove1">Remove</button>
+            <!-- Name + Country -->
+            <div class="row" style="margin-top: 10px;">
+              <div>
+                <label for="name">Name</label>
+                <input id="name" type="text" placeholder="Your name" />
+              </div>
+              <div>
+                <label for="country">Country</label>
+                <input id="country" type="text" placeholder="Country" />
               </div>
             </div>
-            <div class="ph" id="ph2">
-              <button class="star" id="main2" aria-label="Set as Main">⭐</button>
-              <img id="thumb2" class="thumb" alt="Photo 2 preview">
-              <input id="file2" type="file" accept="image/*">
-              <div class="actions">
-                <button class="btn ghost" id="remove2">Remove</button>
+
+            <!-- Birthday + Connection Type -->
+            <div class="row" style="margin-top: 10px;">
+              <div>
+                <label for="birthday">Birth date</label>
+                <input
+                  id="birthday"
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9\-\.]*"
+                  placeholder="1972-11-22"
+                  aria-describedby="birthdayHint"
+                />
+                <div id="birthdayHint" class="hint">Example: 1993-02-24 (or type 19930224)</div>
+              </div>
+
+              <div>
+                <label>Connection Type</label>
+                <div id="connectionChips" class="chips"></div>
               </div>
             </div>
-            <div class="ph" id="ph3">
-              <button class="star" id="main3" aria-label="Set as Main">⭐</button>
-              <img id="thumb3" class="thumb" alt="Photo 3 preview">
-              <input id="file3" type="file" accept="image/*">
-              <div class="actions">
-                <button class="btn ghost" id="remove3">Remove</button>
+
+            <!-- Love Languages -->
+            <div style="margin-top: 10px;">
+              <label>
+                Love Languages
+                <small class="hint">Choose one or more. The first becomes your Primary.</small>
+              </label>
+              <div id="loveChips" class="chips"></div>
+            </div>
+
+            <!-- Gender + Seeking -->
+            <div class="row" style="margin-top: 10px;">
+              <div>
+                <label>Your Gender Identity</label>
+                <div id="genderIdChips" class="chips"></div>
+                <div id="genderSelfMount"></div>
+              </div>
+
+              <div>
+                <label>Who you want to connect with</label>
+                <div id="connectWithChips" class="chips"></div>
+                <div id="connectWithCustomMount"></div>
               </div>
             </div>
-          </div>
-          <div class="hint" style="margin-top:6px">JPG/PNG recommended. We store previews locally in your browser.</div>
+
+            <!-- Orientation -->
+            <div style="margin-top: 10px;">
+              <label>Orientation</label>
+              <div id="orientationChips" class="chips"></div>
+            </div>
+
+            <!-- Hobbies + Values -->
+            <div class="row" style="margin-top: 10px;">
+              <div>
+                <label>Hobbies</label>
+                <div id="hobbyChips" class="chips"></div>
+                <input
+                  id="hobbyInput"
+                  type="text"
+                  placeholder="Add custom hobby… (Enter)"
+                  style="margin-top: 8px;"
+                />
+              </div>
+
+              <div>
+                <label>Values</label>
+                <div id="valueChips" class="chips"></div>
+                <input
+                  id="valueInput"
+                  type="text"
+                  placeholder="Add custom value… (Enter)"
+                  style="margin-top: 8px;"
+                />
+              </div>
+            </div>
+
+            <!-- Boundaries + About -->
+            <div class="row" style="margin-top: 10px;">
+              <div>
+                <label for="boundaries">Boundaries</label>
+                <textarea
+                  id="boundaries"
+                  placeholder="What behaviors are not aligned with your soul? 🌑"
+                ></textarea>
+              </div>
+
+              <div>
+                <label for="aboutMe">About Me</label>
+                <textarea id="aboutMe" placeholder="Tell us about your soul journey… ✨"></textarea>
+              </div>
+            </div>
+
+            <!-- Photos -->
+            <div style="margin-top: 10px;">
+              <label>Profile Photos</label>
+
+              <div class="photos">
+                <div class="ph" id="ph1">
+                  <button class="star" id="main1" type="button" aria-label="Set as Main">⭐</button>
+                  <img id="thumb1" class="thumb" alt="Photo 1 preview" />
+                  <input id="file1" type="file" accept="image/*" />
+                  <div class="actions">
+                    <button class="btn ghost" id="remove1">Remove</button>
+                  </div>
+                </div>
+
+                <div class="ph" id="ph2">
+                  <button class="star" id="main2" type="button" aria-label="Set as Main">⭐</button>
+                  <img id="thumb2" class="thumb" alt="Photo 2 preview" />
+                  <input id="file2" type="file" accept="image/*" />
+                  <div class="actions">
+                    <button class="btn ghost" id="remove2">Remove</button>
+                  </div>
+                </div>
+
+                <div class="ph" id="ph3">
+                  <button class="star" id="main3" type="button" aria-label="Set as Main">⭐</button>
+                  <img id="thumb3" class="thumb" alt="Photo 3 preview" />
+                  <input id="file3" type="file" accept="image/*" />
+                  <div class="actions">
+                    <button class="btn ghost" id="remove3">Remove</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="hint" style="margin-top: 6px;">
+                JPG/PNG recommended. We store previews locally in your browser.
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions" style="margin-top: 16px;">
+              <button id="backQuiz" class="btn ghost">Back ← Quiz</button>
+              <div style="flex: 1;"></div>
+              <button id="resetForm" class="btn outline">Reset Form</button>
+              <button id="saveBtn" class="btn primary">Save My Soul 💚</button>
+              <button id="nextSoul" class="btn outline">Next → My Soul</button>
+            </div>
+          </section>
+
+          <!-- RIGHT COLUMN — LIVE PREVIEW -->
+          <aside class="glass-card card preview" aria-live="polite">
+            <h2>✨ Live Preview</h2>
+
+            <div style="display: flex; align-items: center; gap: 14px; margin-top: 10px;">
+              <div class="avatar">
+                <img id="prevAvatar" alt="Avatar" />
+              </div>
+
+              <div>
+                <div id="prevName" style="font-weight: 800; font-size: 1.2rem;">Your Name</div>
+                <div id="prevAge" class="hint">Age: –</div>
+              </div>
+            </div>
+
+            <div style="margin-top: 10px;">
+              <span id="tagZodiac" class="tag" hidden></span>
+              <span id="tagChinese" class="tag" hidden></span>
+              <span id="tagLife" class="tag" hidden></span>
+              <span id="tagConn" class="tag" hidden></span>
+            </div>
+
+            <div style="margin-top: 12px;">
+              <div class="hint">Love languages</div>
+              <div id="prevLove" class="list-chips"></div>
+            </div>
+
+            <div style="margin-top: 12px;">
+              <div class="hint">Values</div>
+              <div id="prevValues" class="list-chips"></div>
+            </div>
+
+            <div style="margin-top: 12px;">
+              <div class="hint">Hobbies</div>
+              <div id="prevHobbies" class="list-chips"></div>
+            </div>
+
+            <div style="margin-top: 12px;">
+              <div class="hint">About Me</div>
+              <div id="prevAbout" class="about-quote empty">—</div>
+            </div>
+          </aside>
         </div>
+      </div>
+    </main>
 
-        <div class="actions">
-          <button id="backQuiz" class="btn ghost">Back ← Quiz</button>
-          <div style="flex:1"></div>
-          <button id="resetForm" class="btn outline">Reset Form</button>
-          <button id="saveBtn" class="btn primary">Save My Soul 💚</button>
-          <button id="nextSoul" class="btn outline">Next → My Soul</button>
-        </div>
-      </section>
-
-      <!-- RIGHT: LIVE PREVIEW -->
-      <aside class="card preview" aria-live="polite">
-        <h2>✨ Live Preview</h2>
-        <div style="display:flex;align-items:center;gap:14px;margin-top:10px">
-          <div class="avatar"><img id="prevAvatar" alt="Avatar"></div>
-          <div>
-            <div id="prevName" style="font-weight:800;font-size:1.2rem">Your Name</div>
-            <div id="prevAge" class="hint">Age: –</div>
-          </div>
-        </div>
-        <div style="margin-top:10px">
-          <span id="tagZodiac" class="tag" hidden></span>
-          <span id="tagChinese" class="tag" hidden></span>
-          <span id="tagLife" class="tag" hidden></span>
-          <span id="tagConn" class="tag" hidden></span>
-        </div>
-        <div style="margin-top:12px">
-          <div class="hint">Love languages</div>
-          <div id="prevLove" class="list-chips"></div>
-        </div>
-        <div style="margin-top:12px">
-          <div class="hint">Values</div>
-          <div id="prevValues" class="list-chips"></div>
-        </div>
-        <div style="margin-top:12px">
-          <div class="hint">Hobbies</div>
-          <div id="prevHobbies" class="list-chips"></div>
-        </div>
-        <div style="margin-top:12px">
-          <div class="hint">About Me</div>
-          <div id="prevAbout" class="about-quote empty">—</div>
-        </div>
-      </aside>
-    </div>
-
-    <footer>© 2025 Soulink.global | Created with love by Soulink Team</footer>
-  </div>
-
-<script>
-(()=>{
-
-  /* ===== DOM ===== */
-  const $=s=>document.querySelector(s);
-  const ui={
-    // basics
-    name:$('#name'), country:$('#country'), birthday:$('#birthday'), birthdayHint:$('#birthdayHint'),
-    connectionChips:$('#connectionChips'),
-
-    // love
-    loveChips:$('#loveChips'),
-
-    // gender/connect/orientation
-    genderIdChips:$('#genderIdChips'), genderSelfMount:$('#genderSelfMount'),
-    connectWithChips:$('#connectWithChips'), connectWithCustomMount:$('#connectWithCustomMount'),
-    orientationChips:$('#orientationChips'),
-
-    // hv
-    hobbyChips:$('#hobbyChips'), valueChips:$('#valueChips'),
-    hobbyInput:$('#hobbyInput'), valueInput:$('#valueInput'),
-
-    // long texts
-    boundaries:$('#boundaries'), aboutMe:$('#aboutMe'),
-
-    // photos
-    file1:$('#file1'), file2:$('#file2'), file3:$('#file3'),
-    thumb1:$('#thumb1'), thumb2:$('#thumb2'), thumb3:$('#thumb3'),
-    remove1:$('#remove1'), remove2:$('#remove2'), remove3:$('#remove3'),
-    ph1:$('#ph1'), ph2:$('#ph2'), ph3:$('#ph3'),
-    main1:$('#main1'), main2:$('#main2'), main3:$('#main3'),
-
-    // actions
-    backQuiz:$('#backQuiz'), saveBtn:$('#saveBtn'), nextSoul:$('#nextSoul'), resetForm:$('#resetForm'),
-
-    // preview
-    prevAvatar:$('#prevAvatar'), prevName:$('#prevName'), prevAge:$('#prevAge'),
-    tagZodiac:$('#tagZodiac'), tagChinese:$('#tagChinese'), tagLife:$('#tagLife'), tagConn:$('#tagConn'),
-    prevLove:$('#prevLove'), prevValues:$('#prevValues'), prevHobbies:$('#prevHobbies'), prevAbout:$('#prevAbout'),
-
-    // nav
-    openDrawer:$('#openDrawer'), closeDrawer:$('#closeDrawer'),
-    drawer:$('#drawer'), drawerBackdrop:$('#drawerBackdrop'),
-    logout:$('#logoutLink'), logoutM:$('#logoutLinkMobile'),
-    navbar:document.querySelector('.navbar'),
-
-    // announcer
-    announce:(()=>{const d=document.createElement('div');d.setAttribute('aria-live','polite');d.style.height='1px';d.style.overflow='hidden';document.body.appendChild(d);return d;})()
-  };
-
-  /* ===== Data helpers ===== */
-  const getData=()=>{ try{const raw=localStorage.getItem('soulQuiz');return raw?JSON.parse(raw):{};}catch{return{}} };
-  const setData=(patch)=>{ const cur=getData(); const merged={...cur,...patch}; localStorage.setItem('soulQuiz',JSON.stringify(merged)); return merged; };
-  const list=v=>Array.isArray(v)?v:(typeof v==='string'?v.split(/[\n,]/).map(s=>s.trim()).filter(Boolean):[]);
-  const setKey=(key,val)=>setData({[key]:val});
-
-  /* ===== Static options ===== */
-  const LOVE_LIST=['Words of Affirmation','Acts of Service','Receiving Gifts','Quality Time','Physical Touch'];
-  const ORIENTATIONS=['Heterosexual','Gay','Lesbian','Bisexual','Pansexual','Asexual','Queer','Questioning','Prefer not to say'];
-  const CONNECT_OPTS=['Women','Men','Non-binary','Open to all','Custom preference'];
-  const GENDER_OPTS=['Woman','Man','Non-binary','Prefer not to say','Self-describe'];
-  const DEFAULT_HOBBIES=['Travel','Yoga','Music','Reading','Gym','Running','Dancing','Art','Photography','Cooking','Baking','Hiking','Gardening','Meditation','Movies','Gaming'];
-  const DEFAULT_VALUES=['Honesty','Kindness','Loyalty','Freedom','Creativity','Growth','Family','Adventure','Compassion','Integrity','Humor','Respect','Balance','Spirituality','Curiosity'];
-
-  /* ===== Small utils ===== */
-  const hobbyIcon=(label)=>{ const s=(label||'').toLowerCase(); const map=[['travel','✈️'],['yoga','🧘'],['music','🎵'],['reading','📚'],['books','📚'],['gym','🏋️'],['running','🏃'],['dance','💃'],['art','🎨'],['photo','📷'],['cook','🍳'],['bake','🧁'],['hiking','🥾'],['garden','🌿'],['meditation','🕯️'],['movie','🎬'],['game','🎮']]; for(const [k,i] of map){ if(s.includes(k)) return i; } return '✨'; };
-  const chip=(lbl)=>{ const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=lbl; b.setAttribute('aria-pressed','false'); return b; };
-  function ageFrom(iso){ if(!iso) return null; const d=new Date(iso); if(isNaN(d)) return null; const diff=Date.now()-d.getTime(); const a=new Date(diff); return Math.abs(a.getUTCFullYear()-1970); }
-  function zodiac(iso){ if(!iso) return null; const d=new Date(iso); if(isNaN(d)) return null; const m=d.getMonth()+1,day=d.getDate(); const inR=(m,d,m1,d1,m2,d2)=> (m===m1&&d>=d1)||(m===m2&&d<=d2)||(m>m1&&m<m2)||(m1>m2&&(m>=m1||m<=m2)); if(inR(m,day,3,21,4,19))return'Aries'; if(inR(m,day,4,20,5,20))return'Taurus'; if(inR(m,day,5,21,6,20))return'Gemini'; if(inR(m,day,6,21,7,22))return'Cancer'; if(inR(m,day,7,23,8,22))return'Leo'; if(inR(m,day,8,23,9,22))return'Virgo'; if(inR(m,day,9,23,10,22))return'Libra'; if(inR(m,day,10,23,11,21))return'Scorpio'; if(inR(m,day,11,22,12,21))return'Sagittarius'; if(inR(m,day,12,22,1,19))return'Capricorn'; if(inR(m,day,1,20,2,18))return'Aquarius'; if(inR(m,day,2,19,3,20))return'Pisces'; return null; }
-  function chinese(y){ if(!y) return null; const animals=['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig']; const i=(y-1900)%12; return animals[(i+12)%12]; }
-  function life(iso){ if(!iso) return null; const digits=String(iso).replace(/\D/g,''); if(!digits) return null; const master=n=>[11,22,33].includes(n); const sum=n=>String(n).split('').reduce((a,b)=>a+ +b,0); let n=digits.split('').reduce((a,b)=>a+ +b,0); while(n>9&&!master(n)) n=sum(n); return n; }
-
-  /* ===== Birthday input helpers ===== */
-  function formatBirthOnInput(){
-    const el=ui.birthday; if(!el) return;
-    const v=el.value.replace(/[^\d-]/g,''); const digits=v.replace(/\D/g,'');
-    if(digits.length>=5 && !v.includes('-')){
-      const y=digits.slice(0,4), m=digits.slice(4,6), d=digits.slice(6,8);
-      el.value=[y,m,d].filter(Boolean).join('-');
-    }
-  }
-  function validateBirthday(){
-    const raw=ui.birthday.value.trim(); const digits=raw.replace(/\D/g,'');
-    if(digits.length!==8) return;
-    const y=+digits.slice(0,4), m=+digits.slice(4,6), d=+digits.slice(6,8);
-    const ok = y>=1900 && y<=2035 && m>=1 && m<=12 && d>=1 && d<=31;
-    if(ok) setKey('birthday', `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
-    paintPreview();
-  }
-
-  /* ===== Renderers ===== */
-  function renderConnection(type){
-    const opts=['friendship','romantic','both'];
-    ui.connectionChips.innerHTML='';
-    const cur=type||'friendship';
-    opts.forEach(lbl=>{
-      const el=chip(lbl);
-      if(cur===lbl){ el.setAttribute('aria-pressed','true'); el.classList.add('selected'); }
-      el.addEventListener('click', ()=>{ setKey('connectionType',lbl); renderConnection(lbl); paintPreview(); });
-      ui.connectionChips.appendChild(el);
-    });
-  }
-
-  function renderLove(arr){
-    const selected = Array.isArray(arr)? [...arr]: list(arr);
-    ui.loveChips.innerHTML='';
-    LOVE_LIST.forEach(lbl=>{
-      const el=chip(lbl);
-      const on = selected.map(v=>v.toLowerCase()).includes(lbl.toLowerCase());
-      if(on){ el.setAttribute('aria-pressed','true'); el.classList.add('selected'); if(selected[0]&&selected[0].toLowerCase()===lbl.toLowerCase()) el.innerHTML=`<span class="ico">★</span> ${lbl} <small class="hint">Primary</small>`; }
-      el.addEventListener('click', ()=>{
-        let d=list(getData().loveLanguages||getData().loveLanguage);
-        const idx=d.map(v=>v.toLowerCase()).indexOf(lbl.toLowerCase());
-        if(idx>-1){ d.splice(idx,1); }
-        else{ if(d.length===0) d=[lbl]; else d.push(lbl); }
-        setKey('loveLanguages', d);
-        renderLove(d); paintPreview();
-      });
-      ui.loveChips.appendChild(el);
-    });
-  }
-
-  function renderGender(d){
-    ui.genderIdChips.innerHTML='';
-    const cur=d.genderIdentity||'';
-    ['Woman','Man','Non-binary','Prefer not to say','Self-describe'].forEach(lbl=>{
-      const el=chip(lbl); if(cur===lbl){ el.classList.add('selected'); el.setAttribute('aria-pressed','true'); }
-      el.addEventListener('click', ()=>{
-        const patch = { genderIdentity: lbl==='Self-describe'? null : lbl };
-        if(lbl!=='Self-describe') patch.genderSelf=null;
-        setData(patch); renderGender(getData()); paintPreview();
-      });
-      ui.genderIdChips.appendChild(el);
-    });
-    ui.genderSelfMount.innerHTML='';
-    if(cur==='Self-describe' || d.genderSelf){
-      const wrap=document.createElement('div');
-      wrap.innerHTML=`<label>Self-describe</label><input id="genderSelf" type="text" placeholder="Type here…">`;
-      ui.genderSelfMount.appendChild(wrap);
-      const input=wrap.querySelector('#genderSelf');
-      input.value=d.genderSelf||'';
-      input.addEventListener('input',()=>{ setKey('genderSelf', input.value.trim()); paintPreview(); });
-    }
-  }
-
-  function renderConnectWith(d){
-    ui.connectWithChips.innerHTML='';
-    const cur=d.connectWith||'Open to all';
-    ['Women','Men','Non-binary','Open to all','Custom preference'].forEach(lbl=>{
-      const el=chip(lbl); if(cur===lbl){ el.classList.add('selected'); el.setAttribute('aria-pressed','true'); }
-      el.addEventListener('click', ()=>{
-        const patch = { connectWith: lbl };
-        if(lbl!=='Custom preference') patch.connectWithCustom=null;
-        setData(patch); renderConnectWith(getData()); paintPreview();
-      });
-      ui.connectWithChips.appendChild(el);
-    });
-    ui.connectWithCustomMount.innerHTML='';
-    if(cur==='Custom preference'){
-      const wrap=document.createElement('div');
-      wrap.innerHTML=`<label>Custom preference</label><input id="connectWithCustom" type="text" placeholder="e.g., Women & Non-binary">`;
-      ui.connectWithCustomMount.appendChild(wrap);
-      const input=wrap.querySelector('#connectWithCustom');
-      input.value=d.connectWithCustom||'';
-      input.addEventListener('input',()=>{ setKey('connectWithCustom', input.value.trim()); paintPreview(); });
-    }
-  }
-
-  function renderOrientation(d){
-    ui.orientationChips.innerHTML='';
-    ['Heterosexual','Gay','Lesbian','Bisexual','Pansexual','Asexual','Queer','Questioning','Prefer not to say'].forEach(lbl=>{
-      const el=chip(lbl); if(d.orientation===lbl){ el.classList.add('selected'); el.setAttribute('aria-pressed','true'); }
-      el.addEventListener('click',()=>{ setKey('orientation', lbl); renderOrientation(getData()); paintPreview(); });
-      ui.orientationChips.appendChild(el);
-    });
-  }
-
-  function getOptions(defaults, keyCustom){
-    const d=getData(); const customs=list(d[keyCustom]);
-    const merged=[...defaults]; customs.forEach(v=>{ if(!merged.map(x=>x.toLowerCase()).includes(v.toLowerCase())) merged.push(v); });
-    return {merged, customs};
-  }
-
-  function renderToggles(container, selectedArr, defaults, {gem=false, icon=false, key}){
-    const {merged}=getOptions(defaults, key==='hobbies'?'customHobbies':'customValues');
-    const selected=Array.isArray(selectedArr)?[...selectedArr]:list(selectedArr);
-    container.innerHTML='';
-    merged.forEach(lbl=>{
-      const btn=document.createElement('button'); btn.type='button'; btn.className='chip'+(gem?' gem':''); btn.setAttribute('aria-pressed','false');
-      if(icon){ btn.innerHTML=`<span class="ico">${hobbyIcon(lbl)}</span><span>${lbl}</span>`; } else { btn.textContent=lbl; }
-      const on=selected.map(v=>v.toLowerCase()).includes(lbl.toLowerCase());
-      if(on){ btn.classList.add('selected'); btn.setAttribute('aria-pressed','true'); if(!icon) btn.innerHTML=`<span class="ico">✓</span> ${lbl}`; }
-      btn.addEventListener('click', ()=>{
-        let data=list(getData()[key]);
-        const i=data.map(v=>v.toLowerCase()).indexOf(lbl.toLowerCase());
-        if(i>-1) data.splice(i,1); else data.push(lbl);
-        setKey(key, data); renderToggles(container, data, defaults, {gem,icon,key}); paintPreview();
-      });
-      container.appendChild(btn);
-    });
-  }
-
-  function addCustom(inputEl, key, container, opts, defaults){
-    inputEl.addEventListener('keydown',(e)=>{
-      if(e.key!=='Enter') return;
-      const raw=inputEl.value.trim().replace(/\s+/g,' ');
-      if(!raw) return;
-      const d=getData();
-      const customs=list(d[key==='hobbies'?'customHobbies':'customValues']);
-      const exists=[...defaults,...customs].map(x=>x.toLowerCase()).includes(raw.toLowerCase());
-      const field=key==='hobbies'?'customHobbies':'customValues';
-      const patch={}; if(!exists) patch[field]=[...customs, raw];
-      patch[key]=[...list(d[key]), raw];
-      setData(patch); inputEl.value='';
-      renderToggles(container, list(getData()[key]), defaults, opts); paintPreview();
-    });
-  }
-
-  /* ===== Photos + main selection ===== */
-  const phSvg='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><defs><radialGradient id="g" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00fdd8" stop-opacity=".35"/><stop offset="100%" stop-color="#00fdd8" stop-opacity=".05"/></radialGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><circle cx="48" cy="38" r="18" fill="#0a6a6f"/><rect x="20" y="58" width="56" height="22" rx="11" fill="#0a6a6f"/></svg>');
-
-  function getMainIndex(){
-    const d=getData(); const m = Number(d.mainPhoto)||1;
-    return Math.min(3, Math.max(1, m));
-  }
-
-  function setMain(i){
-    setKey('mainPhoto', i);
-    [ui.ph1,ui.ph2,ui.ph3].forEach((ph,idx)=>{ ph.classList.toggle('main', idx+1===i); });
-    const d=getData();
-    const src = d[`profilePhoto${i}`] || phSvg;
-    ui.prevAvatar.src = src;
-    ui.announce.textContent='Main photo updated';
-  }
-
-  function loadPhotos(){
-    const d=getData();
-    ui.thumb1.src=d.profilePhoto1||phSvg;
-    ui.thumb2.src=d.profilePhoto2||phSvg;
-    ui.thumb3.src=d.profilePhoto3||phSvg;
-
-    const currentMain = getMainIndex();
-    setMain(currentMain);
-
-    // if main has no image but another has – switch
-    const has = [d.profilePhoto1, d.profilePhoto2, d.profilePhoto3];
-    if(!has[currentMain-1]){
-      const fallback = (has.findIndex(Boolean)+1)||1;
-      setMain(fallback);
-    }
-  }
-
-  function bindPhoto(input, key, thumb, idx){
-    input.addEventListener('change',()=>{
-      const f=input.files && input.files[0]; if(!f) return;
-      const reader=new FileReader();
-      reader.onload=()=>{ setKey(key, reader.result); thumb.src=reader.result; if(getMainIndex()===idx) ui.prevAvatar.src=reader.result; ui.announce.textContent='Photo updated'; };
-      reader.readAsDataURL(f);
-    });
-  }
-  function bindRemove(btn,key,thumb,idx){
-    btn.addEventListener('click',(e)=>{ e.preventDefault(); setKey(key,null); thumb.src=phSvg;
-      if(getMainIndex()===idx){ // choose another as main
-        const d=getData(); const has=[d.profilePhoto1,d.profilePhoto2,d.profilePhoto3];
-        const next=(has.findIndex(Boolean)+1)||1;
-        setMain(next);
-      }
-    });
-  }
-
-  /* ===== Preview ===== */
-  function paintPreview(){
-    const d=getData();
-    ui.prevName.textContent=d.name||'Your Name';
-    const a=ageFrom(d.birthday);
-    ui.prevAge.textContent = (a==null)? 'Age: –' : `Age: ${a} years`;
-
-    const yr=(d.birthday? new Date(d.birthday).getFullYear(): null);
-    const z=zodiac(d.birthday); const cz=chinese(yr); const lp=life(d.birthday);
-    if(z){ ui.tagZodiac.hidden=false; ui.tagZodiac.textContent=z; } else ui.tagZodiac.hidden=true;
-    if(cz){ ui.tagChinese.hidden=false; ui.tagChinese.textContent=cz; } else ui.tagChinese.hidden=true;
-    if(lp!=null){ ui.tagLife.hidden=false; ui.tagLife.textContent='Life Path '+lp; } else ui.tagLife.hidden=true;
-    if(d.connectionType){ ui.tagConn.hidden=false; ui.tagConn.textContent=d.connectionType; } else ui.tagConn.hidden=true;
-
-    // love
-    ui.prevLove.innerHTML='';
-    const loves=list(d.loveLanguages||d.loveLanguage);
-    loves.forEach((l,i)=>{ const s=document.createElement('span'); s.className='tag'; s.textContent=i===0? l+' · Primary':l; ui.prevLove.appendChild(s); });
-    if(!loves.length) ui.prevLove.innerHTML='<span class="empty">—</span>';
-
-    // values
-    ui.prevValues.innerHTML='';
-    const vals=list(d.values);
-    vals.slice(0,12).forEach(v=>{ const s=document.createElement('span'); s.className='tag'; s.textContent=v; ui.prevValues.appendChild(s); });
-    if(!vals.length) ui.prevValues.innerHTML='<span class="empty">—</span>';
-
-    // hobbies
-    ui.prevHobbies.innerHTML='';
-    const h=list(d.hobbies);
-    h.slice(0,12).forEach(v=>{ const s=document.createElement('span'); s.className='tag'; s.textContent=hobbyIcon(v)+' '+v; ui.prevHobbies.appendChild(s); });
-    if(!h.length) ui.prevHobbies.innerHTML='<span class="empty">—</span>';
-
-    // about
-    const about=(d.aboutMe||'').trim();
-    if(about){
-      ui.prevAbout.classList.remove('empty');
-      ui.prevAbout.textContent = ` ${about} `;
-    }else{
-      ui.prevAbout.classList.add('empty');
-      ui.prevAbout.textContent = '—';
-    }
-
-    // avatar according to mainPhoto
-    const mainIdx=getMainIndex();
-    const src=d[`profilePhoto${mainIdx}`] || phSvg;
-    ui.prevAvatar.src=src;
-  }
-
-  /* ===== Populate form from localStorage ===== */
-  function populate(){
-    const d=getData();
-    ui.name.value=d.name||''; ui.country.value=d.country||''; ui.birthday.value=d.birthday||'';
-    renderConnection(d.connectionType);
-    renderLove(d.loveLanguages||d.loveLanguage);
-    renderGender(d);
-    renderConnectWith(d);
-    renderOrientation(d);
-    renderToggles(ui.hobbyChips, list(d.hobbies), DEFAULT_HOBBIES, {icon:true, key:'hobbies'});
-    renderToggles(ui.valueChips, list(d.values), DEFAULT_VALUES, {gem:true, key:'values'});
-    loadPhotos();
-    ui.boundaries.value=d.boundaries||''; ui.aboutMe.value=d.aboutMe||'';
-    paintPreview();
-  }
-
-  /* ===== Bind basics (autosave) ===== */
-  function bindBasics(){
-    ui.name.addEventListener('input',()=>{ setKey('name', ui.name.value.trim()); paintPreview(); });
-    ui.country.addEventListener('input',()=>{ setKey('country', ui.country.value.trim()); paintPreview(); });
-    ui.birthday.addEventListener('input', formatBirthOnInput);
-    ui.birthday.addEventListener('blur', validateBirthday);
-    ui.boundaries.addEventListener('input',()=> setKey('boundaries', ui.boundaries.value));
-    ui.aboutMe.addEventListener('input',()=> { setKey('aboutMe', ui.aboutMe.value); paintPreview(); });
-  }
-
-  /* ===== Actions ===== */
-  ui.backQuiz.addEventListener('click', ()=> location.href='quiz.html');
-  ui.nextSoul.addEventListener('click', ()=> location.href='my-soul.html');
-  ui.saveBtn.addEventListener('click', ()=>{
-    ui.announce.textContent='Profile updated successfully ✨';
-    alert('Profile updated successfully ✨');
-  });
-  ui.resetForm.addEventListener('click', ()=>{
-    if(!confirm('Clear visible form fields? This will NOT erase your saved profile.')) return;
-    ['name','country','birthday','boundaries','aboutMe'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-    document.querySelectorAll('.chips .chip[aria-pressed="true"]').forEach(el=>{ el.setAttribute('aria-pressed','false'); el.classList.remove('selected'); });
-    paintPreview();
-  });
-
-  /* ===== Photos bind ===== */
-  bindPhoto(ui.file1,'profilePhoto1',ui.thumb1,1);
-  bindPhoto(ui.file2,'profilePhoto2',ui.thumb2,2);
-  bindPhoto(ui.file3,'profilePhoto3',ui.thumb3,3);
-  bindRemove(ui.remove1,'profilePhoto1',ui.thumb1,1);
-  bindRemove(ui.remove2,'profilePhoto2',ui.thumb2,2);
-  bindRemove(ui.remove3,'profilePhoto3',ui.thumb3,3);
-  ui.main1.addEventListener('click',()=> setMain(1));
-  ui.main2.addEventListener('click',()=> setMain(2));
-  ui.main3.addEventListener('click',()=> setMain(3));
-
-  /* ===== H/V custom inputs ===== */
-  addCustom(ui.hobbyInput,'hobbies',ui.hobbyChips,{icon:true,key:'hobbies'},DEFAULT_HOBBIES);
-  addCustom(ui.valueInput,'values',ui.valueChips,{gem:true,key:'values'},DEFAULT_VALUES);
-
-  /* ===== Navbar & drawer ===== */
-  const onScroll=()=>{ if(window.scrollY>6) ui.navbar.classList.add('scrolled'); else ui.navbar.classList.remove('scrolled'); };
-  onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
-  const openDrawer=()=>{ ui.drawer.classList.add('open'); document.body.classList.add('no-scroll'); };
-  const closeDrawer=()=>{ ui.drawer.classList.remove('open'); document.body.classList.remove('no-scroll'); };
-  ui.openDrawer?.addEventListener('click', openDrawer);
-  ui.closeDrawer?.addEventListener('click', closeDrawer);
-  ui.drawerBackdrop?.addEventListener('click', closeDrawer);
-  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeDrawer(); });
-
-  ui.logout?.addEventListener('click', (e)=>{ e.preventDefault(); localStorage.clear(); location.href='index.html'; });
-  ui.logoutM?.addEventListener('click', (e)=>{ e.preventDefault(); localStorage.clear(); location.href='index.html'; });
-
-  /* ===== Init ===== */
-  document.addEventListener('DOMContentLoaded', ()=>{ populate(); bindBasics(); });
-
-})();
-</script>
-<script src="auth.js"></script>
-<script src="data-helpers.js" defer></script>
-<script src="nav.js" defer></script>
-<script src="edit-profile.js" defer></script>
-</body>
+    <!-- FOOTER -->
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <p>Soulink.global — conscious matching for hearts &amp; souls.</p>
+        <p>Created with love and ChatGPT as a co-creator.</p>
+      </div>
+    </footer>
+  </body>
 </html>
-
