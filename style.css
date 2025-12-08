@@ -1541,6 +1541,51 @@ body[data-page="match"] .navbar .nav-links a[href*="match"]{
 
 .sl-head{display:flex;align-items:center;gap:.6rem;margin-bottom:.4rem;}
 .sl-name{font-weight:600;font-size:1.1rem;}
+/* --- FIX MOBILE NAV (Soulink) --- */
+
+.topnav {
+  position: relative;
+  z-index: 50;
+}
+
+/* Hide desktop nav on mobile */
+@media (max-width: 860px) {
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 75%;
+    max-width: 260px;
+    background: rgba(0, 34, 38, 0.98);
+    box-shadow: 0 0 20px rgba(0, 253, 216, 0.35);
+    border: 1px solid rgba(0, 253, 216, 0.25);
+    border-radius: 12px;
+    padding: 1.2rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .nav-links.open {
+    display: flex;
+  }
+
+  .nav-links a {
+    font-size: 1.1rem;
+    padding: 0.4rem 0;
+  }
+
+  .nav-toggle {
+    display: flex;
+  }
+}
+
+/* Desktop */
+@media (min-width: 861px) {
+  .nav-toggle {
+    display: none;
+  }
+}
 
 
 
