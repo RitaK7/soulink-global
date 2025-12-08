@@ -1592,3 +1592,28 @@ body[data-page="match"] .navbar .nav-links a[href*="match"]{
     display: none;
   }
 }
+/* --- Soulink hamburger icon --- */
+.nav-toggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 253, 216, 0.6);
+  box-shadow: 0 0 12px rgba(0, 253, 216, 0.4);
+  background: rgba(0, 60, 67, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.nav-toggle-bar {
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: #00FDD8;
+  display: block;
+}
+
+.nav-toggle-bar + .nav-toggle-bar {
+  margin-top: 4px;
+}
