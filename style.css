@@ -1541,27 +1541,33 @@ body[data-page="match"] .navbar .nav-links a[href*="match"]{
 
 .sl-head{display:flex;align-items:center;gap:.6rem;margin-bottom:.4rem;}
 .sl-name{font-weight:600;font-size:1.1rem;}
-/* --- FIX MOBILE NAV (Soulink) --- */
+/* --- FIX MOBILE NAV (Soulink) v2 --- */
 
+/* ant viso headerio – kad meniu būtų virš turinio */
 .topnav {
   position: relative;
   z-index: 50;
 }
 
-/* Hide desktop nav on mobile */
+/* Mobile layout */
 @media (max-width: 860px) {
+
+  .topnav-inner {
+    position: static;
+  }
+
   .nav-links {
     display: none;
     position: absolute;
     top: 100%;
+    left: 0;
     right: 0;
-    width: 75%;
-    max-width: 260px;
+    width: 100%;
+    max-width: none;
     background: rgba(0, 34, 38, 0.98);
-    box-shadow: 0 0 20px rgba(0, 253, 216, 0.35);
-    border: 1px solid rgba(0, 253, 216, 0.25);
-    border-radius: 12px;
-    padding: 1.2rem;
+    box-shadow: 0 0 30px rgba(0, 253, 216, 0.35);
+    border-top: 1px solid rgba(0, 253, 216, 0.25);
+    padding: 1.2rem 1.5rem 1.4rem;
     flex-direction: column;
     gap: 1rem;
   }
@@ -1571,8 +1577,8 @@ body[data-page="match"] .navbar .nav-links a[href*="match"]{
   }
 
   .nav-links a {
-    font-size: 1.1rem;
-    padding: 0.4rem 0;
+    font-size: 1.05rem;
+    padding: 0.35rem 0;
   }
 
   .nav-toggle {
@@ -1580,22 +1586,9 @@ body[data-page="match"] .navbar .nav-links a[href*="match"]{
   }
 }
 
-/* Desktop */
+/* Desktop – rodom viską klasikinėje juostoje */
 @media (min-width: 861px) {
   .nav-toggle {
     display: none;
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
