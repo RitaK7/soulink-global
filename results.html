@@ -220,6 +220,18 @@
       font-size: 0.85rem;
       opacity: 0.8;
     }
+        /* --- FIX: always show quiz nav on mobile --- */
+    @media (max-width: 800px) {
+      .navbar .nav-links {
+        display: flex !important;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .navbar .hamburger {
+        display: none !important;
+      }
+    }
+
   </style>
 </head>
 <body class="soulink-bg">
