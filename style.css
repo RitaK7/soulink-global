@@ -1617,3 +1617,14 @@ body[data-page="match"] .navbar .nav-links a[href*="match"]{
 .nav-toggle-bar + .nav-toggle-bar {
   margin-top: 4px;
 }
+/* FIX NAV TEXT VISIBILITY */
+.topnav .brand,
+.topnav .nav-links a,
+.nav-toggle span {
+  color: #00FDD8 !important;
+  background-color: transparent !important;
+}
+.nav-toggle span {
+  border-color: #00FDD8 !important;
+  background: #00FDD8 !important;
+}
