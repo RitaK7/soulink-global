@@ -10,177 +10,171 @@
     />
     <link rel="stylesheet" href="style.css" />
 
-    <!-- Shared scripts -->
+    <!-- Shared scripts (DO NOT TOUCH) -->
     <script src="auth.js" defer></script>
     <script src="data-helpers.js" defer></script>
     <script src="nav.js" defer></script>
     <script src="quiz.js" defer></script>
 
-    <!-- Quiz-specific visual enhancements -->
+    <!-- Quiz-specific visual refinements (design only, no logic) -->
     <style>
-      /* --- Layout shell for Quiz page --- */
+      /* --- Quiz page shell --- */
 
       .quiz-page {
-        padding: 1.5rem 1rem 2.75rem;
+        position: relative;
+        padding: 1.25rem 1rem 2.25rem;
       }
 
       @media (min-width: 768px) {
         .quiz-page {
-          padding: 2.5rem 1.5rem 3.5rem;
+          padding: 2rem 1.5rem 3rem;
         }
       }
 
       .quiz-page .page-inner {
-        max-width: 1080px;
+        max-width: 1040px;
         margin: 0 auto;
         display: flex;
         flex-direction: column;
-        gap: 1.25rem;
+        gap: 1rem;
+      }
+
+      /* Subtle background “particles” */
+      .quiz-page::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.15;
+        background-image:
+          radial-gradient(circle at 5% 15%, rgba(0, 253, 216, 0.2) 0, transparent 40%),
+          radial-gradient(circle at 90% 80%, rgba(0, 253, 216, 0.12) 0, transparent 40%),
+          radial-gradient(circle at 40% 60%, rgba(255, 255, 255, 0.05) 0, transparent 35%);
+        z-index: 0;
+      }
+
+      .quiz-page .page-inner,
+      .quiz-page .page-hero,
+      .quiz-page .quiz-section {
+        position: relative;
+        z-index: 1;
       }
 
       /* --- Hero card --- */
 
       .quiz-page .page-hero {
-        position: relative;
-        padding: 1.5rem 1.25rem;
-        border-radius: 20px;
-        overflow: hidden;
+        padding: 1.25rem 1rem;
+        border-radius: 18px;
         background: radial-gradient(
             circle at 0% 0%,
-            rgba(0, 253, 216, 0.18),
+            rgba(0, 253, 216, 0.17),
             transparent 55%
           ),
           radial-gradient(
             circle at 100% 100%,
-            rgba(0, 253, 216, 0.09),
-            transparent 60%
+            rgba(0, 253, 216, 0.07),
+            transparent 55%
           ),
-          rgba(0, 0, 0, 0.24);
-        border: 1px solid rgba(0, 253, 216, 0.3);
-        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55),
-          0 0 32px rgba(0, 253, 216, 0.25);
-        backdrop-filter: blur(16px);
+          rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(0, 253, 216, 0.35);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65),
+          0 0 18px rgba(0, 253, 216, 0.25);
+        backdrop-filter: blur(12px);
+        transform: translateY(10px);
+        opacity: 0;
+        animation: quizFadeUp 0.6s ease-out forwards;
       }
 
       @media (min-width: 768px) {
         .quiz-page .page-hero {
-          padding: 1.75rem 2.25rem;
-          border-radius: 24px;
+          padding: 1.5rem 1.8rem;
+          border-radius: 20px;
         }
       }
 
-      .quiz-page .page-hero-text {
-        position: relative;
-        z-index: 1;
-      }
-
       .quiz-page .page-title {
-        font-size: 1.8rem;
+        font-size: 1.7rem;
         letter-spacing: 0.03em;
       }
 
       @media (min-width: 900px) {
         .quiz-page .page-title {
-          font-size: 2.05rem;
+          font-size: 1.9rem;
         }
       }
 
       .quiz-page .page-subtitle {
-        margin-top: 0.4rem;
+        margin-top: 0.35rem;
         max-width: 32rem;
-        font-size: 0.95rem;
+        font-size: 0.93rem;
         opacity: 0.9;
       }
 
-      /* subtle aura ring */
-      .quiz-page .page-hero::after {
-        content: "";
-        position: absolute;
-        inset: -40%;
-        background: radial-gradient(
-          circle at 10% 10%,
-          rgba(0, 253, 216, 0.14),
-          transparent 55%
-        );
-        opacity: 0.6;
-        pointer-events: none;
-      }
-
-      /* --- Cards / sections --- */
+      /* --- Sections / cards --- */
 
       .quiz-section.glass-card {
-        position: relative;
-        margin-top: 0.4rem;
-        padding: 1.35rem 1.1rem 1.4rem;
-        border-radius: 20px;
+        margin-top: 0.35rem;
+        padding: 1.1rem 1rem 1.25rem;
+        border-radius: 18px;
         background: linear-gradient(
             135deg,
-            rgba(0, 253, 216, 0.08),
-            transparent 55%
+            rgba(0, 253, 216, 0.06),
+            transparent 60%
           ),
-          rgba(0, 0, 0, 0.48);
-        border: 1px solid rgba(0, 253, 216, 0.24);
-        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.58),
-          0 0 24px rgba(0, 253, 216, 0.12);
-        backdrop-filter: blur(16px);
-        overflow: hidden;
+          rgba(0, 0, 0, 0.52);
+        border: 1px solid rgba(0, 253, 216, 0.2);
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6),
+          0 0 16px rgba(0, 253, 216, 0.18);
+        backdrop-filter: blur(12px);
         transform: translateY(10px);
         opacity: 0;
-        animation: quizFadeUp 0.75s ease-out forwards;
+        animation: quizFadeUp 0.6s ease-out forwards;
       }
 
       @media (min-width: 768px) {
         .quiz-section.glass-card {
-          padding: 1.6rem 1.7rem 1.7rem;
-          border-radius: 22px;
+          padding: 1.25rem 1.5rem 1.35rem;
+          border-radius: 20px;
         }
       }
 
-      /* fade+rise entrance with stagger */
-      .quiz-page .page-hero {
-        opacity: 0;
-        transform: translateY(10px);
-        animation: quizFadeUp 0.75s ease-out forwards;
-        animation-delay: 0.05s;
-      }
-
       .quiz-page .quiz-section:nth-of-type(1) {
-        animation-delay: 0.12s;
+        animation-delay: 0.08s;
       }
 
       .quiz-page .quiz-section:nth-of-type(2) {
-        animation-delay: 0.18s;
+        animation-delay: 0.12s;
       }
 
       .quiz-page .quiz-section:nth-of-type(3) {
-        animation-delay: 0.24s;
+        animation-delay: 0.16s;
       }
 
       .quiz-page .quiz-section:nth-of-type(4) {
-        animation-delay: 0.3s;
+        animation-delay: 0.2s;
       }
 
       .quiz-page .quiz-section:nth-of-type(5) {
-        animation-delay: 0.36s;
+        animation-delay: 0.24s;
       }
 
       .quiz-page .quiz-section:nth-of-type(6) {
-        animation-delay: 0.42s;
+        animation-delay: 0.28s;
       }
 
       .quiz-page .quiz-section:nth-of-type(7) {
-        animation-delay: 0.48s;
+        animation-delay: 0.32s;
       }
 
       .quiz-page .quiz-section:nth-of-type(8) {
-        animation-delay: 0.54s;
+        animation-delay: 0.36s;
       }
 
       @keyframes quizFadeUp {
         from {
           opacity: 0;
           transform: translateY(12px);
-          filter: blur(4px);
+          filter: blur(3px);
         }
         to {
           opacity: 1;
@@ -192,8 +186,8 @@
       .quiz-section-header {
         display: flex;
         flex-direction: column;
-        gap: 0.3rem;
-        margin-bottom: 0.85rem;
+        gap: 0.25rem;
+        margin-bottom: 0.7rem;
       }
 
       .quiz-section-header-title {
@@ -206,34 +200,33 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 1.85rem;
-        height: 1.85rem;
+        width: 1.6rem;
+        height: 1.6rem;
         border-radius: 999px;
-        font-size: 1.1rem;
+        font-size: 1rem;
         background: radial-gradient(
-          circle at 30% 20%,
+          circle at 35% 25%,
           rgba(0, 253, 216, 0.4),
-          rgba(0, 0, 0, 0.5)
+          rgba(0, 0, 0, 0.6)
         );
-        box-shadow: 0 0 16px rgba(0, 253, 216, 0.55);
+        box-shadow: 0 0 14px rgba(0, 253, 216, 0.5);
       }
 
       .quiz-section-title {
-        font-size: 1.15rem;
+        font-size: 1.08rem;
         letter-spacing: 0.02em;
       }
 
       .quiz-section-subtitle {
-        font-size: 0.9rem;
-        opacity: 0.82;
+        font-size: 0.88rem;
+        opacity: 0.83;
         max-width: 34rem;
       }
 
       .quiz-section-body {
         display: flex;
         flex-direction: column;
-        gap: 0.9rem;
-        margin-top: 0.25rem;
+        gap: 0.8rem;
       }
 
       /* --- Field groups / labels / hints --- */
@@ -241,13 +234,13 @@
       .quiz-page .field-group {
         display: flex;
         flex-direction: column;
-        gap: 0.25rem;
+        gap: 0.22rem;
       }
 
       .quiz-page .field-group-inline {
         display: grid;
         grid-template-columns: minmax(0, 1fr);
-        gap: 0.85rem;
+        gap: 0.75rem;
       }
 
       @media (min-width: 720px) {
@@ -257,7 +250,7 @@
       }
 
       .quiz-page .field-label {
-        font-size: 0.9rem;
+        font-size: 0.88rem;
         font-weight: 600;
         letter-spacing: 0.02em;
         opacity: 0.96;
@@ -270,29 +263,29 @@
 
       .quiz-page .field-error {
         color: #ffb3c1;
-        min-height: 1.05em;
+        min-height: 1em;
       }
 
-      /* --- Inputs / textareas / selects --- */
+      /* --- Inputs / selects / textareas --- */
 
       .quiz-page .field-input,
       .quiz-page select.field-input {
         width: 100%;
         border-radius: 999px;
-        border: 1px solid rgba(0, 253, 216, 0.25);
-        padding: 0.6rem 0.95rem;
-        font-size: 0.94rem;
-        background: radial-gradient(
-            circle at 0% 0%,
-            rgba(0, 253, 216, 0.07),
-            transparent 55%
-          ),
-          rgba(0, 0, 0, 0.7);
+        border: 1px solid rgba(0, 253, 216, 0.26);
+        padding: 0.52rem 0.9rem;
+        font-size: 0.93rem;
+        background: rgba(0, 0, 0, 0.72);
+        background-image: radial-gradient(
+          circle at 0% 0%,
+          rgba(0, 253, 216, 0.06),
+          transparent 60%
+        );
         color: #f6ffff;
         outline: none;
         box-shadow: 0 0 0 0 rgba(0, 253, 216, 0.2);
-        transition: border-color 0.18s ease, box-shadow 0.18s ease,
-          background 0.18s ease, transform 0.1s ease;
+        transition: border-color 0.16s ease, box-shadow 0.16s ease,
+          background 0.16s ease, transform 0.08s ease;
       }
 
       .quiz-page .field-input::placeholder {
@@ -301,15 +294,14 @@
 
       .quiz-page .field-input:focus,
       .quiz-page select.field-input:focus {
-        border-color: rgba(0, 253, 216, 0.8);
-        box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.5),
-          0 0 25px rgba(0, 253, 216, 0.35);
-        background: radial-gradient(
-            circle at 0% 0%,
-            rgba(0, 253, 216, 0.12),
-            transparent 60%
-          ),
-          rgba(0, 0, 0, 0.8);
+        border-color: rgba(0, 253, 216, 0.85);
+        box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.55),
+          0 0 16px rgba(0, 253, 216, 0.35);
+        background-image: radial-gradient(
+          circle at 0% 0%,
+          rgba(0, 253, 216, 0.1),
+          transparent 60%
+        );
         transform: translateY(-1px);
       }
 
@@ -318,21 +310,21 @@
         resize: vertical;
         min-height: 4rem;
         border-radius: 14px;
-        border: 1px solid rgba(0, 253, 216, 0.25);
-        padding: 0.65rem 0.9rem;
-        font-size: 0.94rem;
+        border: 1px solid rgba(0, 253, 216, 0.26);
+        padding: 0.6rem 0.9rem;
+        font-size: 0.93rem;
         line-height: 1.45;
-        background: radial-gradient(
-            circle at 0% 0%,
-            rgba(0, 253, 216, 0.06),
-            transparent 60%
-          ),
-          rgba(0, 0, 0, 0.7);
+        background: rgba(0, 0, 0, 0.72);
+        background-image: radial-gradient(
+          circle at 0% 0%,
+          rgba(0, 253, 216, 0.06),
+          transparent 60%
+        );
         color: #f6ffff;
         outline: none;
         box-shadow: 0 0 0 0 rgba(0, 253, 216, 0.2);
-        transition: border-color 0.18s ease, box-shadow 0.18s ease,
-          background 0.18s ease, transform 0.1s ease;
+        transition: border-color 0.16s ease, box-shadow 0.16s ease,
+          background 0.16s ease, transform 0.08s ease;
       }
 
       .quiz-page .field-textarea::placeholder {
@@ -340,15 +332,14 @@
       }
 
       .quiz-page .field-textarea:focus {
-        border-color: rgba(0, 253, 216, 0.8);
-        box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.5),
-          0 0 25px rgba(0, 253, 216, 0.3);
-        background: radial-gradient(
-            circle at 0% 0%,
-            rgba(0, 253, 216, 0.11),
-            transparent 60%
-          ),
-          rgba(0, 0, 0, 0.82);
+        border-color: rgba(0, 253, 216, 0.85);
+        box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.55),
+          0 0 18px rgba(0, 253, 216, 0.3);
+        background-image: radial-gradient(
+          circle at 0% 0%,
+          rgba(0, 253, 216, 0.1),
+          transparent 60%
+        );
         transform: translateY(-1px);
       }
 
@@ -357,7 +348,7 @@
       .quiz-page .chip-group {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.45rem;
+        gap: 0.4rem;
         margin-top: 0.1rem;
       }
 
@@ -382,23 +373,23 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 0.4rem 0.85rem;
+        padding: 0.35rem 0.8rem;
         border-radius: 999px;
-        border: 1px solid rgba(0, 253, 216, 0.38);
-        font-size: 0.86rem;
+        border: 1px solid rgba(0, 253, 216, 0.42);
+        font-size: 0.85rem;
         letter-spacing: 0.01em;
-        background: rgba(0, 0, 0, 0.75);
-        box-shadow: 0 0 0 0 rgba(0, 253, 216, 0.32);
-        transition: border-color 0.18s ease, box-shadow 0.18s ease,
-          background 0.18s ease, transform 0.08s ease;
+        background: rgba(0, 0, 0, 0.78);
+        box-shadow: 0 0 0 0 rgba(0, 253, 216, 0.28);
+        transition: border-color 0.16s ease, box-shadow 0.16s ease,
+          background 0.16s ease, transform 0.06s ease;
       }
 
       .quiz-page .chip-option:hover span {
         border-color: rgba(0, 253, 216, 0.9);
-        box-shadow: 0 0 18px rgba(0, 253, 216, 0.45);
+        box-shadow: 0 0 14px rgba(0, 253, 216, 0.45);
         background: radial-gradient(
-            circle at 20% 0%,
-            rgba(0, 253, 216, 0.22),
+            circle at 25% 0%,
+            rgba(0, 253, 216, 0.18),
             transparent 55%
           ),
           rgba(0, 0, 0, 0.9);
@@ -407,32 +398,32 @@
 
       .quiz-page .chip-option:active span {
         transform: translateY(0);
-        box-shadow: 0 0 10px rgba(0, 253, 216, 0.3);
+        box-shadow: 0 0 8px rgba(0, 253, 216, 0.32);
       }
 
       .quiz-page .chip-option input[type="radio"]:checked + span,
       .quiz-page .chip-option input[type="checkbox"]:checked + span {
-        border-color: rgba(0, 253, 216, 0.98);
+        border-color: rgba(0, 253, 216, 1);
         background: radial-gradient(
             circle at 0% 0%,
-            rgba(0, 253, 216, 0.3),
+            rgba(0, 253, 216, 0.25),
             transparent 55%
           ),
-          rgba(0, 0, 0, 0.98);
-        box-shadow: 0 0 22px rgba(0, 253, 216, 0.65);
+          rgba(0, 0, 0, 0.96);
+        box-shadow: 0 0 18px rgba(0, 253, 216, 0.65);
       }
 
       @media (max-width: 480px) {
         .quiz-page .chip-option span {
-          padding-inline: 0.75rem;
-          font-size: 0.84rem;
+          padding-inline: 0.7rem;
+          font-size: 0.83rem;
         }
       }
 
       /* --- Actions (Back / Next) --- */
 
       .quiz-actions {
-        margin-top: 1.4rem;
+        margin-top: 1.3rem;
       }
 
       .quiz-actions-inner {
@@ -449,25 +440,35 @@
 
       .quiz-actions .btn.secondary {
         background: transparent;
-        border-color: rgba(0, 253, 216, 0.55);
+        border-color: rgba(0, 253, 216, 0.7);
+        color: #e9fffb;
       }
 
       .quiz-actions .btn.secondary:hover {
-        background: rgba(0, 253, 216, 0.1);
+        background: rgba(0, 253, 216, 0.12);
+        box-shadow: 0 0 14px rgba(0, 253, 216, 0.35);
       }
 
       .quiz-actions .btn.primary {
-        box-shadow: 0 0 18px rgba(0, 253, 216, 0.6);
+        background: linear-gradient(
+          135deg,
+          rgba(0, 253, 216, 0.95),
+          rgba(0, 253, 216, 0.7)
+        );
+        color: #003c43;
+        border-color: rgba(0, 253, 216, 1);
+        box-shadow: 0 0 16px rgba(0, 253, 216, 0.8);
       }
 
       .quiz-actions .btn.primary:hover {
-        box-shadow: 0 0 26px rgba(0, 253, 216, 0.9);
+        box-shadow: 0 0 22px rgba(0, 253, 216, 0.95);
+        transform: translateY(-1px);
       }
 
       .quiz-actions-hint {
-        margin-top: 0.45rem;
+        margin-top: 0.4rem;
         font-size: 0.8rem;
-        opacity: 0.8;
+        opacity: 0.82;
       }
 
       @media (max-width: 640px) {
@@ -481,7 +482,7 @@
         }
       }
 
-      /* --- Footer alignment (reuse global, just center nicely for Quiz) --- */
+      /* --- Footer alignment for quiz --- */
 
       .quiz-page + .footer-note {
         margin-top: 0.5rem;
@@ -492,6 +493,7 @@
   </head>
 
   <body class="soulink-bg">
+    <!-- NAVBAR (unchanged) -->
     <header
       class="navbar soulink-nav"
       data-active="Quiz"
@@ -1235,7 +1237,7 @@
             </div>
           </section>
 
-          <!-- Hidden fields for computed data (zodiac, Chinese zodiac, life path) -->
+          <!-- Hidden fields for computed data -->
           <input type="hidden" id="zodiac" name="zodiac" />
           <input type="hidden" id="chineseZodiac" name="chineseZodiac" />
           <input type="hidden" id="lifePathNumber" name="lifePathNumber" />
@@ -1259,8 +1261,8 @@
       </div>
     </main>
 
-    <footer class="footer-note">
-      © 2025 Soulink.global | Created with love by Soulink Team
-    </footer>
+      <footer class="footer-note">
+        © 2025 Soulink.global | Created with love by Soulink Team
+      </footer>
   </body>
 </html>
