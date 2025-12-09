@@ -1,4 +1,4 @@
-// quiz.js — Soulink Core Quiz Flow (refined)
+// quiz.js — Soulink Core Quiz Flow
 // Uses shared helpers: getSoulData, saveSoulData, patchSoulData (from data-helpers.js)
 
 (function () {
@@ -248,7 +248,7 @@
     // Relationship / orientation
     setRadio("gender", data.gender || data.genderSelf || "");
     setRadio("connectionType", data.connectionType || "");
-    setRadio("orientation", data.orientation || "");
+    setRadio("orientation", data.orientationChoice || data.orientation || "");
     setInputValue("orientationText", data.orientationText || "");
 
     // Love languages

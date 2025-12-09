@@ -58,7 +58,7 @@
       </div>
     </header>
 
-    <main class="page container quiz-page">
+    <main class="container quiz-page">
       <div class="page-inner">
         <section class="page-hero glass-card">
           <div class="page-hero-text">
@@ -74,7 +74,10 @@
           <!-- Basic Info -->
           <section class="glass-card quiz-section">
             <header class="quiz-section-header">
-              <h2 class="quiz-section-title">Basic Information</h2>
+              <div class="quiz-section-header-title">
+                <span class="quiz-icon">👑</span>
+                <h2 class="quiz-section-title">Basic Information</h2>
+              </div>
               <p class="quiz-section-subtitle">
                 A few simple details so your soul profile feels grounded and
                 clear.
@@ -161,10 +164,206 @@
             </div>
           </section>
 
+          <!-- Connection Type -->
+          <section class="glass-card quiz-section">
+            <header class="quiz-section-header">
+              <div class="quiz-section-header-title">
+                <span class="quiz-icon">🤝</span>
+                <h2 class="quiz-section-title">Connection</h2>
+              </div>
+              <p class="quiz-section-subtitle">
+                What kind of connection are you open to right now? You can
+                always change this later.
+              </p>
+            </header>
+
+            <div class="quiz-section-body">
+              <div class="field-group">
+                <span class="field-label">Connection type</span>
+                <div
+                  class="chip-group"
+                  role="radiogroup"
+                  aria-label="Preferred type of connection"
+                >
+                  <label class="chip-option">
+                    <input
+                      type="radio"
+                      name="connectionType"
+                      value="Friendship"
+                    />
+                    <span>Friendship</span>
+                  </label>
+                  <label class="chip-option">
+                    <input type="radio" name="connectionType" value="Romantic" />
+                    <span>Romantic</span>
+                  </label>
+                  <label class="chip-option">
+                    <input type="radio" name="connectionType" value="Both" />
+                    <span>Both</span>
+                  </label>
+                  <label class="chip-option">
+                    <input
+                      type="radio"
+                      name="connectionType"
+                      value="Not sure yet"
+                    />
+                    <span>Not sure yet</span>
+                  </label>
+                </div>
+                <p class="field-hint">
+                  Your matches will adapt to this choice — you can tune it
+                  anytime as your heart changes.
+                </p>
+                <p
+                  class="field-hint field-error"
+                  id="error-connectionType"
+                  aria-live="polite"
+                ></p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Love Languages -->
+          <section class="glass-card quiz-section">
+            <header class="quiz-section-header">
+              <div class="quiz-section-header-title">
+                <span class="quiz-icon">💖</span>
+                <h2 class="quiz-section-title">Love Languages</h2>
+              </div>
+              <p class="quiz-section-subtitle">
+                Choose your primary love language and any secondary ones that
+                also feel important.
+              </p>
+            </header>
+
+            <div class="quiz-section-body">
+              <div class="field-group">
+                <span class="field-label">Primary love language</span>
+                <div
+                  class="chip-group"
+                  role="radiogroup"
+                  aria-label="Primary love language"
+                >
+                  <label class="chip-option">
+                    <input
+                      type="radio"
+                      name="loveLanguage"
+                      value="Words of Affirmation"
+                    />
+                    <span>Words of Affirmation</span>
+                  </label>
+                  <label class="chip-option">
+                    <input
+                      type="radio"
+                      name="loveLanguage"
+                      value="Quality Time"
+                    />
+                    <span>Quality Time</span>
+                  </label>
+                  <label class="chip-option">
+                    <input
+                      type="radio"
+                      name="loveLanguage"
+                      value="Acts of Service"
+                    />
+                    <span>Acts of Service</span>
+                  </label>
+                  <label class="chip-option">
+                    <input
+                      type="radio"
+                      name="loveLanguage"
+                      value="Physical Touch"
+                    />
+                    <span>Physical Touch</span>
+                  </label>
+                  <label class="chip-option">
+                    <input
+                      type="radio"
+                      name="loveLanguage"
+                      value="Receiving Gifts"
+                    />
+                    <span>Receiving Gifts</span>
+                  </label>
+                </div>
+                <p
+                  class="field-hint field-error"
+                  id="error-loveLanguage"
+                  aria-live="polite"
+                ></p>
+              </div>
+
+              <div class="field-group">
+                <span class="field-label">
+                  Secondary love languages (choose all that fit)
+                </span>
+                <div
+                  class="chip-group"
+                  role="group"
+                  aria-label="Secondary love languages (multiple selection)"
+                >
+                  <label class="chip-option">
+                    <input
+                      type="checkbox"
+                      name="loveLanguages"
+                      value="Words of Affirmation"
+                    />
+                    <span>Words of Affirmation</span>
+                  </label>
+                  <label class="chip-option">
+                    <input
+                      type="checkbox"
+                      name="loveLanguages"
+                      value="Quality Time"
+                    />
+                    <span>Quality Time</span>
+                  </label>
+                  <label class="chip-option">
+                    <input
+                      type="checkbox"
+                      name="loveLanguages"
+                      value="Acts of Service"
+                    />
+                    <span>Acts of Service</span>
+                  </label>
+                  <label class="chip-option">
+                    <input
+                      type="checkbox"
+                      name="loveLanguages"
+                      value="Physical Touch"
+                    />
+                    <span>Physical Touch</span>
+                  </label>
+                  <label class="chip-option">
+                    <input
+                      type="checkbox"
+                      name="loveLanguages"
+                      value="Receiving Gifts"
+                    />
+                    <span>Receiving Gifts</span>
+                  </label>
+                </div>
+                <p class="field-hint">
+                  Words of Affirmation — feeling seen through kind words.<br />
+                  Quality Time — feeling loved when you truly share time and
+                  presence.<br />
+                  Acts of Service — feeling supported when someone helps you in
+                  practical ways.<br />
+                  Physical Touch — feeling connected through hugs, holding
+                  hands, and closeness.<br />
+                  Receiving Gifts — feeling cared for through thoughtful
+                  gestures and surprises.
+                </p>
+              </div>
+            </div>
+          </section>
+
           <!-- Gender & Orientation -->
           <section class="glass-card quiz-section">
             <header class="quiz-section-header">
-              <h2 class="quiz-section-title">How do you identify?</h2>
+              <div class="quiz-section-header-title">
+                <span class="quiz-icon">🌈</span>
+                <h2 class="quiz-section-title">How do you identify?</h2>
+              </div>
               <p class="quiz-section-subtitle">
                 Gender and orientation help the algorithm understand who you are
                 and what you’re open to.
@@ -296,195 +495,13 @@
             </div>
           </section>
 
-          <!-- Connection Type -->
-          <section class="glass-card quiz-section">
-            <header class="quiz-section-header">
-              <h2 class="quiz-section-title">
-                What kind of connection are you open to?
-              </h2>
-              <p class="quiz-section-subtitle">
-                You can always change this later — it just helps to tune your
-                matches.
-              </p>
-            </header>
-
-            <div class="quiz-section-body">
-              <div class="field-group">
-                <span class="field-label">Connection type</span>
-                <div
-                  class="chip-group"
-                  role="radiogroup"
-                  aria-label="Preferred type of connection"
-                >
-                  <label class="chip-option">
-                    <input
-                      type="radio"
-                      name="connectionType"
-                      value="Friendship"
-                    />
-                    <span>Friendship</span>
-                  </label>
-                  <label class="chip-option">
-                    <input type="radio" name="connectionType" value="Romantic" />
-                    <span>Romantic</span>
-                  </label>
-                  <label class="chip-option">
-                    <input type="radio" name="connectionType" value="Both" />
-                    <span>Both</span>
-                  </label>
-                  <label class="chip-option">
-                    <input
-                      type="radio"
-                      name="connectionType"
-                      value="Not sure yet"
-                    />
-                    <span>Not sure yet</span>
-                  </label>
-                </div>
-                <p
-                  class="field-hint field-error"
-                  id="error-connectionType"
-                  aria-live="polite"
-                ></p>
-              </div>
-            </div>
-          </section>
-
-          <!-- Love Languages -->
-          <section class="glass-card quiz-section">
-            <header class="quiz-section-header">
-              <h2 class="quiz-section-title">Love Languages</h2>
-              <p class="quiz-section-subtitle">
-                Choose your primary love language and any secondary ones that
-                also feel important.
-              </p>
-            </header>
-
-            <div class="quiz-section-body">
-              <div class="field-group">
-                <span class="field-label">Primary love language</span>
-                <div
-                  class="chip-group"
-                  role="radiogroup"
-                  aria-label="Primary love language"
-                >
-                  <label class="chip-option">
-                    <input
-                      type="radio"
-                      name="loveLanguage"
-                      value="Words of Affirmation"
-                    />
-                    <span>Words of Affirmation</span>
-                  </label>
-                  <label class="chip-option">
-                    <input
-                      type="radio"
-                      name="loveLanguage"
-                      value="Quality Time"
-                    />
-                    <span>Quality Time</span>
-                  </label>
-                  <label class="chip-option">
-                    <input
-                      type="radio"
-                      name="loveLanguage"
-                      value="Acts of Service"
-                    />
-                    <span>Acts of Service</span>
-                  </label>
-                  <label class="chip-option">
-                    <input
-                      type="radio"
-                      name="loveLanguage"
-                      value="Physical Touch"
-                    />
-                    <span>Physical Touch</span>
-                  </label>
-                  <label class="chip-option">
-                    <input
-                      type="radio"
-                      name="loveLanguage"
-                      value="Receiving Gifts"
-                    />
-                    <span>Receiving Gifts</span>
-                  </label>
-                </div>
-                <p
-                  class="field-hint field-error"
-                  id="error-loveLanguage"
-                  aria-live="polite"
-                ></p>
-              </div>
-
-              <div class="field-group">
-                <span class="field-label">
-                  Secondary love languages (choose all that fit)
-                </span>
-                <div
-                  class="chip-group"
-                  role="group"
-                  aria-label="Secondary love languages (multiple selection)"
-                >
-                  <label class="chip-option">
-                    <input
-                      type="checkbox"
-                      name="loveLanguages"
-                      value="Words of Affirmation"
-                    />
-                    <span>Words of Affirmation</span>
-                  </label>
-                  <label class="chip-option">
-                    <input
-                      type="checkbox"
-                      name="loveLanguages"
-                      value="Quality Time"
-                    />
-                    <span>Quality Time</span>
-                  </label>
-                  <label class="chip-option">
-                    <input
-                      type="checkbox"
-                      name="loveLanguages"
-                      value="Acts of Service"
-                    />
-                    <span>Acts of Service</span>
-                  </label>
-                  <label class="chip-option">
-                    <input
-                      type="checkbox"
-                      name="loveLanguages"
-                      value="Physical Touch"
-                    />
-                    <span>Physical Touch</span>
-                  </label>
-                  <label class="chip-option">
-                    <input
-                      type="checkbox"
-                      name="loveLanguages"
-                      value="Receiving Gifts"
-                    />
-                    <span>Receiving Gifts</span>
-                  </label>
-                </div>
-                <p class="field-hint">
-                  Words of Affirmation — feeling seen through kind words.<br />
-                  Quality Time — feeling loved when you truly share time and
-                  presence.<br />
-                  Acts of Service — feeling supported when someone helps you in
-                  practical ways.<br />
-                  Physical Touch — feeling connected through hugs, holding
-                  hands, and closeness.<br />
-                  Receiving Gifts — feeling cared for through thoughtful
-                  gestures and surprises.
-                </p>
-              </div>
-            </div>
-          </section>
-
           <!-- Hobbies / Interests -->
           <section class="glass-card quiz-section">
             <header class="quiz-section-header">
-              <h2 class="quiz-section-title">Hobbies &amp; Passions</h2>
+              <div class="quiz-section-header-title">
+                <span class="quiz-icon">🎨</span>
+                <h2 class="quiz-section-title">Hobbies &amp; Passions</h2>
+              </div>
               <p class="quiz-section-subtitle">
                 What lights you up or helps you recharge? Choose the ones that
                 feel most like you.
@@ -586,7 +603,10 @@
           <!-- Core Values -->
           <section class="glass-card quiz-section">
             <header class="quiz-section-header">
-              <h2 class="quiz-section-title">Core Values</h2>
+              <div class="quiz-section-header-title">
+                <span class="quiz-icon">💎</span>
+                <h2 class="quiz-section-title">Core Values</h2>
+              </div>
               <p class="quiz-section-subtitle">
                 These are the values that your soul wants to protect in every
                 connection.
@@ -660,9 +680,12 @@
           <!-- Boundaries / Unacceptable -->
           <section class="glass-card quiz-section">
             <header class="quiz-section-header">
-              <h2 class="quiz-section-title">
-                Boundaries &amp; Non-negotiables
-              </h2>
+              <div class="quiz-section-header-title">
+                <span class="quiz-icon">🚦</span>
+                <h2 class="quiz-section-title">
+                  Boundaries &amp; Non-negotiables
+                </h2>
+              </div>
               <p class="quiz-section-subtitle">
                 This is where you gently name what is not OK for you in any
                 connection.
@@ -688,7 +711,10 @@
           <!-- About Me, Mantra, Soul Summary -->
           <section class="glass-card quiz-section">
             <header class="quiz-section-header">
-              <h2 class="quiz-section-title">Your Soul Voice</h2>
+              <div class="quiz-section-header-title">
+                <span class="quiz-icon">🕊️</span>
+                <h2 class="quiz-section-title">Your Soul Voice</h2>
+              </div>
               <p class="quiz-section-subtitle">
                 Share a little piece of your story and how you want to feel in
                 your connections.
@@ -759,11 +785,8 @@
       </div>
     </main>
 
-    <footer class="site-footer">
-      <div class="site-footer-inner">
-        <p>Soulink.global — conscious matching for hearts &amp; souls.</p>
-        <p>Created with love and ChatGPT as a co-creator.</p>
-      </div>
+    <footer class="footer-note">
+      © 2025 Soulink.global | Created with love by Soulink Team
     </footer>
   </body>
 </html>
