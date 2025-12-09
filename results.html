@@ -220,24 +220,13 @@
       font-size: 0.85rem;
       opacity: 0.8;
     }
-        /* --- FIX: always show quiz nav on mobile --- */
-    @media (max-width: 800px) {
-      .navbar .nav-links {
-        display: flex !important;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-      .navbar .hamburger {
-        display: none !important;
-      }
-    }
-
+   
   </style>
 </head>
 <body class="soulink-bg">
 
   <!-- TOP NAVBAR (unified, handled by nav.js) -->
-  <header class="topnav" data-active="Results" aria-label="Primary navigation">
+  <header class="topnav navbar" data-active="Results" aria-label="Primary navigation"></header>
     <div class="topnav-inner">
       <a href="index.html"
          class="brand"
