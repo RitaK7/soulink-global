@@ -18,50 +18,66 @@
   </head>
 
   <body class="soulink-bg">
-    <header class="navbar soulink-nav" data-active="Quiz" aria-label="Primary navigation">
-  <div class="nav-inner">
-    <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">
-      Soulink
-    </a>
+    <header
+      class="navbar soulink-nav"
+      data-active="Quiz"
+      aria-label="Primary navigation"
+    >
+      <div class="nav-inner">
+        <a
+          href="index.html"
+          class="brand"
+          data-page="Home"
+          aria-label="Soulink Home"
+        >
+          Soulink
+        </a>
 
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-label="Toggle navigation">
-      <span></span><span></span><span></span>
-    </button>
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span></span><span></span><span></span>
+        </button>
 
-    <nav class="nav-links" aria-label="Primary">
-      <a href="index.html" data-page="Home">Home</a>
-      <a href="quiz.html" data-page="Quiz">Quiz</a>
-      <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
-      <a href="my-soul.html" data-page="My Soul">My Soul</a>
-      <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
-      <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
-      <a href="match.html" data-page="Match">Match</a>
-      <a href="friends.html" data-page="Friends">Friends</a>
-      <a href="results.html" data-page="Results">Results</a>
-      <a href="login.html" data-page="Login">Log In</a>
-      <a href="signup.html" data-page="Sign Up">Sign Up</a>
-    </nav>
-  </div>
-</header>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="index.html" data-page="Home">Home</a>
+          <a href="quiz.html" data-page="Quiz">Quiz</a>
+          <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
+          <a href="my-soul.html" data-page="My Soul">My Soul</a>
+          <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
+          <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
+          <a href="match.html" data-page="Match">Match</a>
+          <a href="friends.html" data-page="Friends">Friends</a>
+          <a href="results.html" data-page="Results">Results</a>
+          <a href="login.html" data-page="Login">Log In</a>
+          <a href="signup.html" data-page="Sign Up">Sign Up</a>
+        </nav>
+      </div>
+    </header>
 
-    <main class="page">
+    <main class="page container quiz-page">
       <div class="page-inner">
         <section class="page-hero glass-card">
           <div class="page-hero-text">
-            <h1 class="page-title">Soulink Quiz</h1>
-            <p class="page-subtitle">
-              Core profile that powers your My Soul, Soul Chart, Match and Friends pages.
+            <h1 class="page-title section-title">Soulink Quiz</h1>
+            <p class="page-subtitle hint">
+              Core profile that powers your My Soul, Soul Chart, Match and
+              Friends pages.
             </p>
           </div>
         </section>
 
-        <form id="quizForm" data-next="my-soul.html" novalidate>
+        <form id="quizForm" data-next="edit-profile.html" novalidate>
           <!-- Basic Info -->
           <section class="glass-card quiz-section">
             <header class="quiz-section-header">
               <h2 class="quiz-section-title">Basic Information</h2>
               <p class="quiz-section-subtitle">
-                A few simple details so your soul profile feels grounded and clear.
+                A few simple details so your soul profile feels grounded and
+                clear.
               </p>
             </header>
 
@@ -76,6 +92,11 @@
                   placeholder="How do you want to be called here?"
                   autocomplete="name"
                 />
+                <p
+                  class="field-hint field-error"
+                  id="error-name"
+                  aria-live="polite"
+                ></p>
               </div>
 
               <div class="field-group field-group-inline">
@@ -90,7 +111,8 @@
                     autocomplete="bday"
                   />
                   <p class="field-hint">
-                    Text format — you can type DD.MM.YYYY, DD/MM/YYYY or YYYY-MM-DD.
+                    Text format — you can type DD.MM.YYYY, DD/MM/YYYY or
+                    YYYY-MM-DD.
                   </p>
                 </div>
 
@@ -144,14 +166,19 @@
             <header class="quiz-section-header">
               <h2 class="quiz-section-title">How do you identify?</h2>
               <p class="quiz-section-subtitle">
-                Gender and orientation help the algorithm understand who you are and what you’re open to.
+                Gender and orientation help the algorithm understand who you are
+                and what you’re open to.
               </p>
             </header>
 
             <div class="quiz-section-body">
               <div class="field-group">
                 <span class="field-label">Gender</span>
-                <div class="chip-group" role="radiogroup" aria-label="Gender">
+                <div
+                  class="chip-group"
+                  role="radiogroup"
+                  aria-label="Gender"
+                >
                   <label class="chip-option">
                     <input type="radio" name="gender" value="Woman" />
                     <span>Woman</span>
@@ -165,7 +192,11 @@
                     <span>Non-binary</span>
                   </label>
                   <label class="chip-option">
-                    <input type="radio" name="gender" value="Prefer not to say" />
+                    <input
+                      type="radio"
+                      name="gender"
+                      value="Prefer not to say"
+                    />
                     <span>Prefer not to say</span>
                   </label>
                 </div>
@@ -186,29 +217,57 @@
 
               <div class="field-group">
                 <span class="field-label">Orientation</span>
-                <div class="chip-group" role="radiogroup" aria-label="Orientation">
+                <div
+                  class="chip-group"
+                  role="radiogroup"
+                  aria-label="Orientation"
+                >
                   <label class="chip-option">
-                    <input type="radio" name="orientation" value="Heterosexual" />
+                    <input
+                      type="radio"
+                      name="orientation"
+                      value="Heterosexual"
+                    />
                     <span>Heterosexual</span>
                   </label>
                   <label class="chip-option">
-                    <input type="radio" name="orientation" value="Homosexual" />
+                    <input
+                      type="radio"
+                      name="orientation"
+                      value="Homosexual"
+                    />
                     <span>Homosexual</span>
                   </label>
                   <label class="chip-option">
-                    <input type="radio" name="orientation" value="Bisexual" />
+                    <input
+                      type="radio"
+                      name="orientation"
+                      value="Bisexual"
+                    />
                     <span>Bisexual</span>
                   </label>
                   <label class="chip-option">
-                    <input type="radio" name="orientation" value="Pansexual" />
+                    <input
+                      type="radio"
+                      name="orientation"
+                      value="Pansexual"
+                    />
                     <span>Pansexual</span>
                   </label>
                   <label class="chip-option">
-                    <input type="radio" name="orientation" value="Asexual" />
+                    <input
+                      type="radio"
+                      name="orientation"
+                      value="Asexual"
+                    />
                     <span>Asexual</span>
                   </label>
                   <label class="chip-option">
-                    <input type="radio" name="orientation" value="Questioning" />
+                    <input
+                      type="radio"
+                      name="orientation"
+                      value="Questioning"
+                    />
                     <span>Questioning</span>
                   </label>
                   <label class="chip-option">
@@ -223,11 +282,11 @@
               </div>
 
               <div class="field-group">
-                <label for="orientation" class="field-label">
+                <label for="orientationText" class="field-label">
                   Orientation in your own words (optional)
                 </label>
                 <input
-                  id="orientation"
+                  id="orientationText"
                   name="orientationText"
                   type="text"
                   class="field-input"
@@ -244,7 +303,8 @@
                 What kind of connection are you open to?
               </h2>
               <p class="quiz-section-subtitle">
-                You can always change this later — it just helps to tune your matches.
+                You can always change this later — it just helps to tune your
+                matches.
               </p>
             </header>
 
@@ -281,6 +341,11 @@
                     <span>Not sure yet</span>
                   </label>
                 </div>
+                <p
+                  class="field-hint field-error"
+                  id="error-connectionType"
+                  aria-live="polite"
+                ></p>
               </div>
             </div>
           </section>
@@ -290,7 +355,8 @@
             <header class="quiz-section-header">
               <h2 class="quiz-section-title">Love Languages</h2>
               <p class="quiz-section-subtitle">
-                Choose your primary love language and any secondary ones that also feel important.
+                Choose your primary love language and any secondary ones that
+                also feel important.
               </p>
             </header>
 
@@ -343,6 +409,11 @@
                     <span>Receiving Gifts</span>
                   </label>
                 </div>
+                <p
+                  class="field-hint field-error"
+                  id="error-loveLanguage"
+                  aria-live="polite"
+                ></p>
               </div>
 
               <div class="field-group">
@@ -395,6 +466,17 @@
                     <span>Receiving Gifts</span>
                   </label>
                 </div>
+                <p class="field-hint">
+                  Words of Affirmation — feeling seen through kind words.<br />
+                  Quality Time — feeling loved when you truly share time and
+                  presence.<br />
+                  Acts of Service — feeling supported when someone helps you in
+                  practical ways.<br />
+                  Physical Touch — feeling connected through hugs, holding
+                  hands, and closeness.<br />
+                  Receiving Gifts — feeling cared for through thoughtful
+                  gestures and surprises.
+                </p>
               </div>
             </div>
           </section>
@@ -404,7 +486,8 @@
             <header class="quiz-section-header">
               <h2 class="quiz-section-title">Hobbies &amp; Passions</h2>
               <p class="quiz-section-subtitle">
-                What lights you up or helps you recharge? Choose the ones that feel most like you.
+                What lights you up or helps you recharge? Choose the ones that
+                feel most like you.
               </p>
             </header>
 
@@ -505,7 +588,8 @@
             <header class="quiz-section-header">
               <h2 class="quiz-section-title">Core Values</h2>
               <p class="quiz-section-subtitle">
-                These are the values that your soul wants to protect in every connection.
+                These are the values that your soul wants to protect in every
+                connection.
               </p>
             </header>
 
@@ -548,7 +632,11 @@
                     <span>Family</span>
                   </label>
                   <label class="chip-option">
-                    <input type="checkbox" name="values" value="Spirituality" />
+                    <input
+                      type="checkbox"
+                      name="values"
+                      value="Spirituality"
+                    />
                     <span>Spirituality</span>
                   </label>
                 </div>
@@ -572,9 +660,12 @@
           <!-- Boundaries / Unacceptable -->
           <section class="glass-card quiz-section">
             <header class="quiz-section-header">
-              <h2 class="quiz-section-title">Boundaries &amp; Non-negotiables</h2>
+              <h2 class="quiz-section-title">
+                Boundaries &amp; Non-negotiables
+              </h2>
               <p class="quiz-section-subtitle">
-                This is where you gently name what is not OK for you in any connection.
+                This is where you gently name what is not OK for you in any
+                connection.
               </p>
             </header>
 
@@ -599,7 +690,8 @@
             <header class="quiz-section-header">
               <h2 class="quiz-section-title">Your Soul Voice</h2>
               <p class="quiz-section-subtitle">
-                Share a little piece of your story and how you want to feel in your connections.
+                Share a little piece of your story and how you want to feel in
+                your connections.
               </p>
             </header>
 
@@ -651,20 +743,16 @@
           <!-- Actions -->
           <section class="quiz-actions">
             <div class="quiz-actions-inner">
-              <button
-                type="button"
-                class="btn secondary"
-                onclick="window.location.href='index.html'"
-              >
+              <a href="index.html" class="btn secondary">
                 ← Back to Home
-              </button>
+              </a>
               <button type="submit" class="btn primary">
-                Next → My Soul
+                Next → Edit Profile
               </button>
             </div>
             <p class="quiz-actions-hint">
-              Your answers are saved locally in your browser and power your My Soul, Soul Chart,
-              Match and Friends pages.
+              Your answers are saved locally in your browser and power your My
+              Soul, Soul Chart, Match and Friends pages.
             </p>
           </section>
         </form>
