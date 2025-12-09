@@ -1628,3 +1628,130 @@ body[data-page="match"] .navbar .nav-links a[href*="match"]{
   border-color: #00FDD8 !important;
   background: #00FDD8 !important;
 }
+/* style.css — navbar section */
+
+.navbar.soulink-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  background: #003c43;
+}
+
+/* inner layout */
+.navbar.soulink-nav .nav-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* brand */
+.navbar.soulink-nav .brand {
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #00fdd8;
+}
+
+/* nav links container */
+.navbar.soulink-nav .nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* individual links */
+.navbar.soulink-nav .nav-links a {
+  position: relative;
+  text-decoration: none;
+  font-size: 0.95rem;
+  color: #e6fffb;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.navbar.soulink-nav .nav-links a:hover {
+  background: rgba(0, 253, 216, 0.12);
+  box-shadow: 0 0 10px rgba(0, 253, 216, 0.35);
+}
+
+.navbar.soulink-nav .nav-links a.active {
+  background: rgba(0, 253, 216, 0.18);
+  color: #00fdd8;
+  box-shadow: 0 0 16px rgba(0, 253, 216, 0.55);
+}
+
+/* hamburger toggle */
+.navbar.soulink-nav .nav-toggle {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 253, 216, 0.6);
+  background: rgba(0, 60, 67, 0.9);
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(0, 253, 216, 0.4);
+}
+
+.navbar.soulink-nav .nav-toggle span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: #00fdd8;
+}
+
+/* desktop layout */
+@media (min-width: 960px) {
+  .navbar.soulink-nav .nav-toggle {
+    display: none;
+  }
+
+  .navbar.soulink-nav .nav-links {
+    display: flex;
+    position: static;
+    flex-direction: row;
+    background: transparent;
+    box-shadow: none;
+  }
+}
+
+/* mobile layout */
+@media (max-width: 959.98px) {
+  .navbar.soulink-nav .nav-toggle {
+    display: inline-flex;
+  }
+
+  .navbar.soulink-nav .nav-links {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.75rem 1rem 1rem;
+    background: rgba(0, 60, 67, 0.97);
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.6);
+  }
+
+  .navbar.soulink-nav.is-open .nav-links {
+    display: flex;
+  }
+
+  .navbar.soulink-nav .nav-links a {
+    width: 100%;
+  }
+}
+
