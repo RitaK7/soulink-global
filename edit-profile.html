@@ -15,219 +15,1029 @@
     <script src="data-helpers.js" defer></script>
     <script src="nav.js" defer></script>
     <script src="edit-profile.js" defer></script>
+
+    <!-- Edit Profile visual upgrade (design-only, JS logic untouched) -->
+    <style>
+      /* Shell */
+
+      .edit-profile-page {
+        position: relative;
+        padding: 1.25rem 1rem 2.25rem;
+      }
+
+      @media (min-width: 768px) {
+        .edit-profile-page {
+          padding: 2rem 1.5rem 3rem;
+        }
+      }
+
+      .edit-profile-page .ep-inner,
+      .edit-profile-page .ep-hero,
+      .edit-profile-page .ep-section {
+        position: relative;
+        z-index: 1;
+      }
+
+      .edit-profile-page::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.18;
+        background-image:
+          radial-gradient(circle at 5% 10%, rgba(0, 253, 216, 0.25) 0, transparent 45%),
+          radial-gradient(circle at 90% 85%, rgba(0, 253, 216, 0.14) 0, transparent 45%),
+          radial-gradient(circle at 40% 60%, rgba(255, 255, 255, 0.05) 0, transparent 38%);
+        z-index: 0;
+      }
+
+      .edit-profile-page .ep-inner {
+        max-width: 1120px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      /* Hero */
+
+      .edit-profile-page .ep-hero {
+        padding: 1.25rem 1.1rem;
+        border-radius: 20px;
+        background:
+          radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.18), transparent 60%),
+          radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.08), transparent 60%),
+          rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(0, 253, 216, 0.38);
+        box-shadow:
+          0 12px 32px rgba(0, 0, 0, 0.7),
+          0 0 18px rgba(0, 253, 216, 0.3);
+        backdrop-filter: blur(13px);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.9rem;
+        transform: translateY(10px);
+        opacity: 0;
+        animation: epFadeUp 0.55s ease-out forwards;
+      }
+
+      @media (min-width: 768px) {
+        .edit-profile-page .ep-hero {
+          padding: 1.4rem 1.7rem;
+          border-radius: 22px;
+        }
+      }
+
+      .edit-profile-page .page-title {
+        font-size: 1.7rem;
+        letter-spacing: 0.04em;
+      }
+
+      @media (min-width: 900px) {
+        .edit-profile-page .page-title {
+          font-size: 1.9rem;
+        }
+      }
+
+      .edit-profile-page .page-subtitle {
+        margin-top: 0.3rem;
+        max-width: 34rem;
+        font-size: 0.9rem;
+        opacity: 0.9;
+      }
+
+      .edit-profile-page .ep-hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .edit-profile-page .ep-hero-actions .btn {
+        min-width: 9rem;
+      }
+
+      /* Grid layout */
+
+      .edit-profile-page .page-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.1fr);
+        gap: 1rem;
+        align-items: flex-start;
+      }
+
+      @media (max-width: 960px) {
+        .edit-profile-page .page-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      /* Sections / cards */
+
+      .edit-profile-page .ep-section.glass-card {
+        padding: 1.1rem 1rem 1.3rem;
+        border-radius: 20px;
+        background:
+          linear-gradient(135deg, rgba(0, 253, 216, 0.06), transparent 60%),
+          rgba(0, 0, 0, 0.55);
+        border: 1px solid rgba(0, 253, 216, 0.24);
+        box-shadow:
+          0 10px 28px rgba(0, 0, 0, 0.7),
+          0 0 18px rgba(0, 253, 216, 0.22);
+        backdrop-filter: blur(12px);
+        transform: translateY(10px);
+        opacity: 0;
+        animation: epFadeUp 0.55s ease-out forwards;
+      }
+
+      .edit-profile-page .ep-section-main {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .edit-profile-page .ep-section-header {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        margin-bottom: 0.3rem;
+      }
+
+      .edit-profile-page .ep-section-header-title {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+      }
+
+      .edit-profile-page .ep-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 999px;
+        font-size: 1rem;
+        background:
+          radial-gradient(circle at 25% 0%, rgba(0, 253, 216, 0.4), rgba(0, 0, 0, 0.7));
+        box-shadow: 0 0 14px rgba(0, 253, 216, 0.55);
+      }
+
+      .edit-profile-page .ep-section-title {
+        font-size: 1.02rem;
+        letter-spacing: 0.02em;
+      }
+
+      .edit-profile-page .ep-section-subtitle {
+        font-size: 0.83rem;
+        opacity: 0.83;
+        max-width: 38rem;
+      }
+
+      .edit-profile-page .ep-section-body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+      }
+
+      @keyframes epFadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(13px);
+          filter: blur(3px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+          filter: blur(0);
+        }
+      }
+
+      /* Field groups */
+
+      .edit-profile-page .row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.7rem;
+      }
+
+      @media (min-width: 768px) {
+        .edit-profile-page .row {
+          grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+        }
+      }
+
+      .edit-profile-page label {
+        display: inline-block;
+        font-size: 0.87rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        margin-bottom: 0.16rem;
+      }
+
+      .edit-profile-page .hint {
+        font-size: 0.78rem;
+        opacity: 0.8;
+      }
+
+      /* Inputs / textareas */
+
+      .edit-profile-page input[type="text"],
+      .edit-profile-page input[type="file"],
+      .edit-profile-page textarea {
+        font-family: inherit;
+      }
+
+      .edit-profile-page input[type="text"] {
+        width: 100%;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 253, 216, 0.26);
+        padding: 0.5rem 0.9rem;
+        font-size: 0.92rem;
+        background: rgba(0, 0, 0, 0.76);
+        background-image: radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.07), transparent 60%);
+        color: #f3ffff;
+        outline: none;
+        box-shadow: 0 0 0 0 rgba(0, 253, 216, 0.2);
+        transition:
+          border-color 0.16s ease,
+          box-shadow 0.16s ease,
+          transform 0.06s ease,
+          background 0.16s ease;
+      }
+
+      .edit-profile-page input[type="text"]::placeholder {
+        color: rgba(221, 248, 244, 0.7);
+      }
+
+      .edit-profile-page input[type="text"]:focus {
+        border-color: rgba(0, 253, 216, 0.9);
+        box-shadow:
+          0 0 0 1px rgba(0, 253, 216, 0.65),
+          0 0 16px rgba(0, 253, 216, 0.4);
+        transform: translateY(-1px);
+        background-image: radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.12), transparent 60%);
+      }
+
+      .edit-profile-page textarea {
+        width: 100%;
+        min-height: 4.1rem;
+        border-radius: 16px;
+        border: 1px solid rgba(0, 253, 216, 0.26);
+        padding: 0.6rem 0.9rem;
+        font-size: 0.92rem;
+        background: rgba(0, 0, 0, 0.76);
+        background-image: radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.07), transparent 60%);
+        color: #f3ffff;
+        outline: none;
+        resize: vertical;
+        box-shadow: 0 0 0 0 rgba(0, 253, 216, 0.2);
+        transition:
+          border-color 0.16s ease,
+          box-shadow 0.16s ease,
+          transform 0.06s ease,
+          background 0.16s ease;
+      }
+
+      .edit-profile-page textarea::placeholder {
+        color: rgba(221, 248, 244, 0.7);
+      }
+
+      .edit-profile-page textarea:focus {
+        border-color: rgba(0, 253, 216, 0.9);
+        box-shadow:
+          0 0 0 1px rgba(0, 253, 216, 0.65),
+          0 0 18px rgba(0, 253, 216, 0.4);
+        transform: translateY(-1px);
+        background-image: radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.12), transparent 60%);
+      }
+
+      /* Chips */
+
+      .edit-profile-page .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-top: 0.05rem;
+      }
+
+      .edit-profile-page .chip {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        padding: 0.35rem 0.8rem;
+        font-size: 0.84rem;
+        cursor: pointer;
+        border: 1px solid rgba(0, 253, 216, 0.45);
+        background: rgba(0, 0, 0, 0.82);
+        box-shadow: 0 0 0 0 rgba(0, 253, 216, 0.28);
+        color: #e4fffb;
+        transition:
+          border-color 0.16s ease,
+          box-shadow 0.16s ease,
+          transform 0.06s ease,
+          background 0.16s ease,
+          opacity 0.16s ease;
+      }
+
+      .edit-profile-page .chip .ico {
+        font-size: 0.8rem;
+        opacity: 0.8;
+      }
+
+      .edit-profile-page .chip .label {
+        white-space: nowrap;
+      }
+
+      .edit-profile-page .chip:hover {
+        border-color: rgba(0, 253, 216, 0.95);
+        box-shadow:
+          0 0 14px rgba(0, 253, 216, 0.5),
+          0 0 0 1px rgba(0, 253, 216, 0.4);
+        transform: translateY(-1px);
+      }
+
+      .edit-profile-page .chip[aria-pressed="true"] {
+        background:
+          radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.25), transparent 60%),
+          rgba(0, 0, 0, 0.96);
+        border-color: rgba(0, 253, 216, 1);
+        box-shadow: 0 0 20px rgba(0, 253, 216, 0.7);
+      }
+
+      /* Photo section */
+
+      .edit-profile-page .photos {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 0.5rem;
+      }
+
+      @media (max-width: 640px) {
+        .edit-profile-page .photos {
+          justify-content: center;
+        }
+      }
+
+      .edit-profile-page .ph {
+        position: relative;
+        width: 180px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+        align-items: center;
+        text-align: center;
+      }
+
+      .edit-profile-page .ph-main {
+        position: relative;
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.22), transparent 55%),
+          rgba(0, 0, 0, 0.86);
+        border: 1px solid rgba(0, 253, 216, 0.45);
+        box-shadow:
+          0 0 18px rgba(0, 253, 216, 0.55),
+          0 10px 18px rgba(0, 0, 0, 0.7);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition:
+          box-shadow 0.16s ease,
+          transform 0.12s ease,
+          border-color 0.16s ease;
+      }
+
+      .edit-profile-page .ph-main:hover {
+        box-shadow:
+          0 0 22px rgba(0, 253, 216, 0.9),
+          0 14px 22px rgba(0, 0, 0, 0.8);
+        border-color: rgba(0, 253, 216, 1);
+        transform: translateY(-2px);
+      }
+
+      .edit-profile-page .ph.has-photo .ph-placeholder {
+        opacity: 0;
+      }
+
+      .edit-profile-page .ph-main label.photo-circle {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .edit-profile-page .ph-main img.thumb {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        display: block;
+        opacity: 0;
+        transition: opacity 0.18s ease;
+      }
+
+      .edit-profile-page .ph.has-photo img.thumb {
+        opacity: 1;
+      }
+
+      .edit-profile-page .ph-placeholder {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.7rem;
+        text-align: center;
+        font-size: 0.8rem;
+        color: rgba(228, 255, 251, 0.82);
+        pointer-events: none;
+        transition: opacity 0.16s ease;
+      }
+
+      .edit-profile-page .ph-main:hover .ph-placeholder {
+        opacity: 0.15;
+      }
+
+      .edit-profile-page .ph input[type="file"] {
+        display: none;
+      }
+
+      .edit-profile-page .star {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        z-index: 2;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 253, 216, 0.7);
+        background: rgba(0, 0, 0, 0.8);
+        color: #ffe066;
+        font-size: 0.9rem;
+        width: 26px;
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(0, 253, 216, 0.4);
+        transition:
+          border-color 0.16s ease,
+          box-shadow 0.16s ease,
+          transform 0.08s ease;
+      }
+
+      .edit-profile-page .star:hover {
+        border-color: rgba(0, 253, 216, 1);
+        box-shadow:
+          0 0 16px rgba(0, 253, 216, 0.8),
+          0 0 0 1px rgba(0, 253, 216, 0.7);
+        transform: translateY(-1px);
+      }
+
+      .edit-profile-page .photo-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.3rem;
+      }
+
+      .edit-profile-page .photo-actions .btn {
+        padding-inline: 0.8rem;
+        font-size: 0.8rem;
+        min-height: 2.1rem;
+      }
+
+      .edit-profile-page .btn.replace {
+        background: transparent;
+        border-color: rgba(0, 253, 216, 0.7);
+        color: #e9fffb;
+      }
+
+      .edit-profile-page .btn.replace:hover {
+        background: rgba(0, 253, 216, 0.14);
+        box-shadow: 0 0 14px rgba(0, 253, 216, 0.4);
+      }
+
+      .edit-profile-page .btn.remove {
+        background: rgba(0, 0, 0, 0.7);
+        border-color: rgba(255, 154, 162, 0.7);
+        color: #ffd4dc;
+      }
+
+      .edit-profile-page .btn.remove:hover {
+        background: rgba(255, 154, 162, 0.16);
+        box-shadow: 0 0 14px rgba(255, 154, 162, 0.4);
+      }
+
+      /* Actions row */
+
+      .edit-profile-page .ep-actions {
+        margin-top: 1.1rem;
+        border-top: 1px solid rgba(0, 253, 216, 0.16);
+        padding-top: 0.9rem;
+      }
+
+      .edit-profile-page .ep-actions-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        align-items: center;
+      }
+
+      .edit-profile-page .ep-actions-row .spacer {
+        flex: 1;
+      }
+
+      .edit-profile-page .ep-actions-row .btn {
+        min-width: 8.8rem;
+        justify-content: center;
+      }
+
+      @media (max-width: 720px) {
+        .edit-profile-page .ep-actions-row {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .edit-profile-page .ep-actions-row .spacer {
+          display: none;
+        }
+
+        .edit-profile-page .ep-actions-row .btn {
+          width: 100%;
+        }
+      }
+
+      .edit-profile-page .btn.primary {
+        background: linear-gradient(
+          135deg,
+          rgba(0, 253, 216, 0.97),
+          rgba(0, 253, 216, 0.75)
+        );
+        color: #003c43;
+        border-color: rgba(0, 253, 216, 1);
+        box-shadow: 0 0 20px rgba(0, 253, 216, 0.85);
+      }
+
+      .edit-profile-page .btn.primary:hover {
+        box-shadow: 0 0 24px rgba(0, 253, 216, 1);
+        transform: translateY(-1px);
+      }
+
+      .edit-profile-page .btn.outline {
+        background: transparent;
+        border-color: rgba(0, 253, 216, 0.75);
+        color: #e9fffb;
+      }
+
+      .edit-profile-page .btn.outline:hover {
+        background: rgba(0, 253, 216, 0.12);
+        box-shadow: 0 0 14px rgba(0, 253, 216, 0.45);
+      }
+
+      .edit-profile-page .btn.ghost {
+        background: rgba(0, 0, 0, 0.7);
+        border-color: rgba(0, 253, 216, 0.35);
+        color: #e9fffb;
+      }
+
+      .edit-profile-page .btn.ghost:hover {
+        background: rgba(0, 253, 216, 0.08);
+        box-shadow: 0 0 12px rgba(0, 253, 216, 0.35);
+      }
+
+      /* Preview card */
+
+      .edit-profile-page aside.preview {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+      }
+
+      .edit-profile-page aside.preview h2 {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        font-size: 1.02rem;
+      }
+
+      .edit-profile-page aside.preview h2::before {
+        content: "🔮";
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 999px;
+        background:
+          radial-gradient(circle at 20% 0%, rgba(0, 253, 216, 0.4), rgba(0, 0, 0, 0.9));
+        box-shadow: 0 0 14px rgba(0, 253, 216, 0.6);
+      }
+
+      .edit-profile-page .avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.2), transparent 55%),
+          rgba(0, 0, 0, 0.92);
+        border: 1px solid rgba(0, 253, 216, 0.55);
+        box-shadow:
+          0 0 16px rgba(0, 253, 216, 0.6),
+          0 10px 18px rgba(0, 0, 0, 0.8);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .edit-profile-page .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .edit-profile-page .tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.24rem 0.6rem;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 253, 216, 0.6);
+        font-size: 0.78rem;
+        margin-right: 0.25rem;
+        margin-top: 0.16rem;
+        background:
+          radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.2), transparent 55%),
+          rgba(0, 0, 0, 0.92);
+      }
+
+      .edit-profile-page .list-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+        margin-top: 0.25rem;
+      }
+
+      .edit-profile-page .list-chips .chip.gem {
+        font-size: 0.8rem;
+        padding-inline: 0.7rem;
+      }
+
+      .edit-profile-page .about-quote {
+        margin-top: 0.3rem;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+
+      .edit-profile-page .about-quote.empty {
+        opacity: 0.7;
+        font-style: italic;
+      }
+
+      /* Footer alignment */
+
+      .site-footer {
+        margin-top: 0.25rem;
+        text-align: center;
+      }
+
+      .site-footer-inner p {
+        margin: 0.2rem 0;
+      }
+    </style>
   </head>
 
   <body class="soulink-bg">
-    <!-- NAVIGATION -->
-    <header class="navbar soulink-nav" data-active="Edit Profile" aria-label="Primary navigation">
-  <div class="nav-inner">
-    <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">
-      Soulink
-    </a>
+    <!-- NAVIGATION (unchanged) -->
+    <header
+      class="navbar soulink-nav"
+      data-active="Edit Profile"
+      aria-label="Primary navigation"
+    >
+      <div class="nav-inner">
+        <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">
+          Soulink
+        </a>
 
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-label="Toggle navigation">
-      <span></span><span></span><span></span>
-    </button>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
 
-    <nav class="nav-links" aria-label="Primary">
-      <a href="index.html" data-page="Home">Home</a>
-      <a href="quiz.html" data-page="Quiz">Quiz</a>
-      <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
-      <a href="my-soul.html" data-page="My Soul">My Soul</a>
-      <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
-      <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
-      <a href="match.html" data-page="Match">Match</a>
-      <a href="friends.html" data-page="Friends">Friends</a>
-      <a href="results.html" data-page="Results">Results</a>
-      <a href="login.html" data-page="Login">Log In</a>
-      <a href="signup.html" data-page="Sign Up">Sign Up</a>
-    </nav>
-  </div>
-</header>
-
+        <nav class="nav-links" aria-label="Primary">
+          <a href="index.html" data-page="Home">Home</a>
+          <a href="quiz.html" data-page="Quiz">Quiz</a>
+          <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
+          <a href="my-soul.html" data-page="My Soul">My Soul</a>
+          <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
+          <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
+          <a href="match.html" data-page="Match">Match</a>
+          <a href="friends.html" data-page="Friends">Friends</a>
+          <a href="results.html" data-page="Results">Results</a>
+          <a href="login.html" data-page="Login">Log In</a>
+          <a href="signup.html" data-page="Sign Up">Sign Up</a>
+        </nav>
+      </div>
+    </header>
 
     <!-- MAIN -->
-    <main class="page">
-      <div class="page-inner">
+    <main class="page edit-profile-page">
+      <div class="page-inner ep-inner">
         <!-- HERO -->
-        <section class="page-hero glass-card">
+        <section class="page-hero glass-card ep-hero">
           <div class="page-hero-text">
             <h1 class="page-title">Edit Profile</h1>
             <p class="page-subtitle">
               Fine-tune your soul data that powers My Soul, Soul Chart, Match and Friends.
             </p>
           </div>
+          <div class="ep-hero-actions">
+            <!-- Top save uses existing saveBtn logic by triggering bottom button -->
+            <button
+              type="button"
+              class="btn primary"
+              onclick="var b=document.getElementById('saveBtn'); if(b){ b.click(); }"
+            >
+              Save Changes
+            </button>
+            <a href="my-soul.html" class="btn outline">View My Soul →</a>
+          </div>
         </section>
 
         <!-- GRID LAYOUT -->
         <div class="page-grid page-grid-2col">
           <!-- LEFT COLUMN — FORM -->
-          <section class="glass-card card">
-            <h2>🛠️ Edit Profile</h2>
+          <section class="glass-card card ep-section">
+            <div class="ep-section-main">
+              <header class="ep-section-header">
+                <div class="ep-section-header-title">
+                  <span class="ep-icon">🛠️</span>
+                  <h2 class="ep-section-title">Profile Details</h2>
+                </div>
+                <p class="ep-section-subtitle">
+                  Update your basic information, preferences and soul story. Everything is stored locally in your browser.
+                </p>
+              </header>
 
-            <!-- Name + Country -->
-            <div class="row" style="margin-top: 10px;">
-              <div>
-                <label for="name">Name</label>
-                <input id="name" type="text" placeholder="Your name" />
-              </div>
-              <div>
-                <label for="country">Country</label>
-                <input id="country" type="text" placeholder="Country" />
-              </div>
-            </div>
-
-            <!-- Birthday + Connection Type -->
-            <div class="row" style="margin-top: 10px;">
-              <div>
-                <label for="birthday">Birth date</label>
-                <input
-                  id="birthday"
-                  type="text"
-                  inputmode="numeric"
-                  pattern="[0-9\-\.]*"
-                  placeholder="1972-11-22"
-                  aria-describedby="birthdayHint"
-                />
-                <div id="birthdayHint" class="hint">Example: 1993-02-24 (or type 19930224)</div>
-              </div>
-
-              <div>
-                <label>Connection Type</label>
-                <div id="connectionChips" class="chips"></div>
-              </div>
-            </div>
-
-            <!-- Love Languages -->
-            <div style="margin-top: 10px;">
-              <label>
-                Love Languages
-                <small class="hint">Choose one or more. The first becomes your Primary.</small>
-              </label>
-              <div id="loveChips" class="chips"></div>
-            </div>
-
-            <!-- Gender + Seeking -->
-            <div class="row" style="margin-top: 10px;">
-              <div>
-                <label>Your Gender Identity</label>
-                <div id="genderIdChips" class="chips"></div>
-                <div id="genderSelfMount"></div>
-              </div>
-
-              <div>
-                <label>Who you want to connect with</label>
-                <div id="connectWithChips" class="chips"></div>
-                <div id="connectWithCustomMount"></div>
-              </div>
-            </div>
-
-            <!-- Orientation -->
-            <div style="margin-top: 10px;">
-              <label>Orientation</label>
-              <div id="orientationChips" class="chips"></div>
-            </div>
-
-            <!-- Hobbies + Values -->
-            <div class="row" style="margin-top: 10px;">
-              <div>
-                <label>Hobbies</label>
-                <div id="hobbyChips" class="chips"></div>
-                <input
-                  id="hobbyInput"
-                  type="text"
-                  placeholder="Add custom hobby… (Enter)"
-                  style="margin-top: 8px;"
-                />
-              </div>
-
-              <div>
-                <label>Values</label>
-                <div id="valueChips" class="chips"></div>
-                <input
-                  id="valueInput"
-                  type="text"
-                  placeholder="Add custom value… (Enter)"
-                  style="margin-top: 8px;"
-                />
-              </div>
-            </div>
-
-            <!-- Boundaries + About -->
-            <div class="row" style="margin-top: 10px;">
-              <div>
-                <label for="boundaries">Boundaries</label>
-                <textarea
-                  id="boundaries"
-                  placeholder="What behaviors are not aligned with your soul? 🌑"
-                ></textarea>
-              </div>
-
-              <div>
-                <label for="aboutMe">About Me</label>
-                <textarea id="aboutMe" placeholder="Tell us about your soul journey… ✨"></textarea>
-              </div>
-            </div>
-
-            <!-- Photos -->
-            <div style="margin-top: 10px;">
-              <label>Profile Photos</label>
-
-              <div class="photos">
-                <div class="ph" id="ph1">
-                  <button class="star" id="main1" type="button" aria-label="Set as Main">⭐</button>
-                  <img id="thumb1" class="thumb" alt="Photo 1 preview" />
-                  <input id="file1" type="file" accept="image/*" />
-                  <div class="actions">
-                    <button class="btn ghost" id="remove1">Remove</button>
+              <div class="ep-section-body">
+                <!-- Name + Country -->
+                <div class="row">
+                  <div>
+                    <label for="name">Name</label>
+                    <input id="name" type="text" placeholder="Your name" />
+                  </div>
+                  <div>
+                    <label for="country">Country</label>
+                    <input id="country" type="text" placeholder="Country" />
                   </div>
                 </div>
 
-                <div class="ph" id="ph2">
-                  <button class="star" id="main2" type="button" aria-label="Set as Main">⭐</button>
-                  <img id="thumb2" class="thumb" alt="Photo 2 preview" />
-                  <input id="file2" type="file" accept="image/*" />
-                  <div class="actions">
-                    <button class="btn ghost" id="remove2">Remove</button>
+                <!-- Birthday + Connection Type -->
+                <div class="row">
+                  <div>
+                    <label for="birthday">Birth date</label>
+                    <input
+                      id="birthday"
+                      type="text"
+                      inputmode="numeric"
+                      pattern="[0-9\-\.]*"
+                      placeholder="1972-11-22"
+                      aria-describedby="birthdayHint"
+                    />
+                    <div id="birthdayHint" class="hint">
+                      Example: 1993-02-24 (or type 19930224)
+                    </div>
+                  </div>
+
+                  <div>
+                    <label>Connection Type</label>
+                    <div id="connectionChips" class="chips"></div>
                   </div>
                 </div>
 
-                <div class="ph" id="ph3">
-                  <button class="star" id="main3" type="button" aria-label="Set as Main">⭐</button>
-                  <img id="thumb3" class="thumb" alt="Photo 3 preview" />
-                  <input id="file3" type="file" accept="image/*" />
-                  <div class="actions">
-                    <button class="btn ghost" id="remove3">Remove</button>
+                <!-- Love Languages -->
+                <div>
+                  <label>
+                    Love Languages
+                    <small class="hint">
+                      Choose one or more. The first becomes your Primary.
+                    </small>
+                  </label>
+                  <div id="loveChips" class="chips"></div>
+                </div>
+
+                <!-- Gender + Seeking -->
+                <div class="row">
+                  <div>
+                    <label>Your Gender Identity</label>
+                    <div id="genderIdChips" class="chips"></div>
+                    <div id="genderSelfMount"></div>
+                  </div>
+
+                  <div>
+                    <label>Who you want to connect with</label>
+                    <div id="connectWithChips" class="chips"></div>
+                    <div id="connectWithCustomMount"></div>
+                  </div>
+                </div>
+
+                <!-- Orientation -->
+                <div>
+                  <label>Orientation</label>
+                  <div id="orientationChips" class="chips"></div>
+                </div>
+
+                <!-- Hobbies + Values -->
+                <div class="row">
+                  <div>
+                    <label>Hobbies</label>
+                    <div id="hobbyChips" class="chips"></div>
+                    <input
+                      id="hobbyInput"
+                      type="text"
+                      placeholder="Add custom hobby… (Enter)"
+                      style="margin-top: 8px;"
+                    />
+                  </div>
+
+                  <div>
+                    <label>Values</label>
+                    <div id="valueChips" class="chips"></div>
+                    <input
+                      id="valueInput"
+                      type="text"
+                      placeholder="Add custom value… (Enter)"
+                      style="margin-top: 8px;"
+                    />
+                  </div>
+                </div>
+
+                <!-- Boundaries + About -->
+                <div class="row">
+                  <div>
+                    <label for="boundaries">Boundaries</label>
+                    <textarea
+                      id="boundaries"
+                      placeholder="What behaviors are not aligned with your soul? 🌑"
+                    ></textarea>
+                  </div>
+
+                  <div>
+                    <label for="aboutMe">About Me</label>
+                    <textarea
+                      id="aboutMe"
+                      placeholder="Tell us about your soul journey… ✨"
+                    ></textarea>
+                  </div>
+                </div>
+
+                <!-- Photos -->
+                <div>
+                  <label>Profile Photos</label>
+
+                  <div class="photos">
+                    <!-- Slot 1 -->
+                    <div class="ph" id="ph1">
+                      <div class="ph-main">
+                        <button
+                          class="star"
+                          id="main1"
+                          type="button"
+                          aria-label="Set as Main"
+                        >
+                          ⭐
+                        </button>
+                        <label for="file1" class="photo-circle">
+                          <img id="thumb1" class="thumb" alt="Photo 1 preview" />
+                          <div class="ph-placeholder">
+                            Tap to upload your main photo
+                          </div>
+                        </label>
+                        <input id="file1" type="file" accept="image/*" />
+                      </div>
+                      <div class="photo-actions">
+                        <label for="file1" class="btn replace">Replace photo</label>
+                        <button class="btn remove" id="remove1" type="button">
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Slot 2 -->
+                    <div class="ph" id="ph2">
+                      <div class="ph-main">
+                        <button
+                          class="star"
+                          id="main2"
+                          type="button"
+                          aria-label="Set as Main"
+                        >
+                          ⭐
+                        </button>
+                        <label for="file2" class="photo-circle">
+                          <img id="thumb2" class="thumb" alt="Photo 2 preview" />
+                          <div class="ph-placeholder">
+                            Tap to add another angle or moment
+                          </div>
+                        </label>
+                        <input id="file2" type="file" accept="image/*" />
+                      </div>
+                      <div class="photo-actions">
+                        <label for="file2" class="btn replace">Replace photo</label>
+                        <button class="btn remove" id="remove2" type="button">
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Slot 3 -->
+                    <div class="ph" id="ph3">
+                      <div class="ph-main">
+                        <button
+                          class="star"
+                          id="main3"
+                          type="button"
+                          aria-label="Set as Main"
+                        >
+                          ⭐
+                        </button>
+                        <label for="file3" class="photo-circle">
+                          <img id="thumb3" class="thumb" alt="Photo 3 preview" />
+                          <div class="ph-placeholder">
+                            Tap to add one more piece of your world
+                          </div>
+                        </label>
+                        <input id="file3" type="file" accept="image/*" />
+                      </div>
+                      <div class="photo-actions">
+                        <label for="file3" class="btn replace">Replace photo</label>
+                        <button class="btn remove" id="remove3" type="button">
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="hint" style="margin-top: 6px;">
+                    JPG/PNG recommended. Previews are stored only in your browser and are not uploaded to a server.
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="ep-actions">
+                  <div class="ep-actions-row">
+                    <button id="backQuiz" class="btn ghost" type="button">
+                      Back ← Quiz
+                    </button>
+                    <div class="spacer"></div>
+                    <button id="resetForm" class="btn outline" type="button">
+                      Reset Form
+                    </button>
+                    <button id="saveBtn" class="btn primary" type="button">
+                      Save My Soul 💚
+                    </button>
+                    <button id="nextSoul" class="btn outline" type="button">
+                      Next → My Soul
+                    </button>
                   </div>
                 </div>
               </div>
-
-              <div class="hint" style="margin-top: 6px;">
-                JPG/PNG recommended. We store previews locally in your browser.
-              </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="actions" style="margin-top: 16px;">
-              <button id="backQuiz" class="btn ghost">Back ← Quiz</button>
-              <div style="flex: 1;"></div>
-              <button id="resetForm" class="btn outline">Reset Form</button>
-              <button id="saveBtn" class="btn primary">Save My Soul 💚</button>
-              <button id="nextSoul" class="btn outline">Next → My Soul</button>
             </div>
           </section>
 
           <!-- RIGHT COLUMN — LIVE PREVIEW -->
-          <aside class="glass-card card preview" aria-live="polite">
-            <h2>✨ Live Preview</h2>
+          <aside class="glass-card card preview ep-section" aria-live="polite">
+            <h2>Live Soul Preview</h2>
 
-            <div style="display: flex; align-items: center; gap: 14px; margin-top: 10px;">
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                margin-top: 10px;
+              "
+            >
               <div class="avatar">
                 <img id="prevAvatar" alt="Avatar" />
               </div>
 
               <div>
-                <div id="prevName" style="font-weight: 800; font-size: 1.2rem;">Your Name</div>
+                <div
+                  id="prevName"
+                  style="font-weight: 800; font-size: 1.2rem;"
+                >
+                  Your Name
+                </div>
                 <div id="prevAge" class="hint">Age: –</div>
               </div>
             </div>
@@ -258,16 +1068,22 @@
               <div class="hint">About Me</div>
               <div id="prevAbout" class="about-quote empty">—</div>
             </div>
+
+            <div style="margin-top: 16px;">
+              <a href="my-soul.html" class="btn outline" style="width: 100%; justify-content: center;">
+                View My Soul page →
+              </a>
+            </div>
           </aside>
         </div>
       </div>
     </main>
 
-    <!-- FOOTER -->
+    <!-- FOOTER (unchanged) -->
     <footer class="site-footer">
       <div class="site-footer-inner">
         <p>Soulink.global — conscious matching for hearts &amp; souls.</p>
-        <p>Created with love and ChatGPT as a co-creator.</p>
+        <p>Created with love by Soulink team</p>
       </div>
     </footer>
   </body>
