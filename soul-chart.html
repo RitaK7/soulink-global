@@ -1,171 +1,771 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Soulink — Soul Chart</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="Soulink Soul Chart — a clear, gentle overview of your zodiac, numerology, love language, values and passions in one place."
-    />
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body class="soulink-bg">
-    <header class="navbar soulink-nav" data-active="Soul Cart" aria-label="Primary navigation">
-  <div class="nav-inner">
-    <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">
-      Soulink
-    </a>
+<head>
+  <meta charset="utf-8" />
+  <title>Soulink — Soul Chart</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="description"
+    content="Soulink Soul Chart — an AI-style dashboard of your love language, values, passions, zodiac and numerology in one glowing map."
+  />
+  <link rel="stylesheet" href="style.css" />
+  <script src="auth.js" defer></script>
+  <script src="data-helpers.js" defer></script>
+  <script src="nav.js" defer></script>
+  <script src="soul-chart.js" defer></script>
 
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-label="Toggle navigation">
-      <span></span><span></span><span></span>
-    </button>
+  <style>
+    .soul-chart-page {
+      position: relative;
+      padding: 1.5rem 1rem 2.5rem;
+      isolation: isolate;
+    }
 
-    <nav class="nav-links" aria-label="Primary">
-      <a href="index.html" data-page="Home">Home</a>
-      <a href="quiz.html" data-page="Quiz">Quiz</a>
-      <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
-      <a href="my-soul.html" data-page="My Soul">My Soul</a>
-      <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
-      <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
-      <a href="match.html" data-page="Match">Match</a>
-      <a href="friends.html" data-page="Friends">Friends</a>
-      <a href="results.html" data-page="Results">Results</a>
-      <a href="login.html" data-page="Login">Log In</a>
-      <a href="signup.html" data-page="Sign Up">Sign Up</a>
-    </nav>
-  </div>
-</header>
+    @media (min-width: 900px) {
+      .soul-chart-page {
+        padding: 2rem 1.5rem 3rem;
+      }
+    }
 
+    .soul-chart-page::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.22;
+      background-image:
+        radial-gradient(circle at 10% 15%, rgba(0, 253, 216, 0.18) 0, transparent 55%),
+        radial-gradient(circle at 80% 10%, rgba(0, 253, 216, 0.12) 0, transparent 55%),
+        radial-gradient(circle at 15% 80%, rgba(0, 253, 216, 0.12) 0, transparent 55%),
+        radial-gradient(circle at 80% 85%, rgba(0, 253, 216, 0.18) 0, transparent 55%);
+      z-index: -1;
+    }
 
-    <main class="page">
-      <div class="page-inner">
-        <section class="page-hero glass-card">
-          <div class="page-hero-text">
-            <h1 class="page-title">Soul Chart</h1>
-            <p class="page-subtitle">
-              At-a-glance overview of your soul’s energies — zodiac, numerology, love language,
-              values and passions in one glowing map.
+    @media (prefers-reduced-motion: reduce) {
+      .soul-chart-page::before {
+        opacity: 0.14;
+      }
+    }
+
+    .soul-chart-page .page-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+
+    .sc-hero {
+      border-radius: 26px;
+      padding: 1.6rem 1.4rem 1.5rem;
+      margin-bottom: 1.8rem;
+      background:
+        radial-gradient(circle at top left, rgba(0, 253, 216, 0.22), transparent 60%),
+        radial-gradient(circle at bottom right, rgba(0, 253, 216, 0.18), transparent 60%),
+        rgba(0, 0, 0, 0.28);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.4),
+        0 24px 60px rgba(0, 0, 0, 0.8),
+        inset 0 0 26px rgba(0, 253, 216, 0.16);
+      backdrop-filter: blur(18px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sc-hero::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.22), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.22), transparent 55%);
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .sc-hero-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .sc-hero-main {
+      flex: 1 1 220px;
+      min-width: 0;
+    }
+
+    .sc-hero-kicker {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      opacity: 0.85;
+      margin-bottom: 0.2rem;
+    }
+
+    .sc-hero-title {
+      font-size: 1.85rem;
+      margin-bottom: 0.3rem;
+    }
+
+    @media (min-width: 900px) {
+      .sc-hero-title {
+        font-size: 2.05rem;
+      }
+    }
+
+    .sc-hero-subtitle {
+      font-size: 0.96rem;
+      opacity: 0.92;
+      max-width: 32rem;
+    }
+
+    .sc-hero-meta {
+      margin-top: 0.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .sc-meta-pill {
+      border-radius: 999px;
+      font-size: 0.8rem;
+      padding: 0.25rem 0.7rem;
+      border: 1px solid rgba(0, 253, 216, 0.55);
+      background: rgba(0, 253, 216, 0.12);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.25),
+        0 0 16px rgba(0, 253, 216, 0.4);
+      white-space: nowrap;
+    }
+
+    .sc-hero-orbit {
+      flex: 0 0 auto;
+      min-width: 180px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .sc-orbit-ring {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 253, 216, 0.45);
+      box-shadow:
+        0 0 40px rgba(0, 253, 216, 0.65),
+        0 0 80px rgba(0, 253, 216, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle, rgba(0, 253, 216, 0.18), transparent 65%);
+      overflow: hidden;
+    }
+
+    .sc-orbit-ring::before,
+    .sc-orbit-ring::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      border: 1px dashed rgba(0, 253, 216, 0.35);
+    }
+
+    .sc-orbit-ring::before {
+      width: 120%;
+      height: 120%;
+    }
+
+    .sc-orbit-ring::after {
+      width: 75%;
+      height: 75%;
+      opacity: 0.85;
+    }
+
+    .sc-orbit-core {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 0.6rem 0.8rem;
+    }
+
+    .sc-orbit-core-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      opacity: 0.9;
+      margin-bottom: 0.2rem;
+    }
+
+    .sc-orbit-core-main {
+      font-size: 0.98rem;
+      font-weight: 600;
+    }
+
+    .sc-orbit-core-sub {
+      margin-top: 0.25rem;
+      font-size: 0.82rem;
+      opacity: 0.9;
+    }
+
+    .sc-empty-state {
+      margin-top: 1.5rem;
+      border-radius: 22px;
+      padding: 1.4rem 1.3rem;
+      background:
+        radial-gradient(circle at top, rgba(0, 253, 216, 0.16), transparent 60%),
+        rgba(0, 0, 0, 0.32);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.26),
+        0 20px 46px rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(16px);
+      text-align: left;
+    }
+
+    .sc-empty-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.35rem;
+      font-size: 1.04rem;
+      font-weight: 600;
+    }
+
+    .sc-empty-title span:first-child {
+      font-size: 1.3rem;
+    }
+
+    .sc-empty-text {
+      font-size: 0.92rem;
+      opacity: 0.9;
+      margin-bottom: 0.9rem;
+      max-width: 30rem;
+    }
+
+    .soul-chart-page .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+    }
+
+    .soul-chart-page .btn-row .btn {
+      min-width: 160px;
+    }
+
+    .sc-grid {
+      margin-top: 1.6rem;
+      display: grid;
+      gap: 1.3rem;
+    }
+
+    @media (min-width: 960px) {
+      .sc-grid {
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr);
+        align-items: flex-start;
+      }
+    }
+
+    .sc-card {
+      position: relative;
+      border-radius: 22px;
+      padding: 1.1rem 1.1rem 1.2rem;
+      background:
+        radial-gradient(circle at top, rgba(0, 253, 216, 0.14), transparent 60%),
+        rgba(0, 0, 0, 0.32);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.24),
+        0 18px 40px rgba(0, 0, 0, 0.7),
+        inset 0 0 20px rgba(0, 253, 216, 0.05);
+      overflow: hidden;
+      backdrop-filter: blur(14px);
+      transition:
+        transform 0.22s ease,
+        box-shadow 0.22s ease,
+        border-color 0.22s ease,
+        background 0.22s ease;
+    }
+
+    .sc-card::before {
+      content: "";
+      position: absolute;
+      inset: -30%;
+      background:
+        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.16), transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.16), transparent 60%);
+      opacity: 0.18;
+      pointer-events: none;
+    }
+
+    .sc-card:hover {
+      transform: translateY(-3px) scale(1.01);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.4),
+        0 22px 52px rgba(0, 0, 0, 0.85),
+        inset 0 0 26px rgba(0, 253, 216, 0.12);
+      background:
+        radial-gradient(circle at top, rgba(0, 253, 216, 0.18), transparent 60%),
+        rgba(0, 0, 0, 0.36);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sc-card:hover {
+        transform: none;
+      }
+    }
+
+    .sc-card-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .sc-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .sc-card-icon {
+      width: 1.9rem;
+      height: 1.9rem;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      background: radial-gradient(circle, rgba(0, 253, 216, 0.24), transparent 65%);
+      box-shadow: 0 0 18px rgba(0, 253, 216, 0.4);
+      flex-shrink: 0;
+    }
+
+    .sc-card-title {
+      font-size: 1.02rem;
+      font-weight: 600;
+    }
+
+    .sc-card-subtitle {
+      font-size: 0.85rem;
+      opacity: 0.88;
+      margin-top: 0.1rem;
+    }
+
+    .sc-chart-shell {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .sc-chart-canvas-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border-radius: 18px;
+      padding: 0.6rem;
+      background:
+        radial-gradient(circle at top, rgba(0, 253, 216, 0.14), transparent 60%),
+        rgba(0, 0, 0, 0.28);
+      box-shadow:
+        inset 0 0 18px rgba(0, 253, 216, 0.18),
+        0 0 0 1px rgba(0, 253, 216, 0.2);
+      overflow: hidden;
+    }
+
+    .sc-chart-canvas-wrap canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .sc-chart-note {
+      font-size: 0.84rem;
+      opacity: 0.9;
+    }
+
+    .sc-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.1rem;
+    }
+
+    .sc-chip {
+      font-size: 0.8rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.45);
+      background: rgba(0, 253, 216, 0.08);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.22);
+      white-space: nowrap;
+    }
+
+    .sc-chip.primary {
+      background: rgba(0, 253, 216, 0.18);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.52),
+        0 0 18px rgba(0, 253, 216, 0.5);
+    }
+
+    .sc-chip.muted {
+      border-style: dashed;
+      opacity: 0.85;
+    }
+
+    .sc-summary-card {
+      margin-top: 1.5rem;
+      border-radius: 22px;
+      padding: 1.2rem 1.2rem 1.25rem;
+      background:
+        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.14), transparent 60%),
+        rgba(0, 0, 0, 0.32);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.24),
+        0 18px 40px rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(14px);
+    }
+
+    .sc-summary-title {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.4rem;
+      font-size: 1.03rem;
+      font-weight: 600;
+    }
+
+    .sc-summary-title span:first-child {
+      font-size: 1.3rem;
+    }
+
+    .sc-summary-text {
+      font-size: 0.94rem;
+      opacity: 0.96;
+      margin-bottom: 0.5rem;
+    }
+
+    .sc-summary-meta {
+      font-size: 0.84rem;
+      opacity: 0.9;
+    }
+
+    .sc-actions-bottom {
+      margin-top: 1.7rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sc-actions-bottom .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+    }
+
+    @media (max-width: 720px) {
+      .sc-actions-bottom {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .sc-actions-bottom .btn-row {
+        width: 100%;
+      }
+
+      .sc-actions-bottom .btn-row .btn {
+        width: 100%;
+      }
+    }
+
+    .sc-actions-note {
+      font-size: 0.84rem;
+      opacity: 0.86;
+      max-width: 26rem;
+    }
+
+    /* Entrance animations */
+    .sc-animated {
+      opacity: 0;
+      transform: translateY(12px);
+      animation: sc-fade-up 0.65s ease-out forwards;
+    }
+
+    .sc-delay-1 { animation-delay: 0.05s; }
+    .sc-delay-2 { animation-delay: 0.12s; }
+    .sc-delay-3 { animation-delay: 0.18s; }
+    .sc-delay-4 { animation-delay: 0.24s; }
+    .sc-delay-5 { animation-delay: 0.3s; }
+
+    @keyframes sc-fade-up {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sc-animated {
+        opacity: 1;
+        transform: none;
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body class="soulink-bg">
+  <!-- Top Navigation (shared) -->
+  <header class="topnav" data-active="Soul Chart" aria-label="Primary navigation">
+    <div class="topnav-inner">
+      <a
+        href="index.html"
+        class="brand"
+        data-page="Home"
+        aria-label="Soulink Home"
+      >
+        Soulink
+      </a>
+
+      <button
+        class="nav-toggle"
+        type="button"
+        aria-label="Toggle navigation"
+        aria-expanded="false"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="nav-links" aria-label="Primary">
+        <a href="index.html" data-page="Home">Home</a>
+        <a href="quiz.html" data-page="Quiz">Quiz</a>
+        <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
+        <a href="my-soul.html" data-page="My Soul">My Soul</a>
+        <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
+        <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
+        <a href="match.html" data-page="Match">Match</a>
+        <a href="friends.html" data-page="Friends">Friends</a>
+        <a href="results.html" data-page="Results">Results</a>
+        <a href="login.html" data-page="Login">Log In</a>
+        <a href="signup.html" data-page="Sign Up">Sign Up</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page soul-chart-page">
+    <div class="page-inner">
+      <!-- HERO -->
+      <section class="sc-hero sc-animated sc-delay-1">
+        <div class="sc-hero-inner">
+          <div class="sc-hero-main">
+            <p class="sc-hero-kicker">AI Soul Dashboard</p>
+            <h1 class="sc-hero-title">Soul Chart</h1>
+            <p class="sc-hero-subtitle">
+              A living, glowing map of your soul energies — love language, values, passions,
+              zodiac and numerology woven into one visual dashboard.
             </p>
+            <div class="sc-hero-meta">
+              <span id="scMetaName" class="sc-meta-pill" hidden></span>
+              <span id="scMetaZodiac" class="sc-meta-pill" hidden></span>
+              <span id="scMetaChinese" class="sc-meta-pill" hidden></span>
+              <span id="scMetaLifePath" class="sc-meta-pill" hidden></span>
+            </div>
           </div>
-        </section>
-
-        <section
-          id="chartEmpty"
-          class="info-banner info-banner-soft"
-          hidden
-          aria-live="polite"
-        >
-          No soul data yet — please complete your Soulink Quiz and Edit Profile to see your
-          Soul Chart.
-        </section>
-
-        <section class="chart-grid">
-          <article class="glass-card chart-card">
-            <header class="chart-card-header">
-              <h2 class="chart-card-title">Western Zodiac</h2>
-              <p class="chart-card-subtitle">
-                The flavor of your sun sign in relationships.
-              </p>
-            </header>
-            <div id="chartZodiac" class="chart-card-body">
-              Not set yet — your zodiac sign will appear here after you add or update your
-              birthday.
+          <div class="sc-hero-orbit" aria-hidden="true">
+            <div class="sc-orbit-ring">
+              <div class="sc-orbit-core">
+                <div class="sc-orbit-core-title">Core vibe</div>
+                <div class="sc-orbit-core-main" id="scOrbitMain">Soul online</div>
+                <div class="sc-orbit-core-sub" id="scOrbitSub">
+                  Ready to translate your inner map into glowing charts.
+                </div>
+              </div>
             </div>
-          </article>
+          </div>
+        </div>
+      </section>
 
-          <article class="glass-card chart-card">
-            <header class="chart-card-header">
-              <h2 class="chart-card-title">Chinese Zodiac</h2>
-              <p class="chart-card-subtitle">
-                Animal energy that colors your instincts.
-              </p>
+      <!-- EMPTY STATE -->
+      <section id="scEmpty" class="sc-empty-state" hidden aria-live="polite">
+        <div class="sc-empty-title">
+          <span>✨</span>
+          <span>Your Soul Chart is not ready yet</span>
+        </div>
+        <p class="sc-empty-text">
+          To unlock your Soul Chart, please complete the Soulink Quiz and share a few key details
+          about your love language, values and passions.
+        </p>
+        <div class="btn-row">
+          <a href="quiz.html" class="btn primary">Go to Quiz</a>
+          <a href="edit-profile.html" class="btn outline">Edit Profile</a>
+        </div>
+      </section>
+
+      <!-- MAIN DASHBOARD -->
+      <section id="scDashboard" class="sc-grid sc-animated sc-delay-2" hidden>
+        <!-- Love Language Radar -->
+        <article class="sc-card">
+          <div class="sc-card-inner">
+            <header class="sc-card-header">
+              <div class="sc-card-icon" aria-hidden="true">✨</div>
+              <div>
+                <h2 class="sc-card-title">The Voice of Your Heart</h2>
+                <p class="sc-card-subtitle">
+                  Radar of the five love languages, highlighting how your heart naturally gives and receives love.
+                </p>
+              </div>
             </header>
-            <div id="chartChinese" class="chart-card-body">
-              Not set yet — your Chinese zodiac animal will appear here after your birthday is
-              known.
-            </div>
-          </article>
 
-          <article class="glass-card chart-card">
-            <header class="chart-card-header">
-              <h2 class="chart-card-title">Life Path Number</h2>
-              <p class="chart-card-subtitle">
-                Numerology theme your soul is learning in this lifetime.
+            <div class="sc-chart-shell">
+              <div class="sc-chart-canvas-wrap">
+                <canvas
+                  id="loveLanguageChart"
+                  width="360"
+                  height="270"
+                  aria-label="Love language radar chart"
+                  role="img"
+                ></canvas>
+              </div>
+              <p id="loveLanguageSummary" class="sc-chart-note">
+                Your primary love language will appear here once you complete the Quiz.
               </p>
-            </header>
-            <div id="chartLifePath" class="chart-card-body">
-              Not calculated yet — your life path number will appear here after your birthday is
-              recognized.
+              <div class="sc-chip-row" id="loveLanguageChips">
+                <!-- chips populated by JS -->
+              </div>
             </div>
-          </article>
+          </div>
+        </article>
 
-          <article class="glass-card chart-card">
-            <header class="chart-card-header">
-              <h2 class="chart-card-title">Primary Love Language</h2>
-              <p class="chart-card-subtitle">
-                The way your heart most naturally gives and receives love.
+        <!-- Hobbies & Passions Donut -->
+        <article class="sc-card">
+          <div class="sc-card-inner">
+            <header class="sc-card-header">
+              <div class="sc-card-icon" aria-hidden="true">🌿</div>
+              <div>
+                <h2 class="sc-card-title">Where Your Spirit Flows</h2>
+                <p class="sc-card-subtitle">
+                  A glowing donut of the activities and spaces where your energy feels most alive.
+                </p>
+              </div>
+            </header>
+
+            <div class="sc-chart-shell">
+              <div class="sc-chart-canvas-wrap">
+                <canvas
+                  id="hobbiesChart"
+                  width="360"
+                  height="270"
+                  aria-label="Hobbies and passions chart"
+                  role="img"
+                ></canvas>
+              </div>
+              <p id="hobbiesSummary" class="sc-chart-note">
+                Your soul lights up most when you are around the things you love — they will appear here.
               </p>
-            </header>
-            <div id="chartLove" class="chart-card-body">
-              Not chosen yet — your primary love language will appear here after you complete
-              the quiz.
+              <div class="sc-chip-row" id="hobbiesChips">
+                <!-- chips populated by JS -->
+              </div>
             </div>
-          </article>
+          </div>
+        </article>
 
-          <article class="glass-card chart-card chart-card-wide">
-            <header class="chart-card-header">
-              <h2 class="chart-card-title">Core Values</h2>
-              <p class="chart-card-subtitle">
-                The inner compass that guides your choices and boundaries.
+        <!-- Core Values Compass -->
+        <article class="sc-card">
+          <div class="sc-card-inner">
+            <header class="sc-card-header">
+              <div class="sc-card-icon" aria-hidden="true">🧭</div>
+              <div>
+                <h2 class="sc-card-title">The Compass of Your Soul</h2>
+                <p class="sc-card-subtitle">
+                  A triad of Heart, Mind and Spirit, showing which direction your inner compass leans toward.
+                </p>
+              </div>
+            </header>
+
+            <div class="sc-chart-shell">
+              <div class="sc-chart-canvas-wrap">
+                <canvas
+                  id="valuesCompassChart"
+                  width="360"
+                  height="270"
+                  aria-label="Core values compass chart"
+                  role="img"
+                ></canvas>
+              </div>
+              <p id="valuesSummary" class="sc-chart-note">
+                Once you share your core values, this compass will reveal where your soul naturally points.
               </p>
-            </header>
-            <div id="chartValues" class="chart-card-body">
-              Not filled in yet — your core values will appear here once you share them in the
-              quiz or Edit Profile.
+              <div class="sc-chip-row" id="valuesChips">
+                <!-- chips populated by JS -->
+              </div>
             </div>
-          </article>
+          </div>
+        </article>
 
-          <article class="glass-card chart-card chart-card-wide">
-            <header class="chart-card-header">
-              <h2 class="chart-card-title">Hobbies &amp; Passions</h2>
-              <p class="chart-card-subtitle">
-                Places where your energy feels alive, playful and creative.
+        <!-- Zodiac & Numerology quick card -->
+        <article class="sc-card">
+          <div class="sc-card-inner">
+            <header class="sc-card-header">
+              <div class="sc-card-icon" aria-hidden="true">🌌</div>
+              <div>
+                <h2 class="sc-card-title">Zodiac &amp; Numerology Snapshot</h2>
+                <p class="sc-card-subtitle">
+                  A quick synthesis of your Western zodiac, Chinese animal and life path number.
+                </p>
+              </div>
+            </header>
+
+            <div class="sc-chart-shell">
+              <p id="zodiacLine" class="sc-chart-note">
+                Your zodiac and numerology snapshot will appear here after you add your birthday.
               </p>
-            </header>
-            <div id="chartHobbies" class="chart-card-body">
-              Not filled in yet — your interests, hobbies and passions will appear here after
-              you add them.
+              <div class="sc-chip-row" id="zodiacChips">
+                <!-- zodiac chips -->
+              </div>
             </div>
-          </article>
+          </div>
+        </article>
+      </section>
 
-          <article class="glass-card chart-card chart-card-wide">
-            <header class="chart-card-header">
-              <h2 class="chart-card-title">Soul Chart Summary</h2>
-              <p class="chart-card-subtitle">
-                A gentle synthesis of your main energies in one paragraph.
-              </p>
-            </header>
-            <div id="chartSummary" class="chart-card-body">
-              Your Soul Chart will come alive once you complete the Soulink Quiz and share a bit
-              more about yourself.
-            </div>
-          </article>
-        </section>
-      </div>
-    </main>
+      <!-- SUMMARY -->
+      <section id="scSummarySection" class="sc-summary-card sc-animated sc-delay-3" hidden>
+        <div class="sc-summary-title">
+          <span>🜁</span>
+          <span>Soul Chart Summary</span>
+        </div>
+        <p id="scSummaryText" class="sc-summary-text">
+          Your Soul Chart will come alive once your core data is saved in Soulink.
+        </p>
+        <p id="scSummaryMeta" class="sc-summary-meta">
+          This paragraph weaves together your zodiac, Chinese animal, life path, primary love language,
+          values and passions into one gentle overview.
+        </p>
+      </section>
 
-    <footer class="site-footer">
-      <div class="site-footer-inner">
-        <p>Soulink.global — conscious matching for hearts &amp; souls.</p>
-        <p>Created with love and ChatGPT as a co-creator.</p>
-      </div>
-    </footer>
+      <!-- ACTIONS -->
+      <section class="sc-actions-bottom sc-animated sc-delay-4">
+        <div class="btn-row">
+          <a href="my-soul.html" class="btn outline">← Back to My Soul</a>
+          <a href="soul-coach.html" class="btn">Next → Soul Coach</a>
+          <button type="button" id="scRefreshBtn" class="btn outline">
+            Refresh Chart
+          </button>
+        </div>
+        <p class="sc-actions-note">
+          Your Soul Chart updates whenever you refine your Quiz or Edit Profile. Use it as a calm,
+          visual reminder of what keeps your soul balanced and bright.
+        </p>
+      </section>
+    </div>
+  </main>
 
-    <script src="auth.js"></script>
-    <script src="data-helpers.js" defer></script>
-    <script src="nav.js" defer></script>
-    <script src="soul-chart.js" defer></script>
-  </body>
+  <footer class="footer-note">
+    © 2025 Soulink.global | Created with love by Soulink team.
+  </footer>
+</body>
 </html>
-
