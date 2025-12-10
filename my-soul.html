@@ -1,493 +1,731 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Soulink · My Soul</title>
+  <title>Soulink – My Soul</title>
+  <!-- Global Soulink styles -->
+  <link rel="stylesheet" href="style.css" />
+  <!-- Global scripts -->
+  <script src="auth.js" defer></script>
+  <script src="data-helpers.js" defer></script>
+  <script src="nav.js" defer></script>
+  <script src="my-soul.js" defer></script>
+
+  <!-- My Soul page-local styles -->
   <style>
-    :root{
-      --bg:#003c43;          /* dark teal */
-      --fg:#eaf8f6;          /* light text */
-      --muted:#bde5df;       /* muted text */
-      --accent:#00fdd8;      /* neon */
-      --card:#014a52;        /* card base */
-      --border:rgba(0,253,216,.35);
-      --shadow:0 0 0 1px var(--border), 0 10px 30px rgba(0,253,216,.06), 0 0 40px rgba(0,253,216,.04) inset;
-      --maxw:1100px;
+    .my-soul-page {
+      padding: 1.5rem 1rem 2.5rem;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Arial,sans-serif}
-    a{color:var(--accent);text-decoration:none}
-    img{max-width:100%;height:auto}
-    .container{max-width:var(--maxw);margin:0 auto;padding:24px}
 
-    /* NAVBAR */
-    .navbar{position:sticky;top:0;z-index:50;background:rgba(0,60,67,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
-    .navbar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transform:scaleX(.2);transform-origin:center;transition:opacity .25s ease, transform .25s ease}
-    .navbar.scrolled::after{opacity:.85;transform:scaleX(1)}
-    .nav-inner{display:flex;justify-content:space-between;align-items:center;padding:10px 16px}
-    .brand{font-weight:800;color:var(--accent);letter-spacing:.4px}
-    .nav-links{display:flex;gap:14px;flex-wrap:wrap}
-    .nav-links a{padding:8px 10px;border-radius:10px;border:1px solid transparent;transition:box-shadow .15s ease, border-color .15s ease}
-    .nav-links a:hover{border-color:var(--border);box-shadow:0 0 0 1px var(--border),0 0 16px rgba(0,253,216,.18)}
-    .nav-links a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-    .hamburger{display:none}
-    .hamburger button{appearance:none;background:transparent;border:1px solid var(--border);color:var(--fg);padding:8px 10px;border-radius:10px;cursor:pointer}
-    @media(max-width:800px){.nav-links{display:none}.hamburger{display:block}}
+    @media (min-width: 900px) {
+      .my-soul-page {
+        padding: 2rem 1.5rem 3rem;
+      }
+    }
 
-    /* DRAWER */
-    .drawer{position:fixed;inset:0;display:none;z-index:100}
-    .drawer.open{display:block}
-    .drawer .backdrop{position:absolute;inset:0;background:rgba(0,60,67,.96)}
-    .drawer .panel{position:absolute;top:0;right:0;width:min(82vw,360px);height:100%;background:#003c43;border-left:1px solid var(--border);padding:18px;transform:translateX(100%);transition:transform .25s ease}
-    .drawer.open .panel{transform:translateX(0)}
-    @media (prefers-reduced-motion: reduce){.drawer .panel{transition:none}}
-    /* prevent background scroll when drawer open */
-    body.no-scroll{overflow:hidden}
-    .drawer .panel a{display:block;padding:14px 12px;border-radius:12px;min-height:44px;transition:box-shadow .15s ease, background .15s ease}
-    .drawer .panel a:hover{background:rgba(0,253,216,.08);box-shadow:0 0 0 1px var(--border),0 0 14px rgba(0,253,216,.18)}
-    .drawer .panel a:active,.drawer .panel a:focus-visible{box-shadow:0 0 0 1px var(--border),0 0 16px rgba(0,253,216,.22);outline:none}
+    .my-soul-page .page-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+    }
 
-    /* HEADER */
-    .header{display:flex;align-items:center;gap:18px;padding:16px;border-radius:18px;background:linear-gradient(180deg,rgba(0,253,216,.06),rgba(0,253,216,.02));box-shadow:var(--shadow)}
-    .avatar{position:relative}
-    .avatar img{width:76px;height:76px;border-radius:999px;object-fit:cover;border:1px solid var(--border);box-shadow:0 0 0 3px rgba(0,253,216,.08)}
-    .avatar::before{content:"";position:absolute;inset:-6px;border-radius:999px;border:1px solid rgba(0,253,216,.25);box-shadow:0 0 36px rgba(0,253,216,.24),0 0 0 2px rgba(0,253,216,.18);animation:pulse 2.6s ease-in-out infinite}
-    @keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
-    @media (prefers-reduced-motion: reduce){.avatar::before{animation:none}}
-    .name-and-tags h1{margin:0;font-size:1.6rem}
-    .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-    .tag{font-size:.85rem;padding:6px 10px;border-radius:999px;background:rgba(0,253,216,.08);border:1px solid var(--border)}
+    .my-soul-page .page-kicker {
+      font-size: 0.85rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.8;
+      margin-bottom: 0.25rem;
+    }
 
-    /* CARDS */
-    .card{background:linear-gradient(180deg,rgba(1,74,82,.74),rgba(1,74,82,.56));border:1px solid var(--border);box-shadow:var(--shadow);border-radius:18px;padding:18px;margin:22px 0}
-    .card-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+    .my-soul-page .page-title {
+      font-size: 1.7rem;
+      margin-bottom: 0.3rem;
+    }
 
-    .chips{display:flex;flex-wrap:wrap;gap:10px}
-    .chip{padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:rgba(0,253,216,.06);font-size:.92rem;white-space:nowrap}
-    .chip.primary{background:rgba(0,253,216,.16);box-shadow:0 0 20px rgba(0,253,216,.08) inset}
-    .chip.gem{background:rgba(0,253,216,.1);box-shadow:inset 0 0 20px rgba(0,253,216,.08)}
-    .hobby{display:inline-flex;align-items:center;gap:8px}
-    .hobby .ico{width:1.1rem;display:inline-block;text-align:center}
+    @media (min-width: 900px) {
+      .my-soul-page .page-title {
+        font-size: 1.95rem;
+      }
+    }
 
-    .empty{color:var(--muted)}
+    .my-soul-page .page-subtitle {
+      max-width: 34rem;
+      font-size: 0.95rem;
+      opacity: 0.9;
+    }
 
-    .typewriter p{margin:10px 0 0;min-height:18px;opacity:0;transform:translateY(4px)}
-    .typewriter p.show{opacity:1;transform:none;transition:opacity .25s ease, transform .25s ease}
-    @media (prefers-reduced-motion: reduce){ .typewriter p{ transform:none } }
+    .my-soul-page .ms-hero-card {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      margin-bottom: 1.75rem;
+      border-radius: 24px;
+      padding: 1.4rem 1.3rem 1.5rem;
+      background: radial-gradient(circle at top left, rgba(0, 253, 216, 0.16), transparent 55%),
+                  radial-gradient(circle at bottom right, rgba(0, 253, 216, 0.12), transparent 60%),
+                  rgba(0, 0, 0, 0.2);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.22),
+        0 24px 60px rgba(0, 0, 0, 0.55),
+        inset 0 0 30px rgba(0, 253, 216, 0.06);
+      position: relative;
+      overflow: hidden;
+    }
 
-    /* Sparkle */
-    .sparkle{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);pointer-events:none;animation:sparkleUp .3s ease-out forwards}
-    @keyframes sparkleUp{from{transform:translate(-50%,-50%) scale(1);opacity:1}to{transform:translate(-50%,-120%) scale(.6);opacity:0}}
-    @media (prefers-reduced-motion: reduce){.sparkle{animation:none;display:none}}
+    .my-soul-page .ms-hero-card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      opacity: 0.28;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(0, 253, 216, 0.16), transparent 55%),
+        radial-gradient(circle at 90% 100%, rgba(0, 253, 216, 0.12), transparent 55%);
+      pointer-events: none;
+    }
 
-    /* ACTIONS */
-    .actions-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-end;margin:28px 0}
-    .btn{appearance:none;border:none;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700;min-height:44px}
-    .btn.primary{background:var(--accent);color:#003136}
-    .btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--border)}
-    .btn.outline{background:transparent;color:var(--fg);border:1px solid var(--border)}
-    .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    .my-soul-page .ms-hero-inner {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      position: relative;
+      z-index: 1;
+    }
 
-    footer{margin:40px 0 16px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:.95rem;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .my-soul-page .ms-avatar-wrap {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-    /* RESPONSIVE spacing polish */
-    @media (max-width:760px){
-      .header{flex-direction:column;align-items:flex-start}
-      .card{margin:26px 0}
-      .actions-row{justify-content:flex-start;flex-direction:column;gap:16px}.actions-row .btn{width:100%}
+    .my-soul-page .ms-avatar {
+      width: 92px;
+      height: 92px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(0, 253, 216, 0.8);
+      box-shadow:
+        0 0 0 3px rgba(0, 253, 216, 0.16),
+        0 0 40px rgba(0, 253, 216, 0.55);
+      background: radial-gradient(circle, rgba(0, 253, 216, 0.15), transparent 65%);
+    }
+
+    .my-soul-page .ms-avatar-ring {
+      position: relative;
+    }
+
+    .my-soul-page .ms-avatar-ring::before {
+      content: "";
+      position: absolute;
+      inset: -10px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.38);
+      opacity: 0.75;
+      box-shadow: 0 0 40px rgba(0, 253, 216, 0.5);
+      animation: ms-pulse 3.4s ease-in-out infinite;
+    }
+
+    @keyframes ms-pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.55;
+      }
+      50% {
+        transform: scale(1.06);
+        opacity: 1;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .my-soul-page .ms-avatar-ring::before {
+        animation: none;
+      }
+    }
+
+    .my-soul-page .ms-hero-text {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .my-soul-page .ms-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.6rem;
+    }
+
+    .my-soul-page .ms-tag {
+      font-size: 0.82rem;
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.55);
+      background: radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.2), transparent 60%);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.35),
+        0 0 18px rgba(0, 253, 216, 0.25);
+      white-space: nowrap;
+    }
+
+    .my-soul-page .ms-hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      justify-content: flex-start;
+      position: relative;
+      z-index: 1;
+    }
+
+    .my-soul-page .ms-hero-actions .btn {
+      min-width: 160px;
+    }
+
+    .my-soul-page .ms-photos-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      margin-top: 0.6rem;
+      opacity: 0.95;
+    }
+
+    .my-soul-page .ms-photo {
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
+      object-fit: cover;
+      border: 1px solid rgba(0, 253, 216, 0.5);
+      box-shadow: 0 0 18px rgba(0, 253, 216, 0.34);
+      background: radial-gradient(circle, rgba(0, 253, 216, 0.18), transparent 60%);
+    }
+
+    .my-soul-page .ms-photo.is-empty {
+      opacity: 0.25;
+      border-style: dashed;
+      box-shadow: none;
+    }
+
+    /* Layout grid */
+    .my-soul-page .ms-grid {
+      display: grid;
+      gap: 1.25rem;
+      margin-top: 0.5rem;
+    }
+
+    @media (min-width: 960px) {
+      .my-soul-page .ms-grid {
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+        align-items: flex-start;
+      }
+    }
+
+    .my-soul-page .ms-card {
+      border-radius: 20px;
+      padding: 1.2rem 1.1rem 1.15rem;
+      background: radial-gradient(circle at top, rgba(0, 253, 216, 0.12), transparent 60%),
+                  rgba(0, 0, 0, 0.32);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.22),
+        0 18px 40px rgba(0, 0, 0, 0.65),
+        inset 0 0 24px rgba(0, 253, 216, 0.05);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .my-soul-page .ms-card::before {
+      content: "";
+      position: absolute;
+      inset: -30%;
+      opacity: 0.14;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(0, 253, 216, 0.16), transparent 60%),
+        radial-gradient(circle at 80% 100%, rgba(0, 253, 216, 0.12), transparent 60%);
+      pointer-events: none;
+    }
+
+    .my-soul-page .ms-card-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .my-soul-page .ms-section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .my-soul-page .ms-section-icon {
+      width: 1.9rem;
+      height: 1.9rem;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      background: radial-gradient(circle, rgba(0, 253, 216, 0.24), transparent 65%);
+      box-shadow: 0 0 18px rgba(0, 253, 216, 0.4);
+      flex-shrink: 0;
+    }
+
+    .my-soul-page .ms-section-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .my-soul-page .ms-section-subtitle {
+      font-size: 0.86rem;
+      opacity: 0.85;
+      margin-top: 0.1rem;
+    }
+
+    .my-soul-page .ms-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.6rem;
+    }
+
+    .my-soul-page .ms-chip {
+      border-radius: 999px;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.87rem;
+      border: 1px solid rgba(0, 253, 216, 0.45);
+      background: rgba(0, 253, 216, 0.10);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.18);
+      white-space: nowrap;
+    }
+
+    .my-soul-page .ms-chip.primary {
+      background: rgba(0, 253, 216, 0.18);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.45),
+        0 0 18px rgba(0, 253, 216, 0.5);
+    }
+
+    .my-soul-page .ms-chip.ghost {
+      background: rgba(0, 0, 0, 0.22);
+      border-style: dashed;
+      opacity: 0.8;
+    }
+
+    .my-soul-page .ms-definition-list {
+      margin-top: 0.4rem;
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      row-gap: 0.25rem;
+      column-gap: 0.75rem;
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 600px) {
+      .my-soul-page .ms-definition-list {
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+      }
+    }
+
+    .my-soul-page .ms-definition-term {
+      opacity: 0.8;
+    }
+
+    .my-soul-page .ms-definition-value {
+      font-weight: 500;
+    }
+
+    .my-soul-page .ms-text-block {
+      font-size: 0.94rem;
+      opacity: 0.96;
+      margin-top: 0.6rem;
+      white-space: pre-wrap;
+    }
+
+    .my-soul-page .ms-placeholder {
+      font-size: 0.9rem;
+      opacity: 0.75;
+      font-style: italic;
+    }
+
+    .my-soul-page .ms-divider {
+      height: 1px;
+      margin: 0.8rem 0 0.6rem;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(0, 253, 216, 0.4),
+        transparent
+      );
+      opacity: 0.65;
+    }
+
+    .my-soul-page .ms-actions-bottom {
+      margin-top: 1.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .my-soul-page .ms-actions-bottom .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    @media (max-width: 700px) {
+      .my-soul-page .ms-actions-bottom {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .my-soul-page .ms-actions-bottom .btn-row {
+        width: 100%;
+      }
+
+      .my-soul-page .ms-actions-bottom .btn-row .btn {
+        width: 100%;
+      }
+    }
+
+    .my-soul-page .ms-actions-note {
+      font-size: 0.86rem;
+      opacity: 0.8;
+    }
+
+    /* Empty state */
+    .my-soul-page .ms-empty-card {
+      margin-top: 1.5rem;
+      border-radius: 20px;
+      padding: 1.4rem 1.2rem;
+      background: radial-gradient(circle at top, rgba(0, 253, 216, 0.12), transparent 55%),
+                  rgba(0, 0, 0, 0.32);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.22),
+        0 18px 40px rgba(0, 0, 0, 0.65);
+      text-align: left;
+    }
+
+    .my-soul-page .ms-empty-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.35rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .my-soul-page .ms-empty-title span {
+      font-size: 1.3rem;
+    }
+
+    .my-soul-page .ms-empty-subtitle {
+      font-size: 0.9rem;
+      opacity: 0.88;
+      margin-bottom: 0.9rem;
+      max-width: 30rem;
+    }
+
+    /* Soft entrance animation */
+    .my-soul-page .ms-section-animated {
+      opacity: 0;
+      transform: translateY(10px);
+      animation: ms-fade-up 0.6s ease forwards;
+    }
+
+    .my-soul-page .ms-section-animated.ms-delay-1 {
+      animation-delay: 0.05s;
+    }
+    .my-soul-page .ms-section-animated.ms-delay-2 {
+      animation-delay: 0.12s;
+    }
+    .my-soul-page .ms-section-animated.ms-delay-3 {
+      animation-delay: 0.18s;
+    }
+    .my-soul-page .ms-section-animated.ms-delay-4 {
+      animation-delay: 0.24s;
+    }
+    .my-soul-page .ms-section-animated.ms-delay-5 {
+      animation-delay: 0.30s;
+    }
+
+    @keyframes ms-fade-up {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .my-soul-page .ms-section-animated {
+        opacity: 1;
+        transform: none;
+        animation: none;
+      }
     }
   </style>
 </head>
-<body>
-  <!-- NAVBAR -->
-  <nav class="navbar" role="navigation" aria-label="Main">
-    <div class="nav-inner">
-      <div class="brand">Soulink</div>
-      <div class="nav-links" aria-label="Primary">
-        <ul class="nav-links">
-     <li><a href="index.html">Home</a></li>
-     <li><a href="quiz.html">Quiz</a></li>
-     <li><a href="edit-profile.html">Edit Profile</a></li>
-     <li><a href="my-soul.html">My Soul</a></li>
-     <li><a href="soul-chart.html">Soul Chart</a></li>
-     <li><a href="soul-coach.html">Soul Coach</a></li>
-     <li><a href="match.html">Match</a></li>
-     <li><a href="friends.html">Friends</a></li>
-     <li><a href="results.html">Results</a></li>
-     <li><a href="login.html">Log In</a></li>
-     <li><a href="signup.html">Sign Up</a></li>
-     <li><a href="logout.html">Log Out</a></li>
-   </ul>
-      </div>
-      <div class="hamburger"><button id="openDrawer" aria-label="Open menu">☰ Menu</button></div>
+<body class="soulink-bg">
+  <!-- TOP NAVBAR (shared, handled by nav.js) -->
+  <header class="topnav" data-active="My Soul" aria-label="Primary navigation">
+    <div class="topnav-inner">
+      <a
+        href="index.html"
+        class="brand"
+        data-page="Home"
+        aria-label="Soulink Home"
+      >
+        Soulink
+      </a>
+
+      <button
+        class="nav-toggle"
+        type="button"
+        aria-label="Toggle navigation"
+        aria-expanded="false"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="nav-links" aria-label="Primary">
+        <a href="index.html" data-page="Home">Home</a>
+        <a href="quiz.html" data-page="Quiz">Quiz</a>
+        <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
+        <a href="my-soul.html" data-page="My Soul">My Soul</a>
+        <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
+        <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
+        <a href="match.html" data-page="Match">Match</a>
+        <a href="friends.html" data-page="Friends">Friends</a>
+        <a href="results.html" data-page="Results">Results</a>
+        <a href="login.html" data-page="Login">Log In</a>
+        <a href="signup.html" data-page="Sign Up">Sign Up</a>
+      </nav>
     </div>
-  </nav>
+  </header>
 
-  <!-- MOBILE DRAWER -->
-  <div class="drawer" id="drawer" aria-hidden="true">
-    <div class="backdrop" id="drawerBackdrop" tabindex="-1" aria-label="Close"></div>
-    <aside class="panel" role="dialog" aria-modal="true" aria-label="Navigation">
-      <a href="index.html">Home</a>
-      <a href="quiz.html">Quiz</a>
-      <a href="edit-profile.html">Edit Profile</a>
-      <a href="my-soul.html" aria-current="page">My Soul</a>
-      <a href="soul-chart.html">Soul Chart</a>
-      <a href="soul-coach.html">Soul Coach</a>
-      <a href="match.html">Match</a>
-      <a href="friends.html">Friends</a>
-      <a href="results.html">Results</a>
-      <a href="login.html">Log In</a>
-      <a href="signup.html">Sign Up</a>
-      <a href="#" id="logoutLinkMobile">Log Out</a>
-      <button class="btn ghost" id="closeDrawer" style="margin-top:8px">Close</button>
-    </aside>
-  </div>
-
-  <div class="container">
-    <!-- COSMIC HEADER -->
-    <header class="header">
-      <div class="avatar"><img id="avatar" alt="Profile photo" /></div>
-      <div class="name-and-tags">
-        <h1 id="userName">My Soul</h1>
-        <div class="tags">
-          <span id="zodiacTag" class="tag" hidden></span>
-          <span id="chineseTag" class="tag" hidden></span>
-          <span id="lifePathTag" class="tag" hidden></span>
-          <span id="connectionTag" class="tag" hidden></span>
+  <main class="page my-soul-page">
+    <div class="page-inner">
+      <!-- EMPTY STATE (shown if no data) -->
+      <section id="mySoulEmpty" class="ms-empty-card" hidden>
+        <div class="ms-empty-title">
+          <span>✨</span>
+          <span>Your Soul report is waiting</span>
         </div>
+        <p class="ms-empty-subtitle">
+          Start with the Soulink Quiz to create your core soul profile. Once you complete it,
+          this page will become your glowing soul snapshot.
+        </p>
+        <a href="quiz.html" id="mySoulStartQuiz" class="btn primary">Start with Quiz</a>
+      </section>
+
+      <!-- MAIN CONTENT (hidden until data is loaded) -->
+      <div id="mySoulContent" hidden>
+        <!-- HERO CARD -->
+        <section class="ms-hero-card ms-section-animated ms-delay-1">
+          <div class="ms-hero-inner">
+            <div class="ms-avatar-wrap ms-avatar-ring">
+              <img id="msAvatar" class="ms-avatar" alt="Soul avatar" />
+            </div>
+            <div class="ms-hero-text">
+              <p class="page-kicker">Soul Snapshot</p>
+              <h1 class="page-title" id="msHeroTitle">My Soul</h1>
+              <p class="page-subtitle" id="msHeroSubtitle">
+                This is your living soul profile – a gentle mirror built from your answers in Soulink.
+              </p>
+
+              <div class="ms-tags">
+                <span id="msZodiacTag" class="ms-tag" hidden></span>
+                <span id="msChineseTag" class="ms-tag" hidden></span>
+                <span id="msLifePathTag" class="ms-tag" hidden></span>
+                <span id="msConnectionTag" class="ms-tag" hidden></span>
+              </div>
+
+              <div class="ms-photos-strip" aria-hidden="true">
+                <img id="msPhoto1" class="ms-photo is-empty" alt="" />
+                <img id="msPhoto2" class="ms-photo is-empty" alt="" />
+                <img id="msPhoto3" class="ms-photo is-empty" alt="" />
+              </div>
+            </div>
+          </div>
+
+          <div class="ms-hero-actions">
+            <a href="edit-profile.html" class="btn primary" id="msEditProfileBtn">Edit Profile</a>
+            <a href="quiz.html" class="btn outline" id="msBackToQuizTop">Back to Quiz</a>
+          </div>
+        </section>
+
+        <!-- GRID LAYOUT -->
+        <section class="ms-grid">
+          <!-- LEFT COLUMN -->
+          <div class="ms-left-column">
+            <!-- Soul Summary -->
+            <section class="ms-card ms-section-animated ms-delay-2" aria-labelledby="msSummaryHeading">
+              <div class="ms-card-inner">
+                <header class="ms-section-header">
+                  <div class="ms-section-icon" aria-hidden="true">🕊️</div>
+                  <div>
+                    <h2 id="msSummaryHeading" class="ms-section-title">Soul Summary</h2>
+                    <p class="ms-section-subtitle">
+                      A short, human explanation of what your soul is seeking and how it shines.
+                    </p>
+                  </div>
+                </header>
+
+                <p id="msSoulSummary" class="ms-text-block ms-placeholder" aria-live="polite">
+                  Complete your profile to see your Soul Summary ✨
+                </p>
+              </div>
+            </section>
+
+            <!-- Core Snapshot -->
+            <section class="ms-card ms-section-animated ms-delay-3" aria-labelledby="msCoreHeading">
+              <div class="ms-card-inner">
+                <header class="ms-section-header">
+                  <div class="ms-section-icon" aria-hidden="true">👑</div>
+                  <div>
+                    <h2 id="msCoreHeading" class="ms-section-title">Core Snapshot</h2>
+                    <p class="ms-section-subtitle">
+                      Quick facts about you, the way your soul likes to live, love and connect.
+                    </p>
+                  </div>
+                </header>
+
+                <div class="ms-definition-list" aria-label="Basic profile details">
+                  <div class="ms-definition-term">Name</div>
+                  <div class="ms-definition-value" id="msSnapshotName">—</div>
+
+                  <div class="ms-definition-term">Age</div>
+                  <div class="ms-definition-value" id="msSnapshotAge">—</div>
+
+                  <div class="ms-definition-term">Country</div>
+                  <div class="ms-definition-value" id="msSnapshotCountry">—</div>
+
+                  <div class="ms-definition-term">Connection type</div>
+                  <div class="ms-definition-value" id="msSnapshotConnection">—</div>
+
+                  <div class="ms-definition-term">Primary love language</div>
+                  <div class="ms-definition-value" id="msSnapshotLoveLanguage">—</div>
+                </div>
+
+                <div class="ms-divider" aria-hidden="true"></div>
+
+                <div style="margin-top: 0.55rem;">
+                  <div class="ms-section-subtitle" style="margin-bottom: 0.25rem;">Key values</div>
+                  <div id="msSnapshotValues" class="ms-list" aria-label="Key values"></div>
+                </div>
+
+                <div style="margin-top: 0.7rem;">
+                  <div class="ms-section-subtitle" style="margin-bottom: 0.25rem;">Energies &amp; joys</div>
+                  <div id="msSnapshotHobbies" class="ms-list" aria-label="Main hobbies"></div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <!-- RIGHT COLUMN -->
+          <div class="ms-right-column">
+            <!-- Energy & Path -->
+            <section class="ms-card ms-section-animated ms-delay-2" aria-labelledby="msEnergyHeading">
+              <div class="ms-card-inner">
+                <header class="ms-section-header">
+                  <div class="ms-section-icon" aria-hidden="true">🌌</div>
+                  <div>
+                    <h2 id="msEnergyHeading" class="ms-section-title">Energy &amp; Path</h2>
+                    <p class="ms-section-subtitle">
+                      Zodiac, Chinese sign and life path number woven into one simple line.
+                    </p>
+                  </div>
+                </header>
+
+                <p id="msEnergyText" class="ms-text-block ms-placeholder">
+                  Add your birthday in the Quiz to see this part of your map.
+                </p>
+              </div>
+            </section>
+
+            <!-- Love & Connection -->
+            <section class="ms-card ms-section-animated ms-delay-4" aria-labelledby="msLoveHeading">
+              <div class="ms-card-inner">
+                <header class="ms-section-header">
+                  <div class="ms-section-icon" aria-hidden="true">💖</div>
+                  <div>
+                    <h2 id="msLoveHeading" class="ms-section-title">Love &amp; Connection Style</h2>
+                    <p class="ms-section-subtitle">
+                      How your heart speaks, and the kind of connections you are calling in.
+                    </p>
+                  </div>
+                </header>
+
+                <div>
+                  <div class="ms-section-subtitle" style="margin-bottom: 0.25rem;">Love languages</div>
+                  <div id="msLoveLanguages" class="ms-list" aria-label="Love languages"></div>
+                </div>
+
+                <div style="margin-top: 0.7rem;">
+                  <div class="ms-section-subtitle" style="margin-bottom: 0.25rem;">Who you want to connect with</div>
+                  <div id="msConnectWith" class="ms-list" aria-label="Preferred connection profiles"></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Boundaries & Voice -->
+            <section class="ms-card ms-section-animated ms-delay-5" aria-labelledby="msVoiceHeading">
+              <div class="ms-card-inner">
+                <header class="ms-section-header">
+                  <div class="ms-section-icon" aria-hidden="true">📝</div>
+                  <div>
+                    <h2 id="msVoiceHeading" class="ms-section-title">Boundaries &amp; Voice</h2>
+                    <p class="ms-section-subtitle">
+                      What feels safe, and how your soul likes to express itself in words.
+                    </p>
+                  </div>
+                </header>
+
+                <div>
+                  <div class="ms-section-subtitle" style="margin-bottom: 0.25rem;">Boundaries / non-negotiables</div>
+                  <p id="msBoundariesText" class="ms-text-block ms-placeholder">
+                    You haven’t written your boundaries yet. When you add them, they will appear here.
+                  </p>
+                </div>
+
+                <div style="margin-top: 0.8rem;">
+                  <div class="ms-section-subtitle" style="margin-bottom: 0.25rem;">About you</div>
+                  <p id="msAboutText" class="ms-text-block ms-placeholder">
+                    Share your story in the Quiz or Edit Profile to let this part of the page come alive.
+                  </p>
+                </div>
+
+                <div style="margin-top: 0.8rem;">
+                  <div class="ms-section-subtitle" style="margin-bottom: 0.25rem;">Mantra / intention</div>
+                  <p id="msMantraText" class="ms-text-block ms-placeholder">
+                    Add a mantra to carry with you – something short you can return to on difficult days.
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <!-- Bottom actions -->
+        <section class="ms-actions-bottom">
+          <div class="btn-row">
+            <a href="quiz.html" class="btn outline" id="msBackToQuizBottom">← Back to Quiz</a>
+            <a href="soul-chart.html" class="btn" id="msGoToChart">Next → Soul Chart</a>
+          </div>
+          <p class="ms-actions-note">
+            Your soul data is private to you. You can refine it anytime in the Quiz or Edit Profile.
+          </p>
+        </section>
       </div>
-    </header>
+    </div>
+  </main>
 
-    <!-- STORY -->
-    <section class="card">
-      <div class="card-header">
-        <h2>🌌 Soul Portrait of <span id="nameInStory">You</span></h2>
-        <div style="position:relative">
-          <button id="regenBtn" class="btn ghost">Regenerate ✨</button>
-          <button id="copyBtn" class="btn ghost">Copy</button>
-        </div>
-      </div>
-      <div id="storyText" class="typewriter" aria-live="polite"></div>
-    </section>
-
-    <section class="card">
-      <h3>💖 Love Languages</h3>
-      <div id="loveList" class="chips"></div>
-      <p id="loveEmpty" class="empty" hidden>Add love languages in Quiz or Edit Profile.</p>
-    </section>
-
-    <section class="card">
-      <h3>💎 Values</h3>
-      <div id="valuesList" class="chips"></div>
-      <p id="valuesEmpty" class="empty" hidden>Add values to guide your compass ✨</p>
-    </section>
-
-    <section class="card">
-      <h3>🌿 Hobbies</h3>
-      <div id="hobbiesList" class="chips"></div>
-      <p id="hobbiesEmpty" class="empty" hidden>Add hobbies to enrich your sky ✨</p>
-    </section>
-
-    <section class="card">
-      <h3>🕊️ Soul Summary</h3>
-      <p id="summaryText" class="empty" aria-live="polite"></p>
-    </section>
-
-    <section class="actions-row">
-      <button id="editBtn" class="btn primary">Edit Profile</button>
-      <button id="nextChartBtn" class="btn outline">Next → Soul Chart</button>
-    </section>
-
-    <footer>
-      <span>© 2025 Soulink.global | Created with love by Soulink Team</span>
-    </footer>
-  </div>
-
-  <script>
-(() => {
-  const $ = (s) => document.querySelector(s);
-  const ui = {
-    avatar: $('#avatar'), userName: $('#userName'), nameInStory: $('#nameInStory'),
-    zodiacTag: $('#zodiacTag'), chineseTag: $('#chineseTag'), lifePathTag: $('#lifePathTag'), connectionTag: $('#connectionTag'),
-    storyText: $('#storyText'),
-    loveList: $('#loveList'), loveEmpty: $('#loveEmpty'),
-    valuesList: $('#valuesList'), valuesEmpty: $('#valuesEmpty'),
-    hobbiesList: $('#hobbiesList'), hobbiesEmpty: $('#hobbiesEmpty'),
-    summaryText: $('#summaryText'),
-    regenBtn: $('#regenBtn'), copyBtn: $('#copyBtn'),
-    editBtn: $('#editBtn'), nextChartBtn: $('#nextChartBtn'),
-    openDrawer: $('#openDrawer'), closeDrawer: $('#closeDrawer'), drawer: $('#drawer'), drawerBackdrop: $('#drawerBackdrop'),
-    logout: $('#logoutLink'), logoutM: $('#logoutLinkMobile'),
-    navbar: document.querySelector('.navbar')
-  };
-
-  /* ===== helpers ===== */
-  function parse(){ try{ const raw=localStorage.getItem('soulQuiz'); return raw? JSON.parse(raw): {}; } catch { return {}; } }
-  function list(v){ if(Array.isArray(v)) return v.map(x=>String(x).trim()).filter(Boolean);
-    if(typeof v==='string') return v.split(/[\n,]/).map(s=>s.trim()).filter(Boolean); return []; }
-  function zodiac(iso){ if(!iso) return null; const d=new Date(iso); if(isNaN(d)) return null;
-    const m=d.getMonth()+1,day=d.getDate();
-    const inR=(m,d,m1,d1,m2,d2)=> (m===m1&&day>=d1)||(m===m2&&day<=d2)||(m>m1&&m<m2)||(m1>m2&&(m>=m1||m<=m2));
-    if(inR(m,day,3,21,4,19))return'Aries'; if(inR(m,day,4,20,5,20))return'Taurus';
-    if(inR(m,day,5,21,6,20))return'Gemini'; if(inR(m,day,6,21,7,22))return'Cancer';
-    if(inR(m,day,7,23,8,22))return'Leo'; if(inR(m,day,8,23,9,22))return'Virgo';
-    if(inR(m,day,9,23,10,22))return'Libra'; if(inR(m,day,10,23,11,21))return'Scorpio';
-    if(inR(m,day,11,22,12,21))return'Sagittarius'; if(inR(m,day,12,22,1,19))return'Capricorn';
-    if(inR(m,day,1,20,2,18))return'Aquarius'; if(inR(m,day,2,19,3,20))return'Pisces'; return null; }
-  function chinese(y){ if(!y) return null; const a=['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig']; const i=(y-1900)%12; return a[(i+12)%12]; }
-  function life(iso){ if(!iso) return null; const digits=String(iso).replace(/\D/g,''); if(!digits) return null;
-    const master=n=>[11,22,33].includes(n), sum=n=>String(n).split('').reduce((a,b)=>a+ +b,0);
-    let n=digits.split('').reduce((a,b)=>a+ +b,0); while(n>9&&!master(n)) n=sum(n); return n; }
-  function hobbyIcon(label){ const s=(label||'').toLowerCase();
-    const map=[['travel','✈️'],['yoga','🧘'],['music','🎵'],['reading','📚'],['books','📚'],['gym','🏋️'],['running','🏃'],['dance','💃'],['art','🎨'],['photo','📷'],['cook','🍳'],['bake','🧁'],['hiking','🥾'],['garden','🌿'],['meditation','🕯️'],['movie','🎬'],['game','🎮']];
-    for(const [k,ico] of map){ if(s.includes(k)) return ico; } return '✨'; }
-  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  /* ===== poetic 2 paragraphs ===== */
-  function buildPoeticParagraphs(d){
-    const n=d.name||'Friend'; const z=d.zodiac||zodiac(d.birthday); const lp=d.lifePath||life(d.birthday);
-    const loves=list(d.loveLanguages||d.loveLanguage); const p=loves[0]; const others=loves.slice(1);
-    const vals=list(d.values); const topVals=vals.slice(0,2); const hobs=list(d.hobbies).slice(0,3);
-
-    const p1=[`Your light has a calm shimmer, ${n}—a star that remembers its sky.`];
-    if(z) p1.push(`Born under ${z}, you carry its quiet signature.`);
-    if(lp!=null) p1.push(`Life Path ${lp} is your inner compass, turning toward what feels true.`);
-    if(p && others.length) p1.push(`Your heart speaks ${p} first, yet understands ${others.join(', ')} like harmonies.`);
-    else if(p) p1.push(`Your heart speaks ${p}, a language that blossoms when it’s heard.`);
-
-    const p2=[];
-    if(topVals.length) p2.push(`You honor ${topVals.join(', ')}—your pocketful of crystals.`);
-    if(hobs.length) p2.push(`Rituals like ${hobs.join(', ')} water the garden of your spirit.`);
-    p2.push(`Walk softly, shine openly—the path brightens as you move.`);
-    return [p1.join(' '), p2.join(' ')];
-  }
-
-  function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
-  function applyBold(pEl, phrases){
-    let html=pEl.textContent||'', used=0;
-    for(const ph of phrases){ if(!ph||used>=3) break;
-      const re=new RegExp('(\\b'+escapeRegExp(ph)+'\\b)','i');
-      if(re.test(html)){ html=html.replace(re,'<strong>$1</strong>'); used++; } }
-    pEl.innerHTML=html;
-  }
-
-  function typeParagraphs(container, paragraphs, boldPhrases){
-    container.innerHTML='';
-    let idx=0; const typeOne=()=>{ if(idx>=paragraphs.length) return;
-      const pEl=document.createElement('p'); container.appendChild(pEl); pEl.classList.add('show');
-      if(reduceMotion){ pEl.textContent=paragraphs[idx++]; applyBold(pEl,boldPhrases); return typeOne(); }
-      const text=paragraphs[idx++]; const dur=1200+Math.floor(Math.random()*400);
-      const steps=Math.max(20,Math.ceil(text.length/2)); const interval=Math.max(12,Math.floor(dur/steps));
-      let i=0; const id=setInterval(()=>{ i+=Math.ceil(text.length/steps);
-        pEl.textContent=text.slice(0,Math.min(i,text.length));
-        if(i>=text.length){ clearInterval(id); applyBold(pEl,boldPhrases); setTimeout(typeOne,120); }
-      },interval);
-    }; typeOne();
-  }
-
-  /* ===== chips with Show more ===== */
-  function renderChipGroup(arr, container, emptyEl, {type='values'}={}){
-    container.innerHTML=''; const MAX=10; const total=arr.length;
-    if(!total){ emptyEl.hidden=false; return; } else emptyEl.hidden=true;
-    let expanded=false; const btn=document.createElement('button');
-    btn.className='btn ghost'; btn.style.padding='6px 10px'; btn.style.borderRadius='999px';
-    const paint=()=>{ container.innerHTML=''; const items=expanded?arr:arr.slice(0,MAX);
-      items.forEach(v=>{ const s=document.createElement('span');
-        s.className='chip'+(type==='values'?' gem':'')+(type==='hobby'?' hobby':'');
-        if(type==='hobby'){ const ico=document.createElement('span'); ico.className='ico'; ico.textContent=hobbyIcon(v);
-          const t=document.createElement('span'); t.textContent=v; s.appendChild(ico); s.appendChild(t); }
-        else s.textContent=v; container.appendChild(s); });
-      if(total>MAX){ btn.textContent=expanded?'Show less':`Show more (+${total-MAX})`; container.appendChild(btn); }
-    };
-    btn.addEventListener('click',()=>{ expanded=!expanded; paint(); }); paint();
-  }
-
-  /* ===== summary ===== */
-// --- Soul Summary generator (love → values → hobbies → optional aboutMe) ---
-// --- Soul Summary (lyrical mode) ---
-function generateLyricalSummary(d){
-  const name = d.name || 'Your soul';
-
-  // pronouns by genderIdentity (fallback → they/their)
-  const g = String(d.genderIdentity||'').toLowerCase();
-  const P = g.includes('woman') ? {Subj:'She', subj:'she', obj:'her', possAdj:'her'}
-        : g.includes('man')    ? {Subj:'He',  subj:'he',  obj:'him', possAdj:'his'}
-                                : {Subj:'They',subj:'they',obj:'them',possAdj:'their'};
-
-  // helpers
-  const list = (v)=> Array.isArray(v) ? v : (typeof v==='string' ? v.split(/[\n,]/).map(s=>s.trim()).filter(Boolean) : []);
-  const oxford = (arr)=>{
-    const a = arr.filter(Boolean);
-    if(!a.length) return '';
-    if(a.length===1) return a[0];
-    if(a.length===2) return `${a[0]} and ${a[1]}`;
-    return `${a.slice(0,-1).join(', ')}, and ${a[a.length-1]}`;
-  };
-  const endDot = (s)=> s ? (/[.!?]$/.test(s) ? s : s + '.') : '';
-
-  const loves   = list(d.loveLanguages || d.loveLanguage);
-  const values  = list(d.values).slice(0,4);
-  const hobbies = list(d.hobbies).slice(0,4);
-  const aboutMe = String(d.aboutMe || d.about || '').trim();
-
-  const lines = [];
-
-  // Sentence 1 — name only once; love languages as the heart’s expression
-  if(loves.length){
-  const main = loves[0];
-  const second = loves[1];
-  lines.push(
-      second
-        ? `${name} is guided by ${main} and ${second}, ${P.possAdj} heart finding its voice in kindness and care.`
-        : `${name} is guided by ${main}, ${P.possAdj} heart finding its true voice in love.`
-    );
-  } else if(values.length){
-    lines.push(`${name} carries ${oxford(values.slice(0,3))} as ${P.possAdj} quiet compass.`);
-  } else if(hobbies.length){
-    lines.push(`${name} finds joy in ${oxford(hobbies.slice(0,3))}, letting simple rituals glow.`);
-  }
-
-  // Sentence 2 — values as guiding stars
-  if(values.length){
-    lines.push(`${P.Subj} treasures ${oxford(values)} — guiding stars that keep ${P.obj} true.`);
-  }
-
-  // Sentence 3 — hobbies as rituals
-  if(hobbies.length){
-    lines.push(`With ${oxford(hobbies)}, ${P.subj} nourishes ${P.possAdj} days, tending the garden of the spirit.`);
-  }
-
-  // Sentence 4 — blend About Me softly (convert first-person → third-person)
-  if(aboutMe){
-    let s = ' ' + aboutMe + ' ';
-    s = s
-      .replace(/\bI am\b/gi, `${P.Subj.toLowerCase()==='they'?'They are':P.Subj+' is'}`)
-      .replace(/\bI'm\b/gi,  `${P.Subj.toLowerCase()==='they'?'They’re':P.Subj+"’s"}`)
-      .replace(/\bI\b/gi,    P.Subj)
-      .replace(/\bmy\b/gi,   P.possAdj)
-      .replace(/\bme\b/gi,   P.obj)
-      .replace(/\bmine\b/gi, P.possAdj);
-    s = s.trim();
-    // keep it one warm sentence
-    s = s.split(/[.!?]\s*/).filter(Boolean)[0] || s;
-    lines.push(endDot(s));
-  }
-
-  const out = lines.filter(Boolean).slice(0,4).join(' ');
-  return out || '';
-}
-// --- Soul Summary (plain, human-like) ---
-function oxfordJoin(arr){
-  const a = (arr||[]).filter(Boolean);
-  if(!a.length) return '';
-  if(a.length===1) return a[0];
-  if(a.length===2) return `${a[0]} and ${a[1]}`;
-  return `${a.slice(0,-1).join(', ')}, and ${a[a.length-1]}`;
-}
-
-function generateSoulSummary(d){
-  const name   = d.name || 'Your soul';
-  const loves  = Array.isArray(d.loveLanguages) ? d.loveLanguages : (d.loveLanguage ? [d.loveLanguage] : []);
-  const values = Array.isArray(d.values) ? d.values : [];
-  const hobbies= Array.isArray(d.hobbies)? d.hobbies: [];
-  const about  = String(d.aboutMe || d.about || '').trim();
-
-  const out = [];
-
-  if(loves.length){
-    const main = loves[0], second = loves[1];
-    out.push(second
-      ? `${name} is guided by ${main} and ${second}.`
-      : `${name} is guided by ${main}.`);
-  }
-  if(values.length){
-    const v = values.slice(0,3);
-    out.push(`Values ${oxfordJoin(v)} light the way.`);
-  }
-  if(hobbies.length){
-    const h = hobbies.slice(0,3);
-    out.push(`Enjoys ${oxfordJoin(h)}.`);
-  }
-  if(about){
-    out.push(/[.!?]$/.test(about) ? about : about + '.');
-  }
-    return out.join(' ');}
-
-
-  /* ===== render ===== */
-  function render(){
-    const d=parse();
-    // avatar
-    const ph='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 96 96\"><defs><radialGradient id=\"g\" cx=\"50%\" cy=\"50%\" r=\"50%\"><stop offset=\"0%\" stop-color=\"#00fdd8\" stop-opacity=\".35\"/><stop offset=\"100%\" stop-color=\"#00fdd8\" stop-opacity=\".05\"/></radialGradient></defs><rect width=\"100%\" height=\"100%\" fill=\"url(#g)\"/><circle cx=\"48\" cy=\"38\" r=\"18\" fill=\"#0a6a6f\"/><rect x=\"20\" y=\"58\" width=\"56\" height=\"22\" rx=\"11\" fill=\"#0a6a6f\"/></svg>');
-    const stored=d.profilePhoto1||localStorage.getItem('profilePhoto1'); ui.avatar.src=stored||ph; ui.avatar.alt='Profile photo';
-
-    // name & tags
-    const name=d.name||'My Soul'; ui.userName.textContent=name; ui.nameInStory.textContent=name;
-    const z=d.zodiac||zodiac(d.birthday); if(z){ ui.zodiacTag.textContent=z; ui.zodiacTag.hidden=false; }
-    const yr=(()=>{ if(d.birthday){ const dt=new Date(d.birthday); if(!isNaN(dt)) return dt.getFullYear();
-      const y=String(d.birthday).slice(0,4); if(/^\d{4}$/.test(y)) return Number(y);} return null; })();
-    const cz=chinese(yr); if(cz){ ui.chineseTag.textContent=cz; ui.chineseTag.hidden=false; }
-    const lp=d.lifePath||life(d.birthday); if(lp!=null){ ui.lifePathTag.textContent='Life Path '+lp; ui.lifePathTag.hidden=false; }
-    if(d.connectionType){ ui.connectionTag.textContent=d.connectionType; ui.connectionTag.hidden=false; }
-
-    // portrait
-    const loves=list(d.loveLanguages||d.loveLanguage); const primary=loves[0];
-    const vals=list(d.values); const bolds=[primary, vals[0], vals[1]].filter(Boolean);
-    const paragraphs=buildPoeticParagraphs(d); typeParagraphs(ui.storyText, paragraphs, bolds);
-
-    // love languages
-    ui.loveList.innerHTML=''; if(loves.length){ loves.forEach((l,i)=>{ const s=document.createElement('span');
-      s.className='chip'+(i===0?' primary':''); s.textContent=i===0? `${l} · Primary` : l; ui.loveList.appendChild(s); });
-      ui.loveEmpty.hidden=true; } else ui.loveEmpty.hidden=false;
-
-    // values & hobbies
-    renderChipGroup(list(d.values), ui.valuesList, ui.valuesEmpty, {type:'values'});
-    renderChipGroup(list(d.hobbies), ui.hobbiesList, ui.hobbiesEmpty, {type:'hobby'});
-
-  // summary (lyrical -> fallback to plain -> placeholder)
-const lyrical = (typeof generateLyricalSummary==='function') ? generateLyricalSummary(d) : '';
-const plain   = generateSoulSummary(d);
-const final   = lyrical || plain;
-
-ui.summaryText.textContent = final || 'Complete your profile to see your Soul Summary ✨';
-ui.summaryText.classList.toggle('empty', !final);
-
-  }
-
-  /* ===== sparkle + nav + actions ===== */
-  function sparkle(el){ if(reduceMotion) return;
-    const r=el.getBoundingClientRect(); const sp=document.createElement('span');
-    sp.className='sparkle'; sp.style.left=(r.left+r.width-8)+'px'; sp.style.top=(r.top+window.scrollY+8)+'px';
-    document.body.appendChild(sp); setTimeout(()=>sp.remove(),300); }
-
-  function bind(){
-    const onScroll=()=>{ if(window.scrollY>6) ui.navbar?.classList.add('scrolled'); else ui.navbar?.classList.remove('scrolled'); };
-    onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
-
-    const openDrawer=()=>{ ui.drawer?.classList.add('open'); document.body.classList.add('no-scroll'); };
-    const closeDrawer=()=>{ ui.drawer?.classList.remove('open'); document.body.classList.remove('no-scroll'); };
-    ui.openDrawer?.addEventListener('click', openDrawer);
-    ui.closeDrawer?.addEventListener('click', closeDrawer);
-    ui.drawerBackdrop?.addEventListener('click', closeDrawer);
-    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeDrawer(); });
-
-    ui.regenBtn?.addEventListener('click', (e)=>{ render(); sparkle(e.currentTarget); });
-    ui.copyBtn?.addEventListener('click', ()=>{ const t=[...ui.storyText.querySelectorAll('p')].map(p=>p.textContent).join('\\n\\n');
-      if(!t) return; navigator.clipboard.writeText(t).then(()=>{ const prev=ui.copyBtn.textContent; ui.copyBtn.textContent='Copied ✨'; setTimeout(()=>ui.copyBtn.textContent=prev,900); }); });
-
-    ui.editBtn?.addEventListener('click', ()=>{ location.href='edit-profile.html'; });
-    ui.nextChartBtn?.addEventListener('click', ()=>{ location.href='soul-chart.html'; });
-
-    ui.logout?.addEventListener('click', (e)=>{ e.preventDefault(); localStorage.clear(); location.href='index.html'; });
-    ui.logoutM?.addEventListener('click', (e)=>{ e.preventDefault(); localStorage.clear(); location.href='index.html'; });
-  }
-
-  document.addEventListener('DOMContentLoaded', ()=>{ render(); bind(); });
-})();
-</script>
-<script src="nav.js" defer></script>
-
+  <!-- FOOTER (canonical) -->
+  <footer class="footer-note">
+    © 2025 Soulink.global | Created with love by Soulink Team
+  </footer>
 </body>
 </html>
