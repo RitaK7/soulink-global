@@ -324,14 +324,14 @@
     }
 
     .my-soul-page .ms-card:hover {
-      transform: translateY(-3px);
+      transform: translateY(-3px) scale(1.01);
       box-shadow:
-        0 0 0 1px rgba(0, 253, 216, 0.32),
-        0 22px 52px rgba(0, 0, 0, 0.78),
-        inset 0 0 30px rgba(0, 253, 216, 0.08);
+        0 0 0 1px rgba(0, 253, 216, 0.45),
+        0 22px 52px rgba(0, 0, 0, 0.82),
+        inset 0 0 30px rgba(0, 253, 216, 0.12);
       background:
-        radial-gradient(circle at top, rgba(0, 253, 216, 0.16), transparent 60%),
-        rgba(0, 0, 0, 0.34);
+        radial-gradient(circle at top, rgba(0, 253, 216, 0.18), transparent 60%),
+        rgba(0, 0, 0, 0.36);
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -573,11 +573,64 @@
       }
     }
 
+
+    /* Generic fade-in-up helper for hero / summary text */
+    .my-soul-page .fade-in-up {
+      opacity: 0;
+      transform: translateY(14px);
+      animation: ms-fade-up 0.7s ease-out forwards;
+    }
+
+    /* Typewriter effect styles */
+    .my-soul-page .ms-typing {
+      position: relative;
+    }
+
+    .my-soul-page .ms-typing-cursor {
+      display: inline-block;
+      width: 0.6ch;
+      margin-left: 0.06rem;
+      opacity: 1;
+      animation: ms-cursor-blink 0.8s steps(1, end) infinite;
+    }
+
+    @keyframes ms-cursor-blink {
+      0%, 50% {
+        opacity: 1;
+      }
+      50.01%, 100% {
+        opacity: 0;
+      }
+    }
+
+    /* Avatar hover float */
+    .my-soul-page .ms-avatar-wrap {
+      transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+    }
+
+    .my-soul-page .ms-avatar-ring:hover .ms-avatar {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow:
+        0 0 0 3px rgba(0, 253, 216, 0.32),
+        0 0 60px rgba(0, 253, 216, 0.9);
+    }
+
     @media (prefers-reduced-motion: reduce) {
-      .my-soul-page .ms-section-animated {
+      .my-soul-page .ms-section-animated,
+      .my-soul-page .fade-in-up {
         opacity: 1;
         transform: none;
         animation: none;
+      }
+
+      .my-soul-page .ms-typing-cursor {
+        animation: none;
+      }
+
+      .my-soul-page .ms-avatar-ring:hover .ms-avatar {
+        transform: none;
       }
     }
   </style>
@@ -647,8 +700,8 @@
             </div>
             <div class="ms-hero-text">
               <p class="page-kicker">Soul Snapshot</p>
-              <h1 class="page-title" id="msHeroTitle">My Soul</h1>
-              <p class="page-subtitle" id="msHeroSubtitle">
+              <h1 class="page-title fade-in-up" id="msHeroTitle">My Soul</h1>
+              <p class="page-subtitle fade-in-up" id="msHeroSubtitle">
                 This is your living soul profile – a gentle mirror built from your answers in Soulink.
               </p>
 
@@ -690,7 +743,7 @@
                   </div>
                 </header>
 
-                <p id="msSoulSummary" class="ms-text-block ms-placeholder" aria-live="polite">
+                <p id="msSoulSummary" class="ms-text-block ms-placeholder fade-in-up" aria-live="polite">
                   Complete your profile to see your Soul Summary ✨
                 </p>
               </div>
@@ -843,5 +896,65 @@
   <footer class="footer-note">
     © 2025 Soulink.global | Created with love by Soulink Team
   </footer>
+  <script>
+    (function () {
+      "use strict";
+
+      window.addEventListener("load", function () {
+        try {
+          var summaryEl = document.getElementById("msSoulSummary");
+          if (!summaryEl) return;
+
+          var full = (summaryEl.textContent || "").trim();
+          if (!full) return;
+
+          if (summaryEl.classList && summaryEl.classList.contains("ms-placeholder")) {
+            return;
+          }
+
+          var prefersReduced = false;
+          try {
+            if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+              prefersReduced = true;
+            }
+          } catch (e) {}
+
+          if (prefersReduced) {
+            return;
+          }
+
+          summaryEl.classList.add("ms-typing");
+
+          var cursor = document.createElement("span");
+          cursor.className = "ms-typing-cursor";
+          cursor.setAttribute("aria-hidden", "true");
+          cursor.textContent = "▎";
+
+          summaryEl.textContent = "";
+          var textNode = document.createTextNode("");
+          summaryEl.appendChild(textNode);
+          summaryEl.appendChild(cursor);
+
+          var index = 0;
+          var delay = 32;
+
+          function typeNext() {
+            if (index >= full.length) {
+              return;
+            }
+            textNode.nodeValue += full.charAt(index);
+            index += 1;
+            if (index < full.length) {
+              window.setTimeout(typeNext, delay);
+            }
+          }
+
+          window.setTimeout(typeNext, 220);
+        } catch (err) {
+
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
