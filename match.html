@@ -1,118 +1,730 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Soulink — Match Lab</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="Soulink Match Lab — a gentle, AI-inspired playground to explore compatibility based on love language, values and passions."
-    />
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body class="soulink-bg">
-    <header class="navbar soulink-nav" data-active="Match" aria-label="Primary navigation">
-  <div class="nav-inner">
-    <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">
-      Soulink
-    </a>
+<head>
+  <!-- Match page redesigned based on previous Match Lab implementation -->
+  <meta charset="utf-8" />
+  <title>Soulink — Match</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="description"
+    content="Soulink Match — a glowing AI compatibility lab that blends love language, values, joys, astrology and numerology into one view."
+  />
+  <link rel="stylesheet" href="style.css" />
+  <script src="auth.js" defer></script>
+  <script src="data-helpers.js" defer></script>
+  <script src="nav.js" defer></script>
+  <script src="match.js" defer></script>
 
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-label="Toggle navigation">
-      <span></span><span></span><span></span>
-    </button>
+  <style>
+    .match-page {
+      position: relative;
+    }
 
-    <nav class="nav-links" aria-label="Primary">
-      <a href="index.html" data-page="Home">Home</a>
-      <a href="quiz.html" data-page="Quiz">Quiz</a>
-      <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
-      <a href="my-soul.html" data-page="My Soul">My Soul</a>
-      <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
-      <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
-      <a href="match.html" data-page="Match">Match</a>
-      <a href="friends.html" data-page="Friends">Friends</a>
-      <a href="results.html" data-page="Results">Results</a>
-      <a href="login.html" data-page="Login">Log In</a>
-      <a href="signup.html" data-page="Sign Up">Sign Up</a>
-    </nav>
-  </div>
-</header>
+    .match-page .page-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 1.75rem 1.25rem 2.5rem;
+      box-sizing: border-box;
+    }
 
-    <main class="page">
-      <div class="page-inner">
-        <!-- Hero -->
-        <section class="page-hero glass-card">
-          <div class="page-hero-text">
-            <h1 class="page-title">Match Lab</h1>
-            <p class="page-subtitle">
-              AI-inspired compatibility playground — see how your love language,
-              values and passions resonate with different soul vibes.
-            </p>
-          </div>
-        </section>
+    .match-page::before {
+      content: "";
+      position: fixed;
+      inset: -40vh -40vw;
+      pointer-events: none;
+      opacity: 0.9;
+      z-index: -1;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.14), transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.1), transparent 60%);
+    }
 
-        <!-- No data banner -->
-        <section
-          id="matchEmpty"
-          class="info-banner info-banner-soft"
-          hidden
-          aria-live="polite"
-        >
-          Please complete your Soulink Quiz and Edit Profile to unlock Match Lab.
-        </section>
+    /* Empty state */
 
-        <!-- Base soul summary -->
-        <section class="match-user-section">
-          <article class="glass-card match-user-card">
-            <header class="match-user-header">
-              <h2 class="match-user-title">Your Base Soul</h2>
-              <p class="match-user-subtitle">
-                This is the energy we use as a reference for all compatibility
-                calculations.
+    .match-page .m-empty-card {
+      margin-top: 2.25rem;
+      padding: 1.8rem 1.6rem 1.9rem;
+      border-radius: 22px;
+      border: 1px solid rgba(0, 253, 216, 0.32);
+      background:
+        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.18), transparent 55%),
+        rgba(0, 0, 0, 0.84);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.28),
+        0 22px 60px rgba(0, 0, 0, 0.92);
+      text-align: center;
+    }
+
+    .match-page .m-empty-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 1.05rem;
+      letter-spacing: 0.03em;
+    }
+
+    .match-page .m-empty-subtitle {
+      margin-top: 0.75rem;
+      font-size: 0.95rem;
+      opacity: 0.9;
+    }
+
+    .match-page .m-empty-actions {
+      margin-top: 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .match-page .m-empty-actions .btn {
+      min-width: 160px;
+    }
+
+    /* Hero */
+
+    .match-page .m-hero {
+      margin-top: 2rem;
+      padding: 1.8rem 1.6rem 1.9rem;
+      border-radius: 24px;
+      border: 1px solid rgba(0, 253, 216, 0.38);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.22), transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.16), transparent 60%),
+        rgba(0, 0, 0, 0.84);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.3),
+        0 24px 70px rgba(0, 0, 0, 0.95);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.75rem;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(18px);
+    }
+
+    .match-page .m-hero::before {
+      content: "";
+      position: absolute;
+      inset: -30%;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.26), transparent 60%),
+        radial-gradient(circle at 120% 120%, rgba(0, 253, 216, 0.18), transparent 58%);
+      opacity: 0.4;
+    }
+
+    .match-page .m-hero-inner {
+      position: relative;
+      display: contents;
+    }
+
+    .match-page .m-hero-left {
+      position: relative;
+      z-index: 1;
+    }
+
+    .match-page .m-kicker {
+      font-size: 0.82rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(224, 255, 250, 0.9);
+      opacity: 0.9;
+    }
+
+    .match-page .m-title {
+      margin-top: 0.4rem;
+      font-size: clamp(1.7rem, 2.1vw + 1.2rem, 2.15rem);
+      font-weight: 650;
+      letter-spacing: 0.03em;
+    }
+
+    .match-page .m-subtitle {
+      margin-top: 0.65rem;
+      font-size: 0.98rem;
+      max-width: 34rem;
+      opacity: 0.9;
+    }
+
+    .match-page .m-pill-row {
+      margin-top: 1.1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+
+    .match-page .m-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.85rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.6);
+      background: rgba(0, 0, 0, 0.55);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.35),
+        0 0 22px rgba(0, 253, 216, 0.42);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      white-space: nowrap;
+    }
+
+    .match-page .m-pill-label {
+      opacity: 0.7;
+    }
+
+    .match-page .m-pill-value {
+      opacity: 0.95;
+    }
+
+    .match-page .m-pill-soft {
+      border-color: rgba(0, 253, 216, 0.32);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.16),
+        0 0 18px rgba(0, 253, 216, 0.25);
+      background: rgba(0, 0, 0, 0.72);
+      text-transform: none;
+      letter-spacing: 0.03em;
+      font-size: 0.8rem;
+    }
+
+    .match-page .m-hero-right {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+    }
+
+    .match-page .m-orb {
+      width: 190px;
+      max-width: 70vw;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 253, 216, 0.7);
+      background:
+        radial-gradient(circle at 30% 15%, rgba(0, 253, 216, 0.9), transparent 55%),
+        radial-gradient(circle at 70% 90%, rgba(0, 253, 216, 0.3), transparent 60%),
+        rgba(0, 0, 0, 0.93);
+      box-shadow:
+        0 0 35px rgba(0, 253, 216, 0.65),
+        0 0 80px rgba(0, 253, 216, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .match-page .m-orb::before {
+      content: "";
+      position: absolute;
+      inset: 10%;
+      border-radius: inherit;
+      border: 1px dashed rgba(0, 253, 216, 0.35);
+      opacity: 0.9;
+    }
+
+    .match-page .m-orb-inner {
+      position: relative;
+      text-align: center;
+      padding: 0 1.3rem;
+    }
+
+    .match-page .m-orb-label {
+      display: block;
+      font-size: 0.75rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      opacity: 0.86;
+    }
+
+    .match-page .m-orb-main {
+      margin-top: 0.4rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .match-page .m-orb-sub {
+      margin-top: 0.4rem;
+      font-size: 0.82rem;
+      opacity: 0.9;
+    }
+
+    /* Main section */
+
+    .match-page .m-main {
+      margin-top: 2.2rem;
+    }
+
+    .match-page .m-section-header {
+      margin-bottom: 1.1rem;
+    }
+
+    .match-page .m-section-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .match-page .m-section-subtitle {
+      margin-top: 0.25rem;
+      font-size: 0.9rem;
+      opacity: 0.9;
+      max-width: 36rem;
+    }
+
+    .match-page .m-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.2rem;
+    }
+
+    .match-page .m-card {
+      position: relative;
+      padding: 1.2rem 1.2rem 1.4rem;
+      border-radius: 20px;
+      border: 1px solid rgba(0, 253, 216, 0.32);
+      background:
+        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.16), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.1), transparent 55%),
+        rgba(0, 0, 0, 0.8);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.2),
+        0 16px 40px rgba(0, 0, 0, 0.9);
+      overflow: hidden;
+      backdrop-filter: blur(16px);
+    }
+
+    .match-page .m-card::before {
+      content: "";
+      position: absolute;
+      inset: -35%;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.2), transparent 60%),
+        radial-gradient(circle at 120% 120%, rgba(0, 253, 216, 0.14), transparent 55%);
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .match-page .m-card-inner {
+      position: relative;
+    }
+
+    .match-page .m-card-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1.8fr) auto;
+      gap: 0.9rem;
+      align-items: center;
+    }
+
+    .match-page .m-card-left {
+      display: flex;
+      gap: 0.85rem;
+      align-items: center;
+    }
+
+    .match-page .m-avatar-circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at 30% 15%, rgba(0, 253, 216, 0.85), transparent 60%),
+        radial-gradient(circle at 70% 100%, rgba(0, 253, 216, 0.4), transparent 60%);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.55),
+        0 0 22px rgba(0, 253, 216, 0.5);
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .match-page .m-avatar-initial {
+      text-transform: uppercase;
+    }
+
+    .match-page .m-card-title {
+      font-size: 1.02rem;
+      font-weight: 600;
+    }
+
+    .match-page .m-card-meta {
+      margin-top: 0.2rem;
+      font-size: 0.82rem;
+      opacity: 0.9;
+    }
+
+    .match-page .m-score {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .match-page .m-score-ring {
+      --score: 0;
+      --ring-color: #00fdd8;
+      width: 64px;
+      height: 64px;
+      border-radius: 999px;
+      position: relative;
+      background:
+        conic-gradient(
+          var(--ring-color) calc(var(--score) * 1%),
+          rgba(0, 253, 216, 0.08) 0
+        );
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.4),
+        0 0 28px rgba(0, 253, 216, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .match-page .m-score-ring::before {
+      content: "";
+      position: absolute;
+      inset: 6px;
+      border-radius: inherit;
+      background: rgba(0, 0, 0, 0.95);
+    }
+
+    .match-page .m-score-inner {
+      position: relative;
+      text-align: center;
+      font-size: 0.78rem;
+    }
+
+    .match-page .m-score-value {
+      display: block;
+      font-size: 0.98rem;
+      font-weight: 600;
+    }
+
+    .match-page .m-score-label {
+      display: block;
+      font-size: 0.7rem;
+      opacity: 0.9;
+    }
+
+    .match-page .m-card-body {
+      margin-top: 0.8rem;
+      font-size: 0.88rem;
+      opacity: 0.96;
+    }
+
+    .match-page .m-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .match-page .m-chip-group {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      align-items: center;
+      padding: 0.3rem 0.65rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.32);
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .match-page .m-chip-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.8;
+    }
+
+    .match-page .m-chip {
+      font-size: 0.8rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.3);
+      background: radial-gradient(
+        circle at 30% 20%,
+        rgba(0, 253, 216, 0.2),
+        transparent 60%
+      );
+    }
+
+    .match-page .m-snippet {
+      margin-top: 0.75rem;
+      font-size: 0.88rem;
+      opacity: 0.96;
+    }
+
+    .match-page .m-card-actions {
+      margin-top: 0.8rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+
+    .match-page .m-card-actions .btn {
+      min-width: 130px;
+    }
+
+    .match-page .m-card-actions .btn-outline {
+      border-style: dashed;
+    }
+
+    /* Hover & motion */
+
+    .match-page .m-card,
+    .match-page .m-orb {
+      transition:
+        transform 220ms ease-out,
+        box-shadow 220ms ease-out,
+        border-color 220ms ease-out;
+    }
+
+    .match-page .m-card:hover,
+    .match-page .m-card:focus-within {
+      transform: translateY(-2px);
+      border-color: rgba(0, 253, 216, 0.65);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.42),
+        0 22px 55px rgba(0, 0, 0, 0.95);
+    }
+
+    .match-page .m-orb:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow:
+        0 0 45px rgba(0, 253, 216, 0.8),
+        0 0 90px rgba(0, 253, 216, 0.55);
+    }
+
+    .match-page .match-section-animated {
+      opacity: 0;
+      transform: translateY(16px);
+      transition:
+        opacity 700ms ease-out,
+        transform 700ms ease-out;
+    }
+
+    .match-page.match-animate .match-section-animated {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .match-page .m-delay-1 {
+      transition-delay: 60ms;
+    }
+
+    .match-page .m-delay-2 {
+      transition-delay: 120ms;
+    }
+
+    .match-page .m-delay-3 {
+      transition-delay: 180ms;
+    }
+
+    .match-page .m-delay-4 {
+      transition-delay: 240ms;
+    }
+
+    .match-page.match-animate .m-orb {
+      animation: m-orb-float 9s ease-in-out infinite;
+    }
+
+    @keyframes m-orb-float {
+      0% {
+        transform: translateY(0) scale(1);
+      }
+      50% {
+        transform: translateY(-6px) scale(1.02);
+      }
+      100% {
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Responsive */
+
+    @media (min-width: 768px) {
+      .match-page .m-hero {
+        grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.4fr);
+      }
+
+      .match-page .m-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      .match-page .m-hero {
+        padding-inline: 1.25rem;
+      }
+
+      .match-page .m-card-header {
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: 0.6rem;
+      }
+
+      .match-page .m-score {
+        justify-content: flex-start;
+      }
+
+      .match-page .m-card-actions {
+        justify-content: flex-start;
+      }
+
+      .match-page .m-card-actions .btn {
+        width: 100%;
+      }
+
+      .match-page .m-empty-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .match-page .m-empty-actions .btn {
+        width: 100%;
+      }
+    }
+
+    /* Reduced motion */
+
+    @media (prefers-reduced-motion: reduce) {
+      .match-page .match-section-animated {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+
+      .match-page.match-animate .m-orb {
+        animation: none !important;
+      }
+
+      .match-page .m-card,
+      .match-page .m-orb {
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body class="soulink-bg">
+  <!-- Top Navigation (shared) -->
+  <header class="topnav" data-active="Match" aria-label="Primary navigation">
+    <div class="topnav-inner">
+      <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">
+        Soulink
+      </a>
+
+      <button
+        class="nav-toggle"
+        type="button"
+        aria-label="Toggle navigation"
+        aria-expanded="false"
+      >
+        <span class="nav-toggle-line"></span>
+        <span class="nav-toggle-line"></span>
+      </button>
+
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="index.html" data-page="Home">Home</a>
+        <a href="quiz.html" data-page="Quiz">Quiz</a>
+        <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
+        <a href="my-soul.html" data-page="My Soul">My Soul</a>
+        <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
+        <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
+        <a href="match.html" data-page="Match">Match</a>
+        <a href="friends.html" data-page="Friends">Friends</a>
+        <a href="results.html" data-page="Results">Results</a>
+        <a href="login.html" data-page="Login">Log In</a>
+        <a href="signup.html" data-page="Sign Up">Sign Up</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page match-page">
+    <div class="page-inner">
+      <!-- EMPTY STATE -->
+      <section id="matchEmpty" class="m-empty-card" hidden aria-live="polite">
+        <div class="m-empty-title">
+          <span>🧪</span>
+          <span>No Matches Yet</span>
+        </div>
+        <p class="m-empty-subtitle">
+          Your compatibility lab will wake up as soon as you add a few connections in
+          <strong>Friends</strong> or complete your profile details.
+        </p>
+        <div class="m-empty-actions">
+          <a href="friends.html" class="btn outline">Go to Friends</a>
+          <a href="my-soul.html" class="btn">Back to My Soul</a>
+        </div>
+      </section>
+
+      <!-- MAIN LAYOUT -->
+      <section id="matchLayout" hidden>
+        <!-- HERO -->
+        <section class="m-hero match-section-animated m-delay-1">
+          <div class="m-hero-inner">
+            <div class="m-hero-left">
+              <p class="m-kicker">AI Compatibility Lab</p>
+              <h1 class="m-title">Match</h1>
+              <p class="m-subtitle">
+                Your personalized compatibility map — blending love language, values, joys,
+                astrology and numerology into one soft, intuitive view.
               </p>
-            </header>
-            <div class="match-user-body">
-              <div class="match-user-row">
-                <span class="match-label">Name</span>
-                <span id="matchUserName" class="match-value">beautiful soul</span>
-              </div>
-              <div class="match-user-row">
-                <span class="match-label">Connection Type</span>
-                <span id="matchUserConn" class="match-value">not set yet</span>
-              </div>
-              <div class="match-user-row">
-                <span class="match-label">Primary Love Language</span>
-                <span id="matchUserLove" class="match-value">not defined yet</span>
+
+              <div class="m-pill-row">
+                <span class="m-pill" id="matchPillName">
+                  <span class="m-pill-label">Name</span>
+                  <span class="m-pill-value" id="matchHeroName">Beautiful soul</span>
+                </span>
+                <span class="m-pill" id="matchPillLove">
+                  <span class="m-pill-label">Love Language</span>
+                  <span class="m-pill-value" id="matchHeroLove">Not set yet</span>
+                </span>
+                <span class="m-pill" id="matchPillLife">
+                  <span class="m-pill-label">Life Path</span>
+                  <span class="m-pill-value" id="matchHeroLife">Not calculated yet</span>
+                </span>
               </div>
             </div>
-          </article>
-        </section>
 
-        <!-- Matches grid -->
-        <section class="match-grid-section">
-          <h2 class="section-title">Potential Matches</h2>
-          <p class="section-subtitle">
-            These are example energies generated for you to feel how different
-            combinations of values and love languages could resonate.
-          </p>
-
-          <div id="matchList" class="match-grid">
-            <!-- match cards will be rendered here by match.js -->
+            <div class="m-hero-right">
+              <div class="m-orb" aria-hidden="true">
+                <div class="m-orb-inner">
+                  <span class="m-orb-label">Compatibility</span>
+                  <div class="m-orb-main" id="matchOrbMain">Explore your connections</div>
+                  <div class="m-orb-sub" id="matchOrbSub">
+                    Notice who feels easy to be around — that&#39;s data too.
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
-      </div>
-    </main>
 
-    <footer class="site-footer">
-      <div class="site-footer-inner">
-        <p>Soulink.global — conscious matching for hearts &amp; souls.</p>
-        <p>Created with love and ChatGPT as a co-creator.</p>
-      </div>
-    </footer>
+        <!-- MATCH LIST -->
+        <section class="m-main">
+          <header class="m-section-header match-section-animated m-delay-2">
+            <h2 class="m-section-title">Potential Matches</h2>
+            <p class="m-section-subtitle">
+              These connections are sorted by a gentle compatibility score that considers
+              your love language, values, joys and symbolic sky — not as a verdict, but as a
+              soft guide.
+            </p>
+          </header>
 
-    <!-- Shared scripts -->
-    <script src="auth.js"></script>
-    <script src="data-helpers.js" defer></script>
-    <script src="nav.js" defer></script>
-    <script src="match.js" defer></script>
-  </body>
+          <div id="matchList" class="m-grid match-section-animated m-delay-3">
+            <!-- Match cards rendered by match.js -->
+          </div>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer-note">
+    © 2025 Soulink.global | Created with love by Soulink Team.
+  </footer>
+</body>
 </html>
