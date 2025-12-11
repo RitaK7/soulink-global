@@ -8,107 +8,577 @@
       name="description"
       content="Soulink Soul Friends — a gentle space to keep track of souls you feel resonant with for friendship, collaboration or soft support."
     />
+    <!-- Global Soulink styles -->
     <link rel="stylesheet" href="style.css" />
+    <!-- Global scripts -->
+    <script src="auth.js" defer></script>
+    <script src="data-helpers.js" defer></script>
+    <script src="nav.js" defer></script>
+    <script src="friends.js" defer></script>
+
+    <style>
+      .friends-page {
+        position: relative;
+      }
+
+      .friends-page .page-inner {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 1.75rem 1.25rem 2.75rem;
+        box-sizing: border-box;
+      }
+
+      .friends-page::before {
+        content: "";
+        position: fixed;
+        inset: -40vh -40vw;
+        pointer-events: none;
+        opacity: 0.9;
+        z-index: -1;
+        background:
+          radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.14), transparent 60%),
+          radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.1), transparent 60%);
+      }
+
+      /* Hero */
+
+      .friends-hero {
+        margin-top: 2rem;
+        padding: 1.9rem 1.7rem 2rem;
+        border-radius: 24px;
+        border: 1px solid rgba(0, 253, 216, 0.38);
+        background:
+          radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.22), transparent 60%),
+          radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.16), transparent 60%),
+          rgba(0, 0, 0, 0.84);
+        box-shadow:
+          0 0 0 1px rgba(0, 253, 216, 0.3),
+          0 24px 70px rgba(0, 0, 0, 0.95);
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(18px);
+      }
+
+      .friends-hero::before {
+        content: "";
+        position: absolute;
+        inset: -30%;
+        pointer-events: none;
+        background:
+          radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.26), transparent 60%),
+          radial-gradient(circle at 120% 120%, rgba(0, 253, 216, 0.18), transparent 58%);
+        opacity: 0.4;
+      }
+
+      .friends-hero-inner {
+        position: relative;
+      }
+
+      .friends-kicker {
+        font-size: 0.82rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: rgba(224, 255, 250, 0.9);
+        opacity: 0.9;
+      }
+
+      .friends-title {
+        margin-top: 0.4rem;
+        font-size: clamp(1.7rem, 2.2vw + 1.2rem, 2.25rem);
+        font-weight: 650;
+        letter-spacing: 0.03em;
+      }
+
+      .friends-subtitle {
+        margin-top: 0.7rem;
+        font-size: 0.98rem;
+        max-width: 38rem;
+        opacity: 0.9;
+      }
+
+      /* Toolbar */
+
+      .friends-toolbar {
+        margin-top: 1.6rem;
+        padding: 0.9rem 1.1rem;
+        border-radius: 18px;
+        border: 1px solid rgba(0, 253, 216, 0.32);
+        background:
+          radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.16), transparent 55%),
+          rgba(0, 0, 0, 0.78);
+        box-shadow:
+          0 0 0 1px rgba(0, 253, 216, 0.22),
+          0 16px 40px rgba(0, 0, 0, 0.9);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        justify-content: space-between;
+      }
+
+      .friends-toolbar-left {
+        font-size: 0.9rem;
+        opacity: 0.9;
+      }
+
+      .friends-toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+
+      .friends-sort-label {
+        font-size: 0.85rem;
+        opacity: 0.85;
+      }
+
+      .friends-sort-select {
+        min-width: 180px;
+        padding: 0.35rem 0.85rem;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 253, 216, 0.5);
+        background:
+          radial-gradient(circle at 30% 20%, rgba(0, 253, 216, 0.22), transparent 60%),
+          rgba(0, 0, 0, 0.9);
+        color: #e6fffb;
+        font-size: 0.85rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        position: relative;
+        padding-right: 2.2rem;
+        background-image:
+          linear-gradient(45deg, transparent 50%, rgba(0, 253, 216, 0.9) 50%),
+          linear-gradient(135deg, rgba(0, 253, 216, 0.9) 50%, transparent 50%);
+        background-position:
+          calc(100% - 1.1rem) 50%,
+          calc(100% - 0.75rem) 50%;
+        background-size: 6px 6px, 6px 6px;
+        background-repeat: no-repeat;
+      }
+
+      .friends-sort-select:focus-visible {
+        outline: 2px solid rgba(0, 253, 216, 0.9);
+        outline-offset: 2px;
+      }
+
+      /* Empty state */
+
+      .friends-empty-card {
+        margin-top: 2.2rem;
+        padding: 1.9rem 1.7rem 2rem;
+        border-radius: 22px;
+        border: 1px solid rgba(0, 253, 216, 0.32);
+        background:
+          radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.18), transparent 55%),
+          rgba(0, 0, 0, 0.84);
+        box-shadow:
+          0 0 0 1px rgba(0, 253, 216, 0.28),
+          0 22px 60px rgba(0, 0, 0, 0.92);
+        text-align: left;
+      }
+
+      .friends-empty-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 1.05rem;
+        letter-spacing: 0.03em;
+      }
+
+      .friends-empty-subtitle {
+        margin-top: 0.8rem;
+        font-size: 0.95rem;
+        opacity: 0.9;
+      }
+
+      /* Grid */
+
+      .friends-grid {
+        margin-top: 1.9rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.2rem;
+      }
+
+      /* Cards */
+
+      .friends-card {
+        position: relative;
+        padding: 1.3rem 1.25rem 1.4rem;
+        border-radius: 20px;
+        border: 1px solid rgba(0, 253, 216, 0.32);
+        background:
+          radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.16), transparent 55%),
+          radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.1), transparent 55%),
+          rgba(0, 0, 0, 0.8);
+        box-shadow:
+          0 0 0 1px rgba(0, 253, 216, 0.2),
+          0 16px 40px rgba(0, 0, 0, 0.9);
+        overflow: hidden;
+        backdrop-filter: blur(14px);
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+      }
+
+      .friends-card::before {
+        content: "";
+        position: absolute;
+        inset: -35%;
+        background:
+          radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.2), transparent 60%),
+          radial-gradient(circle at 120% 120%, rgba(0, 253, 216, 0.14), transparent 55%);
+        opacity: 0.32;
+        pointer-events: none;
+      }
+
+      .friends-card-inner {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+      }
+
+      .friends-card-top {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 0.7rem;
+        align-items: center;
+      }
+
+      .friends-card-main {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+      }
+
+      .friends-avatar-wrap {
+        flex-shrink: 0;
+      }
+
+      .friends-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: 1px solid rgba(0, 253, 216, 0.7);
+        background:
+          radial-gradient(circle at 30% 15%, rgba(0, 253, 216, 0.9), transparent 55%),
+          radial-gradient(circle at 70% 90%, rgba(0, 253, 216, 0.3), transparent 60%),
+          rgba(0, 0, 0, 0.93);
+        box-shadow:
+          0 0 18px rgba(0, 253, 216, 0.6),
+          0 0 32px rgba(0, 253, 216, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .friends-avatar-initial {
+        font-size: 1.3rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .friends-avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .friends-name-line {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+      }
+
+      .friends-name-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        align-items: baseline;
+      }
+
+      .friends-name {
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
+
+      .friends-pronouns {
+        font-size: 0.78rem;
+        opacity: 0.8;
+        text-transform: lowercase;
+      }
+
+      .friends-meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        font-size: 0.8rem;
+        opacity: 0.9;
+      }
+
+      .friends-meta-pill {
+        padding: 0.12rem 0.55rem;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 253, 216, 0.35);
+        background: rgba(0, 0, 0, 0.7);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+      }
+
+      .friends-vibe-pill {
+        border-color: rgba(0, 253, 216, 0.8);
+        box-shadow:
+          0 0 0 1px rgba(0, 253, 216, 0.45),
+          0 0 18px rgba(0, 253, 216, 0.5);
+      }
+
+      .friends-score-pill {
+        justify-self: flex-end;
+        padding: 0.28rem 0.75rem;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 253, 216, 0.85);
+        background:
+          radial-gradient(circle at 30% 20%, rgba(0, 253, 216, 0.22), transparent 60%),
+          rgba(0, 0, 0, 0.85);
+        box-shadow:
+          0 0 0 1px rgba(0, 253, 216, 0.55),
+          0 0 24px rgba(0, 253, 216, 0.7);
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-align: right;
+        min-width: 72px;
+      }
+
+      .friends-score-label {
+        display: block;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        opacity: 0.8;
+      }
+
+      .friends-score-value {
+        display: block;
+        margin-top: 0.1rem;
+      }
+
+      .friends-description {
+        font-size: 0.88rem;
+        opacity: 0.96;
+      }
+
+      .friends-card-actions {
+        margin-top: 0.15rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+      }
+
+      .friends-card-actions .btn {
+        min-width: 150px;
+      }
+
+      .friends-btn-disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .friends-btn-disabled[aria-disabled="true"] {
+        pointer-events: none;
+      }
+
+      /* Animations */
+
+      .friends-card-animated {
+        opacity: 0;
+        transform: translateY(14px);
+        transition:
+          opacity 600ms ease-out,
+          transform 600ms ease-out,
+          box-shadow 220ms ease-out,
+          border-color 220ms ease-out;
+      }
+
+      .friends-page.friends-animate .friends-card-animated {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .friends-card {
+        transition:
+          box-shadow 220ms ease-out,
+          border-color 220ms ease-out,
+          transform 220ms ease-out;
+      }
+
+      .friends-card:hover,
+      .friends-card:focus-within {
+        transform: translateY(-2px);
+        border-color: rgba(0, 253, 216, 0.65);
+        box-shadow:
+          0 0 0 1px rgba(0, 253, 216, 0.42),
+          0 22px 55px rgba(0, 0, 0, 0.95);
+      }
+
+      /* Responsive */
+
+      @media (min-width: 768px) {
+        .friends-toolbar {
+          padding-inline: 1.4rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .friends-toolbar {
+          align-items: flex-start;
+        }
+
+        .friends-toolbar-right {
+          width: 100%;
+          justify-content: space-between;
+        }
+
+        .friends-sort-select {
+          flex: 1;
+        }
+
+        .friends-card-actions {
+          flex-direction: column;
+        }
+
+        .friends-card-actions .btn {
+          width: 100%;
+        }
+      }
+
+      /* Reduced motion */
+
+      @media (prefers-reduced-motion: reduce) {
+        .friends-card-animated {
+          opacity: 1 !important;
+          transform: none !important;
+          transition: none !important;
+        }
+
+        .friends-card {
+          transition: none !important;
+        }
+      }
+    </style>
   </head>
   <body class="soulink-bg">
-   <header class="navbar soulink-nav" data-active="Friends" aria-label="Primary navigation">
-  <div class="nav-inner">
-    <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">
-      Soulink
-    </a>
+    <!-- Top Navigation (shared) -->
+    <header class="topnav" data-active="Friends" aria-label="Primary navigation">
+      <div class="topnav-inner">
+        <a
+          href="index.html"
+          class="brand"
+          data-page="Home"
+          aria-label="Soulink Home"
+        >
+          Soulink
+        </a>
 
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-label="Toggle navigation">
-      <span></span><span></span><span></span>
-    </button>
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-label="Toggle navigation"
+          aria-expanded="false"
+        >
+          <span class="nav-toggle-line"></span>
+          <span class="nav-toggle-line"></span>
+        </button>
 
-    <nav class="nav-links" aria-label="Primary">
-      <a href="index.html" data-page="Home">Home</a>
-      <a href="quiz.html" data-page="Quiz">Quiz</a>
-      <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
-      <a href="my-soul.html" data-page="My Soul">My Soul</a>
-      <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
-      <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
-      <a href="match.html" data-page="Match">Match</a>
-      <a href="friends.html" data-page="Friends">Friends</a>
-      <a href="results.html" data-page="Results">Results</a>
-      <a href="login.html" data-page="Login">Log In</a>
-      <a href="signup.html" data-page="Sign Up">Sign Up</a>
-    </nav>
-  </div>
-</header>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" data-page="Home">Home</a>
+          <a href="quiz.html" data-page="Quiz">Quiz</a>
+          <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
+          <a href="my-soul.html" data-page="My Soul">My Soul</a>
+          <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
+          <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
+          <a href="match.html" data-page="Match">Match</a>
+          <a href="friends.html" data-page="Friends">Friends</a>
+          <a href="results.html" data-page="Results">Results</a>
+          <a href="login.html" data-page="Login">Log In</a>
+          <a href="signup.html" data-page="Sign Up">Sign Up</a>
+        </nav>
+      </div>
+    </header>
 
-
-    <main class="page">
+    <main class="page friends-page">
       <div class="page-inner">
-        <section class="page-hero glass-card">
-          <div class="page-hero-text">
-            <h1 class="page-title">Soul Friends</h1>
-            <p class="page-subtitle">
-              A gentle space to keep track of souls you feel resonant with — for friendship,
-              collaboration or soft support.
+        <!-- Hero -->
+        <section class="friends-hero">
+          <div class="friends-hero-inner">
+            <p class="friends-kicker">Your circle</p>
+            <h1 class="friends-title">My Soul Friends</h1>
+            <p class="friends-subtitle">
+              People whose energy resonates with you in meaningful ways. A softer space
+              to remember the connections that feel like true companionship, not just
+              contacts.
             </p>
           </div>
         </section>
 
+        <!-- Toolbar -->
+        <section
+          class="friends-toolbar"
+          aria-label="Friends sorting and filters"
+        >
+          <div class="friends-toolbar-left">
+            Keep this list as gentle as you wish — just the souls who truly feel like
+            “your people”.
+          </div>
+          <div class="friends-toolbar-right">
+            <span class="friends-sort-label">Sort by</span>
+            <select
+              id="friendsSortSelect"
+              class="friends-sort-select"
+              aria-label="Sort friends by"
+            >
+              <option value="score">Highest score</option>
+              <option value="name">Name A–Z</option>
+              <option value="newest">Newest added</option>
+            </select>
+          </div>
+        </section>
+
+        <!-- Empty state -->
         <section
           id="friendsEmpty"
-          class="info-banner info-banner-soft"
-          hidden
+          class="friends-empty-card"
           aria-live="polite"
+          hidden
         >
-          No data yet — please complete your Soulink Quiz and add at least one soul friend.
-        </section>
-
-        <section class="friends-user-section">
-          <article class="glass-card friends-user-card">
-            <header class="friends-user-header">
-              <h2 class="friends-user-title">Your Base Soul</h2>
-              <p class="friends-user-subtitle">
-                This is the energy we use as a reference for how your friendships may feel.
-              </p>
-            </header>
-            <div class="friends-user-body">
-              <div class="friends-user-row">
-                <span class="friends-label">Name</span>
-                <span id="friendsUserName" class="friends-value">beautiful soul</span>
-              </div>
-              <div class="friends-user-row">
-                <span class="friends-label">Connection Type</span>
-                <span id="friendsUserConn" class="friends-value">not set yet</span>
-              </div>
-              <div class="friends-user-row">
-                <span class="friends-label">Primary Love Language</span>
-                <span id="friendsUserLove" class="friends-value">not defined yet</span>
-              </div>
-            </div>
-          </article>
-        </section>
-
-        <section class="friends-grid-section">
-          <h2 class="section-title">Saved Soul Friends</h2>
-          <p class="section-subtitle">
-            These are the souls you’ve saved in your circle — people who feel like resonance,
-            soft support or true friendship.
+          <div class="friends-empty-title">
+            <span>🌱</span>
+            <span>No saved connections yet</span>
+          </div>
+          <p class="friends-empty-subtitle">
+            You have no saved connections yet. Explore Matches to find your people and
+            add the ones who feel truly kind to your nervous system.
           </p>
+        </section>
 
-          <div id="friendsList" class="friends-grid">
-            <!-- Friends cards will be rendered here by friends.js -->
+        <!-- Friends grid -->
+        <section aria-label="Saved soul friends">
+          <div id="friendsGrid" class="friends-grid">
+            <!-- Cards rendered by friends.js -->
           </div>
         </section>
       </div>
     </main>
 
-    <footer class="site-footer">
-      <div class="site-footer-inner">
-        <p>Soulink.global — conscious matching for hearts &amp; souls.</p>
-        <p>Created with love and ChatGPT as a co-creator.</p>
-      </div>
+    <footer class="footer-note">
+      © 2025 Soulink.global | Created with love by Soulink Team.
     </footer>
-
-    <!-- Shared scripts -->
-    <script src="auth.js"></script>
-    <script src="data-helpers.js" defer></script>
-    <script src="nav.js" defer></script>
-    <script src="friends.js" defer></script>
   </body>
 </html>
