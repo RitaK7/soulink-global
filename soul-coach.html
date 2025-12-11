@@ -1,222 +1,757 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Soulink — Soul Coach</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="Soulink Soul Coach — gentle guidance based on your soul profile, love language, zodiac, numerology, values and passions."
-    />
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body class="soulink-bg">
-    <!-- Top Navigation (shared) -->
-    <header class="navbar soulink-nav" data-active="Soul Coach" aria-label="Primary navigation">
-  <div class="nav-inner">
-    <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">
-      Soulink
-    </a>
+<head>
+  <meta charset="utf-8" />
+  <title>Soulink — Soul Coach</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="description"
+    content="Soulink Soul Coach — a gentle AI-style mentor that turns your soul profile into warm reflections and small, practical steps."
+  />
+  <link rel="stylesheet" href="style.css" />
+  <script src="auth.js" defer></script>
+  <script src="data-helpers.js" defer></script>
+  <script src="nav.js" defer></script>
+  <script src="soul-coach.js" defer></script>
 
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-label="Toggle navigation">
-      <span></span><span></span><span></span>
-    </button>
+  <style>
+    .soul-coach-page {
+      position: relative;
+      padding: 1.5rem 1rem 2.5rem;
+      isolation: isolate;
+    }
 
-    <nav class="nav-links" aria-label="Primary">
-      <a href="index.html" data-page="Home">Home</a>
-      <a href="quiz.html" data-page="Quiz">Quiz</a>
-      <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
-      <a href="my-soul.html" data-page="My Soul">My Soul</a>
-      <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
-      <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
-      <a href="match.html" data-page="Match">Match</a>
-      <a href="friends.html" data-page="Friends">Friends</a>
-      <a href="results.html" data-page="Results">Results</a>
-      <a href="login.html" data-page="Login">Log In</a>
-      <a href="signup.html" data-page="Sign Up">Sign Up</a>
-    </nav>
-  </div>
-</header>
+    @media (min-width: 900px) {
+      .soul-coach-page {
+        padding: 2rem 1.5rem 3rem;
+      }
+    }
 
-    <main class="page">
-      <div class="page-inner">
-        <!-- Hero / Intro -->
-        <section class="page-hero glass-card">
-          <div class="page-hero-text">
-            <h1 class="page-title">Soul Coach</h1>
-            <p class="page-subtitle">
-              Gentle guidance for your <span id="coachConn">connection type not set yet</span> —
-              based on your unique
-              <span id="coachLovePrimary">love language</span>, astrological energy and soul path.
-            </p>
+    .soul-coach-page::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.22;
+      background-image:
+        radial-gradient(circle at 10% 15%, rgba(0, 253, 216, 0.18) 0, transparent 55%),
+        radial-gradient(circle at 80% 10%, rgba(0, 253, 216, 0.12) 0, transparent 55%),
+        radial-gradient(circle at 15% 80%, rgba(0, 253, 216, 0.12) 0, transparent 55%),
+        radial-gradient(circle at 80% 85%, rgba(0, 253, 216, 0.18) 0, transparent 55%);
+      z-index: -1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .soul-coach-page::before {
+        opacity: 0.14;
+      }
+    }
+
+    .soul-coach-page .page-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+
+    /* Empty state */
+
+    .sc-empty-card {
+      border-radius: 22px;
+      padding: 1.4rem 1.3rem 1.3rem;
+      background:
+        radial-gradient(circle at top, rgba(0, 253, 216, 0.16), transparent 60%),
+        rgba(0, 0, 0, 0.32);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.26),
+        0 20px 46px rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(16px);
+      margin-bottom: 1.8rem;
+    }
+
+    .sc-empty-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+      font-size: 1.04rem;
+      font-weight: 600;
+    }
+
+    .sc-empty-title span:first-child {
+      font-size: 1.3rem;
+    }
+
+    .sc-empty-subtitle {
+      font-size: 0.92rem;
+      opacity: 0.9;
+      max-width: 32rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .sc-empty-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+    }
+
+    .sc-empty-actions .btn {
+      min-width: 170px;
+    }
+
+    /* Hero */
+
+    .sc-hero {
+      border-radius: 26px;
+      padding: 1.6rem 1.4rem 1.5rem;
+      margin-bottom: 1.9rem;
+      background:
+        radial-gradient(circle at top left, rgba(0, 253, 216, 0.22), transparent 60%),
+        radial-gradient(circle at bottom right, rgba(0, 253, 216, 0.18), transparent 60%),
+        rgba(0, 0, 0, 0.28);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.4),
+        0 24px 60px rgba(0, 0, 0, 0.8),
+        inset 0 0 26px rgba(0, 253, 216, 0.16);
+      backdrop-filter: blur(18px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sc-hero::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.22), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.22), transparent 55%);
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .sc-hero-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.4rem;
+      align-items: flex-start;
+    }
+
+    .sc-hero-left {
+      flex: 1 1 260px;
+      min-width: 0;
+    }
+
+    .sc-kicker {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      opacity: 0.85;
+      margin-bottom: 0.2rem;
+    }
+
+    .sc-title {
+      font-size: 1.85rem;
+      margin-bottom: 0.3rem;
+    }
+
+    @media (min-width: 900px) {
+      .sc-title {
+        font-size: 2.05rem;
+      }
+    }
+
+    .sc-subtitle {
+      font-size: 0.96rem;
+      opacity: 0.92;
+      max-width: 34rem;
+    }
+
+    .sc-hero-meta {
+      margin-top: 0.9rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .sc-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      padding: 0.25rem 0.75rem;
+      border: 1px solid rgba(0, 253, 216, 0.55);
+      background: rgba(0, 253, 216, 0.12);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.28),
+        0 0 16px rgba(0, 253, 216, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      white-space: nowrap;
+    }
+
+    .sc-pill span:last-child {
+      text-transform: none;
+      letter-spacing: 0;
+      opacity: 0.95;
+    }
+
+    .sc-hero-right {
+      flex: 0 0 auto;
+      min-width: 190px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .sc-coach-orb {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 253, 216, 0.45);
+      box-shadow:
+        0 0 40px rgba(0, 253, 216, 0.65),
+        0 0 80px rgba(0, 253, 216, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle, rgba(0, 253, 216, 0.18), transparent 65%);
+      overflow: hidden;
+    }
+
+    .sc-coach-orb::before,
+    .sc-coach-orb::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      border: 1px dashed rgba(0, 253, 216, 0.35);
+    }
+
+    .sc-coach-orb::before {
+      width: 122%;
+      height: 122%;
+    }
+
+    .sc-coach-orb::after {
+      width: 78%;
+      height: 78%;
+      opacity: 0.9;
+    }
+
+    .sc-coach-orb-inner {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 0.65rem 0.8rem;
+    }
+
+    .sc-orb-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      opacity: 0.9;
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+
+    .sc-orb-main {
+      font-size: 1.02rem;
+      font-weight: 600;
+    }
+
+    .sc-orb-sub {
+      margin-top: 0.25rem;
+      font-size: 0.84rem;
+      opacity: 0.9;
+    }
+
+    /* Main grid */
+
+    .sc-main {
+      margin-top: 0.2rem;
+    }
+
+    .sc-grid {
+      display: grid;
+      gap: 1.3rem;
+    }
+
+    @media (min-width: 980px) {
+      .sc-grid {
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.05fr);
+        align-items: flex-start;
+      }
+
+      .sc-card-wide {
+        grid-column: 1 / -1;
+      }
+    }
+
+    .sc-card {
+      position: relative;
+      border-radius: 22px;
+      padding: 1.1rem 1.15rem 1.25rem;
+      background:
+        radial-gradient(circle at top, rgba(0, 253, 216, 0.14), transparent 60%),
+        rgba(0, 0, 0, 0.32);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.24),
+        0 18px 40px rgba(0, 0, 0, 0.7),
+        inset 0 0 20px rgba(0, 253, 216, 0.05);
+      overflow: hidden;
+      backdrop-filter: blur(14px);
+      transition:
+        transform 0.22s ease,
+        box-shadow 0.22s ease,
+        background 0.22s ease;
+    }
+
+    .sc-card::before {
+      content: "";
+      position: absolute;
+      inset: -30%;
+      background:
+        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.16), transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.16), transparent 60%);
+      opacity: 0.18;
+      pointer-events: none;
+    }
+
+    .sc-card:hover {
+      transform: translateY(-3px) scale(1.01);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.4),
+        0 22px 52px rgba(0, 0, 0, 0.85),
+        inset 0 0 26px rgba(0, 253, 216, 0.12);
+      background:
+        radial-gradient(circle at top, rgba(0, 253, 216, 0.18), transparent 60%),
+        rgba(0, 0, 0, 0.36);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sc-card:hover {
+        transform: none;
+      }
+    }
+
+    .sc-card-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .sc-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .sc-card-icon {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      background: radial-gradient(circle, rgba(0, 253, 216, 0.24), transparent 65%);
+      box-shadow: 0 0 18px rgba(0, 253, 216, 0.4);
+      flex-shrink: 0;
+    }
+
+    .sc-card-title {
+      font-size: 1.02rem;
+      font-weight: 600;
+    }
+
+    .sc-card-subtitle {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      margin-top: 0.12rem;
+    }
+
+    .sc-card-body {
+      font-size: 0.94rem;
+      opacity: 0.96;
+      margin-top: 0.4rem;
+    }
+
+    .sc-card-body p + p {
+      margin-top: 0.5rem;
+    }
+
+    .sc-tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .sc-tag-row .sc-tag {
+      font-size: 0.8rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.45);
+      background: rgba(0, 253, 216, 0.08);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.22);
+      white-space: nowrap;
+    }
+
+    .sc-card-actions-title {
+      font-size: 0.84rem;
+      font-weight: 600;
+      margin-top: 0.8rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .sc-actions-list {
+      list-style: disc;
+      padding-left: 1.2rem;
+      font-size: 0.9rem;
+      opacity: 0.95;
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .sc-step-highlight {
+      margin-top: 0.7rem;
+      font-size: 0.9rem;
+      padding: 0.55rem 0.7rem;
+      border-radius: 14px;
+      border: 1px solid rgba(0, 253, 216, 0.55);
+      background:
+        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.18), transparent 60%),
+        rgba(0, 0, 0, 0.4);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.35),
+        0 0 20px rgba(0, 253, 216, 0.45);
+    }
+
+    /* Bottom actions */
+
+    .sc-actions {
+      margin-top: 1.7rem;
+    }
+
+    .sc-actions-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sc-actions-row .btn {
+      min-width: 160px;
+    }
+
+    .sc-refresh {
+      min-width: 150px;
+    }
+
+    .sc-note {
+      margin-top: 0.6rem;
+      font-size: 0.84rem;
+      opacity: 0.86;
+      max-width: 28rem;
+    }
+
+    @media (max-width: 720px) {
+      .sc-actions-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .sc-actions-row .btn {
+        width: 100%;
+      }
+    }
+
+    /* Entrance animations */
+
+    .sc-section-animated {
+      opacity: 0;
+      transform: translateY(12px);
+      animation: sc-section-fade-up 0.65s ease-out forwards;
+    }
+
+    .sc-delay-1 { animation-delay: 0.05s; }
+    .sc-delay-2 { animation-delay: 0.12s; }
+    .sc-delay-3 { animation-delay: 0.18s; }
+    .sc-delay-4 { animation-delay: 0.24s; }
+    .sc-delay-5 { animation-delay: 0.3s; }
+
+    @keyframes sc-section-fade-up {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sc-section-animated {
+        opacity: 1;
+        transform: none;
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body class="soulink-bg">
+  <!-- Top Navigation (shared) -->
+  <header class="topnav" data-active="Soul Coach" aria-label="Primary navigation">
+    <div class="topnav-inner">
+      <a
+        href="index.html"
+        class="brand"
+        data-page="Home"
+        aria-label="Soulink Home"
+      >
+        Soulink
+      </a>
+
+      <button
+        class="nav-toggle"
+        type="button"
+        aria-label="Toggle navigation"
+        aria-expanded="false"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="nav-links" aria-label="Primary">
+        <a href="index.html" data-page="Home">Home</a>
+        <a href="quiz.html" data-page="Quiz">Quiz</a>
+        <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
+        <a href="my-soul.html" data-page="My Soul">My Soul</a>
+        <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
+        <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
+        <a href="match.html" data-page="Match">Match</a>
+        <a href="friends.html" data-page="Friends">Friends</a>
+        <a href="results.html" data-page="Results">Results</a>
+        <a href="login.html" data-page="Login">Log In</a>
+        <a href="signup.html" data-page="Sign Up">Sign Up</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page soul-coach-page">
+    <div class="page-inner">
+      <!-- EMPTY STATE -->
+      <section id="coachEmpty" class="sc-empty-card" hidden>
+        <div class="sc-empty-title">
+          <span>✨</span>
+          <span>Your Soul Coach is not ready yet</span>
+        </div>
+        <p class="sc-empty-subtitle">
+          Start with the Soulink Quiz and Edit Profile. Once your core information is saved,
+          this page will turn into a personal AI-style mentor with gentle reflections.
+        </p>
+        <div class="sc-empty-actions">
+          <a href="quiz.html" class="btn primary">Start with Quiz</a>
+          <a href="edit-profile.html" class="btn outline">Open Edit Profile</a>
+        </div>
+      </section>
+
+      <!-- MAIN CONTENT -->
+      <section id="coachLayout" hidden>
+        <!-- HERO -->
+        <section class="sc-hero sc-section-animated sc-delay-1">
+          <div class="sc-hero-inner">
+            <div class="sc-hero-left">
+              <p class="sc-kicker">AI Soul Mentor</p>
+              <h1 class="sc-title">Soul Coach</h1>
+              <p class="sc-subtitle">
+                Gentle, non-judgmental reflections based on your Soulink profile – helping you take
+                small, kind steps in love, friendship and everyday life.
+              </p>
+
+              <div class="sc-hero-meta">
+                <span class="sc-pill" id="coachPillName">
+                  <span>NAME:</span>
+                  <span id="coachHeroName">Beautiful soul</span>
+                </span>
+                <span class="sc-pill" id="coachPillLove">
+                  <span>LOVE LANGUAGE:</span>
+                  <span>Not set yet</span>
+                </span>
+                <span class="sc-pill" id="coachPillLife">
+                  <span>LIFE PATH:</span>
+                  <span>Not calculated yet</span>
+                </span>
+              </div>
+            </div>
+
+            <div class="sc-hero-right">
+              <div class="sc-coach-orb" aria-hidden="true">
+                <div class="sc-coach-orb-inner">
+                  <span class="sc-orb-label">Today&#39;s focus</span>
+                  <div class="sc-orb-main" id="coachOrbMain">Your soul</div>
+                  <div class="sc-orb-sub" id="coachOrbSub">
+                    Being kind to your own energy today.
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+        </section>
 
-          <div class="page-hero-meta">
-            <div class="coach-identity">
-              <span class="coach-label">For:</span>
-              <span id="coachName" class="coach-name">beautiful soul</span>
-            </div>
+        <!-- MAIN GRID -->
+        <section class="sc-main">
+          <section class="sc-grid">
+            <!-- Card 1: Love Language Coaching -->
+            <article class="sc-card sc-section-animated sc-delay-2" aria-labelledby="coachLoveHeading">
+              <div class="sc-card-inner">
+                <header class="sc-card-header">
+                  <div class="sc-card-icon" aria-hidden="true">💗</div>
+                  <div>
+                    <h2 id="coachLoveHeading" class="sc-card-title">The Voice of Your Heart</h2>
+                    <p class="sc-card-subtitle">
+                      How your primary love language might show up in real, everyday moments.
+                    </p>
+                  </div>
+                </header>
+                <div class="sc-card-body" id="coachLoveText">
+                  Your heart has its own way of feeling safe and seen. As your profile grows, this
+                  section will offer language and ideas that match you more closely.
+                </div>
+                <p class="sc-card-actions-title">Tiny actions you can try:</p>
+                <ul class="sc-actions-list" id="coachLoveActions">
+                  <li>Notice when you feel most relaxed and appreciated around people.</li>
+                  <li>Write one sentence that describes what feeling loved means for you.</li>
+                  <li>Share it with someone you trust.</li>
+                </ul>
+              </div>
+            </article>
 
-            <!-- Mode toggle -->
-            <div class="coach-mode-toggle" role="tablist" aria-label="Soul Coach focus">
-              <button
-                id="coachModeLove"
-                type="button"
-                class="chip chip-toggle active"
-                role="tab"
-                aria-selected="true"
-                aria-pressed="true"
-              >
-                For Love
-              </button>
-              <button
-                id="coachModeFriend"
-                type="button"
-                class="chip chip-toggle"
-                role="tab"
-                aria-selected="false"
-                aria-pressed="false"
-              >
-                For Friendships
-              </button>
-            </div>
-
-            <!-- Refresh -->
-            <button
-              id="coachRefresh"
-              type="button"
-              class="btn-outline-glow coach-refresh-btn"
-              aria-label="Refresh Soul Coach insights"
+            <!-- Card 2: Values & Boundaries -->
+            <article
+              class="sc-card sc-section-animated sc-delay-3"
+              aria-labelledby="coachValuesHeading"
             >
-              Refresh insights
-            </button>
-          </div>
+              <div class="sc-card-inner">
+                <header class="sc-card-header">
+                  <div class="sc-card-icon" aria-hidden="true">🧭</div>
+                  <div>
+                    <h2 id="coachValuesHeading" class="sc-card-title">Your Inner Compass</h2>
+                    <p class="sc-card-subtitle">
+                      The values that keep you steady and the boundaries that protect your energy.
+                    </p>
+                  </div>
+                </header>
+                <div class="sc-card-body">
+                  <div class="sc-tag-row" id="coachValuesChips"></div>
+                  <p id="coachValuesText">
+                    Your values are the quiet map behind your decisions. As you add them in your
+                    profile, this space will translate them into clear guidance.
+                  </p>
+
+                  <p class="sc-card-actions-title">Micro-steps for your compass:</p>
+                  <ul class="sc-actions-list" id="coachValuesActions">
+                    <li>Write down a few words that describe what you will not compromise on.</li>
+                    <li>Notice which current connections respect these values.</li>
+                    <li>Practice one small boundary sentence that feels kind and clear.</li>
+                  </ul>
+                </div>
+              </div>
+            </article>
+
+            <!-- Card 3: Energy & Joy Rituals -->
+            <article
+              class="sc-card sc-section-animated sc-delay-4"
+              aria-labelledby="coachEnergyHeading"
+            >
+              <div class="sc-card-inner">
+                <header class="sc-card-header">
+                  <div class="sc-card-icon" aria-hidden="true">🌿</div>
+                  <div>
+                    <h2 id="coachEnergyHeading" class="sc-card-title">Where Your Spirit Refuels</h2>
+                    <p class="sc-card-subtitle">
+                      Hobbies, passions and simple rituals that refill your inner batteries.
+                    </p>
+                  </div>
+                </header>
+                <div class="sc-card-body">
+                  <div class="sc-tag-row" id="coachEnergyChips"></div>
+                  <p id="coachEnergyText">
+                    Even if you are still discovering your interests, your body already knows what
+                    feels nourishing. This card turns them into intentional rituals.
+                  </p>
+
+                  <p class="sc-card-actions-title">Nourishing mini-rituals:</p>
+                  <ul class="sc-actions-list" id="coachEnergyActions">
+                    <li>Protect one small pocket of time this week just for yourself.</li>
+                    <li>Notice what activities leave you calmer instead of drained.</li>
+                    <li>Keep one of those activities as a gentle weekly ritual.</li>
+                  </ul>
+                </div>
+              </div>
+            </article>
+
+            <!-- Card 4: Today’s Gentle Step -->
+            <article
+              class="sc-card sc-card-wide sc-section-animated sc-delay-5"
+              aria-labelledby="coachStepHeading"
+            >
+              <div class="sc-card-inner">
+                <header class="sc-card-header">
+                  <div class="sc-card-icon" aria-hidden="true">✨</div>
+                  <div>
+                    <h2 id="coachStepHeading" class="sc-card-title">One Gentle Step</h2>
+                    <p class="sc-card-subtitle">
+                      A soft, realistic invitation for today — combining your love language, values
+                      and what brings you joy.
+                    </p>
+                  </div>
+                </header>
+                <div class="sc-card-body">
+                  <p id="coachStepText">
+                    You do not need to change everything at once. One kind, honest step is plenty for
+                    today.
+                  </p>
+                  <p class="sc-step-highlight" id="coachStepHighlight">
+                    Today&#39;s suggestion: pause, breathe and ask your heart what it needs most right
+                    now.
+                  </p>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <!-- Bottom actions -->
+          <section class="sc-actions sc-section-animated sc-delay-5">
+            <div class="sc-actions-row">
+              <a href="soul-chart.html" class="btn outline" id="coachBackChart">
+                ← Back to Soul Chart
+              </a>
+              <button type="button" class="btn outline sc-refresh" id="coachRefreshBtn">
+                Refresh Coach
+              </button>
+              <a href="match.html" class="btn" id="coachNextMatch">
+                Next → Match
+              </a>
+            </div>
+            <p class="sc-note">
+              Your Soul Coach insights refresh whenever you update your Quiz or Edit Profile. Come
+              back here after each update to feel the subtle shifts.
+            </p>
+          </section>
         </section>
+      </section>
+    </div>
+  </main>
 
-        <!-- No data banner -->
-        <section
-          id="coachEmpty"
-          class="info-banner info-banner-soft"
-          hidden
-          aria-live="polite"
-        >
-          No soul data yet — please complete your Soulink Quiz and Edit Profile first.
-        </section>
-
-        <!-- Grid of coaching cards -->
-        <section class="coach-grid">
-          <!-- Love Language Guidance -->
-          <article class="glass-card coach-card">
-            <header class="coach-card-header">
-              <h2 class="coach-card-title">Love Language Guidance</h2>
-              <p class="coach-card-subtitle">
-                How your heart feels most seen, nourished and safe.
-              </p>
-            </header>
-            <div id="coachLoveAdvice" class="coach-card-body">
-              Your heart has its own unique love language. Begin by noticing when you feel most
-              seen and nourished — is it words, time, support, touch or thoughtful surprises?
-            </div>
-          </article>
-
-          <!-- Zodiac Field Notes -->
-          <article class="glass-card coach-card">
-            <header class="coach-card-header">
-              <h2 class="coach-card-title">Zodiac Field Notes</h2>
-              <p class="coach-card-subtitle">
-                Western zodiac themes that color your connections.
-              </p>
-            </header>
-            <div id="coachZodiacAdvice" class="coach-card-body">
-              Your zodiac energy is a unique blend. Even without a specific sign here, trust the
-              parts of you that feel fiery, earthy, airy or watery — they all have wisdom for your
-              path.
-            </div>
-          </article>
-
-          <!-- Chinese Zodiac Wisdom -->
-          <article class="glass-card coach-card">
-            <header class="coach-card-header">
-              <h2 class="coach-card-title">Chinese Zodiac Wisdom</h2>
-              <p class="coach-card-subtitle">
-                An extra layer of instinct, courage and style.
-              </p>
-            </header>
-            <div id="coachChineseAdvice" class="coach-card-body">
-              Your Chinese zodiac energy adds an extra layer of flavor to your personality. Even if
-              it’s not named here, trust that your instincts, loyalty and courage are guiding your
-              choices.
-            </div>
-          </article>
-
-          <!-- Life Path Lesson -->
-          <article class="glass-card coach-card">
-            <header class="coach-card-header">
-              <h2 class="coach-card-title">Life Path Lesson</h2>
-              <p class="coach-card-subtitle">
-                Numerology themes your soul is learning through relationships.
-              </p>
-            </header>
-            <div id="coachLifePathAdvice" class="coach-card-body">
-              Your life path carries a unique lesson about love, connection and self-worth. Even
-              without a specific number here, notice the repeating themes that life keeps inviting
-              you to grow through.
-            </div>
-          </article>
-
-          <!-- Values & Passions (wide) -->
-          <article class="glass-card coach-card coach-card-wide">
-            <header class="coach-card-header">
-              <h2 class="coach-card-title">Values &amp; Passions</h2>
-              <p class="coach-card-subtitle">
-                The map of what matters most to you and where your energy feels alive.
-              </p>
-            </header>
-            <div id="coachValuesAdvice" class="coach-card-body">
-              Your values and passions are the map for your connections. Take a quiet moment to
-              write down what matters most to you and what lights you up — then let people into
-              that authentic world.
-            </div>
-          </article>
-
-          <!-- Gentle Next Steps (wide) -->
-          <article class="glass-card coach-card coach-card-wide">
-            <header class="coach-card-header">
-              <h2 class="coach-card-title">Gentle Next Steps</h2>
-              <p class="coach-card-subtitle">
-                Soft, practical invitations for your next chapter in love and friendship.
-              </p>
-            </header>
-            <div id="coachNextSteps" class="coach-card-body">
-              <p>
-                • This week, create one intentional moment where you honor your natural way of
-                receiving love.
-              </p>
-              <p>
-                • Write down your top 3 values and notice where they already live in your current
-                relationships.
-              </p>
-              <p>
-                • Take 10 minutes to write a gentle “About me” paragraph just for yourself,
-                describing how you want to feel in your connections.
-              </p>
-            </div>
-          </article>
-        </section>
-      </div>
-    </main>
-
-    <footer class="site-footer">
-      <div class="site-footer-inner">
-        <p>Soulink.global — conscious matching for hearts &amp; souls.</p>
-        <p>Created with love and ChatGPT as a co-creator.</p>
-      </div>
-    </footer>
-
-    <!-- Shared scripts -->
-    <script src="auth.js"></script>
-    <script src="data-helpers.js" defer></script>
-    <script src="nav.js" defer></script>
-    <script src="soul-coach.js" defer></script>
-  </body>
+  <!-- FOOTER (canonical) -->
+  <footer class="footer-note">
+    © 2025 Soulink.global | Created with love and ChatGPT as a co-creator.
+  </footer>
+</body>
 </html>
