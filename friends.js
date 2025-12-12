@@ -182,6 +182,7 @@
 
   const FRIENDS_KEY = "soulink.friends.list";
 
+  // (Kept for possible future demo usage; not used for real data)
   const DEMO_FRIENDS = [
     {
       id: "match-sage",
@@ -305,7 +306,8 @@
       strong = true;
     } else {
       score = Math.round(WEIGHTS.love * 0.3);
-      label = "Different love languages — with communication, this can still balance.";
+      label =
+        "Different love languages — with communication, this can still balance.";
     }
 
     return { score, label, strong, primarySame };
@@ -377,13 +379,15 @@
 
     if (diff === 0) {
       multiplier = 1;
-      label = "Same life path number — strong resonance in how you move through life.";
+      label =
+        "Same life path number — strong resonance in how you move through life.";
     } else if (diff === 1) {
       multiplier = 0.85;
       label = "Adjacent life paths — similar lessons with different flavors.";
     } else if (diff === 2) {
       multiplier = 0.7;
-      label = "Related but distinct life paths — potential for complementary growth.";
+      label =
+        "Related but distinct life paths — potential for complementary growth.";
     }
 
     const score = Math.round(WEIGHTS.numerology * multiplier);
@@ -454,11 +458,46 @@
     grid: $("#friendsGrid"),
     empty: $("#friendsEmpty"),
     sortSelect: $("#friendsSortSelect"),
+    countLabel: $("#friendsCountLabel"),
   };
 
   let baseSoul = {};
   let friendsRaw = [];
   let friendsWithMeta = [];
+  let currentFilter = "all";
+  let currentSort = "score";
+  let filterButtons = [];
+
+  // ===================== UI helpers =====================
+
+  function updateCircleSize(count) {
+    if (!ui.countLabel) return;
+    const n = Number.isFinite(count) ? count : 0;
+    const word = n === 1 ? "soul friend" : "soul friends";
+    ui.countLabel.textContent = "You have " + n + " " + word + ".";
+  }
+
+  function updateFilterUI() {
+    if (!filterButtons || !filterButtons.length) return;
+    filterButtons.forEach((btn) => {
+      const mode = (btn.getAttribute("data-filter") || "all").toLowerCase();
+      const active = mode === currentFilter;
+      btn.classList.toggle("friends-filter-tab-active", active);
+      btn.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+  }
+
+  function rebuildFriendsWithMeta() {
+    const hasSoul = hasAnyCoreData(baseSoul);
+    friendsWithMeta = friendsRaw.map((f, index) => {
+      const clone = Object.assign({}, f);
+      clone._index = index;
+      const breakdown = hasSoul ? computeCompatibility(baseSoul, clone) : null;
+      clone._score = breakdown ? breakdown.score : 0;
+      return clone;
+    });
+    updateCircleSize(friendsWithMeta.length);
+  }
 
   // ===================== Rendering =====================
 
@@ -495,6 +534,48 @@
 
     wrap.appendChild(avatar);
     return wrap;
+  }
+
+  function handleRemoveFriend(friend) {
+    if (typeof localStorage === "undefined") return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to remove this connection from your circle?"
+    );
+    if (!confirmed) return;
+
+    try {
+      const current = safeGetFriendsList();
+      if (!current.length) return;
+
+      const id = normaliseText(friend.id);
+      const name = normaliseText(friend.name);
+      const connType = normaliseText(friend.connectionType);
+
+      let removed = false;
+      const next = current.filter((item) => {
+        if (removed) return true;
+        const sameId =
+          id && normaliseText(item.id) && normaliseText(item.id) === id;
+        const sameNameType =
+          !id &&
+          normaliseText(item.name) === name &&
+          normaliseText(item.connectionType) === connType;
+        if (sameId || sameNameType) {
+          removed = true;
+          return false;
+        }
+        return true;
+      });
+
+      localStorage.setItem(FRIENDS_KEY, JSON.stringify(next));
+
+      friendsRaw = next;
+      rebuildFriendsWithMeta();
+      sortFriends(currentSort);
+    } catch (err) {
+      console.error("Friends: failed to remove friend", err);
+    }
   }
 
   function createFriendCard(friend) {
@@ -621,8 +702,21 @@
     msgBtn.setAttribute("aria-disabled", "true");
     msgBtn.textContent = "Message (coming soon)";
 
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "friends-remove-btn";
+    removeBtn.type = "button";
+    removeBtn.textContent = "Remove";
+    removeBtn.setAttribute(
+      "aria-label",
+      "Remove this connection from your circle"
+    );
+    removeBtn.addEventListener("click", function () {
+      handleRemoveFriend(friend);
+    });
+
     actions.appendChild(viewBtn);
     actions.appendChild(msgBtn);
+    actions.appendChild(removeBtn);
 
     inner.appendChild(top);
     inner.appendChild(desc);
@@ -636,10 +730,20 @@
     if (!ui.grid) return;
     ui.grid.innerHTML = "";
 
-    const friends = Array.isArray(list) ? list : [];
-    if (!friends.length) {
+    const allSorted = Array.isArray(list) ? list : [];
+
+    const filtered = allSorted.filter((friend) => {
+      if (currentFilter === "all") return true;
+      const type = normaliseText(friend.connectionType || "Friendship").toLowerCase();
+      if (currentFilter === "friendship") return type === "friendship";
+      if (currentFilter === "romantic") return type === "romantic";
+      return true;
+    });
+
+    if (!filtered.length) {
       if (ui.empty) {
-        ui.empty.hidden = false;
+        // Show empty state only if there are no friends at all, not just no matches for a filter.
+        ui.empty.hidden = friendsWithMeta.length !== 0 ? true : false;
       }
       return;
     }
@@ -648,7 +752,7 @@
       ui.empty.hidden = true;
     }
 
-    friends.forEach((friend) => {
+    filtered.forEach((friend) => {
       const card = createFriendCard(friend);
       ui.grid.appendChild(card);
     });
@@ -663,7 +767,9 @@
   // ===================== Sorting =====================
 
   function sortFriends(mode) {
-    const modeClean = normaliseText(mode) || "score";
+    const modeClean = (normaliseText(mode) || "score").toLowerCase();
+    currentSort = modeClean;
+
     const arr = friendsWithMeta.slice();
 
     if (modeClean === "name") {
@@ -698,40 +804,49 @@
     renderFriends(arr);
   }
 
+  function setFilter(mode) {
+    const m = (normaliseText(mode) || "all").toLowerCase();
+    currentFilter = m;
+    updateFilterUI();
+    sortFriends(currentSort);
+  }
+
   // ===================== Init =====================
 
   function init() {
     try {
       baseSoul = safeGetSoulData();
-      const hasSoul = hasAnyCoreData(baseSoul);
-
       friendsRaw = safeGetFriendsList();
-      if (!friendsRaw.length) {
-        // If nothing saved yet, gentle demo fallback so page still feels alive.
-        friendsRaw = DEMO_FRIENDS.slice();
-      }
+      rebuildFriendsWithMeta();
 
-      friendsWithMeta = friendsRaw.map((f, index) => {
-        const clone = Object.assign({}, f);
-        clone._index = index;
-        const breakdown = hasSoul ? computeCompatibility(baseSoul, clone) : null;
-        clone._score = breakdown ? breakdown.score : 0;
-        return clone;
-      });
+      filterButtons = Array.from(
+        document.querySelectorAll(".friends-filter-tab")
+      );
+      updateFilterUI();
 
-      if (!friendsWithMeta.length) {
-        if (ui.empty) {
-          ui.empty.hidden = false;
-        }
-        return;
-      }
-
-      sortFriends(ui.sortSelect ? ui.sortSelect.value : "score");
+      const initialSort =
+        (ui.sortSelect && ui.sortSelect.value) || currentSort || "score";
+      currentSort = initialSort;
+      sortFriends(initialSort);
 
       if (ui.sortSelect) {
         ui.sortSelect.addEventListener("change", function (e) {
           sortFriends(e.target.value);
         });
+      }
+
+      if (filterButtons && filterButtons.length) {
+        filterButtons.forEach((btn) => {
+          btn.addEventListener("click", function () {
+            const mode = btn.getAttribute("data-filter") || "all";
+            setFilter(mode);
+          });
+        });
+      }
+
+      // If there are no friends at all, ensure empty state is shown and count is 0.
+      if (!friendsWithMeta.length && ui.empty) {
+        ui.empty.hidden = false;
       }
     } catch (err) {
       console.error("Friends: init failed", err);
@@ -740,6 +855,7 @@
         ui.empty.textContent =
           "We couldn’t load your soul friends right now. Please refresh the page or try again later.";
       }
+      updateCircleSize(0);
     }
   }
 

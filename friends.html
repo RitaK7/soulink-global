@@ -164,6 +164,62 @@
         outline-offset: 2px;
       }
 
+      /* Circle size + filter chips */
+
+      .friends-circle-bar {
+        margin-top: 1.3rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        justify-content: space-between;
+      }
+
+      .friends-count {
+        font-size: 0.9rem;
+        opacity: 0.9;
+      }
+
+      .friends-filter-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+      }
+
+      .friends-filter-tab {
+        padding: 0.2rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 253, 216, 0.4);
+        background:
+          radial-gradient(circle at 30% 20%, rgba(0, 253, 216, 0.15), transparent 60%),
+          rgba(0, 0, 0, 0.8);
+        color: #e6fffb;
+        font-size: 0.8rem;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition:
+          background 160ms ease-out,
+          border-color 160ms ease-out,
+          box-shadow 160ms ease-out,
+          color 160ms ease-out;
+      }
+
+      .friends-filter-tab-active {
+        border-color: rgba(0, 253, 216, 0.9);
+        background:
+          radial-gradient(circle at 30% 20%, rgba(0, 253, 216, 0.25), transparent 60%),
+          rgba(0, 0, 0, 0.92);
+        box-shadow:
+          0 0 0 1px rgba(0, 253, 216, 0.5),
+          0 0 18px rgba(0, 253, 216, 0.6);
+      }
+
+      .friends-filter-tab:focus-visible {
+        outline: 2px solid rgba(0, 253, 216, 0.9);
+        outline-offset: 2px;
+      }
+
       /* Empty state */
 
       .friends-empty-card {
@@ -395,6 +451,30 @@
         pointer-events: none;
       }
 
+      .friends-remove-btn {
+        font-size: 0.78rem;
+        padding: 0.18rem 0.75rem;
+        border-radius: 999px;
+        border: 1px dashed rgba(0, 253, 216, 0.35);
+        background:
+          radial-gradient(circle at 30% 20%, rgba(0, 253, 216, 0.16), transparent 60%),
+          rgba(0, 0, 0, 0.7);
+        color: #e6fffb;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+
+      .friends-remove-btn:hover,
+      .friends-remove-btn:focus-visible {
+        border-style: solid;
+        border-color: rgba(0, 253, 216, 0.7);
+        box-shadow:
+          0 0 0 1px rgba(0, 253, 216, 0.4),
+          0 0 16px rgba(0, 253, 216, 0.5);
+        outline: none;
+      }
+
       /* Animations */
 
       .friends-card-animated {
@@ -436,6 +516,17 @@
         }
       }
 
+      @media (max-width: 640px) {
+        .friends-circle-bar {
+          align-items: flex-start;
+        }
+
+        .friends-filter-tabs {
+          width: 100%;
+          justify-content: flex-start;
+        }
+      }
+
       @media (max-width: 480px) {
         .friends-toolbar {
           align-items: flex-start;
@@ -456,6 +547,11 @@
 
         .friends-card-actions .btn {
           width: 100%;
+        }
+
+        .friends-remove-btn {
+          width: 100%;
+          text-align: center;
         }
       }
 
@@ -551,6 +647,46 @@
           </div>
         </section>
 
+        <!-- Circle size + filter tabs -->
+        <section
+          class="friends-circle-bar"
+          aria-label="Circle size and connection filters"
+        >
+          <p id="friendsCountLabel" class="friends-count">
+            You have 0 soul friends.
+          </p>
+          <div
+            class="friends-filter-tabs"
+            role="group"
+            aria-label="Filter connections by type"
+          >
+            <button
+              type="button"
+              class="friends-filter-tab friends-filter-tab-active"
+              data-filter="all"
+              aria-pressed="true"
+            >
+              All
+            </button>
+            <button
+              type="button"
+              class="friends-filter-tab"
+              data-filter="friendship"
+              aria-pressed="false"
+            >
+              Friendship
+            </button>
+            <button
+              type="button"
+              class="friends-filter-tab"
+              data-filter="romantic"
+              aria-pressed="false"
+            >
+              Romantic
+            </button>
+          </div>
+        </section>
+
         <!-- Empty state -->
         <section
           id="friendsEmpty"
@@ -578,7 +714,7 @@
     </main>
 
     <footer class="footer-note">
-      © 2025 Soulink.global | Created with love by Soulink Team.
+      © 2025 Soulink.global | Created with love and ChatGPT as a co-creator.
     </footer>
   </body>
 </html>
