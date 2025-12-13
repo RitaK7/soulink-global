@@ -1,152 +1,109 @@
-// match.js — Soulink "Match" page, glowing AI compatibility dashboard
-// Logic adapted from earlier Match Lab script
-
+// match.js — Soulink Match Lab (DEMO now, easy switch to real users later)
 (function () {
   if (typeof window === "undefined" || typeof document === "undefined") return;
 
   const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-  // ===================== Helpers =====================
+  // ===================== Settings =====================
 
-  function normaliseText(v) {
-    return (v == null ? "" : String(v)).trim();
-  }
+  const FRIENDS_KEY = "soulink.friends.list";
 
-  function toArray(v) {
-    if (v == null) return [];
-    return Array.isArray(v) ? v : [v];
-  }
+  const DEMO_MATCHES = [
+    {
+      id: "match-aurora",
+      name: "Aurora",
+      connectionType: "Romantic",
+      loveLanguage: "Quality Time",
+      loveLanguages: ["Quality Time", "Words of Affirmation"],
+      values: ["Honesty", "Loyalty", "Growth"],
+      hobbies: ["Hiking", "Books", "Music"],
+      westernZodiac: "Sagittarius",
+      chineseZodiac: "Dragon",
+      lifePathNumber: 7,
+      birthday: "1986-12-03",
+      vibeTag: "Warm horizon seeker",
+    },
+    {
+      id: "match-leo",
+      name: "Leo",
+      connectionType: "Romantic",
+      loveLanguage: "Physical Touch",
+      loveLanguages: ["Physical Touch", "Acts of Service"],
+      values: ["Passion", "Adventure", "Authenticity"],
+      hobbies: ["Travel", "Dancing", "Cooking"],
+      westernZodiac: "Leo",
+      chineseZodiac: "Tiger",
+      lifePathNumber: 5,
+      birthday: "1984-08-01",
+      vibeTag: "Bold heart, bright fire",
+    },
+    {
+      id: "match-sage",
+      name: "Sage",
+      connectionType: "Friendship",
+      loveLanguage: "Words of Affirmation",
+      loveLanguages: ["Words of Affirmation", "Quality Time"],
+      values: ["Honesty", "Curiosity", "Freedom"],
+      hobbies: ["Podcasts", "Yoga", "Nature"],
+      westernZodiac: "Aquarius",
+      chineseZodiac: "Rabbit",
+      lifePathNumber: 9,
+      birthday: "1990-02-11",
+      vibeTag: "Quiet thinker, kind soul",
+    },
+    {
+      id: "match-luna",
+      name: "Luna",
+      connectionType: "Romantic",
+      loveLanguage: "Acts of Service",
+      loveLanguages: ["Acts of Service", "Receiving Gifts"],
+      values: ["Loyalty", "Kindness", "Family"],
+      hobbies: ["Cooking", "Gardening", "Films"],
+      westernZodiac: "Cancer",
+      chineseZodiac: "Horse",
+      lifePathNumber: 6,
+      birthday: "1988-07-05",
+      vibeTag: "Soft moonlight protector",
+    },
+    {
+      id: "match-river",
+      name: "River",
+      connectionType: "Friendship",
+      loveLanguage: "Quality Time",
+      loveLanguages: ["Quality Time", "Physical Touch"],
+      values: ["Growth", "Spirituality", "Authenticity"],
+      hobbies: ["Meditation", "Hiking", "Art"],
+      westernZodiac: "Pisces",
+      chineseZodiac: "Goat",
+      lifePathNumber: 11,
+      birthday: "1992-03-15",
+      vibeTag: "Gentle mystic stream",
+    },
+    {
+      id: "match-nova",
+      name: "Nova",
+      connectionType: "Romantic",
+      loveLanguage: "Receiving Gifts",
+      loveLanguages: ["Receiving Gifts", "Acts of Service"],
+      values: ["Creativity", "Freedom", "Joy"],
+      hobbies: ["Art", "Design", "Music"],
+      westernZodiac: "Libra",
+      chineseZodiac: "Monkey",
+      lifePathNumber: 3,
+      birthday: "1987-10-10",
+      vibeTag: "Spark of playful light",
+    },
+  ];
 
-  function prefersReducedMotion() {
-    try {
-      return (
-        typeof window !== "undefined" &&
-        typeof window.matchMedia === "function" &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      );
-    } catch (_err) {
-      return false;
-    }
-  }
-
-  function safeGetSoulData() {
-    let data = {};
-    try {
-      if (typeof getSoulData === "function") {
-        try {
-          data = getSoulData({ ensureShape: true }) || {};
-        } catch (_e) {
-          data = getSoulData() || {};
-        }
-      }
-    } catch (err) {
-      console.warn("Match: failed to read soul data", err);
-      data = {};
-    }
-    if (!data || typeof data !== "object") return {};
-    return data;
-  }
-
-  function safeParseJSON(raw) {
-    if (!raw || typeof raw !== "string") return null;
-    try {
-      return JSON.parse(raw);
-    } catch (_err) {
-      return null;
-    }
-  }
-
-  function isContactLike(strRaw) {
-    const str = normaliseText(strRaw).toLowerCase();
-    if (!str) return false;
-    if (str.includes("@")) return true;
-    if (str.includes("http://") || str.includes("https://") || str.includes("www.")) return true;
-    if (str.includes("telegram") || str.includes("tg:") || str.includes("whatsapp")) return true;
-    if (str.replace(/[^0-9+]/g, "").length >= 6) return true;
-    return false;
-  }
-
-  function cleanList(listLike) {
-    const out = [];
-    const seen = new Set();
-    toArray(listLike).forEach((item) => {
-      const t = normaliseText(item);
-      if (!t) return;
-      if (isContactLike(t)) return;
-      const key = t.toLowerCase();
-      if (seen.has(key)) return;
-      seen.add(key);
-      out.push(t);
-    });
-    return out;
-  }
-
-  function normalisedSet(arr) {
-    const set = new Set();
-    cleanList(arr).forEach((item) => {
-      set.add(item.toLowerCase());
-    });
-    return set;
-  }
-
-  function overlapList(baseArr, otherArr) {
-    const baseSet = normalisedSet(baseArr);
-    const result = [];
-    cleanList(otherArr).forEach((item) => {
-      const norm = item.toLowerCase();
-      if (baseSet.has(norm)) {
-        result.push(item);
-      }
-    });
-    return result;
-  }
-
-  function numericLifePath(value) {
-    if (value == null) return null;
-    let n = value;
-    if (typeof n === "string") {
-      n = parseInt(n, 10);
-    }
-    if (!Number.isFinite(n)) return null;
-    return n;
-  }
-
-  function computeAge(birthdayRaw) {
-    const str = normaliseText(birthdayRaw);
-    if (!str) return null;
-    const match = str.match(/(\d{4})/);
-    if (!match) return null;
-    const year = parseInt(match[1], 10);
-    if (!Number.isFinite(year)) return null;
-    const now = new Date();
-    const age = now.getFullYear() - year;
-    if (age < 0 || age > 120) return null;
-    return age;
-  }
-
-  // ===================== Love language helpers =====================
-
-  function getPrimaryLoveLanguage(person) {
-    if (!person || typeof person !== "object") return "";
-    const direct = normaliseText(person.loveLanguage);
-    if (direct) return direct;
-    const list = toArray(person.loveLanguages || []);
-    if (list.length) return normaliseText(list[0]);
-    return "";
-  }
-
-  function canonicalLoveKey(labelRaw) {
-    const label = normaliseText(labelRaw).toLowerCase();
-    if (!label) return "";
-    if (label.includes("affirmation") || label.includes("words")) return "words";
-    if (label.includes("quality")) return "quality";
-    if (label.includes("service")) return "service";
-    if (label.includes("touch")) return "touch";
-    if (label.includes("gift")) return "gifts";
-    return "other";
-  }
-
-  // ===================== Zodiac helpers =====================
+  const WEIGHTS = {
+    love: 35,
+    values: 25,
+    hobbies: 15,
+    zodiac: 10,
+    chinese: 5,
+    numerology: 10,
+  };
 
   const ZODIAC_ELEMENTS = {
     aries: "fire",
@@ -195,10 +152,139 @@
     boar: "🐗",
   };
 
+  // ===================== Utils =====================
+
+  function normaliseText(v) {
+    return (v == null ? "" : String(v)).trim();
+  }
+
+  function toArray(v) {
+    if (v == null) return [];
+    return Array.isArray(v) ? v : [v];
+  }
+
+  function prefersReducedMotion() {
+    try {
+      return (
+        typeof window !== "undefined" &&
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      );
+    } catch (_err) {
+      return false;
+    }
+  }
+
+  function safeParseJSON(raw) {
+    if (!raw || typeof raw !== "string") return null;
+    try {
+      return JSON.parse(raw);
+    } catch (_err) {
+      return null;
+    }
+  }
+
+  function isContactLike(strRaw) {
+    const str = normaliseText(strRaw).toLowerCase();
+    if (!str) return false;
+    if (str.includes("@")) return true;
+    if (str.includes("http://") || str.includes("https://") || str.includes("www.")) return true;
+    if (str.includes("telegram") || str.includes("tg:") || str.includes("whatsapp")) return true;
+    if (str.replace(/[^0-9+]/g, "").length >= 6) return true;
+    return false;
+  }
+
+  function cleanList(listLike) {
+    const out = [];
+    const seen = new Set();
+    toArray(listLike).forEach((item) => {
+      const t = normaliseText(item);
+      if (!t) return;
+      if (isContactLike(t)) return;
+      const key = t.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(t);
+    });
+    return out;
+  }
+
+  function normalisedSet(arr) {
+    const set = new Set();
+    cleanList(arr).forEach((item) => set.add(item.toLowerCase()));
+    return set;
+  }
+
+  function overlapList(baseArr, otherArr) {
+    const baseSet = normalisedSet(baseArr);
+    const result = [];
+    cleanList(otherArr).forEach((item) => {
+      const norm = item.toLowerCase();
+      if (baseSet.has(norm)) result.push(item);
+    });
+    return result;
+  }
+
+  function numericLifePath(value) {
+    if (value == null) return null;
+    let n = value;
+    if (typeof n === "string") n = parseInt(n, 10);
+    if (!Number.isFinite(n)) return null;
+    return n;
+  }
+
+  function safeGetSoulData() {
+    let data = {};
+    try {
+      if (typeof getSoulData === "function") {
+        try {
+          data = getSoulData({ ensureShape: true }) || {};
+        } catch (_e) {
+          data = getSoulData() || {};
+        }
+      }
+    } catch (err) {
+      console.warn("Match: failed to read soul data", err);
+      data = {};
+    }
+    if (!data || typeof data !== "object") return {};
+    return data;
+  }
+
+  function hasAnyCoreData(soul) {
+    if (!soul || typeof soul !== "object") return false;
+    if (normaliseText(soul.name)) return true;
+    if (normaliseText(soul.connectionType)) return true;
+    if (normaliseText(soul.loveLanguage)) return true;
+    if (cleanList(soul.values || soul.coreValues || []).length) return true;
+    if (cleanList(soul.hobbies || soul.passions || soul.interests || []).length) return true;
+    if (normaliseText(soul.westernZodiac || soul.zodiac)) return true;
+    if (numericLifePath(soul.lifePathNumber) != null) return true;
+    return false;
+  }
+
+  function getPrimaryLoveLanguage(person) {
+    if (!person || typeof person !== "object") return "";
+    const direct = normaliseText(person.loveLanguage);
+    if (direct) return direct;
+    const list = toArray(person.loveLanguages || []);
+    if (list.length) return normaliseText(list[0]);
+    return "";
+  }
+
+  function canonicalLoveKey(labelRaw) {
+    const label = normaliseText(labelRaw).toLowerCase();
+    if (!label) return "";
+    if (label.includes("affirmation") || label.includes("words")) return "words";
+    if (label.includes("quality")) return "quality";
+    if (label.includes("service")) return "service";
+    if (label.includes("touch")) return "touch";
+    if (label.includes("gift")) return "gifts";
+    return "other";
+  }
+
   function normaliseZodiac(name) {
-    const s = normaliseText(name).toLowerCase();
-    if (!s) return "";
-    return s;
+    return normaliseText(name).toLowerCase();
   }
 
   function zodiacSymbol(name) {
@@ -216,179 +302,123 @@
     return "☯";
   }
 
-  // ===================== Data Sources =====================
+  function createAvatarInitial(name) {
+    const t = normaliseText(name);
+    if (!t) return "?";
+    const words = t.split(/\s+/).filter(Boolean);
+    if (words.length === 1) return words[0].slice(0, 1).toUpperCase();
+    return (words[0].slice(0, 1) + words[1].slice(0, 1)).toUpperCase();
+  }
 
-  const DEMO_MATCHES = [
-    {
-      id: "match-aurora",
-      name: "Aurora",
-      connectionType: "Romantic",
-      loveLanguage: "Quality Time",
-      loveLanguages: ["Quality Time", "Words of Affirmation"],
-      values: ["Honesty", "Loyalty", "Growth"],
-      hobbies: ["Hiking", "Books", "Music"],
-      westernZodiac: "Sagittarius",
-      chineseZodiac: "Dragon",
-      lifePathNumber: 7,
-      birthday: "1986-12-03",
-    },
-    {
-      id: "match-leo",
-      name: "Leo",
-      connectionType: "Romantic",
-      loveLanguage: "Physical Touch",
-      loveLanguages: ["Physical Touch", "Acts of Service"],
-      values: ["Passion", "Adventure", "Authenticity"],
-      hobbies: ["Travel", "Dancing", "Cooking"],
-      westernZodiac: "Leo",
-      chineseZodiac: "Tiger",
-      lifePathNumber: 5,
-      birthday: "1984-08-01",
-    },
-    {
-      id: "match-sage",
-      name: "Sage",
-      connectionType: "Friendship",
-      loveLanguage: "Words of Affirmation",
-      loveLanguages: ["Words of Affirmation", "Quality Time"],
-      values: ["Honesty", "Curiosity", "Freedom"],
-      hobbies: ["Podcasts", "Yoga", "Nature"],
-      westernZodiac: "Aquarius",
-      chineseZodiac: "Rabbit",
-      lifePathNumber: 9,
-      birthday: "1990-02-11",
-    },
-    {
-      id: "match-luna",
-      name: "Luna",
-      connectionType: "Romantic",
-      loveLanguage: "Acts of Service",
-      loveLanguages: ["Acts of Service", "Receiving Gifts"],
-      values: ["Loyalty", "Kindness", "Family"],
-      hobbies: ["Cooking", "Gardening", "Films"],
-      westernZodiac: "Cancer",
-      chineseZodiac: "Horse",
-      lifePathNumber: 6,
-      birthday: "1988-07-05",
-    },
-    {
-      id: "match-river",
-      name: "River",
-      connectionType: "Friendship",
-      loveLanguage: "Quality Time",
-      loveLanguages: ["Quality Time", "Physical Touch"],
-      values: ["Growth", "Spirituality", "Authenticity"],
-      hobbies: ["Meditation", "Hiking", "Art"],
-      westernZodiac: "Pisces",
-      chineseZodiac: "Goat",
-      lifePathNumber: 11,
-      birthday: "1992-03-15",
-    },
-    {
-      id: "match-nova",
-      name: "Nova",
-      connectionType: "Romantic",
-      loveLanguage: "Receiving Gifts",
-      loveLanguages: ["Receiving Gifts", "Acts of Service"],
-      values: ["Creativity", "Freedom", "Joy"],
-      hobbies: ["Art", "Design", "Music"],
-      westernZodiac: "Libra",
-      chineseZodiac: "Monkey",
-      lifePathNumber: 3,
-      birthday: "1987-10-10",
-    },
-  ];
+  // ===================== Friends list =====================
 
-  function safeGetMatchesFromStorage() {
+  function readFriendsList() {
     if (typeof localStorage === "undefined") return [];
     try {
-      const raw = localStorage.getItem("soulink.friends.list");
+      const raw = localStorage.getItem(FRIENDS_KEY);
       const parsed = safeParseJSON(raw);
       if (!parsed || !Array.isArray(parsed)) return [];
       return parsed.filter((item) => item && typeof item === "object");
     } catch (err) {
-      console.warn("Match: failed to read soulink.friends.list", err);
+      console.warn("Match: failed to read friends list", err);
       return [];
     }
   }
 
-  function safeGetMatches() {
-    const fromStorage = safeGetMatchesFromStorage();
-    if (fromStorage.length) return fromStorage;
-    return DEMO_MATCHES;
+  function writeFriendsList(list) {
+    if (typeof localStorage === "undefined") return;
+    try {
+      const safe = Array.isArray(list) ? list : [];
+      localStorage.setItem(FRIENDS_KEY, JSON.stringify(safe));
+    } catch (err) {
+      console.warn("Match: failed to write friends list", err);
+    }
   }
 
-  function hasAnyCoreData(soul) {
-    if (!soul || typeof soul !== "object") return false;
-    if (normaliseText(soul.name)) return true;
-    if (normaliseText(soul.connectionType)) return true;
-    if (getPrimaryLoveLanguage(soul)) return true;
-    if (cleanList(soul.values || soul.coreValues || []).length) return true;
-    if (cleanList(soul.hobbies || soul.passions || soul.interests || []).length) return true;
-    if (normaliseText(soul.westernZodiac || soul.zodiac)) return true;
-    if (numericLifePath(soul.lifePathNumber) != null) return true;
-    return false;
+  function friendKeyFromMatch(match) {
+    const id = normaliseText(match && match.id);
+    if (id) return "id:" + id.toLowerCase();
+    const name = normaliseText(match && match.name);
+    if (name) return "name:" + name.toLowerCase();
+    return "";
   }
 
-  // ===================== Compatibility scoring =====================
+  function isMatchInCircle(friends, match) {
+    if (!Array.isArray(friends) || !friends.length || !match) return false;
+    const key = friendKeyFromMatch(match);
+    if (!key) return false;
+    return friends.some((f) => {
+      const fid = normaliseText(f && f.id);
+      const fname = normaliseText(f && f.name);
+      let fk = "";
+      if (fid) fk = "id:" + fid.toLowerCase();
+      else if (fname) fk = "name:" + fname.toLowerCase();
+      return fk && fk === key;
+    });
+  }
 
-  const WEIGHTS = {
-    love: 35,
-    values: 25,
-    hobbies: 15,
-    zodiac: 10,
-    chinese: 5,
-    numerology: 10,
-  };
+  function toFriendObject(match, score) {
+    const now = Date.now();
+    return {
+      id: normaliseText(match.id) || normaliseText(match.name) || "match-" + now,
+      name: normaliseText(match.name) || "Unknown",
+      connectionType: normaliseText(match.connectionType) || null,
+      score: Number.isFinite(score) ? score : null,
+      vibeTag: normaliseText(match.vibeTag) || null,
+      values: cleanList(match.values || match.coreValues || []),
+      hobbies: cleanList(match.hobbies || match.passions || match.interests || []),
+      westernZodiac: normaliseText(match.westernZodiac || match.zodiac) || null,
+      chineseZodiac: normaliseText(match.chineseZodiac) || null,
+      lifePathNumber: numericLifePath(match.lifePathNumber),
+      profilePhoto: normaliseText(match.profilePhoto) || null,
+      createdAt: new Date().toISOString(),
+    };
+  }
+
+  function addMatchToCircle(match, score) {
+    const friends = readFriendsList();
+    if (isMatchInCircle(friends, match)) return friends;
+    const next = friends.slice();
+    next.push(toFriendObject(match, score));
+    writeFriendsList(next);
+    return next;
+  }
+
+  // ===================== Compatibility =====================
 
   function computeValueOverlap(baseValues, matchValues) {
     const base = cleanList(baseValues);
     const other = cleanList(matchValues);
-    if (!base.length || !other.length) {
-      return { score: 0, items: [] };
-    }
+    if (!base.length || !other.length) return { score: 0, items: [] };
     const items = overlapList(base, other);
-    const maxReference = Math.max(base.length, 1);
-    const ratio = Math.min(items.length / maxReference, 1);
-    const score = Math.round(ratio * WEIGHTS.values);
-    return { score, items };
+    const ratio = Math.min(items.length / Math.max(base.length, 1), 1);
+    return { score: Math.round(ratio * WEIGHTS.values), items };
   }
 
   function computeHobbyScore(baseHobbies, matchHobbies) {
     const base = cleanList(baseHobbies);
     const other = cleanList(matchHobbies);
-    if (!base.length || !other.length) {
-      return { score: 0, items: [] };
-    }
+    if (!base.length || !other.length) return { score: 0, items: [] };
     const items = overlapList(base, other);
-    const maxReference = Math.max(base.length, 1);
-    const ratio = Math.min(items.length / maxReference, 1);
-    const score = Math.round(ratio * WEIGHTS.hobbies);
-    return { score, items };
+    const ratio = Math.min(items.length / Math.max(base.length, 1), 1);
+    return { score: Math.round(ratio * WEIGHTS.hobbies), items };
   }
 
   function loveLanguageScore(basePerson, matchPerson) {
     const basePrimary = getPrimaryLoveLanguage(basePerson);
     const matchPrimary = getPrimaryLoveLanguage(matchPerson);
 
-    const baseSet = normalisedSet(
-      toArray(basePerson.loveLanguages || []).concat(basePrimary)
-    );
-    const matchSet = normalisedSet(
-      toArray(matchPerson.loveLanguages || []).concat(matchPrimary)
-    );
+    const baseSet = normalisedSet(toArray(basePerson.loveLanguages || []).concat(basePrimary));
+    const matchSet = normalisedSet(toArray(matchPerson.loveLanguages || []).concat(matchPrimary));
 
     let score = 0;
     let label = "No clear overlap yet.";
     let strong = false;
 
-    if (!baseSet.size || !matchSet.size) {
-      return { score, label, strong };
-    }
+    if (!baseSet.size || !matchSet.size) return { score, label, strong };
 
     const primarySame =
-      normaliseText(basePrimary).toLowerCase() ===
-      normaliseText(matchPrimary).toLowerCase();
+      normaliseText(basePrimary).toLowerCase() === normaliseText(matchPrimary).toLowerCase();
 
     let anyOverlap = false;
     for (const l of baseSet) {
@@ -408,7 +438,7 @@
       strong = true;
     } else {
       score = Math.round(WEIGHTS.love * 0.3);
-      label = "Different love languages — with communication, this can still balance.";
+      label = "Different love languages — still workable with clear communication.";
     }
 
     return { score, label, strong, primarySame };
@@ -417,15 +447,13 @@
   function zodiacCompatibility(baseZodiacRaw, matchZodiacRaw) {
     const baseZ = normaliseZodiac(baseZodiacRaw);
     const matchZ = normaliseZodiac(matchZodiacRaw);
-    if (!baseZ || !matchZ) {
-      return { score: 0, label: "" };
-    }
+    if (!baseZ || !matchZ) return { score: 0, label: "" };
 
     const baseElem = ZODIAC_ELEMENTS[baseZ] || "";
     const matchElem = ZODIAC_ELEMENTS[matchZ] || "";
 
     let multiplier = 0.5;
-    let label = "Different elements — can be complementary with effort.";
+    let label = "Different elements — can be complementary with care.";
 
     if (baseZ === matchZ) {
       multiplier = 1;
@@ -443,24 +471,16 @@
       label = "Complementary elements — different but supportive.";
     }
 
-    const score = Math.round(WEIGHTS.zodiac * multiplier);
-    return { score, label };
+    return { score: Math.round(WEIGHTS.zodiac * multiplier), label };
   }
 
   function chineseZodiacCompatibility(baseChineseRaw, matchChineseRaw) {
     const baseC = normaliseText(baseChineseRaw).toLowerCase();
     const matchC = normaliseText(matchChineseRaw).toLowerCase();
-    if (!baseC || !matchC) {
-      return { score: 0, label: "" };
-    }
-
+    if (!baseC || !matchC) return { score: 0, label: "" };
     if (baseC === matchC) {
-      return {
-        score: WEIGHTS.chinese,
-        label: "Same Chinese sign — similar rhythm of growth.",
-      };
+      return { score: WEIGHTS.chinese, label: "Same Chinese sign — similar rhythm of growth." };
     }
-
     return {
       score: Math.round(WEIGHTS.chinese * 0.6),
       label: "Different Chinese signs — diversity that can enrich the dynamic.",
@@ -470,9 +490,7 @@
   function numerologyCompatibility(baseLifePathRaw, matchLifePathRaw) {
     const base = numericLifePath(baseLifePathRaw);
     const match = numericLifePath(matchLifePathRaw);
-    if (base == null || match == null) {
-      return { score: 0, label: "" };
-    }
+    if (base == null || match == null) return { score: 0, label: "" };
 
     const diff = Math.abs(base - match);
     let multiplier = 0.6;
@@ -486,20 +504,17 @@
       label = "Adjacent life paths — similar lessons with different flavors.";
     } else if (diff === 2) {
       multiplier = 0.7;
-      label = "Related but distinct life paths — potential for complementary growth.";
+      label = "Related but distinct life paths — complementary growth potential.";
     }
 
-    const score = Math.round(WEIGHTS.numerology * multiplier);
-    return { score, label };
+    return { score: Math.round(WEIGHTS.numerology * multiplier), label };
   }
 
   function computeCompatibility(baseSoul, candidate) {
     const baseValues = baseSoul.values || baseSoul.coreValues || [];
-    const baseHobbies =
-      baseSoul.hobbies || baseSoul.passions || baseSoul.interests || [];
+    const baseHobbies = baseSoul.hobbies || baseSoul.passions || baseSoul.interests || [];
     const matchValues = candidate.values || candidate.coreValues || [];
-    const matchHobbies =
-      candidate.hobbies || candidate.passions || candidate.interests || [];
+    const matchHobbies = candidate.hobbies || candidate.passions || candidate.interests || [];
 
     const loveRes = loveLanguageScore(baseSoul, candidate);
     const valuesRes = computeValueOverlap(baseValues, matchValues);
@@ -509,15 +524,8 @@
     const matchZodiac = candidate.westernZodiac || candidate.zodiac;
     const zodiacRes = zodiacCompatibility(baseZodiac, matchZodiac);
 
-    const chineseRes = chineseZodiacCompatibility(
-      baseSoul.chineseZodiac,
-      candidate.chineseZodiac
-    );
-
-    const numerologyRes = numerologyCompatibility(
-      baseSoul.lifePathNumber,
-      candidate.lifePathNumber
-    );
+    const chineseRes = chineseZodiacCompatibility(baseSoul.chineseZodiac, candidate.chineseZodiac);
+    const numerologyRes = numerologyCompatibility(baseSoul.lifePathNumber, candidate.lifePathNumber);
 
     let score =
       loveRes.score +
@@ -530,8 +538,18 @@
     if (!Number.isFinite(score)) score = 0;
     score = Math.max(0, Math.min(100, Math.round(score)));
 
+    // "Spice" is intentionally playful for DEMO sorting
+    const spice = Math.max(
+      0,
+      Math.min(
+        100,
+        Math.round(score * 0.6 + (candidate.lifePathNumber ? (Number(candidate.lifePathNumber) % 11) * 4 : 0))
+      )
+    );
+
     return {
       score,
+      spice,
       love: loveRes,
       values: valuesRes,
       hobbies: hobbyRes,
@@ -541,472 +559,597 @@
     };
   }
 
-  function generateAISummary(baseSoul, match, breakdown) {
+  function overallVibeLabel(score) {
+    if (score >= 85) return "High harmony";
+    if (score >= 70) return "Good potential";
+    if (score >= 50) return "Exploration match";
+    return "Gentle connection";
+  }
+
+  // ===================== Snapshot text =====================
+
+  function buildSnapshotBody(baseSoul, match, breakdown, mode) {
     const baseName = normaliseText(baseSoul.name) || "You";
     const matchName = normaliseText(match.name) || "this person";
+    const connection = normaliseText(match.connectionType) || "connection";
 
-    const strongAreas = [];
-    const softAreas = [];
-
-    if (breakdown.love.strong) {
-      strongAreas.push("how you give and receive care");
-    }
-
-    if (breakdown.values.items.length) {
-      strongAreas.push("what you both stand for");
-    }
-
-    if (breakdown.hobbies.items.length) {
-      strongAreas.push("the things that bring you joy");
-    }
-
-    const zodiacInfo = normaliseText(breakdown.zodiac.label);
-    const chineseInfo = normaliseText(breakdown.chinese.label);
-    const numerologyInfo = normaliseText(breakdown.numerology.label);
-
-    if (!strongAreas.length && (zodiacInfo || chineseInfo || numerologyInfo)) {
-      softAreas.push("symbolic patterns like zodiac and numerology");
-    }
-
-    let sentence = "";
-
-    if (strongAreas.length) {
-      if (strongAreas.length === 1) {
-        sentence =
-          baseName +
-          " and " +
-          matchName +
-          " align strongly in " +
-          strongAreas[0] +
-          ".";
-      } else if (strongAreas.length === 2) {
-        sentence =
-          baseName +
-          " and " +
-          matchName +
-          " align strongly in " +
-          strongAreas[0] +
-          " and " +
-          strongAreas[1] +
-          ".";
-      } else {
-        sentence =
-          baseName +
-          " and " +
-          matchName +
-          " share a lot in how you love, what you value and the joys you choose.";
-      }
-    } else {
-      sentence =
-        "At first glance there are not many obvious overlaps, which can still be beautiful if you both bring curiosity and honest communication.";
-    }
-
-    const snippets = [];
-
-    if (breakdown.values.items.length) {
-      const first = breakdown.values.items[0];
-      snippets.push("You both care about " + first.toLowerCase() + ".");
-    }
-
-    if (breakdown.hobbies.items.length) {
-      const first = breakdown.hobbies.items[0];
-      snippets.push(
-        "Shared joy around " + first.toLowerCase() + " can create easy bonding."
+    if (mode === "love") {
+      return (
+        "Between " +
+        baseName +
+        " and " +
+        matchName +
+        ", love languages act like tuning forks. " +
+        "When you both name what actually lands as care, the " +
+        connection.toLowerCase() +
+        " feels less confusing and more safe."
       );
     }
 
-    if (zodiacInfo) {
-      snippets.push(zodiacInfo);
+    if (mode === "values") {
+      if (breakdown.values.items.length) {
+        const shared = breakdown.values.items.slice(0, 3);
+        const joined =
+          shared.length === 1
+            ? shared[0]
+            : shared.slice(0, -1).join(", ") + " and " + shared[shared.length - 1];
+        return (
+          "You both seem to care about " +
+          joined.toLowerCase() +
+          ". When these values are honoured in daily choices, trust in this " +
+          connection.toLowerCase() +
+          " grows quietly in the background."
+        );
+      }
+      return (
+        "Your values might still be revealing themselves. A gentle conversation about boundaries and non-negotiables can protect this " +
+        connection.toLowerCase() +
+        " from silent resentment."
+      );
     }
 
-    if (numerologyInfo && snippets.length < 3) {
-      snippets.push(numerologyInfo);
+    if (mode === "joy") {
+      if (breakdown.hobbies.items.length) {
+        const joy = breakdown.hobbies.items[0];
+        return (
+          "Shared joys create low-friction bonding. Even a tiny ritual around " +
+          joy.toLowerCase() +
+          " can reset the emotional tone between you."
+        );
+      }
+      return (
+        "You may bring different flavours of joy into this " +
+        connection.toLowerCase() +
+        ". Staying curious instead of judging what refuels the other person keeps the space playful."
+      );
     }
 
-    let extra = "";
-    if (snippets.length) {
-      extra = " " + snippets.join(" ");
+    if (mode === "astro") {
+      const pieces = [];
+      if (breakdown.zodiac && breakdown.zodiac.label) pieces.push(breakdown.zodiac.label);
+      if (breakdown.chinese && breakdown.chinese.label) pieces.push(breakdown.chinese.label);
+      if (breakdown.numerology && breakdown.numerology.label) pieces.push(breakdown.numerology.label);
+
+      if (!pieces.length) {
+        return (
+          "Astrology and numerology here are symbolic mirrors only — language for tendencies, " +
+          "not rules. Consent, respect and real-time choices always come first."
+        );
+      }
+      return pieces.join(" ") + " These are lenses, not rules — you write the story together in real time.";
     }
 
-    return sentence + extra;
+    // overview
+    const vibe = overallVibeLabel(breakdown.score).toLowerCase();
+    return (
+      "This " +
+      connection.toLowerCase() +
+      " currently reads as a " +
+      vibe +
+      " match. Scores are information, not fate — honest communication and small consistent actions will always matter more than numbers."
+    );
   }
 
-  // ===================== DOM cache =====================
+  function buildSnapshotHighlight(baseSoul, match, breakdown, mode) {
+    const sharedValue = breakdown.values.items[0];
+    const sharedJoy = breakdown.hobbies.items[0];
+    const loveKey = canonicalLoveKey(getPrimaryLoveLanguage(baseSoul));
+
+    if (mode === "love" && loveKey === "quality") {
+      return "Offer 20–30 minutes of undistracted presence — phones away, conversation free to wander.";
+    }
+    if (mode === "love" && loveKey === "words") {
+      return "Share one clear, kind sentence about what you genuinely appreciate in them, with no hidden agenda.";
+    }
+    if (mode === "love" && loveKey === "service") {
+      return "Ask: “What would make your day 5% easier?” — and do one small, real thing.";
+    }
+    if (mode === "love" && loveKey === "touch") {
+      return "Move slowly: ask before touch, and notice what your body says when you’re near them.";
+    }
+    if (mode === "love" && loveKey === "gifts") {
+      return "Offer a small symbolic gesture that shows you remembered a detail about them.";
+    }
+
+    if (mode === "values" && sharedValue) {
+      return "Name one boundary or request that protects your value of “" + sharedValue.toLowerCase() + "”.";
+    }
+    if (mode === "joy" && sharedJoy) {
+      return "Plan a tiny shared moment around “" + sharedJoy.toLowerCase() + "” — nothing grand, just real.";
+    }
+    if (mode === "astro") {
+      return "Treat every description as a suggestion, not a verdict — you are writing the story together.";
+    }
+
+    if (sharedValue && sharedJoy) {
+      return "Protect “" + sharedValue.toLowerCase() + "” while making space for “" + sharedJoy.toLowerCase() + "”.";
+    }
+    return "Ask yourself: “What would make this connection feel 5% kinder today?” and act on one small piece.";
+  }
+
+  // ===================== DOM + State =====================
 
   const ui = {
-    page: $(".match-page"),
-    empty: $("#matchEmpty"),
-    layout: $("#matchLayout"),
-    heroName: $("#matchHeroName"),
-    heroLove: $("#matchHeroLove"),
-    heroLife: $("#matchHeroLife"),
-    pillName: $("#matchPillName"),
-    pillLove: $("#matchPillLove"),
-    pillLife: $("#matchPillLife"),
-    orbMain: $("#matchOrbMain"),
-    orbSub: $("#matchOrbSub"),
     list: $("#matchList"),
+    emptyTemplate: $("#matchEmptyTemplate"),
+    sortSelect: $("#matchSortSelect"),
+    toggles: $$(".match-toggle"),
+    snapshotTitle: $("#matchSnapshotTitle"),
+    snapshotBody: $("#matchSnapshotBody"),
+    snapshotScore: $("#matchSnapshotScore"),
+    snapshotFocus: $("#matchSnapshotFocus"),
+    snapshotHighlight: $("#matchSnapshotHighlight"),
+    snapshotPicker: $("#matchSnapshotPicker"),
   };
 
-  let orbRotationTimer = null;
+  const state = {
+    baseSoul: null,
+    entries: [],
+    friends: [],
+    filter: "all", // all | romantic | friendship
+    sort: "best", // best | name | spice
+    selectedId: null,
+    snapshotMode: "overview", // overview | love | values | joy | astro
+  };
 
-  // ===================== Rendering =====================
+  // ===================== Data prep =====================
 
-  function renderHero(soul) {
-    const name = normaliseText(soul.name) || "Beautiful soul";
-    const primaryLove = getPrimaryLoveLanguage(soul);
-    const lifePath = numericLifePath(soul.lifePathNumber);
+  function prepareBaseSoul() {
+    const raw = safeGetSoulData();
+    state.baseSoul = hasAnyCoreData(raw) ? raw : { name: "You" };
+  }
 
-    if (ui.heroName) ui.heroName.textContent = name;
-    if (ui.heroLove) ui.heroLove.textContent = primaryLove || "Not set yet";
-    if (ui.heroLife) {
-      ui.heroLife.textContent =
-        lifePath != null ? String(lifePath) : "Not calculated yet";
+  function getMatchesSource() {
+    // DEMO for now. Later: replace this function to return real user matches from storage/DB.
+    return DEMO_MATCHES.slice();
+  }
+
+  function prepareEntries() {
+    const base = state.baseSoul || { name: "You" };
+    const rawMatches = getMatchesSource();
+    state.entries = rawMatches.map((m, index) => {
+      const breakdown = computeCompatibility(base, m);
+      return {
+        id: normaliseText(m.id) || "match-" + index,
+        match: m,
+        breakdown,
+        index,
+      };
+    });
+  }
+
+  function getFilteredSortedEntries() {
+    let list = state.entries.slice();
+
+    const filter = normaliseText(state.filter).toLowerCase();
+    if (filter === "romantic" || filter === "friendship") {
+      list = list.filter((entry) => {
+        const type = normaliseText(entry.match.connectionType).toLowerCase();
+        return type === filter;
+      });
     }
 
-    if (ui.pillName) {
-      ui.pillName.setAttribute("title", "Base profile name");
-    }
-    if (ui.pillLove) {
-      ui.pillLove.setAttribute("title", "Your primary love language");
-    }
-    if (ui.pillLife) {
-      ui.pillLife.setAttribute("title", "Life path number from numerology");
-    }
-
-    if (ui.orbMain) {
-      ui.orbMain.textContent = "Explore your connections";
-    }
-
-    if (ui.orbSub) {
-      const loveKey = canonicalLoveKey(primaryLove);
-      let line =
-        "Notice who feels easy to be around — your nervous system is part of the data.";
-
-      if (loveKey === "quality") {
-        line =
-          "Quality time matters: pay attention to who offers you slow, present moments.";
-      } else if (loveKey === "words") {
-        line =
-          "Words matter: notice who speaks to you with respect and clear, kind language.";
-      } else if (loveKey === "service") {
-        line =
-          "Support matters: notice who quietly helps your day feel lighter.";
-      } else if (loveKey === "touch") {
-        line =
-          "Body language matters: notice where touch feels safe and welcomed.";
-      } else if (loveKey === "gifts") {
-        line =
-          "Symbolic gestures matter: notice who remembers the small details about you.";
+    const sort = normaliseText(state.sort).toLowerCase();
+    list.sort((a, b) => {
+      if (sort === "name") {
+        const an = normaliseText(a.match.name).toLowerCase();
+        const bn = normaliseText(b.match.name).toLowerCase();
+        if (an < bn) return -1;
+        if (an > bn) return 1;
+        return 0;
       }
-
-      ui.orbSub.textContent = line;
-    }
-  }
-
-  function createAvatarInitial(name) {
-    const t = normaliseText(name);
-    if (!t) return "?";
-    const words = t.split(/\s+/);
-    if (!words.length) return t.charAt(0).toUpperCase();
-    if (words.length === 1) return words[0].charAt(0).toUpperCase();
-    return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
-  }
-
-  function buildMetaLine(match, score) {
-    const parts = [];
-    const conn = normaliseText(match.connectionType);
-    if (conn) parts.push(conn);
-
-    const age = computeAge(match.birthday);
-    if (age != null) parts.push(age + " yrs");
-
-    const zodiacName = normaliseText(match.westernZodiac || match.zodiac);
-    if (zodiacName) {
-      parts.push(zodiacSymbol(zodiacName) + " " + zodiacName);
-    }
-
-    if (score >= 80) {
-      parts.push("High harmony");
-    } else if (score >= 60) {
-      parts.push("Good potential");
-    } else if (score >= 40) {
-      parts.push("Exploration match");
-    }
-
-    return parts.join(" • ");
-  }
-
-  function buildChipGroups(baseSoul, match, breakdown) {
-    const groups = [];
-
-    // Love language
-    const baseLove = getPrimaryLoveLanguage(baseSoul);
-    const matchLove = getPrimaryLoveLanguage(match);
-    const loveChips = [];
-    if (baseLove) loveChips.push("You: " + baseLove);
-    if (matchLove) loveChips.push(match.name + ": " + matchLove);
-    if (loveChips.length) {
-      groups.push({
-        label: "Love language",
-        chips: loveChips,
-      });
-    }
-
-    // Values
-    if (breakdown.values.items.length) {
-      const list = breakdown.values.items.slice(0, 3);
-      groups.push({
-        label: "Values",
-        chips: list,
-      });
-    }
-
-    // Hobbies
-    if (breakdown.hobbies.items.length) {
-      const list = breakdown.hobbies.items.slice(0, 3);
-      groups.push({
-        label: "Joys",
-        chips: list,
-      });
-    }
-
-    // Zodiac / Chinese / Numerology
-    const zodiacName = normaliseText(match.westernZodiac || match.zodiac);
-    const chineseName = normaliseText(match.chineseZodiac);
-    const lp = numericLifePath(match.lifePathNumber);
-
-    const astroChips = [];
-    if (zodiacName) {
-      astroChips.push(zodiacSymbol(zodiacName) + " " + zodiacName);
-    }
-    if (chineseName) {
-      astroChips.push(chineseEmoji(chineseName) + " " + chineseName);
-    }
-    if (lp != null) {
-      astroChips.push("Life Path " + lp);
-    }
-    if (astroChips.length) {
-      groups.push({
-        label: "Astro & numbers",
-        chips: astroChips,
-      });
-    }
-
-    return groups;
-  }
-
-  function createMatchCard(baseSoul, match, breakdown) {
-    const card = document.createElement("article");
-    card.className = "m-card";
-
-    const inner = document.createElement("div");
-    inner.className = "m-card-inner";
-
-    // Header
-    const header = document.createElement("header");
-    header.className = "m-card-header";
-
-    const left = document.createElement("div");
-    left.className = "m-card-left";
-
-    const avatar = document.createElement("div");
-    avatar.className = "m-avatar-circle";
-    const avatarSpan = document.createElement("span");
-    avatarSpan.className = "m-avatar-initial";
-    avatarSpan.textContent = createAvatarInitial(match.name);
-    avatar.appendChild(avatarSpan);
-
-    const titleBlock = document.createElement("div");
-    const title = document.createElement("h3");
-    title.className = "m-card-title";
-    title.textContent = normaliseText(match.name) || "Soul connection";
-
-    const meta = document.createElement("p");
-    meta.className = "m-card-meta";
-    meta.textContent = buildMetaLine(match, breakdown.score);
-
-    titleBlock.appendChild(title);
-    titleBlock.appendChild(meta);
-
-    left.appendChild(avatar);
-    left.appendChild(titleBlock);
-
-    const scoreWrap = document.createElement("div");
-    scoreWrap.className = "m-score";
-
-    const scoreRing = document.createElement("div");
-    scoreRing.className = "m-score-ring";
-    scoreRing.style.setProperty("--score", String(breakdown.score));
-    scoreRing.setAttribute(
-      "aria-label",
-      "Compatibility score " + breakdown.score + " percent"
-    );
-    scoreRing.setAttribute("role", "img");
-
-    const scoreInner = document.createElement("div");
-    scoreInner.className = "m-score-inner";
-
-    const scoreValue = document.createElement("span");
-    scoreValue.className = "m-score-value";
-    scoreValue.textContent = String(breakdown.score);
-
-    const scoreLabel = document.createElement("span");
-    scoreLabel.className = "m-score-label";
-    scoreLabel.textContent = "match";
-
-    scoreInner.appendChild(scoreValue);
-    scoreInner.appendChild(scoreLabel);
-    scoreRing.appendChild(scoreInner);
-    scoreWrap.appendChild(scoreRing);
-
-    header.appendChild(left);
-    header.appendChild(scoreWrap);
-
-    // Body
-    const body = document.createElement("div");
-    body.className = "m-card-body";
-
-    const chipRow = document.createElement("div");
-    chipRow.className = "m-chip-row";
-
-    const chipGroups = buildChipGroups(baseSoul, match, breakdown);
-    chipGroups.forEach((group) => {
-      const groupEl = document.createElement("div");
-      groupEl.className = "m-chip-group";
-
-      const label = document.createElement("span");
-      label.className = "m-chip-label";
-      label.textContent = group.label;
-      groupEl.appendChild(label);
-
-      group.chips.forEach((ch) => {
-        const chip = document.createElement("span");
-        chip.className = "m-chip";
-        chip.textContent = ch;
-        groupEl.appendChild(chip);
-      });
-
-      chipRow.appendChild(groupEl);
+      if (sort === "spice") {
+        if (b.breakdown.spice !== a.breakdown.spice) return b.breakdown.spice - a.breakdown.spice;
+        return b.breakdown.score - a.breakdown.score;
+      }
+      // best
+      if (b.breakdown.score !== a.breakdown.score) return b.breakdown.score - a.breakdown.score;
+      return a.index - b.index;
     });
 
-    body.appendChild(chipRow);
+    return list;
+  }
 
-    const snippet = document.createElement("p");
-    snippet.className = "m-snippet";
-    snippet.textContent = generateAISummary(baseSoul, match, breakdown);
+  // ===================== Render =====================
 
-    body.appendChild(snippet);
+  function ensureSnapshotPicker() {
+    if (!ui.snapshotPicker) return;
+    ui.snapshotPicker.innerHTML = "";
+    ui.snapshotPicker.setAttribute("aria-hidden", "false");
+
+    const modes = [
+      { key: "overview", label: "Overview" },
+      { key: "love", label: "Love" },
+      { key: "values", label: "Values" },
+      { key: "joy", label: "Joy" },
+      { key: "astro", label: "Astro" },
+    ];
+
+    modes.forEach((m) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "match-snapshot-chip" + (m.key === state.snapshotMode ? " is-active" : "");
+      btn.textContent = m.label;
+      btn.setAttribute("data-mode", m.key);
+      btn.setAttribute("aria-pressed", m.key === state.snapshotMode ? "true" : "false");
+      btn.addEventListener("click", () => {
+        state.snapshotMode = m.key;
+        ensureSnapshotPicker();
+        if (state.selectedId) {
+          const entry = getEntryById(state.selectedId);
+          if (entry) renderSnapshot(entry);
+        }
+      });
+      ui.snapshotPicker.appendChild(btn);
+    });
+  }
+
+  function renderEmptyState() {
+    if (!ui.list) return;
+    ui.list.innerHTML = "";
+    if (ui.emptyTemplate && ui.emptyTemplate.content) {
+      ui.list.appendChild(ui.emptyTemplate.content.cloneNode(true));
+    }
+  }
+
+  function buildCard(baseSoul, entry) {
+    const match = entry.match;
+    const breakdown = entry.breakdown;
+
+    const card = document.createElement("article");
+    card.className = "match-card";
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.setAttribute("aria-label", "Select " + (normaliseText(match.name) || "match") + " snapshot");
+    card.dataset.matchId = entry.id;
+
+    const inner = document.createElement("div");
+    inner.className = "match-card-inner";
+
+    // Left hero column
+    const hero = document.createElement("div");
+    hero.className = "match-card-hero";
+
+    const avatarWrap = document.createElement("div");
+    avatarWrap.className = "match-avatar-wrap";
+
+    if (match.profilePhoto) {
+      const img = document.createElement("img");
+      img.className = "match-avatar-img";
+      img.src = match.profilePhoto;
+      img.alt = normaliseText(match.name) || "Match avatar";
+      avatarWrap.appendChild(img);
+    } else {
+      const fallback = document.createElement("div");
+      fallback.className = "match-avatar-fallback";
+      fallback.textContent = createAvatarInitial(match.name);
+      avatarWrap.appendChild(fallback);
+    }
+
+    const scorePill = document.createElement("div");
+    scorePill.className = "match-score-pill";
+    scorePill.textContent = breakdown.score + "%";
+
+    avatarWrap.appendChild(scorePill);
+
+    const connTag = document.createElement("div");
+    connTag.className = "match-connection-tag";
+    connTag.textContent = normaliseText(match.connectionType) || "Connection";
+
+    hero.appendChild(avatarWrap);
+    hero.appendChild(connTag);
+
+    // Right body column
+    const body = document.createElement("div");
+    body.className = "match-card-body";
+
+    const header = document.createElement("div");
+    header.className = "match-card-header";
+
+    const nameRow = document.createElement("div");
+    nameRow.className = "match-name-row";
+
+    const nameEl = document.createElement("div");
+    nameEl.className = "match-name";
+    nameEl.textContent = normaliseText(match.name) || "Soul connection";
+
+    nameRow.appendChild(nameEl);
+    header.appendChild(nameRow);
+
+    const vibe = document.createElement("div");
+    vibe.className = "match-vibe";
+    vibe.innerHTML =
+      "Vibe: <strong>" +
+      (normaliseText(match.vibeTag) || overallVibeLabel(breakdown.score)) +
+      "</strong>";
+    header.appendChild(vibe);
+
+    const badges = document.createElement("div");
+    badges.className = "match-badges";
+
+    const love = getPrimaryLoveLanguage(match);
+    if (love) {
+      const b = document.createElement("div");
+      b.className = "match-badge";
+      b.innerHTML = "<span>Love:</span> <strong>" + love + "</strong>";
+      badges.appendChild(b);
+    }
+
+    const sharedValues = breakdown.values.items.slice(0, 2);
+    if (sharedValues.length) {
+      const b = document.createElement("div");
+      b.className = "match-badge";
+      b.innerHTML = "<span>Values:</span> <strong>" + sharedValues.join(", ") + "</strong>";
+      badges.appendChild(b);
+    }
+
+    const zodiacName = normaliseText(match.westernZodiac || match.zodiac);
+    if (zodiacName) {
+      const b = document.createElement("div");
+      b.className = "match-badge";
+      b.innerHTML = "<span>Sign:</span> <strong>" + zodiacSymbol(zodiacName) + " " + zodiacName + "</strong>";
+      badges.appendChild(b);
+    }
+
+    const lp = numericLifePath(match.lifePathNumber);
+    if (lp != null) {
+      const b = document.createElement("div");
+      b.className = "match-badge";
+      b.innerHTML = "<span>Life Path:</span> <strong>" + lp + "</strong>";
+      badges.appendChild(b);
+    }
+
+    body.appendChild(header);
+    if (badges.childNodes.length) body.appendChild(badges);
+
+    const summary = document.createElement("div");
+    summary.className = "match-summary";
+
+    const summaryMain = document.createElement("div");
+    summaryMain.className = "match-summary-main";
+    const p = document.createElement("p");
+    p.textContent = buildSnapshotBody(baseSoul, match, breakdown, "overview");
+    summaryMain.appendChild(p);
+
+    const summarySide = document.createElement("div");
+    summarySide.className = "match-summary-pill";
+    summarySide.innerHTML =
+      "<strong>Highlight:</strong> <span>" + buildSnapshotHighlight(baseSoul, match, breakdown, "overview") + "</span>";
+
+    summary.appendChild(summaryMain);
+    summary.appendChild(summarySide);
+    body.appendChild(summary);
+
+    const footer = document.createElement("div");
+    footer.className = "match-card-footer";
 
     const actions = document.createElement("div");
     actions.className = "m-card-actions";
 
-    const viewBtn = document.createElement("a");
-    viewBtn.className = "btn outline btn-outline";
-    viewBtn.href =
-      "match-profile.html?id=" +
-      encodeURIComponent(match.id || match.name || "");
-    viewBtn.textContent = "View Profile";
+    const view = document.createElement("a");
+    view.className = "btn";
+    view.href = "match-profile.html?id=" + encodeURIComponent(match.id || match.name || entry.id);
+    view.textContent = "View Match Profile";
+    view.addEventListener("click", (e) => e.stopPropagation());
 
-    actions.appendChild(viewBtn);
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "btn m-card-add-btn";
 
-    body.appendChild(actions);
+    const inCircle = isMatchInCircle(state.friends, match);
+    if (inCircle) {
+      add.classList.add("in-circle");
+      add.textContent = "In Your Circle";
+      add.disabled = true;
+      add.setAttribute("aria-disabled", "true");
+    } else {
+      add.textContent = "Add to My Circle";
+      add.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (add.disabled) return;
+        state.friends = addMatchToCircle(match, breakdown.score);
+        add.classList.add("in-circle");
+        add.textContent = "In Your Circle";
+        add.disabled = true;
+        add.setAttribute("aria-disabled", "true");
+      });
+    }
 
-    inner.appendChild(header);
+    actions.appendChild(view);
+    actions.appendChild(add);
+    footer.appendChild(actions);
+
+    const note = document.createElement("div");
+    note.className = "m-card-note";
+    note.innerHTML =
+      "<strong>Tip:</strong> Click the card to update the snapshot →";
+    footer.appendChild(note);
+
+    body.appendChild(footer);
+
+    inner.appendChild(hero);
     inner.appendChild(body);
     card.appendChild(inner);
+
+    // selection behaviour
+    card.addEventListener("click", () => selectEntry(entry));
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        selectEntry(entry);
+      }
+    });
 
     return card;
   }
 
-  function renderMatchesList(baseSoul, matches) {
+  function renderList() {
     if (!ui.list) return;
     ui.list.innerHTML = "";
 
-    const enriched = matches.map((match) => {
-      const breakdown = computeCompatibility(baseSoul, match);
-      return { match, breakdown };
-    });
-
-    enriched.sort((a, b) => b.breakdown.score - a.breakdown.score);
-
-    enriched.forEach(({ match, breakdown }) => {
-      const card = createMatchCard(baseSoul, match, breakdown);
-      ui.list.appendChild(card);
-    });
-  }
-
-  function animateSectionsOnce() {
-    if (!ui.page) return;
-    if (prefersReducedMotion()) {
+    const entries = getFilteredSortedEntries();
+    if (!entries.length) {
+      renderEmptyState();
       return;
     }
-    window.requestAnimationFrame(function () {
-      ui.page.classList.add("match-animate");
+
+    entries.forEach((entry) => {
+      ui.list.appendChild(buildCard(state.baseSoul, entry));
+    });
+
+    // auto-select first card for a nicer "demo" feeling
+    if (!state.selectedId && entries.length) {
+      selectEntry(entries[0], { silentScroll: true });
+    } else if (state.selectedId) {
+      highlightSelectedCard(state.selectedId);
+    }
+  }
+
+  function highlightSelectedCard(id) {
+    if (!ui.list) return;
+    const cards = $$(".match-card", ui.list);
+    cards.forEach((card) => {
+      const cid = card.dataset.matchId || "";
+      const isSelected = normaliseText(cid) === normaliseText(id);
+      if (isSelected) card.classList.add("is-selected");
+      else card.classList.remove("is-selected");
     });
   }
 
-  function startOrbRotation() {
-    if (!ui.orbSub) return;
-    if (prefersReducedMotion()) return;
+  function renderSnapshot(entry) {
+    if (!entry) return;
+    const baseSoul = state.baseSoul || { name: "You" };
+    const match = entry.match;
+    const breakdown = entry.breakdown;
 
-    const lines = [
-      ui.orbSub.textContent || "",
-      "Compatibility is information, not a verdict.",
-      "Mutual effort and respect are the real magic.",
-      "Follow where your body feels safe and alive.",
-    ].filter(Boolean);
+    const name = normaliseText(match.name) || "This connection";
+    const cx = normaliseText(match.connectionType) || "Connection";
 
-    if (!lines.length) return;
+    if (ui.snapshotTitle) ui.snapshotTitle.textContent = name;
+    if (ui.snapshotScore) {
+      ui.snapshotScore.innerHTML = "<strong>" + breakdown.score + "%</strong> <span>compatibility</span>";
+    }
+    if (ui.snapshotFocus) {
+      ui.snapshotFocus.textContent =
+        cx.toLowerCase() === "friendship" ? "Friendship focus" : cx + " focus";
+    }
+    if (ui.snapshotBody) {
+      ui.snapshotBody.innerHTML = "<p>" + escapeHTML(buildSnapshotBody(baseSoul, match, breakdown, state.snapshotMode)) + "</p>";
+    }
+    if (ui.snapshotHighlight) {
+      ui.snapshotHighlight.textContent = buildSnapshotHighlight(baseSoul, match, breakdown, state.snapshotMode);
+    }
+  }
 
-    let index = 0;
-    if (orbRotationTimer) window.clearInterval(orbRotationTimer);
+  function escapeHTML(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 
-    orbRotationTimer = window.setInterval(function () {
-      index = (index + 1) % lines.length;
-      ui.orbSub.textContent = lines[index];
-    }, 9000);
+  function getEntryById(id) {
+    const target = normaliseText(id);
+    return state.entries.find((e) => normaliseText(e.id) === target) || null;
+  }
+
+  function selectEntry(entry, opts) {
+    if (!entry) return;
+    state.selectedId = entry.id;
+    highlightSelectedCard(entry.id);
+    renderSnapshot(entry);
+    ensureSnapshotPicker();
+
+    const silent = opts && opts.silentScroll;
+    if (!silent && ui.snapshotTitle) {
+      // Keep it gentle; no forced scroll on mobile.
+    }
+  }
+
+  // ===================== Controls =====================
+
+  function wireSort() {
+    if (!ui.sortSelect) return;
+    ui.sortSelect.addEventListener("change", () => {
+      const v = normaliseText(ui.sortSelect.value).toLowerCase();
+      state.sort = v === "name" || v === "spice" || v === "best" ? v : "best";
+      renderList();
+    });
+  }
+
+  function wireToggles() {
+    if (!ui.toggles || !ui.toggles.length) return;
+
+    ui.toggles.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const mode = normaliseText(btn.getAttribute("data-connection-mode")).toLowerCase() || "all";
+        state.filter = mode;
+
+        ui.toggles.forEach((b) => {
+          const active = b === btn;
+          b.classList.toggle("is-active", active);
+          b.setAttribute("aria-checked", active ? "true" : "false");
+        });
+
+        renderList();
+      });
+    });
   }
 
   // ===================== Init =====================
 
   function init() {
-    try {
-      const soul = safeGetSoulData();
-      const hasData = hasAnyCoreData(soul);
-      const matches = safeGetMatches();
+    if (!ui.list) return;
 
-      const hasMatches = matches && matches.length > 0;
+    state.friends = readFriendsList();
+    prepareBaseSoul();
+    prepareEntries();
 
-      if (!hasMatches) {
-        if (ui.empty) ui.empty.hidden = false;
-        if (ui.layout) ui.layout.hidden = true;
-        return;
-      }
+    // read initial UI state
+    if (ui.sortSelect && ui.sortSelect.value) {
+      const v = normaliseText(ui.sortSelect.value).toLowerCase();
+      state.sort = v === "name" || v === "spice" || v === "best" ? v : "best";
+    }
 
-      if (ui.empty) ui.empty.hidden = true;
-      if (ui.layout) ui.layout.hidden = false;
+    const activeToggle = ui.toggles.find((t) => t.classList.contains("is-active"));
+    if (activeToggle) {
+      const mode = normaliseText(activeToggle.getAttribute("data-connection-mode")).toLowerCase();
+      if (mode === "romantic" || mode === "friendship" || mode === "all") state.filter = mode;
+    }
 
-      if (hasData) {
-        renderHero(soul);
-      }
+    wireSort();
+    wireToggles();
+    ensureSnapshotPicker();
+    renderList();
 
-      renderMatchesList(soul, matches);
-      animateSectionsOnce();
-      startOrbRotation();
-    } catch (err) {
-      console.error("Match: init failed", err);
-      if (ui.empty) {
-        ui.empty.hidden = false;
-        ui.empty.textContent =
-          "We could not load your Match data right now. Please refresh the page or try again later.";
-      }
+    // a11y / motion: no extra animations beyond CSS keyframes
+    if (!prefersReducedMotion()) {
+      // no-op: CSS handles entry fade-in
     }
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
 })();
