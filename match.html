@@ -377,6 +377,7 @@
       box-shadow:
         0 14px 30px rgba(0, 0, 0, 0.38),
         0 0 0 1px rgba(0, 253, 216, 0.08) inset;
+      z-index: 1;
     }
 
     .match-connection-tag {
@@ -566,6 +567,30 @@
       }
     }
 
+    @media (max-width: 640px) {
+      .match-card-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .match-card-hero {
+        flex-direction: row;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .match-avatar-wrap {
+        width: 64px;
+        height: 64px;
+      }
+
+      .match-score-pill {
+        width: 44px;
+        height: 44px;
+        top: -6px;
+        right: -6px;
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .match-card,
       .match-toggle,
@@ -706,7 +731,7 @@
         <a href="mission.html">Mission</a>
       </div>
       <div class="footer-note">
-        <span>Created with love and ChatGPT help.</span>
+        <span>Created with love by Soulink Team.</span>
         <span>© <span id="year"></span></span>
       </div>
     </div>
