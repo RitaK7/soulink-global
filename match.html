@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Match page redesigned based on previous Match Lab implementation -->
   <meta charset="utf-8" />
-  <title>Soulink — Match Lab</title>
+  <title>Soulink — Match</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Soulink Match Lab — explore demo matches now, switch to real user matches later." />
+  <meta
+    name="description"
+    content="Soulink Match — a glowing AI compatibility lab that weaves love language, values, joys, astrology and numerology into one view."
+  />
   <link rel="stylesheet" href="style.css" />
   <script src="auth.js" defer></script>
   <script src="data-helpers.js" defer></script>
@@ -12,736 +16,915 @@
   <script src="match.js" defer></script>
 
   <style>
-    /* Page-only polish (keeps global brand + style.css intact) */
     .match-page {
       position: relative;
-      min-height: 100%;
     }
 
     .match-page .page-inner {
-      max-width: 1180px;
+      max-width: 1120px;
       margin: 0 auto;
-      padding: 1.75rem 1.25rem 3rem;
+      padding: 1.75rem 1.25rem 2.5rem;
       box-sizing: border-box;
     }
 
-    .match-hero {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1.25rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .match-hero-card {
-      position: relative;
-      overflow: hidden;
-      border-radius: 20px;
-      padding: 1.25rem 1.25rem 1.2rem;
-      border: 1px solid rgba(0, 253, 216, 0.16);
-      background:
-        radial-gradient(1200px 500px at 15% 10%, rgba(0, 253, 216, 0.14), transparent 55%),
-        radial-gradient(900px 420px at 85% 10%, rgba(0, 253, 216, 0.10), transparent 55%),
-        rgba(0, 0, 0, 0.10);
-      box-shadow:
-        0 18px 48px rgba(0, 0, 0, 0.35),
-        0 0 0 1px rgba(0, 253, 216, 0.06) inset;
-    }
-
-    .match-hero-top {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: .6rem;
-      align-items: start;
-    }
-
-    .match-hero-title {
-      margin: 0;
-      font-size: 1.55rem;
-      letter-spacing: .3px;
-      line-height: 1.18;
-    }
-
-    .match-hero-subtitle {
-      margin: 0;
+    .match-page::before {
+      content: "";
+      position: fixed;
+      inset: -40vh -40vw;
+      pointer-events: none;
       opacity: 0.9;
-      max-width: 62ch;
-      line-height: 1.55;
-    }
-
-    .match-controls {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.9rem;
-      margin-top: 0.9rem;
-    }
-
-    .match-toggle-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .6rem;
-    }
-
-    .match-toggle {
-      appearance: none;
-      border: 1px solid rgba(0, 253, 216, 0.2);
-      background: rgba(0, 0, 0, 0.12);
-      color: inherit;
-      padding: .55rem .85rem;
-      border-radius: 999px;
-      cursor: pointer;
-      font-weight: 600;
-      letter-spacing: .2px;
-      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.05) inset;
-      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-    }
-
-    .match-toggle:hover {
-      transform: translateY(-1px);
-      border-color: rgba(0, 253, 216, 0.35);
-      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
-    }
-
-    .match-toggle.is-active {
-      border-color: rgba(0, 253, 216, 0.55);
+      z-index: -1;
       background:
-        radial-gradient(420px 220px at 20% 20%, rgba(0, 253, 216, 0.18), transparent 55%),
-        rgba(0, 0, 0, 0.15);
-      box-shadow:
-        0 14px 30px rgba(0, 0, 0, 0.34),
-        0 0 0 1px rgba(0, 253, 216, 0.14) inset;
+        radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.14), transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.1), transparent 60%);
     }
 
-    .match-sort-row {
-      display: flex;
-      gap: .6rem;
-      align-items: center;
-      flex-wrap: wrap;
-    }
+    /* Empty state */
 
-    .match-sort-row label {
-      font-weight: 700;
-      opacity: 0.95;
-    }
-
-    .match-sort-row select {
-      min-width: 220px;
-      border-radius: 12px;
-      border: 1px solid rgba(0, 253, 216, 0.22);
-      background: rgba(0, 0, 0, 0.14);
-      color: inherit;
-      padding: .6rem .75rem;
-      outline: none;
-    }
-
-    .match-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1rem;
-      margin-top: 1.25rem;
-    }
-
-    .match-snapshot {
-      position: relative;
-      overflow: hidden;
-      border-radius: 20px;
-      border: 1px solid rgba(0, 253, 216, 0.18);
+    .match-page .m-empty-card {
+      margin-top: 2.25rem;
+      padding: 1.8rem 1.6rem 1.9rem;
+      border-radius: 22px;
+      border: 1px solid rgba(0, 253, 216, 0.32);
       background:
-        radial-gradient(800px 420px at 15% 15%, rgba(0, 253, 216, 0.13), transparent 60%),
-        radial-gradient(800px 420px at 85% 15%, rgba(0, 253, 216, 0.08), transparent 65%),
-        rgba(0, 0, 0, 0.10);
+        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.18), transparent 55%),
+        rgba(0, 0, 0, 0.84);
       box-shadow:
-        0 18px 52px rgba(0, 0, 0, 0.38),
-        0 0 0 1px rgba(0, 253, 216, 0.07) inset;
-      padding: 1.15rem 1.15rem 1.1rem;
+        0 0 0 1px rgba(0, 253, 216, 0.28),
+        0 22px 60px rgba(0, 0, 0, 0.92);
+      text-align: left;
     }
 
-    .match-snapshot-top {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: .5rem;
-      align-items: start;
-      margin-bottom: .85rem;
-    }
-
-    .match-snapshot-title {
-      margin: 0;
-      font-size: 1.25rem;
-      letter-spacing: .2px;
-      line-height: 1.2;
-    }
-
-    .match-snapshot-meta {
-      display: flex;
-      gap: .55rem;
-      flex-wrap: wrap;
-      align-items: center;
-      opacity: .95;
-    }
-
-    .match-snapshot-score {
+    .match-page .m-empty-title {
       display: inline-flex;
-      align-items: baseline;
-      gap: .35rem;
-      padding: .35rem .7rem;
-      border-radius: 999px;
-      border: 1px solid rgba(0, 253, 216, 0.25);
-      background: rgba(0, 0, 0, 0.14);
-      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.06) inset;
-      font-weight: 800;
-      letter-spacing: .2px;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 1.05rem;
+      letter-spacing: 0.03em;
     }
 
-    .match-snapshot-score span {
-      font-weight: 600;
-      opacity: .9;
-      letter-spacing: .1px;
+    .match-page .m-empty-subtitle {
+      margin-top: 0.75rem;
+      font-size: 0.95rem;
+      opacity: 0.9;
     }
 
-    .match-snapshot-focus {
-      padding: .35rem .7rem;
-      border-radius: 999px;
-      border: 1px solid rgba(0, 253, 216, 0.16);
-      background: rgba(0, 0, 0, 0.10);
-      font-weight: 700;
-      opacity: .95;
-    }
-
-    .match-snapshot-picker {
+    .match-page .m-empty-actions {
+      margin-top: 1.25rem;
       display: flex;
       flex-wrap: wrap;
-      gap: .5rem;
-      margin: .75rem 0 1rem;
+      gap: 0.85rem;
     }
 
-    .match-snapshot-chip {
-      appearance: none;
-      border: 1px solid rgba(0, 253, 216, 0.18);
-      background: rgba(0, 0, 0, 0.10);
-      color: inherit;
-      padding: .45rem .75rem;
-      border-radius: 999px;
-      cursor: pointer;
-      font-weight: 700;
-      letter-spacing: .2px;
-      transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+    .match-page .m-empty-actions .btn {
+      min-width: 170px;
     }
 
-    .match-snapshot-chip:hover {
-      transform: translateY(-1px);
-      border-color: rgba(0, 253, 216, 0.32);
-      box-shadow: 0 12px 22px rgba(0, 0, 0, 0.25);
-    }
+    /* Hero / overview */
 
-    .match-snapshot-chip.is-active {
-      border-color: rgba(0, 253, 216, 0.55);
+    .match-page .m-hero {
+      margin-top: 2rem;
+      padding: 1.8rem 1.6rem 1.9rem;
+      border-radius: 24px;
+      border: 1px solid rgba(0, 253, 216, 0.38);
       background:
-        radial-gradient(380px 180px at 25% 20%, rgba(0, 253, 216, 0.18), transparent 60%),
-        rgba(0, 0, 0, 0.14);
+        radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.22), transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.16), transparent 60%),
+        rgba(0, 0, 0, 0.84);
       box-shadow:
-        0 14px 28px rgba(0, 0, 0, 0.3),
-        0 0 0 1px rgba(0, 253, 216, 0.12) inset;
-    }
-
-    .match-snapshot-body p {
-      margin: 0;
-      line-height: 1.62;
-      opacity: .95;
-    }
-
-    .match-snapshot-highlight {
-      margin-top: .9rem;
-      padding: .8rem .85rem;
-      border-radius: 16px;
-      border: 1px solid rgba(0, 253, 216, 0.16);
-      background:
-        radial-gradient(420px 200px at 20% 20%, rgba(0, 253, 216, 0.12), transparent 65%),
-        rgba(0, 0, 0, 0.10);
-      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.05) inset;
-    }
-
-    .match-snapshot-highlight strong {
-      display: block;
-      margin-bottom: .35rem;
-      letter-spacing: .2px;
-    }
-
-    .match-list {
+        0 0 0 1px rgba(0, 253, 216, 0.3),
+        0 24px 70px rgba(0, 0, 0, 0.95);
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }
-
-    .match-card {
-      border-radius: 20px;
-      border: 1px solid rgba(0, 253, 216, 0.16);
-      background:
-        radial-gradient(800px 420px at 12% 10%, rgba(0, 253, 216, 0.12), transparent 55%),
-        radial-gradient(800px 420px at 88% 0%, rgba(0, 253, 216, 0.08), transparent 60%),
-        rgba(0, 0, 0, 0.10);
-      box-shadow:
-        0 18px 48px rgba(0, 0, 0, 0.38),
-        0 0 0 1px rgba(0, 253, 216, 0.07) inset;
-      overflow: hidden;
-      cursor: pointer;
-      transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
-    }
-
-    .match-card:focus {
-      outline: none;
-      border-color: rgba(0, 253, 216, 0.55);
-      box-shadow:
-        0 18px 48px rgba(0, 0, 0, 0.40),
-        0 0 0 2px rgba(0, 253, 216, 0.18) inset;
-    }
-
-    .match-card:hover {
-      transform: translateY(-2px);
-      border-color: rgba(0, 253, 216, 0.30);
-      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.42);
-    }
-
-    .match-card.is-selected {
-      border-color: rgba(0, 253, 216, 0.55);
-      box-shadow:
-        0 22px 70px rgba(0, 0, 0, 0.45),
-        0 0 0 2px rgba(0, 253, 216, 0.16) inset;
-      transform: translateY(-1px);
-    }
-
-    .match-card-inner {
-      display: grid;
-      grid-template-columns: 120px 1fr;
-      gap: 0.9rem;
-      padding: 0.95rem;
-      align-items: start;
-    }
-
-    .match-card-hero {
-      display: flex;
-      flex-direction: column;
-      gap: .55rem;
-      align-items: flex-start;
-    }
-
-    .match-avatar-wrap {
+      grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.6fr);
+      gap: 1.6rem;
+      align-items: stretch;
       position: relative;
-      width: 72px;
-      height: 72px;
-      border-radius: 18px;
-      border: 1px solid rgba(0, 253, 216, 0.18);
-      background:
-        radial-gradient(220px 120px at 20% 20%, rgba(0, 253, 216, 0.14), transparent 60%),
-        rgba(0, 0, 0, 0.12);
-      display: grid;
-      place-items: center;
-      box-shadow:
-        0 0 0 1px rgba(0, 253, 216, 0.06) inset,
-        0 14px 30px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+      backdrop-filter: blur(18px);
     }
 
-    .match-avatar-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 18px;
-      display: block;
-    }
-
-    .match-avatar-fallback {
-      width: 100%;
-      height: 100%;
-      border-radius: 18px;
-      display: grid;
-      place-items: center;
-      font-weight: 900;
-      letter-spacing: .8px;
-      font-size: 1.05rem;
-      text-transform: uppercase;
-    }
-
-    .match-score-pill {
+    .match-page .m-hero::before {
+      content: "";
       position: absolute;
-      top: -10px;
-      right: -10px;
-      width: 52px;
-      height: 52px;
-      border-radius: 16px;
-      display: grid;
-      place-items: center;
-      font-weight: 900;
-      letter-spacing: .2px;
-      border: 1px solid rgba(0, 253, 216, 0.28);
+      inset: -30%;
+      pointer-events: none;
       background:
-        radial-gradient(180px 120px at 30% 20%, rgba(0, 253, 216, 0.22), transparent 60%),
-        rgba(0, 0, 0, 0.16);
-      box-shadow:
-        0 14px 30px rgba(0, 0, 0, 0.38),
-        0 0 0 1px rgba(0, 253, 216, 0.08) inset;
+        radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.26), transparent 60%),
+        radial-gradient(circle at 120% 120%, rgba(0, 253, 216, 0.18), transparent 58%);
+      opacity: 0.4;
+    }
+
+    .match-page .m-hero-inner {
+      position: relative;
+      display: contents;
+    }
+
+    .match-page .m-hero-left {
+      position: relative;
       z-index: 1;
     }
 
-    .match-connection-tag {
+    .match-page .m-kicker {
+      font-size: 0.82rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(224, 255, 250, 0.9);
+      opacity: 0.9;
+    }
+
+    .match-page .m-title {
+      margin-top: 0.45rem;
+      font-size: clamp(1.7rem, 2.2vw + 1.2rem, 2.3rem);
+      font-weight: 650;
+      letter-spacing: 0.03em;
+    }
+
+    .match-page .m-subtitle {
+      margin-top: 0.7rem;
+      font-size: 0.98rem;
+      max-width: 32rem;
+      opacity: 0.9;
+    }
+
+    .match-page .m-pill-row {
+      margin-top: 1.05rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+
+    .match-page .m-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.28rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.6);
+      background: rgba(0, 0, 0, 0.55);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.35),
+        0 0 22px rgba(0, 253, 216, 0.42);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      white-space: nowrap;
+    }
+
+    .match-page .m-pill-label {
+      opacity: 0.7;
+    }
+
+    .match-page .m-pill-value {
+      opacity: 0.95;
+    }
+
+    .match-page .m-pill-muted {
+      border-style: dashed;
+      opacity: 0.8;
+    }
+
+    .match-page .m-hero-right {
+      position: relative;
+      z-index: 1;
+    }
+
+    .match-page .m-snapshot-card {
+      padding: 1.1rem 1.1rem 1.2rem;
+      border-radius: 18px;
+      border: 1px solid rgba(0, 253, 216, 0.36);
+      background:
+        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.22), transparent 58%),
+        rgba(0, 0, 0, 0.9);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.3),
+        0 18px 55px rgba(0, 0, 0, 0.95);
+    }
+
+    .match-page .m-snapshot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.8rem;
+    }
+
+    .match-page .m-snapshot-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .match-page .m-snapshot-score-pill {
+      padding: 0.22rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.65);
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      background:
+        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.24), transparent 55%),
+        rgba(0, 0, 0, 0.96);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.4),
+        0 0 20px rgba(0, 253, 216, 0.6);
+      white-space: nowrap;
+    }
+
+    .match-page .m-snapshot-score-pill span {
+      opacity: 0.94;
+    }
+
+    .match-page .m-snapshot-body {
+      margin-top: 0.65rem;
+      font-size: 0.9rem;
+      opacity: 0.96;
+    }
+
+    .match-page .m-snapshot-meta {
+      margin-top: 0.7rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 0.8rem;
+      font-size: 0.83rem;
+      opacity: 0.94;
+    }
+
+    .match-page .m-snapshot-meta-label {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.76rem;
+      opacity: 0.75;
+    }
+
+    .match-page .m-snapshot-highlight {
+      margin-top: 0.75rem;
+      padding: 0.55rem 0.8rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.7);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.2), transparent 55%),
+        rgba(0, 0, 0, 0.9);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.55),
+        0 0 25px rgba(0, 253, 216, 0.6);
+      font-size: 0.86rem;
+    }
+
+    .match-page .m-snapshot-highlight-label {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.78rem;
+      opacity: 0.8;
+      margin-right: 0.4rem;
+    }
+
+    .match-page .m-snapshot-highlight-text {
+      opacity: 0.98;
+    }
+
+    .match-page .m-snapshot-picker {
+      margin-top: 0.85rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      font-size: 0.8rem;
+    }
+
+    .match-page .m-snapshot-chip {
+      padding: 0.16rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.4);
+      background: rgba(0, 0, 0, 0.88);
+      cursor: pointer;
+      opacity: 0.86;
+      transition:
+        background 160ms ease-out,
+        border-color 160ms ease-out,
+        opacity 160ms ease-out;
+    }
+
+    .match-page .m-snapshot-chip.is-active {
+      border-color: rgba(0, 253, 216, 0.8);
+      background:
+        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.24), transparent 55%),
+        rgba(0, 0, 0, 0.98);
+      opacity: 1;
+    }
+
+    .match-page .m-hero-footer {
+      margin-top: 0.8rem;
+      font-size: 0.78rem;
+      opacity: 0.92;
+    }
+
+    /* Filters */
+
+    .match-page .m-toolbar {
+      margin-top: 1.5rem;
+      padding: 1rem 1.1rem 1.05rem;
+      border-radius: 18px;
+      border: 1px solid rgba(0, 253, 216, 0.3);
+      background:
+        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.2), transparent 55%),
+        rgba(0, 0, 0, 0.9);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.25),
+        0 14px 40px rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.9rem 1.1rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .match-page .m-toggle-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .match-page .m-toggle-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      opacity: 0.78;
+      margin-right: 0.45rem;
+    }
+
+    .match-page .match-toggle {
+      padding: 0.16rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.3);
+      background: rgba(0, 0, 0, 0.9);
+      font-size: 0.8rem;
+      cursor: pointer;
+      opacity: 0.86;
+      transition:
+        background 150ms ease-out,
+        border-color 150ms ease-out,
+        opacity 150ms ease-out;
+    }
+
+    .match-page .match-toggle.is-active {
+      border-color: rgba(0, 253, 216, 0.8);
+      background:
+        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.22), transparent 55%),
+        rgba(0, 0, 0, 0.98);
+      opacity: 1;
+    }
+
+    .match-page .m-sort {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+    }
+
+    .match-page .m-sort label {
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      opacity: 0.78;
+    }
+
+    .match-page .m-sort select {
+      min-width: 150px;
+    }
+
+    /* Grid + cards */
+
+    .match-page .m-grid {
+      margin-top: 1.5rem;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.1rem;
+    }
+
+    .match-page .m-card {
+      position: relative;
+      padding: 1.2rem 1.2rem 1.4rem;
+      border-radius: 20px;
+      border: 1px solid rgba(0, 253, 216, 0.32);
+      background:
+        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.16), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.1), transparent 55%),
+        rgba(0, 0, 0, 0.8);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.2),
+        0 16px 40px rgba(0, 0, 0, 0.9);
+      overflow: hidden;
+      backdrop-filter: blur(16px);
+      cursor: pointer;
+      transition:
+        transform 180ms ease-out,
+        box-shadow 180ms ease-out,
+        border-color 180ms ease-out;
+    }
+
+    .match-page .m-card:hover,
+    .match-page .m-card:focus-within {
+      transform: translateY(-2px);
+      border-color: rgba(0, 253, 216, 0.65);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.42),
+        0 22px 55px rgba(0, 0, 0, 0.95);
+    }
+
+    .match-page .m-card.is-selected {
+      border-color: rgba(0, 253, 216, 0.9);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.7),
+        0 0 32px rgba(0, 253, 216, 0.85);
+    }
+
+    .match-page .m-card-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1.8fr) auto;
+      gap: 0.9rem;
+      align-items: center;
+    }
+
+    .match-page .m-card-left {
+      display: flex;
+      gap: 0.85rem;
+      align-items: center;
+    }
+
+    .match-page .m-avatar-circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: .35rem .6rem;
-      border-radius: 999px;
-      border: 1px solid rgba(0, 253, 216, 0.16);
-      background: rgba(0, 0, 0, 0.10);
-      font-weight: 800;
-      letter-spacing: .2px;
-      font-size: .85rem;
-      opacity: .98;
-    }
-
-    .match-card-body {
-      display: grid;
-      gap: .7rem;
-    }
-
-    .match-card-header {
-      display: grid;
-      gap: .45rem;
-    }
-
-    .match-name-row {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .match-name {
-      font-size: 1.1rem;
-      font-weight: 900;
-      letter-spacing: .2px;
-    }
-
-    .match-vibe {
-      opacity: .95;
-      line-height: 1.35;
-    }
-
-    .match-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .5rem;
-    }
-
-    .match-badge {
-      border: 1px solid rgba(0, 253, 216, 0.14);
-      background: rgba(0, 0, 0, 0.10);
-      padding: .38rem .6rem;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: .86rem;
-      letter-spacing: .1px;
-      opacity: .98;
-    }
-
-    .match-badge span {
-      opacity: .85;
-      font-weight: 800;
-    }
-
-    .match-summary {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: .65rem;
-    }
-
-    .match-summary-main p {
-      margin: 0;
-      line-height: 1.55;
-      opacity: .94;
-    }
-
-    .match-summary-pill {
-      border-radius: 16px;
-      padding: .65rem .75rem;
-      border: 1px solid rgba(0, 253, 216, 0.14);
       background:
-        radial-gradient(420px 200px at 20% 20%, rgba(0, 253, 216, 0.12), transparent 65%),
-        rgba(0, 0, 0, 0.10);
-      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.05) inset;
-      line-height: 1.45;
+        radial-gradient(circle at 30% 15%, rgba(0, 253, 216, 0.85), transparent 60%),
+        radial-gradient(circle at 70% 100%, rgba(0, 253, 216, 0.4), transparent 60%);
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.55),
+        0 0 22px rgba(0, 253, 216, 0.5);
+      font-weight: 700;
+      font-size: 1.2rem;
+      flex-shrink: 0;
     }
 
-    .match-summary-pill strong {
-      display: inline-block;
-      margin-right: .35rem;
+    .match-page .m-avatar-initial {
+      text-transform: uppercase;
     }
 
-    .match-card-footer {
+    .match-page .m-card-meta {
+      min-width: 0;
+    }
+
+    .match-page .m-card-name-row {
       display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: baseline;
+    }
+
+    .match-page .m-card-name {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .match-page .m-card-vibe {
+      font-size: 0.8rem;
+      opacity: 0.9;
+    }
+
+    .match-page .m-card-tag-row {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem 0.45rem;
+      font-size: 0.75rem;
+    }
+
+    .match-page .m-tag-pill {
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.3);
+      background: rgba(0, 0, 0, 0.9);
+      opacity: 0.92;
+      white-space: nowrap;
+    }
+
+    .match-page .m-tag-pill.m-tag-connection {
+      border-color: rgba(0, 253, 216, 0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      font-size: 0.72rem;
+    }
+
+    .match-page .m-score {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .match-page .m-score-ring {
+      --score: 0;
+      --ring-color: #00fdd8;
+      width: 64px;
+      height: 64px;
+      border-radius: 999px;
+      position: relative;
+      background:
+        conic-gradient(
+          var(--ring-color) calc(var(--score) * 1%),
+          rgba(0, 253, 216, 0.08) 0
+        );
+      box-shadow:
+        0 0 0 1px rgba(0, 253, 216, 0.4),
+        0 0 28px rgba(0, 253, 216, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .match-page .m-score-ring::before {
+      content: "";
+      position: absolute;
+      inset: 6px;
+      border-radius: inherit;
+      background: rgba(0, 0, 0, 0.95);
+    }
+
+    .match-page .m-score-inner {
+      position: relative;
+      text-align: center;
+      font-size: 0.78rem;
+    }
+
+    .match-page .m-score-value {
+      display: block;
+      font-size: 0.98rem;
+      font-weight: 600;
+    }
+
+    .match-page .m-score-label {
+      display: block;
+      font-size: 0.7rem;
+      opacity: 0.9;
+    }
+
+    .match-page .m-card-body {
+      margin-top: 0.8rem;
+      font-size: 0.86rem;
+      opacity: 0.96;
+    }
+
+    .match-page .m-card-body p + p {
+      margin-top: 0.45rem;
+    }
+
+    .match-page .m-card-meta-grid {
+      margin-top: 0.85rem;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr);
+      gap: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    .match-page .m-meta-item-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      opacity: 0.78;
+      margin-bottom: 0.15rem;
+    }
+
+    .match-page .m-meta-pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem 0.4rem;
+    }
+
+    .match-page .m-meta-pill {
+      padding: 0.12rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.28);
+      background: rgba(0, 0, 0, 0.9);
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+
+    .match-page .m-highlight-box {
+      padding: 0.55rem 0.7rem;
+      border-radius: 14px;
+      border: 1px solid rgba(0, 253, 216, 0.4);
+      background: rgba(0, 0, 0, 0.9);
+      font-size: 0.8rem;
+    }
+
+    .match-page .m-card-footer {
+      margin-top: 0.95rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem 0.7rem;
       align-items: center;
       justify-content: space-between;
-      gap: .75rem;
-      flex-wrap: wrap;
-      margin-top: .1rem;
+      font-size: 0.78rem;
     }
 
-    .m-card-actions {
+    .match-page .m-card-actions {
       display: flex;
-      gap: .55rem;
-      align-items: center;
       flex-wrap: wrap;
+      gap: 0.5rem;
     }
 
-    .m-card-actions .btn {
-      border-radius: 999px;
-      padding: .55rem .85rem;
-      font-weight: 900;
-      letter-spacing: .2px;
+    .match-page .m-card-actions .btn {
+      min-width: 150px;
     }
 
-    .m-card-actions .btn.m-card-add-btn {
-      border: 1px solid rgba(0, 253, 216, 0.24);
-      background: rgba(0, 0, 0, 0.12);
+    .match-page .m-add-circle-btn {
+      opacity: 0.92;
     }
 
-    .m-card-actions .btn.m-card-add-btn.in-circle {
-      opacity: .85;
-      cursor: default;
-      border-color: rgba(0, 253, 216, 0.15);
+    .match-page .m-add-circle-btn[aria-disabled="true"],
+    .match-page .m-add-circle-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
     }
 
-    .m-card-note {
-      opacity: .9;
-      font-size: .9rem;
-      line-height: 1.35;
+    .match-page .m-card-tip {
+      opacity: 0.8;
+      font-size: 0.76rem;
     }
 
-    .match-empty {
-      border-radius: 20px;
-      border: 1px dashed rgba(0, 253, 216, 0.22);
-      padding: 1.1rem 1.1rem 1.05rem;
-      background: rgba(0, 0, 0, 0.10);
-      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.05) inset;
+    /* Animations */
+
+    .match-page .match-section-animated {
+      opacity: 0;
+      transform: translateY(16px);
+      transition:
+        opacity 650ms ease-out,
+        transform 650ms ease-out;
     }
 
-    .match-empty h3 {
-      margin: 0 0 .35rem;
-      font-size: 1.05rem;
+    .match-page.m-animate .match-section-animated {
+      opacity: 1;
+      transform: translateY(0);
     }
 
-    .match-empty p {
-      margin: 0;
-      opacity: .92;
-      line-height: 1.55;
+    .match-page .m-delay-1 {
+      transition-delay: 60ms;
     }
 
-    @media (min-width: 920px) {
-      .match-hero {
-        grid-template-columns: 1.25fr .75fr;
-        align-items: start;
+    .match-page .m-delay-2 {
+      transition-delay: 120ms;
+    }
+
+    .match-page .m-delay-3 {
+      transition-delay: 180ms;
+    }
+
+    /* Responsive */
+
+    @media (min-width: 768px) {
+      .match-page .m-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
+    }
 
-      .match-controls {
-        margin-top: 0;
-      }
-
-      .match-grid {
-        grid-template-columns: 0.95fr 1.05fr;
-        gap: 1.1rem;
-        align-items: start;
-      }
-
-      .match-list {
-        gap: 1.1rem;
-      }
-
-      .match-snapshot-top {
-        grid-template-columns: 1fr auto;
-        align-items: center;
-      }
-
-      .match-snapshot-meta {
-        justify-content: flex-end;
-      }
-
-      .match-summary {
-        grid-template-columns: 1.2fr .8fr;
-        align-items: start;
+    @media (min-width: 1024px) {
+      .match-page .m-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
     }
 
     @media (max-width: 640px) {
-      .match-card-inner {
-        grid-template-columns: 1fr;
+      .match-page .m-hero {
+        grid-template-columns: minmax(0, 1fr);
       }
 
-      .match-card-hero {
-        flex-direction: row;
-        align-items: center;
-        gap: 0.75rem;
+      .match-page .m-card-header {
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: 0.75rem;
       }
 
-      .match-avatar-wrap {
-        width: 64px;
-        height: 64px;
-      }
-
-      .match-score-pill {
-        width: 44px;
-        height: 44px;
-        top: -6px;
-        right: -6px;
+      .match-page .m-score {
+        justify-content: flex-start;
       }
     }
 
+    /* Reduced motion */
+
     @media (prefers-reduced-motion: reduce) {
-      .match-card,
-      .match-toggle,
-      .match-snapshot-chip {
+      .match-page .match-section-animated {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+
+      .match-page .m-card,
+      .match-page .m-snapshot-chip {
         transition: none !important;
       }
     }
   </style>
 </head>
-
 <body class="soulink-bg">
-  <header class="topnav" data-active="Match" aria-label="Primary navigation">
-    <div class="topnav-inner">
+  <!-- Top Navigation (shared) -->
+  <header class="navbar soulink-nav" data-active="Match" aria-label="Primary navigation">
+    <div class="nav-inner">
       <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">
-        <span class="brand-mark" aria-hidden="true">⟡</span>
-        <span class="brand-text">Soulink</span>
+        Soulink
       </a>
 
-      <button class="nav-toggle" type="button" aria-label="Open menu" aria-controls="drawer" aria-expanded="false">
-        <span class="nav-toggle-bars" aria-hidden="true"></span>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
       </button>
 
-      <nav class="topnav-links" aria-label="Main menu">
+      <nav class="nav-links" aria-label="Primary">
         <a href="index.html" data-page="Home">Home</a>
         <a href="quiz.html" data-page="Quiz">Quiz</a>
         <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
         <a href="my-soul.html" data-page="My Soul">My Soul</a>
         <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
         <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
-        <a href="match.html" data-page="Match" aria-current="page">Match</a>
+        <a href="match.html" data-page="Match">Match</a>
         <a href="friends.html" data-page="Friends">Friends</a>
         <a href="results.html" data-page="Results">Results</a>
-        <a href="login.html" data-page="Login">Login</a>
+        <a href="login.html" data-page="Login">Log In</a>
         <a href="signup.html" data-page="Sign Up">Sign Up</a>
       </nav>
     </div>
-
-    <aside id="drawer" class="drawer" aria-label="Mobile navigation" aria-hidden="true">
-      <div class="drawer-inner">
-        <nav class="drawer-links" aria-label="Mobile menu">
-          <a href="index.html" data-page="Home">Home</a>
-          <a href="quiz.html" data-page="Quiz">Quiz</a>
-          <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
-          <a href="my-soul.html" data-page="My Soul">My Soul</a>
-          <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
-          <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
-          <a href="match.html" data-page="Match" aria-current="page">Match</a>
-          <a href="friends.html" data-page="Friends">Friends</a>
-          <a href="results.html" data-page="Results">Results</a>
-          <a href="login.html" data-page="Login">Login</a>
-          <a href="signup.html" data-page="Sign Up">Sign Up</a>
-        </nav>
-      </div>
-    </aside>
   </header>
 
-  <main class="match-page" role="main">
+  <main class="page match-page">
     <div class="page-inner">
-      <section class="match-hero" aria-label="Match Lab hero">
-        <div class="match-hero-card">
-          <div class="match-hero-top">
-            <h1 class="match-hero-title">Match Lab</h1>
-            <p class="match-hero-subtitle">
-              DEMO matches for now — crafted to feel alive and intelligent.
-              Later, we’ll swap the data source to real users while keeping this UI + flow.
-            </p>
-          </div>
+      <!-- EMPTY STATE -->
+      <section id="matchEmpty" class="m-empty-card" hidden aria-live="polite">
+        <div class="m-empty-title">
+          <span>🧪</span>
+          <span>No Matches Yet</span>
         </div>
-
-        <div class="match-hero-card">
-          <div class="match-controls" aria-label="Match controls">
-            <div class="match-toggle-row" role="radiogroup" aria-label="Connection filter">
-              <button class="match-toggle is-active" type="button" role="radio" aria-checked="true" data-connection-mode="all">All</button>
-              <button class="match-toggle" type="button" role="radio" aria-checked="false" data-connection-mode="romantic">Romantic</button>
-              <button class="match-toggle" type="button" role="radio" aria-checked="false" data-connection-mode="friendship">Friendship</button>
-            </div>
-
-            <div class="match-sort-row">
-              <label for="matchSortSelect">Sort</label>
-              <select id="matchSortSelect" name="matchSortSelect" aria-label="Sort matches">
-                <option value="best" selected>Best match</option>
-                <option value="spice">Most spice</option>
-                <option value="name">Name (A→Z)</option>
-              </select>
-            </div>
-          </div>
+        <p class="m-empty-subtitle">
+          Once your matches are ready, you'll see a glowing list of compatible souls here —
+          including both romantic and friendship energy.
+        </p>
+        <div class="m-empty-actions">
+          <a href="quiz.html" class="btn outline">Go to Quiz</a>
+          <a href="my-soul.html" class="btn">View My Soul Profile</a>
         </div>
       </section>
 
-      <section class="match-grid" aria-label="Match Lab layout">
-        <aside class="match-snapshot" aria-label="Match snapshot">
-          <div class="match-snapshot-top">
-            <h2 class="match-snapshot-title" id="matchSnapshotTitle">Select a connection</h2>
+      <!-- MAIN LAYOUT -->
+      <section id="matchLayout">
+        <!-- HERO / SNAPSHOT -->
+        <section id="matchHero" class="m-hero match-section-animated m-delay-1">
+          <div class="m-hero-inner">
+            <div class="m-hero-left">
+              <p class="m-kicker">Match Lab</p>
+              <h1 class="m-title">DEMO matches for now</h1>
+              <p class="m-subtitle">
+                Crafted to feel alive and intelligent. Later, we'll swap the data source to real users while keeping
+                this UI and flow.
+              </p>
 
-            <div class="match-snapshot-meta">
-              <div class="match-snapshot-score" id="matchSnapshotScore">
-                <strong>—</strong> <span>compatibility</span>
+              <div class="m-pill-row">
+                <span class="m-pill">
+                  <span class="m-pill-label">Mode</span>
+                  <span class="m-pill-value" id="matchModeLabel">All connections</span>
+                </span>
+                <span class="m-pill">
+                  <span class="m-pill-label">Source</span>
+                  <span class="m-pill-value">Demo soul set</span>
+                </span>
+                <span class="m-pill m-pill-muted">
+                  <span class="m-pill-label">Future</span>
+                  <span class="m-pill-value">Real-time AI matching</span>
+                </span>
               </div>
-              <div class="match-snapshot-focus" id="matchSnapshotFocus">Focus</div>
+
+              <p class="m-hero-footer">
+                Click any card on the right to update the snapshot with a deeper view of that connection.
+              </p>
             </div>
+
+            <aside class="m-hero-right" aria-label="Selected match snapshot">
+              <article class="m-snapshot-card">
+                <header class="m-snapshot-header">
+                  <h2 id="matchSnapshotTitle" class="m-snapshot-title">
+                    No match selected yet
+                  </h2>
+                  <div class="m-snapshot-score-pill">
+                    <span id="matchSnapshotScore">–%</span>
+                  </div>
+                </header>
+
+                <p id="matchSnapshotBody" class="m-snapshot-body">
+                  Tap a card in the Match Lab to see a gentle AI-style portrait of that connection — how your love
+                  languages, values and joys might interact, plus a symbolic look at astrology and numerology.
+                </p>
+
+                <div class="m-snapshot-meta">
+                  <span class="m-snapshot-meta-label">Focus</span>
+                  <span id="matchSnapshotFocus">Romantic &amp; Friendship</span>
+                </div>
+
+                <div class="m-snapshot-highlight">
+                  <span class="m-snapshot-highlight-label">Highlight</span>
+                  <span id="matchSnapshotHighlight" class="m-snapshot-highlight-text">
+                    Scores are information, not fate. Honest communication and small consistent actions will always
+                    matter more than any number.
+                  </span>
+                </div>
+
+                <div id="matchSnapshotPicker" class="m-snapshot-picker" aria-label="Snapshot focus picker">
+                  <button
+                    type="button"
+                    class="m-snapshot-chip is-active"
+                    data-focus="overview"
+                  >
+                    Overview
+                  </button>
+                  <button
+                    type="button"
+                    class="m-snapshot-chip"
+                    data-focus="love"
+                  >
+                    Love language
+                  </button>
+                  <button
+                    type="button"
+                    class="m-snapshot-chip"
+                    data-focus="values"
+                  >
+                    Values
+                  </button>
+                  <button
+                    type="button"
+                    class="m-snapshot-chip"
+                    data-focus="joy"
+                  >
+                    Joys
+                  </button>
+                  <button
+                    type="button"
+                    class="m-snapshot-chip"
+                    data-focus="astro"
+                  >
+                    Astro &amp; numbers
+                  </button>
+                </div>
+              </article>
+            </aside>
+          </div>
+        </section>
+
+        <!-- FILTERS -->
+        <section class="m-toolbar match-section-animated m-delay-2" aria-label="Match filters and sorting">
+          <div class="m-toggle-group">
+            <span class="m-toggle-label">Type</span>
+            <button
+              type="button"
+              class="match-toggle is-active"
+              data-connection-mode="all"
+            >
+              All
+            </button>
+            <button
+              type="button"
+              class="match-toggle"
+              data-connection-mode="romantic"
+            >
+              Romantic
+            </button>
+            <button
+              type="button"
+              class="match-toggle"
+              data-connection-mode="friendship"
+            >
+              Friendship
+            </button>
           </div>
 
-          <div class="match-snapshot-picker" id="matchSnapshotPicker" aria-hidden="false"></div>
-
-          <div class="match-snapshot-body" id="matchSnapshotBody">
-            <p>Pick a card on the right to see an AI-style compatibility snapshot here.</p>
+          <div class="m-sort">
+            <label for="matchSortSelect">Sort</label>
+            <select id="matchSortSelect" aria-label="Sort matches">
+              <option value="best">Best match</option>
+              <option value="name">Name A–Z</option>
+              <option value="spice">Spice factor</option>
+            </select>
           </div>
+        </section>
 
-          <div class="match-snapshot-highlight" id="matchSnapshotHighlight" aria-label="Snapshot highlight">
-            <strong>Small action</strong>
-            A gentle suggestion will appear here.
+        <!-- GRID -->
+        <section class="match-section-animated m-delay-3">
+          <header class="m-section-header">
+            <h2 class="visually-hidden">Match Lab list</h2>
+          </header>
+
+          <div id="matchList" class="m-grid match-section-animated m-delay-3">
+            <!-- Match cards rendered by match.js -->
           </div>
-        </aside>
-
-        <section aria-label="Matches list">
-          <div class="match-list" id="matchList" aria-live="polite"></div>
-
-          <template id="matchEmptyTemplate">
-            <div class="match-empty" role="status">
-              <h3>No matches for this filter</h3>
-              <p>Try switching to <strong>All</strong> or change sorting.</p>
-            </div>
-          </template>
         </section>
       </section>
     </div>
   </main>
 
-  <footer class="footer" aria-label="Soulink footer">
-    <div class="footer-inner">
-      <div class="footer-brand">
-        <span class="footer-mark" aria-hidden="true">⟡</span>
-        <span class="footer-text">Soulink</span>
-      </div>
-      <div class="footer-links">
-        <a href="privacy.html">Privacy</a>
-        <a href="terms.html">Terms</a>
-        <a href="mission.html">Mission</a>
-      </div>
-      <div class="footer-note">
-        <span>Created with love by Soulink Team.</span>
-        <span>© <span id="year"></span></span>
-      </div>
-    </div>
+  <footer class="footer-note">
+    © 2025 Soulink.global | Created with love by Soulink Team.
   </footer>
-
-  <script>
-    (function () {
-      var y = document.getElementById("year");
-      if (y) y.textContent = String(new Date().getFullYear());
-    })();
-  </script>
 </body>
 </html>
