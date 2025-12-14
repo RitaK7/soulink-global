@@ -291,8 +291,10 @@
     },
   ];
 
-  function getDemoMatches() {
-    // Future: replace this with real matches without changing downstream logic
+  // ===================== Matches source switch (single future swap point) =====================
+
+  function getMatchesSource() {
+    // Future: swap implementation here only (e.g., real-user matching) without changing downstream UI logic.
     return DEMO_MATCHES.slice();
   }
 
@@ -490,9 +492,7 @@
 
     const main = hobbies.slice(0, 4);
     const joined =
-      main.length === 1
-        ? main[0]
-        : main.slice(0, -1).join(", ") + " and " + main[main.length - 1];
+      main.length === 1 ? main[0] : main.slice(0, -1).join(", ") + " and " + main[main.length - 1];
 
     return (
       "You’ll likely find lighter, more playful energy together around: " +
@@ -671,11 +671,12 @@
 
   function renderMatchCard(match, isSelected, friendsList) {
     const inCircle = isInFriends(match, friendsList);
+    const sid = stableIdForMatch(match);
 
     const card = document.createElement("article");
     card.className = "m-card";
     card.setAttribute("tabindex", "0");
-    card.setAttribute("data-id", normaliseText(match.id) || "");
+    card.setAttribute("data-id", sid);
     card.setAttribute("data-connection-type", normaliseText(match.connectionType) || "");
     card.setAttribute("data-score", Number.isFinite(match.score) ? String(match.score) : "");
     if (isSelected) card.classList.add("is-selected");
@@ -705,10 +706,12 @@
 
     const nameEl = document.createElement("div");
     nameEl.className = "m-card-name";
+    nameEl.title = normaliseText(match.name) || "";
     nameEl.textContent = normaliseText(match.name) || "Unnamed match";
 
     const vibeEl = document.createElement("div");
     vibeEl.className = "m-card-vibe";
+    vibeEl.title = normaliseText(match.vibeTag) || "";
     vibeEl.textContent = normaliseText(match.vibeTag) || "Soft, emerging vibe";
 
     nameRow.appendChild(nameEl);
@@ -765,11 +768,10 @@
     body.className = "m-card-body";
 
     const bodyP1 = document.createElement("p");
-    bodyP1.textContent =
-      "This romantic currently reads as a exploration match match. Scores are information, not fate — honest communication and small consistent actions will always matter more than numbers.";
+    bodyP1.textContent = buildOverviewText(match);
 
     const bodyP2 = document.createElement("p");
-    bodyP2.textContent = "Ask yourself: “What would make this connection feel 5% kinder today?” and act on one small piece.";
+    bodyP2.textContent = buildHighlight(match);
 
     body.appendChild(bodyP1);
     body.appendChild(bodyP2);
@@ -842,7 +844,7 @@
     actions.className = "m-card-actions";
 
     const viewBtn = document.createElement("a");
-    viewBtn.href = "match-profile.html?id=" + encodeURIComponent(stableIdForMatch(match));
+    viewBtn.href = "match-profile.html?id=" + encodeURIComponent(sid);
     viewBtn.className = "btn outline";
     viewBtn.textContent = "View Match Profile";
     viewBtn.setAttribute("aria-label", "View detailed match profile for " + (normaliseText(match.name) || "this match"));
@@ -861,6 +863,7 @@
 
       const result = addMatchToFriends(match);
       if (result.added || result.already) {
+        state.friends = safeReadFriends();
         addBtn.textContent = "In Your Circle";
         addBtn.disabled = true;
         addBtn.setAttribute("aria-disabled", "true");
@@ -885,7 +888,7 @@
 
     // Card click to select
     function handleSelect() {
-      state.selectedId = stableIdForMatch(match);
+      state.selectedId = sid;
       updateSelectedCardHighlight();
       renderSnapshot(match);
     }
@@ -910,8 +913,12 @@
     });
   }
 
+  function getAllMatches() {
+    return getMatchesSource();
+  }
+
   function filteredAndSortedMatches() {
-    const allMatches = getDemoMatches();
+    const allMatches = getAllMatches();
 
     let filtered = allMatches;
     const mode = (state.connectionMode || "all").toLowerCase();
@@ -952,8 +959,22 @@
     return arr;
   }
 
+  function toggleEmptyState(showEmpty) {
+    if (ui.empty) ui.empty.hidden = !showEmpty;
+    if (ui.layout) ui.layout.hidden = !!showEmpty;
+  }
+
   function renderMatchList() {
     if (!ui.list) return;
+
+    const all = getAllMatches();
+    if (!all.length) {
+      toggleEmptyState(true);
+      ui.list.innerHTML = "";
+      renderSnapshot(null);
+      return;
+    }
+    toggleEmptyState(false);
 
     const matches = filteredAndSortedMatches();
     const friendsList = state.friends || [];
@@ -1002,6 +1023,9 @@
 
     updateModeLabel();
     renderMatchList();
+
+    const current = getAllMatches().find((m) => stableIdForMatch(m) === state.selectedId);
+    if (current) renderSnapshot(current);
   }
 
   function handleSortChange(event) {
@@ -1012,6 +1036,9 @@
       state.sortMode = "best";
     }
     renderMatchList();
+
+    const current = getAllMatches().find((m) => stableIdForMatch(m) === state.selectedId);
+    if (current) renderSnapshot(current);
   }
 
   function wireSnapshotPicker() {
@@ -1021,11 +1048,9 @@
       chip.addEventListener("click", () => {
         const focus = chip.getAttribute("data-focus") || "overview";
         setSnapshotFocus(focus);
-        const matches = filteredAndSortedMatches();
-        const current = matches.find((m) => stableIdForMatch(m) === state.selectedId);
-        if (current) {
-          renderSnapshot(current);
-        }
+
+        const current = getAllMatches().find((m) => stableIdForMatch(m) === state.selectedId);
+        if (current) renderSnapshot(current);
       });
     });
   }
@@ -1065,9 +1090,9 @@
       console.error("Match: init failed", err);
       if (ui.empty) {
         ui.empty.hidden = false;
-        ui.empty.textContent =
-          "We could not load your Match data right now. Please refresh the page or try again later.";
+        ui.empty.textContent = "We could not load your Match data right now. Please refresh the page or try again later.";
       }
+      if (ui.layout) ui.layout.hidden = true;
     }
   }
 
