@@ -1,364 +1,521 @@
+<!-- === FILE: results.html === -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Soulink – Results</title>
+  <meta charset="utf-8" />
+  <title>Soulink — Results</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Soulink Results — your snapshot, insights, matches, export and feedback." />
 
-  <!-- Soulink global styles -->
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="style.css" />
 
-  <!-- Global scripts (shared across pages) -->
   <script src="auth.js" defer></script>
   <script src="data-helpers.js" defer></script>
   <script src="nav.js" defer></script>
+
+  <!-- Optional helpers (results.js gracefully falls back if missing) -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
   <script src="results.js" defer></script>
 
-  <!-- Page-local CSS: layout, avatar, score pill, sticky left, toast, match grid -->
   <style>
-    /* Layout: two columns on desktop → stacked on mobile */
-    .results-page-grid {
-      display: grid;
-      grid-template-columns: 1.1fr 1.9fr;
-      gap: 1.2rem;
-      align-items: flex-start;
+    .results-page { position: relative; }
+    .results-page .page-inner { max-width: 1120px; margin: 0 auto; padding: 1.75rem 1.25rem 2.5rem; box-sizing: border-box; }
+
+    .topnav .brand { flex-shrink: 0; }
+    .topnav .nav-links { flex-wrap: wrap; gap: 0.65rem 0.85rem; justify-content: flex-end; }
+    .topnav .nav-links a { white-space: nowrap; }
+    @media (min-width: 860px) { .topnav .nav-links { white-space: normal; } }
+
+    .results-page::before{
+      content:"";
+      position:fixed;
+      inset:-40vh -40vw;
+      pointer-events:none;
+      opacity:0.9;
+      z-index:-1;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.14), transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.10), transparent 60%);
     }
 
-    @media (max-width: 960px) {
-      .results-page-grid {
-        grid-template-columns: 1fr;
-      }
+    .r-hero{
+      margin-top: 2rem;
+      padding: 1.8rem 1.6rem 1.9rem;
+      border-radius: 24px;
+      border: 1px solid rgba(0, 253, 216, 0.36);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.20), transparent 62%),
+        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.14), transparent 62%),
+        rgba(0, 0, 0, 0.86);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.24), 0 24px 70px rgba(0, 0, 0, 0.95);
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(18px);
     }
 
-    /* Sticky left column on larger screens */
-    @media (min-width: 1024px) {
-      .results-sticky-left {
-        position: sticky;
-        top: 88px;
-      }
+    .r-hero::after{
+      content:"";
+      position:absolute;
+      inset:-30%;
+      pointer-events:none;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.22), transparent 60%),
+        radial-gradient(circle at 120% 120%, rgba(0, 253, 216, 0.16), transparent 58%);
+      opacity:0.28;
     }
 
-    /* Match list grid */
-    .sl-list {
+    .r-hero > *{ position:relative; z-index:1; }
+
+    .r-kicker { font-size: 0.82rem; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(224, 255, 250, 0.92); opacity: 0.9; }
+    .r-title { margin-top: 0.45rem; font-size: clamp(1.7rem, 2.2vw + 1.2rem, 2.3rem); font-weight: 650; letter-spacing: 0.03em; }
+    .r-subtitle { margin-top: 0.7rem; font-size: 0.98rem; max-width: 44rem; opacity: 0.92; color: rgba(240, 255, 252, 0.92); }
+    .r-overview { margin-top: 0.85rem; font-size: 0.92rem; opacity: 0.92; color: rgba(236, 255, 252, 0.90); }
+
+    .r-pill-row { margin-top: 1.05rem; display: flex; flex-wrap: wrap; gap: 0.55rem; }
+    .r-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.28rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.50);
+      background: rgba(0, 0, 0, 0.62);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.22), 0 0 18px rgba(0, 253, 216, 0.28);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      white-space: nowrap;
+      color: rgba(236, 255, 252, 0.96);
+    }
+    .r-pill span:first-child { opacity: 0.7; }
+    .r-pill-muted { border-style: dashed; opacity: 0.82; }
+
+    .r-grid{
+      margin-top: 1.35rem;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 16px;
+      gap: 1rem;
+      align-items: start;
     }
 
-    @media (max-width: 480px) {
-      .sl-list {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* Cards & structure */
-    .results-page .card {
-      position: relative; /* anchor for score badge */
-    }
-
-    .sl-card {
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-    }
-
-    .sl-head {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 8px;
-    }
-
-    .sl-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 8px 0 12px;
-    }
-
-    .sl-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: auto;
-    }
-
-    /* Avatar */
-    .sl-avatar {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
+    .r-surface{
+      border-radius: 20px;
+      border: 1px solid rgba(0, 253, 216, 0.32);
+      background:
+        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.16), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.10), transparent 55%),
+        rgba(0, 0, 0, 0.84);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.20), 0 16px 40px rgba(0, 0, 0, 0.92);
       overflow: hidden;
-      flex: 0 0 56px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      font-size: 22px;
-      text-transform: uppercase;
+      backdrop-filter: blur(16px);
     }
 
-    .sl-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    @media (max-width: 480px) {
-      .sl-avatar {
-        width: 48px;
-        height: 48px;
-        font-size: 20px;
-      }
-    }
-
-    .sl-name {
-      font-weight: 800;
-      line-height: 1.2;
-    }
-
-    .sl-sub {
-      opacity: 0.9;
-      font-size: 0.95rem;
-    }
-
-    /* Score pill badge */
-    .score-badge {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-    }
-
-    .score-pill {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 3rem;
-      padding: 0.15rem 0.6rem;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      background: rgba(0, 253, 216, 0.14);
-      border: 1px solid rgba(0, 253, 216, 0.7);
-    }
-
-    /* Remove bullets for lists inside cards (we use chips) */
-    .card ul,
-    .card li {
-      list-style: none;
-      padding-left: 0;
-      margin-left: 0;
-    }
-    .card li::marker {
-      content: "";
-    }
-
-    /* Toast (feedback) */
-    .toast {
-      position: relative;
-      margin-top: 0.6rem;
-      padding: 0.5rem 0.75rem;
-      border: 1px solid var(--stroke);
-      border-radius: 10px;
-      background: rgba(0, 253, 216, 0.08);
-      color: var(--text);
-      opacity: 0;
-      transition: opacity 0.4s ease;
-      font-size: 0.9rem;
-    }
-
-    .toast.show {
-      opacity: 1;
-    }
-
-    .toast.hide {
-      opacity: 0;
-    }
-
-    .toast.is-success {
-      border-color: rgba(0, 253, 216, 0.9);
-    }
-
-    .toast.is-error {
-      border-color: #ff6b6b;
-    }
-
-    .toast.is-info {
-      border-color: rgba(0, 253, 216, 0.5);
-    }
-
-    /* Minor spacing tweaks */
-    .results-page h1.section-title {
-      margin-bottom: 0.8rem;
-    }
-
-    .results-page .card + .card {
-      margin-top: 1rem;
-    }
-
-    .results-page .section-title {
-      margin-bottom: 0.4rem;
-    }
-
-    .results-page .settings-row {
-      display: flex;
-      flex-wrap: wrap;
+    .r-surface-header{
+      padding: 1.05rem 1.1rem 0.2rem;
+      display:flex;
+      align-items:baseline;
       justify-content: space-between;
-      gap: 0.6rem;
-      margin-top: 0.6rem;
-      align-items: center;
+      gap: 0.75rem;
+    }
+    .r-surface-title{
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 650;
+      letter-spacing: 0.02em;
+      color: rgba(246, 255, 253, 0.96);
+    }
+    .r-surface-sub{
+      margin: 0.2rem 0 0;
+      padding: 0 1.1rem 0.9rem;
+      font-size: 0.86rem;
+      opacity: 0.9;
+      color: rgba(236, 255, 252, 0.90);
     }
 
-    .results-page .settings-buttons {
-      display: flex;
+    .r-surface-body{ padding: 0.95rem 1.1rem 1.1rem; }
+
+    .r-dl{
+      display:grid;
+      grid-template-columns: 120px minmax(0,1fr);
+      gap: 0.45rem 0.85rem;
+      margin: 0;
+      color: rgba(240, 255, 252, 0.92);
+    }
+    .r-dl dt{ opacity: 0.78; font-size: 0.82rem; letter-spacing: 0.06em; text-transform: uppercase; }
+    .r-dl dd{ margin: 0; font-size: 0.92rem; opacity: 0.95; overflow-wrap: anywhere; }
+
+    .r-controls{
+      display:flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .r-row{
+      display:flex;
       flex-wrap: wrap;
-      gap: 0.5rem;
+      gap: 0.65rem 0.8rem;
+      align-items: center;
+      justify-content: space-between;
     }
 
-    .results-page .hint {
-      font-size: 0.85rem;
-      opacity: 0.8;
+    .r-slider{
+      display:flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .r-slider label{
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.82;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .r-slider .r-mult{
+      padding: 0.12rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.28);
+      background: rgba(0, 0, 0, 0.72);
+      font-size: 0.78rem;
+      white-space: nowrap;
+      opacity: 0.95;
+    }
+
+    .r-actions{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      justify-content: flex-start;
+    }
+    .r-actions .btn{ min-width: 160px; }
+
+    .r-form{
+      display:flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .r-form input, .r-form textarea{
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(0, 253, 216, 0.28);
+      background: rgba(0, 0, 0, 0.72);
+      color: rgba(245, 255, 253, 0.96);
+      padding: 0.75rem 0.85rem;
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.16);
+    }
+    .r-form textarea{ min-height: 110px; resize: vertical; }
+
+    #fbToast{
+      margin-top: 0.75rem;
+      padding: 0.65rem 0.85rem;
+      border-radius: 14px;
+      border: 1px solid rgba(0, 253, 216, 0.32);
+      background: rgba(0, 0, 0, 0.78);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.18), 0 14px 34px rgba(0, 0, 0, 0.92);
+      color: rgba(246, 255, 253, 0.96);
+    }
+    #fbToast.is-error{ border-color: rgba(255, 120, 140, 0.55); box-shadow: 0 0 0 1px rgba(255, 120, 140, 0.25), 0 14px 34px rgba(0, 0, 0, 0.92); }
+    #fbToast.is-success{ border-color: rgba(0, 253, 216, 0.55); }
+    #fbToast.is-info{ border-style: dashed; opacity: 0.92; }
+    #fbToast.show{ opacity: 1; transform: translateY(0); transition: opacity 220ms ease-out, transform 220ms ease-out; }
+    #fbToast.hide{ opacity: 0; transform: translateY(6px); transition: opacity 220ms ease-in, transform 220ms ease-in; }
+
+    .r-section{
+      margin-top: 1.35rem;
+    }
+
+    .r-section-header{
+      display:flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.9rem;
+      margin: 0 0 0.75rem;
+    }
+    .r-section-header h2{
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 650;
+      letter-spacing: 0.02em;
+      color: rgba(246, 255, 253, 0.96);
+    }
+    .r-section-header p{
+      margin: 0;
+      font-size: 0.86rem;
+      opacity: 0.9;
+      color: rgba(236, 255, 252, 0.90);
+    }
+
+    .r-matches-grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      align-items: start;
+    }
+
+    #empty{
+      padding: 1.2rem 1.1rem;
+      border-radius: 18px;
+      border: 1px dashed rgba(0, 253, 216, 0.36);
+      background: rgba(0, 0, 0, 0.70);
+      color: rgba(236, 255, 252, 0.92);
+      opacity: 0.92;
+    }
+
+    .sl-card{
+      position: relative;
+      padding: 1.2rem 1.2rem 1.25rem;
+      border-radius: 20px;
+      border: 1px solid rgba(0, 253, 216, 0.32);
+      background:
+        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.16), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.10), transparent 55%),
+        rgba(0, 0, 0, 0.82);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.20), 0 16px 40px rgba(0, 0, 0, 0.92);
+      overflow: hidden;
+      backdrop-filter: blur(16px);
+      transition: transform 180ms ease-out, box-shadow 180ms ease-out, border-color 180ms ease-out;
+    }
+    .sl-card:hover, .sl-card:focus-within{
+      transform: translateY(-2px);
+      border-color: rgba(0, 253, 216, 0.60);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.36), 0 22px 55px rgba(0, 0, 0, 0.95);
+    }
+
+    .score-badge{
+      position:absolute;
+      top: 1rem;
+      right: 1rem;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .score-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.34);
+      background:
+        radial-gradient(circle at 35% 25%, rgba(0, 253, 216, 0.18), transparent 58%),
+        rgba(0, 0, 0, 0.78);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.18), 0 10px 24px rgba(0, 0, 0, 0.92);
+      font-size: 0.82rem;
+      font-weight: 650;
+      letter-spacing: 0.02em;
+      color: rgba(246, 255, 253, 0.96);
+      white-space: nowrap;
+    }
+
+    .sl-head{
+      display:flex;
+      gap: 0.85rem;
+      align-items:center;
+      padding-right: 5.2rem;
+      min-width: 0;
+    }
+    .sl-avatar{
+      width: 60px;
+      height: 60px;
+      border-radius: 999px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      background:
+        radial-gradient(circle at 30% 15%, rgba(0, 253, 216, 0.85), transparent 60%),
+        radial-gradient(circle at 70% 100%, rgba(0, 253, 216, 0.40), transparent 60%);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.55), 0 0 22px rgba(0, 253, 216, 0.50);
+      flex-shrink: 0;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: rgba(246, 255, 253, 0.96);
+      overflow:hidden;
+    }
+    .sl-avatar img{ width:100%; height:100%; object-fit: cover; display:block; }
+
+    .sl-name{ font-weight: 650; font-size: 1rem; color: rgba(246, 255, 253, 0.96); }
+    .sl-sub{ margin-top: 0.2rem; font-size: 0.82rem; opacity: 0.9; color: rgba(236, 255, 252, 0.90); }
+
+    .sl-badges{
+      margin-top: 0.85rem;
+      display:flex;
+      flex-wrap: wrap;
+      gap: 0.4rem 0.45rem;
+    }
+    .sl-card p{
+      margin-top: 0.75rem;
+      font-size: 0.90rem;
+      opacity: 0.94;
+      color: rgba(240, 255, 252, 0.92);
+    }
+
+    .sl-actions{
+      margin-top: 0.95rem;
+      display:flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+    .sl-actions .btn{ min-width: 160px; }
+
+    @media (max-width: 640px){
+      .sl-head{ padding-right: 0; }
+      .score-badge{ position: static; margin-top: 0.85rem; pointer-events: none; }
+      .sl-card{ padding-top: 1.1rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .sl-card, #fbToast{ transition: none !important; }
     }
   </style>
 </head>
+
 <body class="soulink-bg">
-<header class="navbar soulink-nav" data-active="Results" aria-label="Primary navigation">
-  <div class="nav-inner">
-    <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">
-      Soulink
-    </a>
+  <header class="topnav" data-active="Results" aria-label="Primary navigation">
+    <div class="topnav-inner">
+      <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">Soulink</a>
 
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-label="Toggle navigation">
-      <span></span><span></span><span></span>
-    </button>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primaryNav" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
 
-    <nav class="nav-links" aria-label="Primary">
-      <a href="index.html" data-page="Home">Home</a>
-      <a href="quiz.html" data-page="Quiz">Quiz</a>
-      <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
-      <a href="my-soul.html" data-page="My Soul">My Soul</a>
-      <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
-      <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
-      <a href="match.html" data-page="Match">Match</a>
-      <a href="friends.html" data-page="Friends">Friends</a>
-      <a href="results.html" data-page="Results">Results</a>
-      <a href="login.html" data-page="Login">Log In</a>
-      <a href="signup.html" data-page="Sign Up">Sign Up</a>
-    </nav>
-  </div>
-</header>
-  <main class="container results-page">
-    <h1 class="section-title">🏁 Results</h1>
+      <nav id="primaryNav" class="nav-links" aria-label="Primary">
+        <a href="index.html" data-page="Home">Home</a>
+        <a href="quiz.html" data-page="Quiz">Quiz</a>
+        <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
+        <a href="my-soul.html" data-page="My Soul">My Soul</a>
+        <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
+        <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
+        <a href="match.html" data-page="Match">Match</a>
+        <a href="friends.html" data-page="Friends">Friends</a>
+        <a href="results.html" data-page="Results">Results</a>
+        <a href="login.html" data-page="Login">Log In</a>
+        <a href="signup.html" data-page="Sign Up">Sign Up</a>
+      </nav>
+    </div>
+  </header>
 
-    <section class="results-page-grid">
-      <!-- LEFT: Feedback + Snapshot + Settings (sticky on desktop) -->
-      <div class="results-sticky-left">
-        <!-- Feedback -->
-        <section class="card" id="feedback-card">
-          <h3 class="section-title">Feedback</h3>
-
-          <div id="fbStars" class="row" aria-label="Rate your experience"></div>
-
-          <label style="display:block; margin-top:0.6rem;">
-            Email (optional)
-            <input id="fbEmail" type="email" placeholder="you@example.com">
-          </label>
-
-          <label style="display:block; margin-top:0.6rem;">
-            Comments
-            <textarea
-              id="fbMsg"
-              rows="3"
-              maxlength="600"
-              placeholder="What worked well? What should we improve?"
-            ></textarea>
-          </label>
-
-          <div class="row" style="margin-top:0.8rem;">
-            <button id="fbSend" class="btn" type="button">Send Feedback</button>
-          </div>
-
-          <!-- Toast: UX reakcija po siuntimo -->
-          <div id="fbToast" class="toast" aria-live="polite" hidden>
-            💫 Thank you for your feedback!
-          </div>
-        </section>
-
-        <!-- Your Snapshot -->
-        <section class="card">
-          <h3 class="section-title">Your Snapshot</h3>
-
-          <div class="row">
-            <div><strong>Name:</strong> <span id="me-name">—</span></div>
-            <div><strong>Connection:</strong> <span id="me-ct">—</span></div>
-            <div><strong>Love Language:</strong> <span id="me-ll">—</span></div>
-          </div>
-
-          <div style="margin-top:0.4rem;">
-            <strong>Hobbies:</strong> <span id="me-hobbies">—</span>
-          </div>
-          <div style="margin-top:0.2rem;">
-            <strong>Values:</strong> <span id="me-values">—</span>
-          </div>
-        </section>
-
-        <!-- Settings -->
-        <section class="card">
-          <h3 class="section-title">Settings</h3>
-
-          <label for="llWeight">
-            Love Language Weight
-            <small id="llw-label">1.0×</small>
-          </label>
-          <input
-            id="llWeight"
-            type="range"
-            min="0.0"
-            max="2.0"
-            step="0.1"
-            value="1.0"
-            style="width:100%; margin-top:0.4rem;"
-          >
-
-          <div class="settings-row">
-            <div class="settings-buttons">
-              <button id="btnExport" class="btn" type="button">Export Results JSON</button>
-              <button id="btnPrint" class="btn" type="button">Print / Save PDF</button>
-            </div>
-            <span class="hint">Edit friends on the Friends page.</span>
-          </div>
-        </section>
-      </div>
-
-      <!-- RIGHT: Top Matches + lists -->
-      <section class="card" style="margin:0;">
-        <h3 class="section-title">Top Matches</h3>
-
-        <p id="topOverview" class="hint" style="margin-bottom:0.4rem;"></p>
-        <p id="insights" class="hint" style="margin-bottom:0.6rem;"></p>
-
-        <h4 class="section-title" style="margin-top:0.6rem;">Romantic</h4>
-        <section id="romantic" class="sl-list" aria-live="polite"></section>
-
-        <h4 class="section-title" style="margin-top:1rem;">Friendship</h4>
-        <section id="friendship" class="sl-list" aria-live="polite"></section>
-
-        <p id="empty" class="hint" style="display:none; margin-top:0.6rem;">
-          No matches yet. Once you connect with people in Soulink, their profiles will appear here.
+  <main class="page results-page">
+    <div class="page-inner">
+      <section class="r-hero" aria-label="Results overview">
+        <p class="r-kicker">Results</p>
+        <h1 class="r-title">Your Soul Snapshot & Match Insights</h1>
+        <p id="topOverview" class="r-subtitle">
+          Your Results will appear here after you complete the Quiz and profile.
         </p>
+
+        <div class="r-pill-row" aria-label="Quick insights">
+          <span class="r-pill"><span>Mode</span><span>Romantic + Friendship</span></span>
+          <span class="r-pill"><span>Export</span><span>JSON / PDF</span></span>
+          <span class="r-pill r-pill-muted"><span>Powered</span><span>By Soulprint</span></span>
+        </div>
+
+        <p id="insights" class="r-overview"></p>
       </section>
-    </section>
+
+      <section class="r-grid" aria-label="Snapshot and tools">
+        <article class="r-surface" aria-label="My snapshot">
+          <header class="r-surface-header">
+            <h2 class="r-surface-title">My snapshot</h2>
+          </header>
+          <p class="r-surface-sub">A quick read of your base profile that powers scoring.</p>
+          <div class="r-surface-body">
+            <dl class="r-dl">
+              <dt>Name</dt><dd id="me-name">—</dd>
+              <dt>Type</dt><dd id="me-ct">—</dd>
+              <dt>Love</dt><dd id="me-ll">—</dd>
+              <dt>Hobbies</dt><dd id="me-hobbies">—</dd>
+              <dt>Values</dt><dd id="me-values">—</dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="r-surface" aria-label="Tuning and export">
+          <header class="r-surface-header">
+            <h2 class="r-surface-title">Tuning & export</h2>
+          </header>
+          <p class="r-surface-sub">Adjust the weight and export your results.</p>
+          <div class="r-surface-body">
+            <div class="r-controls">
+              <div class="r-slider">
+                <label for="llWeight">
+                  Love Language Weight
+                  <span class="r-mult" id="llw-label">1.0×</span>
+                </label>
+                <input id="llWeight" type="range" min="0" max="2" step="0.1" value="1" aria-label="Love Language Weight" />
+              </div>
+
+              <div class="r-actions">
+                <button id="btnExport" type="button" class="btn outline">Export JSON</button>
+                <button id="btnPrint" type="button" class="btn">Print / Save PDF</button>
+              </div>
+
+              <p style="margin:0; font-size:0.82rem; opacity:0.88; color:rgba(236,255,252,0.90);">
+                Tip: If PDF export isn’t available, the page will use standard print instead.
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article class="r-surface" aria-label="Feedback">
+          <header class="r-surface-header">
+            <h2 class="r-surface-title">Feedback</h2>
+          </header>
+          <p class="r-surface-sub">Help us improve the experience (stars or a short note).</p>
+          <div class="r-surface-body">
+            <form class="r-form" action="#" method="post" aria-label="Feedback form">
+              <div>
+                <div id="fbStars" class="r-row" aria-label="Star rating"></div>
+              </div>
+
+              <input id="fbEmail" type="email" inputmode="email" autocomplete="email" placeholder="Your email (optional)" aria-label="Your email (optional)" />
+              <textarea id="fbMsg" placeholder="Your message (optional, required if no rating)" aria-label="Your message"></textarea>
+
+              <div class="r-actions">
+                <button id="fbSend" type="button" class="btn">Send Feedback</button>
+              </div>
+
+              <div id="fbToast" hidden role="status" aria-live="polite"></div>
+            </form>
+          </div>
+        </article>
+      </section>
+
+      <section class="r-section" aria-label="Matches">
+        <div class="r-section-header">
+          <h2>Matches</h2>
+          <p id="empty">No matches yet. Complete your Quiz to generate Results.</p>
+        </div>
+
+        <div class="r-matches-grid" aria-label="Match lists">
+          <section class="r-surface" aria-label="Romantic matches">
+            <header class="r-surface-header">
+              <h3 class="r-surface-title" style="font-size:1rem;">Romantic</h3>
+            </header>
+            <p class="r-surface-sub">Matches tuned for romantic energy.</p>
+            <div class="r-surface-body">
+              <div id="romantic" class="r-matches-grid" aria-label="Romantic match cards"></div>
+            </div>
+          </section>
+
+          <section class="r-surface" aria-label="Friendship matches">
+            <header class="r-surface-header">
+              <h3 class="r-surface-title" style="font-size:1rem;">Friendship</h3>
+            </header>
+            <p class="r-surface-sub">Matches tuned for friendship and shared life energy.</p>
+            <div class="r-surface-body">
+              <div id="friendship" class="r-matches-grid" aria-label="Friendship match cards"></div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </div>
   </main>
 
-  <!-- Simple pager below main content -->
-  <section class="container" style="margin: 1rem auto 0.5rem;">
-    <a href="friends.html" class="btn">&larr; Back to Friends</a>
-  </section>
-
-  <!-- FOOTER (canonical; do not change text) -->
   <footer class="footer-note">
-    © 2025 Soulink.global | Created with love by Soulink Team
+    © 2025 Soulink.global | Created with love by Soulink Team.
   </footer>
 </body>
 </html>
