@@ -1,14 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Soulink Match Lab (DEMO matches for now) -->
   <meta charset="utf-8" />
   <title>Soulink — Match</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta
-    name="description"
-    content="Soulink Match — a glowing AI compatibility lab that weaves love language, values, joys, astrology and numerology into one view."
-  />
+  <meta name="description" content="Soulink Match Lab — demo matches now, clean path to real users later." />
   <link rel="stylesheet" href="style.css" />
   <script src="auth.js" defer></script>
   <script src="data-helpers.js" defer></script>
@@ -16,16 +12,8 @@
   <script src="match.js" defer></script>
 
   <style>
-    .match-page {
-      position: relative;
-    }
-
-    .match-page .page-inner {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 1.75rem 1.25rem 2.5rem;
-      box-sizing: border-box;
-    }
+    .match-page { position: relative; }
+    .match-page .page-inner { max-width: 1120px; margin: 0 auto; padding: 1.75rem 1.25rem 2.5rem; box-sizing: border-box; }
 
     .match-page::before {
       content: "";
@@ -36,53 +24,24 @@
       z-index: -1;
       background:
         radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.14), transparent 60%),
-        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.1), transparent 60%);
+        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.10), transparent 60%);
     }
 
-    /* Empty state */
-
-    .match-page .m-empty-card {
+    .m-empty-card {
       margin-top: 2.25rem;
       padding: 1.8rem 1.6rem 1.9rem;
       border-radius: 22px;
       border: 1px solid rgba(0, 253, 216, 0.32);
-      background:
-        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.18), transparent 55%),
-        rgba(0, 0, 0, 0.84);
-      box-shadow:
-        0 0 0 1px rgba(0, 253, 216, 0.28),
-        0 22px 60px rgba(0, 0, 0, 0.92);
+      background: radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.18), transparent 55%), rgba(0, 0, 0, 0.84);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.28), 0 22px 60px rgba(0, 0, 0, 0.92);
       text-align: left;
     }
+    .m-empty-title { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 1.05rem; letter-spacing: 0.03em; }
+    .m-empty-subtitle { margin-top: 0.75rem; font-size: 0.95rem; opacity: 0.9; }
+    .m-empty-actions { margin-top: 1.25rem; display: flex; flex-wrap: wrap; gap: 0.85rem; }
+    .m-empty-actions .btn { min-width: 170px; }
 
-    .match-page .m-empty-title {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
-      font-size: 1.05rem;
-      letter-spacing: 0.03em;
-    }
-
-    .match-page .m-empty-subtitle {
-      margin-top: 0.75rem;
-      font-size: 0.95rem;
-      opacity: 0.9;
-    }
-
-    .match-page .m-empty-actions {
-      margin-top: 1.25rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.85rem;
-    }
-
-    .match-page .m-empty-actions .btn {
-      min-width: 170px;
-    }
-
-    /* Hero / overview */
-
-    .match-page .m-hero {
+    .m-hero {
       margin-top: 2rem;
       padding: 1.8rem 1.6rem 1.9rem;
       border-radius: 24px;
@@ -91,11 +50,9 @@
         radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.22), transparent 60%),
         radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.16), transparent 60%),
         rgba(0, 0, 0, 0.84);
-      box-shadow:
-        0 0 0 1px rgba(0, 253, 216, 0.3),
-        0 24px 70px rgba(0, 0, 0, 0.95);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.30), 0 24px 70px rgba(0, 0, 0, 0.95);
       display: grid;
-      grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.6fr);
+      grid-template-columns: minmax(0, 1.9fr) minmax(0, 1.5fr);
       gap: 1.6rem;
       align-items: stretch;
       position: relative;
@@ -103,7 +60,7 @@
       backdrop-filter: blur(18px);
     }
 
-    .match-page .m-hero::before {
+    .m-hero::before {
       content: "";
       position: absolute;
       inset: -30%;
@@ -114,655 +71,233 @@
       opacity: 0.4;
     }
 
-    .match-page .m-hero-inner {
-      position: relative;
-      display: contents;
-    }
-
-    .match-page .m-hero-left {
-      position: relative;
-      z-index: 1;
-    }
-
-    .match-page .m-kicker {
-      font-size: 0.82rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: rgba(224, 255, 250, 0.9);
-      opacity: 0.9;
-    }
-
-    .match-page .m-title {
-      margin-top: 0.45rem;
-      font-size: clamp(1.7rem, 2.2vw + 1.2rem, 2.3rem);
-      font-weight: 650;
-      letter-spacing: 0.03em;
-    }
-
-    .match-page .m-subtitle {
-      margin-top: 0.7rem;
-      font-size: 0.98rem;
-      max-width: 32rem;
-      opacity: 0.9;
-    }
-
-    .match-page .m-pill-row {
-      margin-top: 1.05rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.55rem;
-    }
-
-    .match-page .m-pill {
+    .m-hero-left, .m-hero-right { position: relative; z-index: 1; }
+    .m-kicker { font-size: 0.82rem; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(224, 255, 250, 0.9); opacity: 0.9; }
+    .m-title { margin-top: 0.45rem; font-size: clamp(1.7rem, 2.2vw + 1.2rem, 2.3rem); font-weight: 650; letter-spacing: 0.03em; }
+    .m-subtitle { margin-top: 0.7rem; font-size: 0.98rem; max-width: 34rem; opacity: 0.9; }
+    .m-pill-row { margin-top: 1.05rem; display: flex; flex-wrap: wrap; gap: 0.55rem; }
+    .m-pill {
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
       padding: 0.28rem 0.9rem;
       border-radius: 999px;
-      border: 1px solid rgba(0, 253, 216, 0.6);
+      border: 1px solid rgba(0, 253, 216, 0.60);
       background: rgba(0, 0, 0, 0.55);
-      box-shadow:
-        0 0 0 1px rgba(0, 253, 216, 0.35),
-        0 0 22px rgba(0, 253, 216, 0.42);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.35), 0 0 22px rgba(0, 253, 216, 0.42);
       font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.12em;
       white-space: nowrap;
     }
+    .m-pill-label { opacity: 0.7; }
+    .m-pill-value { opacity: 0.95; }
+    .m-pill-muted { border-style: dashed; opacity: 0.8; }
+    .m-hero-footer { margin-top: 0.8rem; font-size: 0.78rem; opacity: 0.92; }
 
-    .match-page .m-pill-label {
-      opacity: 0.7;
-    }
-
-    .match-page .m-pill-value {
-      opacity: 0.95;
-    }
-
-    .match-page .m-pill-muted {
-      border-style: dashed;
-      opacity: 0.8;
-    }
-
-    .match-page .m-hero-right {
-      position: relative;
-      z-index: 1;
-    }
-
-    .match-page .m-snapshot-card {
+    .m-snapshot-card {
       padding: 1.1rem 1.1rem 1.2rem;
       border-radius: 18px;
       border: 1px solid rgba(0, 253, 216, 0.36);
-      background:
-        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.22), transparent 58%),
-        rgba(0, 0, 0, 0.9);
-      box-shadow:
-        0 0 0 1px rgba(0, 253, 216, 0.3),
-        0 18px 55px rgba(0, 0, 0, 0.95);
+      background: radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.22), transparent 58%), rgba(0, 0, 0, 0.90);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.30), 0 18px 55px rgba(0, 0, 0, 0.95);
     }
-
-    .match-page .m-snapshot-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 0.8rem;
-    }
-
-    .match-page .m-snapshot-title {
-      font-size: 1.05rem;
-      font-weight: 600;
-    }
-
-    .match-page .m-snapshot-score-pill {
+    .m-snapshot-header { display: flex; justify-content: space-between; align-items: baseline; gap: 0.8rem; }
+    .m-snapshot-title { font-size: 1.05rem; font-weight: 600; }
+    .m-snapshot-score-pill {
       padding: 0.22rem 0.7rem;
       border-radius: 999px;
       border: 1px solid rgba(0, 253, 216, 0.65);
       font-size: 0.78rem;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      background:
-        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.24), transparent 55%),
-        rgba(0, 0, 0, 0.96);
-      box-shadow:
-        0 0 0 1px rgba(0, 253, 216, 0.4),
-        0 0 20px rgba(0, 253, 216, 0.6);
+      background: radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.24), transparent 55%), rgba(0, 0, 0, 0.96);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.40), 0 0 20px rgba(0, 253, 216, 0.60);
       white-space: nowrap;
     }
-
-    .match-page .m-snapshot-score-pill span {
-      opacity: 0.94;
-    }
-
-    .match-page .m-snapshot-body {
-      margin-top: 0.65rem;
-      font-size: 0.9rem;
-      opacity: 0.96;
-    }
-
-    .match-page .m-snapshot-meta {
-      margin-top: 0.7rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem 0.8rem;
-      font-size: 0.83rem;
-      opacity: 0.94;
-    }
-
-    .match-page .m-snapshot-meta-label {
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      font-size: 0.76rem;
-      opacity: 0.75;
-    }
-
-    .match-page .m-snapshot-highlight {
+    .m-snapshot-score-pill span { opacity: 0.94; }
+    .m-snapshot-body { margin-top: 0.65rem; font-size: 0.9rem; opacity: 0.96; }
+    .m-snapshot-meta { margin-top: 0.7rem; display: flex; flex-wrap: wrap; gap: 0.35rem 0.8rem; font-size: 0.83rem; opacity: 0.94; }
+    .m-snapshot-meta-label { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.76rem; opacity: 0.75; }
+    .m-snapshot-highlight {
       margin-top: 0.75rem;
       padding: 0.55rem 0.8rem;
       border-radius: 999px;
-      border: 1px solid rgba(0, 253, 216, 0.7);
-      background:
-        radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.2), transparent 55%),
-        rgba(0, 0, 0, 0.9);
-      box-shadow:
-        0 0 0 1px rgba(0, 253, 216, 0.55),
-        0 0 25px rgba(0, 253, 216, 0.6);
+      border: 1px solid rgba(0, 253, 216, 0.70);
+      background: radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.20), transparent 55%), rgba(0, 0, 0, 0.90);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.55), 0 0 25px rgba(0, 253, 216, 0.60);
       font-size: 0.86rem;
     }
-
-    .match-page .m-snapshot-highlight-label {
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      font-size: 0.78rem;
-      opacity: 0.8;
-      margin-right: 0.4rem;
-    }
-
-    .match-page .m-snapshot-highlight-text {
-      opacity: 0.98;
-    }
-
-    .match-page .m-snapshot-picker {
-      margin-top: 0.85rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.45rem;
-      font-size: 0.8rem;
-    }
-
-    .match-page .m-snapshot-chip {
+    .m-snapshot-highlight-label { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.78rem; opacity: 0.8; margin-right: 0.4rem; }
+    .m-snapshot-highlight-text { opacity: 0.98; }
+    .m-snapshot-picker { margin-top: 0.85rem; display: flex; flex-wrap: wrap; gap: 0.45rem; font-size: 0.8rem; }
+    .m-snapshot-chip {
       padding: 0.16rem 0.55rem;
       border-radius: 999px;
-      border: 1px solid rgba(0, 253, 216, 0.4);
+      border: 1px solid rgba(0, 253, 216, 0.40);
       background: rgba(0, 0, 0, 0.88);
       cursor: pointer;
       opacity: 0.86;
-      transition:
-        background 160ms ease-out,
-        border-color 160ms ease-out,
-        opacity 160ms ease-out;
+      transition: background 160ms ease-out, border-color 160ms ease-out, opacity 160ms ease-out;
     }
-
-    .match-page .m-snapshot-chip.is-active {
-      border-color: rgba(0, 253, 216, 0.8);
-      background:
-        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.24), transparent 55%),
-        rgba(0, 0, 0, 0.98);
+    .m-snapshot-chip.is-active {
+      border-color: rgba(0, 253, 216, 0.80);
+      background: radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.24), transparent 55%), rgba(0, 0, 0, 0.98);
       opacity: 1;
     }
 
-    .match-page .m-hero-footer {
-      margin-top: 0.8rem;
-      font-size: 0.78rem;
-      opacity: 0.92;
-    }
-
-    /* Filters */
-
-    .match-page .m-toolbar {
+    .m-toolbar {
       margin-top: 1.5rem;
       padding: 1rem 1.1rem 1.05rem;
       border-radius: 18px;
-      border: 1px solid rgba(0, 253, 216, 0.3);
-      background:
-        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.2), transparent 55%),
-        rgba(0, 0, 0, 0.9);
-      box-shadow:
-        0 0 0 1px rgba(0, 253, 216, 0.25),
-        0 14px 40px rgba(0, 0, 0, 0.9);
+      border: 1px solid rgba(0, 253, 216, 0.30);
+      background: radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.20), transparent 55%), rgba(0, 0, 0, 0.90);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.25), 0 14px 40px rgba(0, 0, 0, 0.90);
       display: flex;
       flex-wrap: wrap;
       gap: 0.9rem 1.1rem;
       align-items: center;
       justify-content: space-between;
     }
-
-    .match-page .m-toggle-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      align-items: center;
-    }
-
-    .match-page .m-toggle-label {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.13em;
-      opacity: 0.78;
-      margin-right: 0.45rem;
-    }
-
-    .match-page .match-toggle {
+    .m-toggle-group { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+    .m-toggle-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.13em; opacity: 0.78; margin-right: 0.45rem; }
+    .match-toggle {
       padding: 0.16rem 0.7rem;
       border-radius: 999px;
-      border: 1px solid rgba(0, 253, 216, 0.3);
-      background: rgba(0, 0, 0, 0.9);
+      border: 1px solid rgba(0, 253, 216, 0.30);
+      background: rgba(0, 0, 0, 0.90);
       font-size: 0.8rem;
       cursor: pointer;
       opacity: 0.86;
-      transition:
-        background 150ms ease-out,
-        border-color 150ms ease-out,
-        opacity 150ms ease-out;
+      transition: background 150ms ease-out, border-color 150ms ease-out, opacity 150ms ease-out;
     }
-
-    .match-page .match-toggle.is-active {
-      border-color: rgba(0, 253, 216, 0.8);
-      background:
-        radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.22), transparent 55%),
-        rgba(0, 0, 0, 0.98);
+    .match-toggle.is-active {
+      border-color: rgba(0, 253, 216, 0.80);
+      background: radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.22), transparent 55%), rgba(0, 0, 0, 0.98);
       opacity: 1;
     }
+    .m-sort { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; }
+    .m-sort label { text-transform: uppercase; letter-spacing: 0.13em; opacity: 0.78; }
+    .m-sort select { min-width: 150px; }
 
-    .match-page .m-sort {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.8rem;
-    }
+    .m-grid { margin-top: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.1rem; }
 
-    .match-page .m-sort label {
-      text-transform: uppercase;
-      letter-spacing: 0.13em;
-      opacity: 0.78;
-    }
-
-    .match-page .m-sort select {
-      min-width: 150px;
-    }
-
-    /* Grid + cards */
-
-    .match-page .m-grid {
-      margin-top: 1.5rem;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      gap: 1.1rem;
-    }
-
-    .match-page .m-card {
+    .m-card {
       position: relative;
       padding: 1.2rem 1.2rem 1.4rem;
       border-radius: 20px;
       border: 1px solid rgba(0, 253, 216, 0.32);
       background:
         radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.16), transparent 55%),
-        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.1), transparent 55%),
-        rgba(0, 0, 0, 0.8);
-      box-shadow:
-        0 0 0 1px rgba(0, 253, 216, 0.2),
-        0 16px 40px rgba(0, 0, 0, 0.9);
+        radial-gradient(circle at 100% 100%, rgba(0, 253, 216, 0.10), transparent 55%),
+        rgba(0, 0, 0, 0.80);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.20), 0 16px 40px rgba(0, 0, 0, 0.90);
       overflow: hidden;
       backdrop-filter: blur(16px);
       cursor: pointer;
-      transition:
-        transform 180ms ease-out,
-        box-shadow 180ms ease-out,
-        border-color 180ms ease-out;
+      transition: transform 180ms ease-out, box-shadow 180ms ease-out, border-color 180ms ease-out;
     }
-
-    .match-page .m-card:hover,
-    .match-page .m-card:focus-within {
+    .m-card:hover, .m-card:focus-within {
       transform: translateY(-2px);
       border-color: rgba(0, 253, 216, 0.65);
-      box-shadow:
-        0 0 0 1px rgba(0, 253, 216, 0.42),
-        0 22px 55px rgba(0, 0, 0, 0.95);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.42), 0 22px 55px rgba(0, 0, 0, 0.95);
+    }
+    .m-card.is-selected {
+      border-color: rgba(0, 253, 216, 0.90);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.70), 0 0 32px rgba(0, 253, 216, 0.85);
     }
 
-    .match-page .m-card.is-selected {
-      border-color: rgba(0, 253, 216, 0.9);
-      box-shadow:
-        0 0 0 1px rgba(0, 253, 216, 0.7),
-        0 0 32px rgba(0, 253, 216, 0.85);
-    }
-
-    /* Prevent score overlap: keep score in-flow, fixed column, and allow text to wrap */
-    .match-page .m-card-header {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 72px;
-      gap: 0.9rem;
-      align-items: start;
-    }
-
-    .match-page .m-card-left {
-      display: flex;
-      gap: 0.85rem;
-      align-items: center;
-      min-width: 0;
-    }
-
-    .match-page .m-avatar-circle {
-      width: 56px;
-      height: 56px;
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+    .m-card-header { display: grid; grid-template-columns: minmax(0, 1fr) 72px; gap: 0.9rem; align-items: start; }
+    .m-card-left { display: flex; gap: 0.85rem; align-items: center; min-width: 0; }
+    .m-avatar-circle {
+      width: 60px; height: 60px; border-radius: 999px;
+      display: inline-flex; align-items: center; justify-content: center;
       background:
         radial-gradient(circle at 30% 15%, rgba(0, 253, 216, 0.85), transparent 60%),
-        radial-gradient(circle at 70% 100%, rgba(0, 253, 216, 0.4), transparent 60%);
-      box-shadow:
-        0 0 0 1px rgba(0, 253, 216, 0.55),
-        0 0 22px rgba(0, 253, 216, 0.5);
-      font-weight: 700;
-      font-size: 1.2rem;
-      flex-shrink: 0;
+        radial-gradient(circle at 70% 100%, rgba(0, 253, 216, 0.40), transparent 60%);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.55), 0 0 22px rgba(0, 253, 216, 0.50);
+      font-weight: 700; font-size: 1.2rem; flex-shrink: 0;
     }
-
-    .match-page .m-avatar-initial {
-      text-transform: uppercase;
+    .m-avatar-initial { text-transform: uppercase; }
+    .m-card-meta { min-width: 0; }
+    .m-card-name-row { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: baseline; min-width: 0; }
+    .m-card-name {
+      font-weight: 600; font-size: 1rem;
+      min-width: 0; max-width: 100%;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-
-    .match-page .m-card-meta {
-      min-width: 0;
+    .m-card-vibe {
+      font-size: 0.8rem; opacity: 0.9;
+      min-width: 0; max-width: 100%;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
+    .m-card-tag-row { margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.25rem 0.45rem; font-size: 0.75rem; }
+    .m-tag-pill { padding: 0.15rem 0.6rem; border-radius: 999px; border: 1px solid rgba(0, 253, 216, 0.30); background: rgba(0, 0, 0, 0.90); opacity: 0.92; white-space: nowrap; }
+    .m-tag-pill.m-tag-connection { border-color: rgba(0, 253, 216, 0.70); text-transform: uppercase; letter-spacing: 0.13em; font-size: 0.72rem; }
 
-    .match-page .m-card-name-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      align-items: baseline;
-      min-width: 0;
-    }
-
-    .match-page .m-card-name {
-      font-weight: 600;
-      font-size: 1rem;
-      min-width: 0;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .match-page .m-card-vibe {
-      font-size: 0.8rem;
-      opacity: 0.9;
-      min-width: 0;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .match-page .m-card-tag-row {
-      margin-top: 0.5rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.25rem 0.45rem;
-      font-size: 0.75rem;
-    }
-
-    .match-page .m-tag-pill {
-      padding: 0.15rem 0.6rem;
-      border-radius: 999px;
-      border: 1px solid rgba(0, 253, 216, 0.3);
-      background: rgba(0, 0, 0, 0.9);
-      opacity: 0.92;
-      white-space: nowrap;
-    }
-
-    .match-page .m-tag-pill.m-tag-connection {
-      border-color: rgba(0, 253, 216, 0.7);
-      text-transform: uppercase;
-      letter-spacing: 0.13em;
-      font-size: 0.72rem;
-    }
-
-    .match-page .m-score {
-      display: flex;
-      justify-content: flex-end;
-      align-self: start;
-      padding-top: 2px;
-    }
-
-    .match-page .m-score-ring {
+    .m-score { display: flex; justify-content: flex-end; align-self: start; padding-top: 2px; }
+    .m-score-ring {
       --score: 0;
       --ring-color: #00fdd8;
-      width: 64px;
-      height: 64px;
-      border-radius: 999px;
-      position: relative;
-      background:
-        conic-gradient(
-          var(--ring-color) calc(var(--score) * 1%),
-          rgba(0, 253, 216, 0.08) 0
-        );
-      box-shadow:
-        0 0 0 1px rgba(0, 253, 216, 0.4),
-        0 0 28px rgba(0, 253, 216, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+      width: 64px; height: 64px; border-radius: 999px; position: relative;
+      background: conic-gradient(var(--ring-color) calc(var(--score) * 1%), rgba(0, 253, 216, 0.08) 0);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.40), 0 0 28px rgba(0, 253, 216, 0.50);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
-
-    /* Remove “black dot” look inside the ring: use dark teal inner lens */
-    .match-page .m-score-ring::before {
+    .m-score-ring::before {
       content: "";
       position: absolute;
       inset: 6px;
       border-radius: inherit;
-      background:
-        radial-gradient(circle at 30% 20%, rgba(0, 253, 216, 0.12), transparent 60%),
-        rgba(0, 60, 67, 0.96);
-      box-shadow:
-        inset 0 0 0 1px rgba(0, 253, 216, 0.18),
-        inset 0 0 20px rgba(0, 253, 216, 0.12);
+      background: radial-gradient(circle at 30% 20%, rgba(0, 253, 216, 0.12), transparent 60%), rgba(0, 60, 67, 0.96);
+      box-shadow: inset 0 0 0 1px rgba(0, 253, 216, 0.18), inset 0 0 20px rgba(0, 253, 216, 0.12);
     }
+    .m-score-inner { position: relative; text-align: center; font-size: 0.78rem; }
+    .m-score-value { display: block; font-size: 0.98rem; font-weight: 600; }
+    .m-score-label { display: block; font-size: 0.7rem; opacity: 0.9; }
 
-    .match-page .m-score-inner {
-      position: relative;
-      text-align: center;
-      font-size: 0.78rem;
-    }
+    .m-card-body { margin-top: 0.8rem; font-size: 0.86rem; opacity: 0.96; }
+    .m-card-body p + p { margin-top: 0.45rem; }
 
-    .match-page .m-score-value {
-      display: block;
-      font-size: 0.98rem;
-      font-weight: 600;
-    }
+    .m-card-meta-grid { margin-top: 0.85rem; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr); gap: 0.5rem 0.75rem; font-size: 0.8rem; }
+    .m-meta-item-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.13em; opacity: 0.78; margin-bottom: 0.15rem; }
+    .m-meta-pill-row { display: flex; flex-wrap: wrap; gap: 0.25rem 0.4rem; }
+    .m-meta-pill { padding: 0.12rem 0.55rem; border-radius: 999px; border: 1px solid rgba(0, 253, 216, 0.28); background: rgba(0, 0, 0, 0.90); font-size: 0.78rem; white-space: nowrap; }
+    .m-highlight-box { padding: 0.55rem 0.7rem; border-radius: 14px; border: 1px solid rgba(0, 253, 216, 0.40); background: rgba(0, 0, 0, 0.90); font-size: 0.8rem; }
 
-    .match-page .m-score-label {
-      display: block;
-      font-size: 0.7rem;
-      opacity: 0.9;
-    }
+    .m-card-footer { margin-top: 0.95rem; display: flex; flex-wrap: wrap; gap: 0.6rem 0.7rem; align-items: center; justify-content: space-between; font-size: 0.78rem; }
+    .m-card-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .m-card-actions .btn { min-width: 150px; }
+    .m-add-circle-btn { opacity: 0.92; }
+    .m-add-circle-btn[aria-disabled="true"], .m-add-circle-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .m-card-tip { opacity: 0.8; font-size: 0.76rem; }
 
-    .match-page .m-card-body {
-      margin-top: 0.8rem;
-      font-size: 0.86rem;
-      opacity: 0.96;
-    }
-
-    .match-page .m-card-body p + p {
-      margin-top: 0.45rem;
-    }
-
-    .match-page .m-card-meta-grid {
-      margin-top: 0.85rem;
-      display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr);
-      gap: 0.5rem 0.75rem;
-      font-size: 0.8rem;
-    }
-
-    .match-page .m-meta-item-label {
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.13em;
-      opacity: 0.78;
-      margin-bottom: 0.15rem;
-    }
-
-    .match-page .m-meta-pill-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.25rem 0.4rem;
-    }
-
-    .match-page .m-meta-pill {
-      padding: 0.12rem 0.55rem;
-      border-radius: 999px;
-      border: 1px solid rgba(0, 253, 216, 0.28);
-      background: rgba(0, 0, 0, 0.9);
-      font-size: 0.78rem;
-      white-space: nowrap;
-    }
-
-    .match-page .m-highlight-box {
-      padding: 0.55rem 0.7rem;
-      border-radius: 14px;
-      border: 1px solid rgba(0, 253, 216, 0.4);
-      background: rgba(0, 0, 0, 0.9);
-      font-size: 0.8rem;
-    }
-
-    .match-page .m-card-footer {
-      margin-top: 0.95rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.6rem 0.7rem;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 0.78rem;
-    }
-
-    .match-page .m-card-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    .match-page .m-card-actions .btn {
-      min-width: 150px;
-    }
-
-    .match-page .m-add-circle-btn {
-      opacity: 0.92;
-    }
-
-    .match-page .m-add-circle-btn[aria-disabled="true"],
-    .match-page .m-add-circle-btn:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-
-    .match-page .m-card-tip {
-      opacity: 0.8;
-      font-size: 0.76rem;
-    }
-
-    /* Animations */
-
-    .match-page .match-section-animated {
-      opacity: 0;
-      transform: translateY(16px);
-      transition:
-        opacity 650ms ease-out,
-        transform 650ms ease-out;
-    }
-
-    .match-page.m-animate .match-section-animated {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .match-page .m-delay-1 {
-      transition-delay: 60ms;
-    }
-
-    .match-page .m-delay-2 {
-      transition-delay: 120ms;
-    }
-
-    .match-page .m-delay-3 {
-      transition-delay: 180ms;
-    }
-
-    /* Responsive */
-
-    @media (min-width: 768px) {
-      .match-page .m-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (min-width: 1024px) {
-      .match-page .m-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-    }
+    .match-section-animated { opacity: 0; transform: translateY(16px); transition: opacity 650ms ease-out, transform 650ms ease-out; }
+    .match-page.m-animate .match-section-animated { opacity: 1; transform: translateY(0); }
+    .m-delay-1 { transition-delay: 60ms; }
+    .m-delay-2 { transition-delay: 120ms; }
+    .m-delay-3 { transition-delay: 180ms; }
 
     @media (max-width: 640px) {
-      .match-page .m-hero {
-        grid-template-columns: minmax(0, 1fr);
-      }
-
-      .match-page .m-card-header {
-        grid-template-columns: minmax(0, 1fr);
-        row-gap: 0.75rem;
-      }
-
-      .match-page .m-score {
-        justify-content: flex-start;
-      }
-
-      .match-page .m-card-name,
-      .match-page .m-card-vibe {
-        white-space: normal;
-      }
+      .m-hero { grid-template-columns: minmax(0, 1fr); }
+      .m-card-header { grid-template-columns: minmax(0, 1fr); row-gap: 0.75rem; }
+      .m-score { justify-content: flex-start; }
+      .m-card-name, .m-card-vibe { white-space: normal; }
     }
 
-    /* Reduced motion */
-
     @media (prefers-reduced-motion: reduce) {
-      .match-page .match-section-animated {
-        opacity: 1 !important;
-        transform: none !important;
-        transition: none !important;
-      }
-
-      .match-page .m-card,
-      .match-page .m-snapshot-chip {
-        transition: none !important;
-      }
+      .match-section-animated { opacity: 1 !important; transform: none !important; transition: none !important; }
+      .m-card, .m-snapshot-chip, .match-toggle { transition: none !important; }
     }
   </style>
 </head>
 
 <body class="soulink-bg">
-  <!-- Top Navigation (shared via nav.js) -->
   <header class="topnav" data-active="Match" aria-label="Primary navigation">
     <div class="topnav-inner">
       <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">Soulink</a>
 
-      <button
-        class="nav-toggle"
-        type="button"
-        aria-expanded="false"
-        aria-controls="primaryNav"
-        aria-label="Toggle navigation"
-      >
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primaryNav" aria-label="Toggle navigation">
         <span></span><span></span><span></span>
       </button>
 
@@ -784,95 +319,69 @@
 
   <main class="page match-page">
     <div class="page-inner">
-      <!-- EMPTY STATE -->
       <section id="matchEmpty" class="m-empty-card" hidden aria-live="polite">
-        <div class="m-empty-title">
-          <span>🧪</span>
-          <span>No Matches Yet</span>
-        </div>
+        <div class="m-empty-title"><span>🧪</span><span>No Matches Yet</span></div>
         <p class="m-empty-subtitle">
-          Once your matches are ready, you'll see a glowing list of compatible souls here —
-          including both romantic and friendship energy.
+          When your matches are ready, you’ll see a glowing list of compatible souls here — including both romantic and friendship energy.
         </p>
         <div class="m-empty-actions">
           <a href="quiz.html" class="btn outline">Go to Quiz</a>
-          <a href="my-soul.html" class="btn">View My Soul Profile</a>
+          <a href="my-soul.html" class="btn">View My Soul</a>
         </div>
       </section>
 
-      <!-- MAIN LAYOUT -->
       <section id="matchLayout">
-        <!-- HERO / SNAPSHOT -->
         <section id="matchHero" class="m-hero match-section-animated m-delay-1">
-          <div class="m-hero-inner">
-            <div class="m-hero-left">
-              <p class="m-kicker">Match Lab</p>
-              <h1 class="m-title">DEMO matches for now</h1>
-              <p class="m-subtitle">
-                Crafted to feel alive and intelligent. Later, we'll swap the data source to real users while keeping
-                this UI and flow.
+          <div class="m-hero-left">
+            <p class="m-kicker">Match Lab</p>
+            <h1 class="m-title">Demo matches computed from your real profile</h1>
+            <p class="m-subtitle">
+              This page reads your base profile via data-helpers.js, then scores each DEMO match. Later, we’ll switch the match source to real users by changing one function only.
+            </p>
+
+            <div class="m-pill-row">
+              <span class="m-pill"><span class="m-pill-label">Type</span><span class="m-pill-value" id="matchModeLabel">All connections</span></span>
+              <span class="m-pill"><span class="m-pill-label">Base</span><span class="m-pill-value" id="baseSoulStatus">Loaded</span></span>
+              <span class="m-pill m-pill-muted"><span class="m-pill-label">Future</span><span class="m-pill-value">Real users</span></span>
+            </div>
+
+            <p class="m-hero-footer">Click any card to update the snapshot with a deeper view of that connection.</p>
+          </div>
+
+          <aside class="m-hero-right" aria-label="Selected match snapshot">
+            <article class="m-snapshot-card">
+              <header class="m-snapshot-header">
+                <h2 id="matchSnapshotTitle" class="m-snapshot-title">No match selected yet</h2>
+                <div class="m-snapshot-score-pill"><span id="matchSnapshotScore">–%</span></div>
+              </header>
+
+              <p id="matchSnapshotBody" class="m-snapshot-body">
+                Tap a card in the Match Lab to see a gentle compatibility portrait — love language, values, joys, and symbolic astro & numbers.
               </p>
 
-              <div class="m-pill-row">
-                <span class="m-pill">
-                  <span class="m-pill-label">Mode</span>
-                  <span class="m-pill-value" id="matchModeLabel">All connections</span>
-                </span>
-                <span class="m-pill">
-                  <span class="m-pill-label">Source</span>
-                  <span class="m-pill-value">Demo soul set</span>
-                </span>
-                <span class="m-pill m-pill-muted">
-                  <span class="m-pill-label">Future</span>
-                  <span class="m-pill-value">Real-time AI matching</span>
+              <div class="m-snapshot-meta">
+                <span class="m-snapshot-meta-label">Focus</span>
+                <span id="matchSnapshotFocus">Romantic &amp; Friendship</span>
+              </div>
+
+              <div class="m-snapshot-highlight">
+                <span class="m-snapshot-highlight-label">Highlight</span>
+                <span id="matchSnapshotHighlight" class="m-snapshot-highlight-text">
+                  Scores are information, not fate. Communication and boundaries matter more than any number.
                 </span>
               </div>
 
-              <p class="m-hero-footer">
-                Click any card on the right to update the snapshot with a deeper view of that connection.
-              </p>
-            </div>
-
-            <aside class="m-hero-right" aria-label="Selected match snapshot">
-              <article class="m-snapshot-card">
-                <header class="m-snapshot-header">
-                  <h2 id="matchSnapshotTitle" class="m-snapshot-title">No match selected yet</h2>
-                  <div class="m-snapshot-score-pill">
-                    <span id="matchSnapshotScore">–%</span>
-                  </div>
-                </header>
-
-                <p id="matchSnapshotBody" class="m-snapshot-body">
-                  Tap a card in the Match Lab to see a gentle AI-style portrait of that connection — how your love
-                  languages, values and joys might interact, plus a symbolic look at astrology and numerology.
-                </p>
-
-                <div class="m-snapshot-meta">
-                  <span class="m-snapshot-meta-label">Focus</span>
-                  <span id="matchSnapshotFocus">Romantic &amp; Friendship</span>
-                </div>
-
-                <div class="m-snapshot-highlight">
-                  <span class="m-snapshot-highlight-label">Highlight</span>
-                  <span id="matchSnapshotHighlight" class="m-snapshot-highlight-text">
-                    Scores are information, not fate. Honest communication and small consistent actions will always
-                    matter more than any number.
-                  </span>
-                </div>
-
-                <div id="matchSnapshotPicker" class="m-snapshot-picker" aria-label="Snapshot focus picker">
-                  <button type="button" class="m-snapshot-chip is-active" data-focus="overview">Overview</button>
-                  <button type="button" class="m-snapshot-chip" data-focus="love">Love language</button>
-                  <button type="button" class="m-snapshot-chip" data-focus="values">Values</button>
-                  <button type="button" class="m-snapshot-chip" data-focus="joy">Joys</button>
-                  <button type="button" class="m-snapshot-chip" data-focus="astro">Astro &amp; numbers</button>
-                </div>
-              </article>
-            </aside>
-          </div>
+              <div id="matchSnapshotPicker" class="m-snapshot-picker" aria-label="Snapshot focus picker">
+                <button type="button" class="m-snapshot-chip is-active" data-focus="overview">Overview</button>
+                <button type="button" class="m-snapshot-chip" data-focus="love">Love</button>
+                <button type="button" class="m-snapshot-chip" data-focus="values">Values</button>
+                <button type="button" class="m-snapshot-chip" data-focus="joy">Joy</button>
+                <button type="button" class="m-snapshot-chip" data-focus="astro">Astro</button>
+              </div>
+            </article>
+          </aside>
         </section>
 
-        <!-- FILTERS -->
         <section class="m-toolbar match-section-animated m-delay-2" aria-label="Match filters and sorting">
           <div class="m-toggle-group">
             <span class="m-toggle-label">Type</span>
@@ -891,22 +400,13 @@
           </div>
         </section>
 
-        <!-- GRID -->
         <section class="match-section-animated m-delay-3">
-          <header class="m-section-header">
-            <h2 class="visually-hidden">Match Lab list</h2>
-          </header>
-
-          <div id="matchList" class="m-grid match-section-animated m-delay-3">
-            <!-- Match cards rendered by match.js -->
-          </div>
+          <div id="matchList" class="m-grid" aria-live="polite"></div>
         </section>
       </section>
     </div>
   </main>
 
-  <footer class="footer-note">
-    © 2025 Soulink.global | Created with love by Soulink Team.
-  </footer>
+  <footer class="footer-note">© 2025 Soulink.global | Created with love by Soulink Team.</footer>
 </body>
 </html>
