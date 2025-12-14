@@ -1,32 +1,4 @@
 // results.js — Soulink Results / Feedback / Snapshot / Matches / Export / Print
-//
-// This version is aligned with results.html and the shared Soulink architecture:
-//
-//  Feedback block:
-//    #fbStars   – star buttons (1–5), rendered by JS
-//    #fbEmail   – email (optional)
-//    #fbMsg     – textarea (optional, but required if no rating)
-//    #fbSend    – "Send Feedback" button
-//    #fbToast   – toast message (success / error / info)
-//
-//  Snapshot:
-//    #me-name, #me-ct, #me-ll, #me-hobbies, #me-values
-//
-//  Settings:
-//    #llWeight    – range slider [0.0–2.0]
-//    #llw-label   – label showing current multiplier (“1.3×”)
-//    #btnExport   – export results JSON
-//    #btnPrint    – print / save PDF
-//
-//  Matches:
-//    #romantic, #friendship – containers for rendered cards
-//    #empty                 – empty-state text
-//    #topOverview, #insights – overview / insight sentences
-//
-// Data source:
-//   Uses data-helpers.js (getSoulData) when available; otherwise falls back to
-//   localStorage["soulink.soulQuiz"] / "soulQuiz" for backward compatibility.
-
 (function () {
   if (typeof window === "undefined" || typeof document === "undefined") return;
 
@@ -35,7 +7,6 @@
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
   // ----- Generic helpers -----
-
   function normaliseText(v) {
     return (v == null ? "" : String(v)).trim();
   }
@@ -54,7 +25,6 @@
     try {
       if (typeof getSoulData === "function") {
         try {
-          // preferred path if helper supports ensureShape
           data = getSoulData({ ensureShape: true }) || {};
         } catch (e) {
           data = getSoulData() || {};
@@ -112,9 +82,7 @@
     const result = [];
     for (const av of aNorm) {
       const found = bNorm.find((bv) => bv.norm === av.norm);
-      if (found) {
-        result.push(found.raw);
-      }
+      if (found) result.push(found.raw);
     }
     return result;
   }
@@ -149,41 +117,34 @@
     else if (tone === "success") el.classList.add("is-success");
     else if (tone === "info") el.classList.add("is-info");
 
-    // Trigger reflow + show
     void el.offsetWidth;
     el.classList.add("show");
 
-    // Hide after a few seconds
     setTimeout(() => {
       el.classList.remove("show");
       el.classList.add("hide");
-    }, 3000);
+    }, 3200);
   }
 
   // ----- DOM cache -----
-
   const ui = {
-    // feedback
     fbStars: $("#fbStars"),
     fbEmail: $("#fbEmail"),
     fbMsg: $("#fbMsg"),
     fbSend: $("#fbSend"),
     fbToast: $("#fbToast"),
 
-    // snapshot
     meName: $("#me-name"),
     meCt: $("#me-ct"),
     meLl: $("#me-ll"),
     meHobbies: $("#me-hobbies"),
     meValues: $("#me-values"),
 
-    // settings
     llWeight: $("#llWeight"),
     llwLabel: $("#llw-label"),
     btnExport: $("#btnExport"),
     btnPrint: $("#btnPrint"),
 
-    // matches
     romantic: $("#romantic"),
     friendship: $("#friendship"),
     empty: $("#empty"),
@@ -192,21 +153,13 @@
   };
 
   // ----- State -----
-
   let soulSnapshot = {};
   let fbRating = 0;
 
-  /** Base match profiles (without scores). Will be derived from soul data. */
   let baseMatches = [];
-
-  /** Last rendered matches with scores, for export. */
-  let lastRenderedMatches = {
-    romantic: [],
-    friendship: [],
-  };
+  let lastRenderedMatches = { romantic: [], friendship: [] };
 
   // ----- Snapshot rendering -----
-
   function renderSnapshot() {
     const soul = soulSnapshot;
     const hasData = hasAnyCoreData(soul);
@@ -235,6 +188,13 @@
 
   // ----- Feedback (stars + EmailJS) -----
 
+  // IMPORTANT: only PUBLIC KEY on frontend. Never use private keys in HTML/JS.
+  const EMAILJS = {
+    PUBLIC_KEY: "SV7ptjuNI88paiVbz",
+    SERVICE_ID: "service_ifo7026",
+    TEMPLATE_ID: "template_99hg4ni",
+  };
+
   let emailJsReady = false;
   let emailJsInitTried = false;
 
@@ -243,18 +203,56 @@
     emailJsInitTried = true;
 
     if (typeof emailjs === "undefined" || !emailjs || typeof emailjs.init !== "function") {
-      console.warn("[Soulink Results] EmailJS not available on this page.");
       emailJsReady = false;
       return false;
     }
+
     try {
-      emailjs.init("UYuKR_3UnPjeqJFL7");
+      emailjs.init({ publicKey: EMAILJS.PUBLIC_KEY });
       emailJsReady = true;
     } catch (err) {
-      console.warn("[Soulink Results] EmailJS init failed", err);
-      emailJsReady = false;
+      try {
+        emailjs.init(EMAILJS.PUBLIC_KEY);
+        emailJsReady = true;
+      } catch (err2) {
+        console.warn("[Soulink Results] EmailJS init failed", err2);
+        emailJsReady = false;
+      }
     }
+
     return emailJsReady;
+  }
+
+  function applyStarStyles() {
+    const buttons = $$("#fbStars button");
+    buttons.forEach((b) => {
+      const val = Number(b.dataset.value || "0");
+      const isOn = val <= fbRating;
+
+      b.style.cursor = "pointer";
+      b.style.display = "inline-flex";
+      b.style.alignItems = "center";
+      b.style.justifyContent = "center";
+      b.style.width = "44px";
+      b.style.height = "38px";
+      b.style.borderRadius = "999px";
+      b.style.padding = "0";
+      b.style.lineHeight = "1";
+      b.style.fontSize = "1.25rem";
+      b.style.userSelect = "none";
+
+      if (isOn) {
+        b.style.color = "#FFD54A";
+        b.style.border = "1px solid rgba(255, 213, 74, 0.70)";
+        b.style.background = "rgba(255, 213, 74, 0.14)";
+        b.style.boxShadow = "0 0 0 1px rgba(255, 213, 74, 0.25), 0 0 16px rgba(255, 213, 74, 0.28)";
+      } else {
+        b.style.color = "rgba(255, 213, 74, 0.40)";
+        b.style.border = "1px solid rgba(0, 253, 216, 0.32)";
+        b.style.background = "rgba(0, 0, 0, 0.55)";
+        b.style.boxShadow = "0 0 0 1px rgba(0, 253, 216, 0.14)";
+      }
+    });
   }
 
   function initStars() {
@@ -265,20 +263,63 @@
     for (let i = 1; i <= maxStars; i++) {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "chip";
       btn.setAttribute("aria-label", `Rate ${i} out of 5`);
       btn.dataset.value = String(i);
       btn.textContent = "★";
+
       btn.addEventListener("click", () => {
-        fbRating = i;
-        // visual state
-        $$("#fbStars button").forEach((b) => {
-          const val = Number(b.dataset.value || "0");
-          b.classList.toggle("active", val <= fbRating);
-        });
+        fbRating = fbRating === i ? 0 : i; // click same star to clear
+        applyStarStyles();
       });
+
       ui.fbStars.appendChild(btn);
     }
+
+    applyStarStyles();
+  }
+
+  function sendFeedbackWithFallback(templateParams) {
+    const canUseSdk =
+      tryInitEmailJs() &&
+      typeof emailjs !== "undefined" &&
+      emailjs &&
+      typeof emailjs.send === "function";
+
+    const sendViaSdk = () =>
+      emailjs.send(EMAILJS.SERVICE_ID, EMAILJS.TEMPLATE_ID, templateParams, {
+        publicKey: EMAILJS.PUBLIC_KEY,
+      });
+
+    const sendViaRestForm = async () => {
+      const fd = new FormData();
+      fd.append("service_id", EMAILJS.SERVICE_ID);
+      fd.append("template_id", EMAILJS.TEMPLATE_ID);
+      fd.append("user_id", EMAILJS.PUBLIC_KEY);
+
+      Object.entries(templateParams || {}).forEach(([k, v]) => {
+        fd.append(k, v == null ? "" : String(v));
+      });
+
+      const res = await fetch("https://api.emailjs.com/api/v1.0/email/send-form", {
+        method: "POST",
+        body: fd,
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`EmailJS send-form failed: ${res.status} ${text}`.trim());
+      }
+      return true;
+    };
+
+    if (!canUseSdk) {
+      return sendViaRestForm();
+    }
+
+    return sendViaSdk().catch((err) => {
+      console.warn("[Soulink Results] SDK send failed, trying send-form fallback", err);
+      return sendViaRestForm();
+    });
   }
 
   function initFeedback() {
@@ -291,24 +332,8 @@
       const msg = ui.fbMsg ? normaliseText(ui.fbMsg.value) : "";
       const name = normaliseText(soulSnapshot.name) || "Soulink user";
 
-      // Validation: at least a star OR a comment
       if (!fbRating && !msg) {
-        showToast(
-          ui.fbToast,
-          "Please add a star rating or a quick comment before sending.",
-          "error"
-        );
-        return;
-      }
-
-      const ready = tryInitEmailJs();
-      if (!ready || typeof emailjs === "undefined" || typeof emailjs.send !== "function") {
-        console.info("[Soulink Results] EmailJS not present, simulating success.");
-        if (ui.fbMsg) ui.fbMsg.value = "";
-        if (ui.fbEmail) ui.fbEmail.value = "";
-        fbRating = 0;
-        $$("#fbStars button").forEach((b) => b.classList.remove("active"));
-        showToast(ui.fbToast, "Thank you for your feedback! 💚", "success");
+        showToast(ui.fbToast, "Please add a star rating or a quick comment before sending.", "error");
         return;
       }
 
@@ -322,35 +347,36 @@
         submitted_at: new Date().toISOString(),
       };
 
+      if (ui.fbSend) ui.fbSend.disabled = true;
       showToast(ui.fbToast, "Sending your feedback…", "info");
 
-      emailjs
-        .send("service_3j9h9ei", "template_99hg4ni", templateParams)
+      sendFeedbackWithFallback(templateParams)
         .then(() => {
           if (ui.fbMsg) ui.fbMsg.value = "";
           if (ui.fbEmail) ui.fbEmail.value = "";
           fbRating = 0;
-          $$("#fbStars button").forEach((b) => b.classList.remove("active"));
+          applyStarStyles();
           showToast(ui.fbToast, "Thank you for your feedback! 💚", "success");
         })
         .catch((err) => {
           console.error("[Soulink Results] feedback send failed", err);
           showToast(
             ui.fbToast,
-            "We could not send your feedback right now. Please try again later.",
+            "Nepavyko išsiųsti. Jei esi laive – tinklas gali blokuoti. Pabandyk vėliau arba per kitą internetą.",
             "error"
           );
+        })
+        .finally(() => {
+          if (ui.fbSend) ui.fbSend.disabled = false;
         });
     });
   }
 
   // ----- Matches: generation, scoring, rendering -----
-
   function buildBaseMatches(soul) {
     const primaryLove = getPrimaryLoveLanguage(soul) || "Quality Time";
     const connectionType = normaliseText(soul.connectionType) || "Romantic love";
 
-    // Simple demo set – tuned slightly by user's primary love language
     return [
       {
         id: "rom-1",
@@ -435,34 +461,22 @@
     score += valuesCount * 7;
     score += hobbiesCount * 4;
 
-    if (loveMatch) {
-      score += 20 * loveWeight;
-    }
+    if (loveMatch) score += 20 * loveWeight;
 
-    // Soft clamp
     if (score > 99) score = 99;
     if (score < 5) score = 5;
 
     const roundedScore = Math.round(score);
 
-    // Explanation
     const parts = [];
-    if (loveMatch) {
-      parts.push("You share the same primary love language.");
-    }
-    if (sharedValues.length) {
-      parts.push(`You both value ${sentenceFromList(sharedValues)}.`);
-    }
-    if (sharedHobbies.length) {
-      parts.push(`You can connect over ${sentenceFromList(sharedHobbies)}.`);
-    }
-    if (!parts.length) {
-      parts.push("Good energetic fit based on your Soulprint.");
-    }
+    if (loveMatch) parts.push("You share the same primary love language.");
+    if (sharedValues.length) parts.push(`You both value ${sentenceFromList(sharedValues)}.`);
+    if (sharedHobbies.length) parts.push(`You can connect over ${sentenceFromList(sharedHobbies)}.`);
+    if (!parts.length) parts.push("Good energetic fit based on your Soulprint.");
 
     return {
       id: match.id,
-      kind: match.kind, // "romantic" | "friendship"
+      kind: match.kind,
       name: match.name,
       connectionLabel: match.connectionLabel || "",
       loveLanguage: match.loveLanguage || "",
@@ -480,7 +494,6 @@
     const card = document.createElement("article");
     card.className = "card sl-card";
 
-    // Score badge
     const scoreBadge = document.createElement("div");
     scoreBadge.className = "score-badge";
     const scoreSpan = document.createElement("span");
@@ -489,7 +502,6 @@
     scoreBadge.appendChild(scoreSpan);
     card.appendChild(scoreBadge);
 
-    // Head: avatar + name + subline
     const head = document.createElement("div");
     head.className = "sl-head";
 
@@ -522,7 +534,6 @@
     head.appendChild(headText);
     card.appendChild(head);
 
-    // Badges
     const badges = document.createElement("div");
     badges.className = "sl-badges";
 
@@ -544,16 +555,12 @@
       });
     }
 
-    if (badges.children.length) {
-      card.appendChild(badges);
-    }
+    if (badges.children.length) card.appendChild(badges);
 
-    // Explanation
     const p = document.createElement("p");
     p.textContent = view.explanation;
     card.appendChild(p);
 
-    // Actions
     const actions = document.createElement("div");
     actions.className = "sl-actions";
 
@@ -567,9 +574,7 @@
       actions.appendChild(a);
     }
 
-    if (actions.children.length) {
-      card.appendChild(actions);
-    }
+    if (actions.children.length) card.appendChild(actions);
 
     return card;
   }
@@ -591,10 +596,7 @@
     romanticViews.sort((a, b) => b.score - a.score);
     friendshipViews.sort((a, b) => b.score - a.score);
 
-    lastRenderedMatches = {
-      romantic: romanticViews,
-      friendship: friendshipViews,
-    };
+    lastRenderedMatches = { romantic: romanticViews, friendship: friendshipViews };
 
     ui.romantic.innerHTML = "";
     ui.friendship.innerHTML = "";
@@ -603,33 +605,24 @@
     friendshipViews.forEach((view) => ui.friendship.appendChild(createMatchCard(view)));
 
     const totalMatches = romanticViews.length + friendshipViews.length;
-    if (ui.empty) {
-      ui.empty.style.display = totalMatches ? "none" : "block";
-    }
+    if (ui.empty) ui.empty.style.display = totalMatches ? "none" : "block";
 
-    // Overview and insights
     if (ui.topOverview) {
-      if (totalMatches) {
-        ui.topOverview.textContent = `We tuned ${totalMatches} matches based on your love language, values, and hobbies.`;
-      } else {
-        ui.topOverview.textContent = "Once you start adding friends and connections, their matches will appear here.";
-      }
+      ui.topOverview.textContent = totalMatches
+        ? `We tuned ${totalMatches} matches based on your love language, values, and hobbies.`
+        : "Once you start adding friends and connections, their matches will appear here.";
     }
 
     if (ui.insights) {
-      const loveMatches = romanticViews.filter((v) => v.loveLanguageMatch).length +
+      const loveMatches =
+        romanticViews.filter((v) => v.loveLanguageMatch).length +
         friendshipViews.filter((v) => v.loveLanguageMatch).length;
 
-      if (totalMatches && loveMatches) {
-        ui.insights.textContent =
-          `You share the same primary love language with ${loveMatches} of your matches. ` +
-          `Use the Love Language Weight slider to see how strongly this shapes your scores.`;
-      } else if (totalMatches) {
-        ui.insights.textContent =
-          "Your matches are currently driven more by shared values and hobbies than by love language.";
-      } else {
-        ui.insights.textContent = "";
-      }
+      ui.insights.textContent = totalMatches
+        ? loveMatches
+          ? `You share the same primary love language with ${loveMatches} of your matches. Use the Love Language Weight slider to see how strongly this shapes your scores.`
+          : "Your matches are currently driven more by shared values and hobbies than by love language."
+        : "";
     }
   }
 
@@ -639,7 +632,6 @@
   }
 
   // ----- Settings: weight + export + print/pdf -----
-
   function initSettings() {
     if (ui.llWeight && ui.llwLabel) {
       const updateLabelAndMatches = () => {
@@ -658,9 +650,7 @@
         try {
           const payload = {
             generatedAt: new Date().toISOString(),
-            settings: {
-              loveLanguageWeight: ui.llWeight ? Number(ui.llWeight.value || "1") : 1,
-            },
+            settings: { loveLanguageWeight: ui.llWeight ? Number(ui.llWeight.value || "1") : 1 },
             soul: soulSnapshot,
             matches: lastRenderedMatches,
           };
@@ -684,7 +674,6 @@
     if (ui.btnPrint) {
       ui.btnPrint.addEventListener("click", (ev) => {
         ev.preventDefault();
-
         const main = document.querySelector("main") || document.body;
 
         if (typeof html2pdf === "function") {
@@ -709,7 +698,6 @@
   }
 
   // ----- Init -----
-
   function init() {
     try {
       soulSnapshot = safeGetSoulData();
@@ -718,7 +706,6 @@
       initFeedback();
       initSettings();
       initMatches();
-      // prepare EmailJS if script is present
       tryInitEmailJs();
     } catch (err) {
       console.error("[Soulink Results] init failed", err);
