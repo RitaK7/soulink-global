@@ -595,10 +595,21 @@
     }
 
     if (ui.btnPrint) {
-      ui.btnPrint.addEventListener("click", (ev) => {
+      ui.btnPrint.addEventListener("click", async (ev) => {
         ev.preventDefault();
 
-        const main = document.querySelector("main") || document.body;
+        const target =
+          document.querySelector(".results-page .page-inner") ||
+          document.querySelector(".page-inner") ||
+          document.querySelector("main") ||
+          document.body;
+
+        showToast(ui.fbToast, "Preparing PDF…", "info");
+
+        const fallbackPrint = () => {
+          showToast(ui.fbToast, "Opening print dialog… (Choose “Save as PDF”)", "info");
+          try { window.print(); } catch (e) { /* ignore */ }
+        };
 
         if (typeof html2pdf === "function") {
           try {
@@ -606,16 +617,40 @@
               margin: 10,
               filename: "soulink-results.pdf",
               image: { type: "jpeg", quality: 0.98 },
-              html2canvas: { scale: 2, useCORS: true },
+              pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+              html2canvas: {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                backgroundColor: "#003c43",
+              },
               jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
             };
-            html2pdf().set(opt).from(main).save();
+
+            await new Promise((r) => setTimeout(r, 60));
+
+            const job = html2pdf().set(opt).from(target).save();
+
+            let finished = false;
+            const guard = new Promise((_, rej) =>
+              setTimeout(() => {
+                if (!finished) rej(new Error("PDF download timed out"));
+              }, 9000)
+            );
+
+            await Promise.race([
+              Promise.resolve(job).then(() => { finished = true; }),
+              guard,
+            ]);
+
+            showToast(ui.fbToast, "PDF saved ✅", "success");
           } catch (err) {
             console.error("[Soulink Results] html2pdf failed, fallback to print()", err);
-            window.print();
+            fallbackPrint();
           }
         } else {
-          window.print();
+          fallbackPrint();
         }
       });
     }
