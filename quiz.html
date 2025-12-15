@@ -430,7 +430,7 @@
        text-shadow: 0 0 10px rgba(0, 253, 216, 0.35);
        pointer-events: none;
       }
-      
+
       @media (max-width: 480px) {
         .quiz-page .chip-option span {
           padding-inline: 0.7rem;
@@ -499,6 +499,21 @@
           width: 100%;
         }
       }
+      /* reserve space for ✓ ONLY when selected */
+.quiz-page .chip-option input[type="radio"]:checked + span,
+.quiz-page .chip-option input[type="checkbox"]:checked + span {
+  padding-right: 1.55rem; /* adjust 1.45–1.75 if needed */
+}
+
+/* ✓ styling */
+.quiz-page .chip-option input[type="radio"]:checked + span::after,
+.quiz-page .chip-option input[type="checkbox"]:checked + span::after {
+  right: 0.6rem;
+  color: #00FDD8;
+  opacity: 1;
+  text-shadow: 0 0 10px rgba(0, 253, 216, 0.55);
+}
+
 
       /* --- Footer alignment for quiz --- */
 
