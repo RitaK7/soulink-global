@@ -1,116 +1,69 @@
-// edit-profile.js — Soulink
-// Uses shared data helpers: getSoulData, patchSoulData, ensureSoulDataShape (from data-helpers.js)
-// Prefills Edit Profile from quiz data and keeps it in sync via patchSoulData().
-
+/* :contentReference[oaicite:1]{index=1} */
 (function () {
-  // Bail out if data helpers are missing AND localStorage is unavailable
   if (typeof window === "undefined") return;
+
+  const PRIMARY_KEY = "soulink.soulQuiz";
+  const LEGACY_KEY = "soulQuiz";
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-  // ===== Data helpers wrapper =====
-  function readSoulData() {
-    try {
-      if (typeof getSoulData === "function") {
-        // Allow data-helpers to normalise shape if it supports an options object
-        try {
-          const data = getSoulData({ ensureShape: true });
-          if (data) return data;
-        } catch (e) {
-          // Fallback: older signature without options
-          const data = getSoulData();
-          if (data) return data;
-        }
-      }
-    } catch (e) {
-      console.warn("Soulink: getSoulData threw, using localStorage fallback", e);
-    }
-
-    // Fallback to direct localStorage read (keeps compatibility with older builds)
-    try {
-      const primary = localStorage.getItem("soulink.soulQuiz");
-      const legacy = localStorage.getItem("soulQuiz");
-      const raw = primary || legacy;
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      console.warn("Soulink: failed to read from localStorage", e);
-      return {};
-    }
-  }
-
-  function writeSoulPatch(patch) {
-    if (!patch || typeof patch !== "object") return;
-
-    let merged;
-    try {
-      if (typeof patchSoulData === "function") {
-        patchSoulData(patch);
-        // After patching, re-read to keep local state fresh
-        merged = readSoulData();
-      } else {
-        // Fallback: merge manually into localStorage
-        const current = readSoulData() || {};
-        merged = Object.assign({}, current, patch);
-        const json = JSON.stringify(merged);
-        try {
-          localStorage.setItem("soulink.soulQuiz", json);
-          localStorage.setItem("soulQuiz", json);
-        } catch (e) {
-          console.warn("Soulink: failed to persist patch to localStorage", e);
-        }
-      }
-    } catch (e) {
-      console.error("Soulink: patchSoulData failed", e);
-    }
-
-    // Return the fresh snapshot so callers can update in-memory copy
-    return merged || readSoulData() || {};
-  }
-
-  // ===== Option catalogues for chips =====
-
-  const CONNECTION_TYPES = [
-    { value: "romantic", label: "Romantic relationship" },
-    { value: "friendship", label: "Friendship" },
-    { value: "both", label: "Both (romantic & friendship)" },
-    { value: "networking", label: "Open to any connection" },
+  const LOVE_LANGUAGE_LIST = [
+    "Words of Affirmation",
+    "Quality Time",
+    "Acts of Service",
+    "Physical Touch",
+    "Receiving Gifts",
   ];
 
-  const LOVE_LANGUAGES = [
-    { value: "words", label: "Words of Affirmation" },
-    { value: "quality", label: "Quality Time" },
-    { value: "service", label: "Acts of Service" },
-    { value: "touch", label: "Physical Touch" },
-    { value: "gifts", label: "Gifts" },
+  const CONNECTION_TYPE_LABELS = [
+    "Romantic relationship",
+    "Friendship",
+    "Both (romantic & friendship)",
+    "Open to any connection",
   ];
 
-  const GENDER_OPTS = [
-    { value: "woman", label: "Woman" },
-    { value: "man", label: "Man" },
-    { value: "nonbinary", label: "Non-binary" },
-    { value: "nosay", label: "Prefer not to say" },
-    { value: "self", label: "Self-describe" },
+  const CONNECTION_TYPE_CODE_TO_LABEL = {
+    romantic: "Romantic relationship",
+    friendship: "Friendship",
+    both: "Both (romantic & friendship)",
+    networking: "Open to any connection",
+  };
+
+  const GENDER_LABELS = [
+    "Woman",
+    "Man",
+    "Non-binary",
+    "Prefer not to say",
+    "Self-describe",
   ];
 
-  const CONNECT_OPTS = [
-    { value: "women", label: "Women" },
-    { value: "men", label: "Men" },
-    { value: "nonbinary", label: "Non-binary" },
-    { value: "all", label: "Open to all" },
-    { value: "custom", label: "Custom preference" },
+  const CONNECT_WITH_LABELS = [
+    "Women",
+    "Men",
+    "Non-binary",
+    "Open to all",
+    "Custom preference",
   ];
 
-  const ORIENTATION_OPTS = [
-    { value: "heterosexual", label: "Heterosexual" },
-    { value: "gay", label: "Gay" },
-    { value: "lesbian", label: "Lesbian" },
-    { value: "bisexual", label: "Bisexual" },
-    { value: "pansexual", label: "Pansexual" },
-    { value: "asexual", label: "Asexual" },
-    { value: "queer", label: "Queer" },
-    { value: "questioning", label: "Questioning" },
-    { value: "nosay", label: "Prefer not to say" },
+  const CONNECT_WITH_CODE_TO_LABEL = {
+    women: "Women",
+    men: "Men",
+    nonbinary: "Non-binary",
+    all: "Open to all",
+    custom: "Custom preference",
+  };
+
+  const ORIENTATION_LABELS = [
+    "Heterosexual",
+    "Gay",
+    "Lesbian",
+    "Bisexual",
+    "Pansexual",
+    "Asexual",
+    "Queer",
+    "Questioning",
+    "Prefer not to say",
   ];
 
   const DEFAULT_HOBBIES = [
@@ -152,16 +105,12 @@
     "Curiosity",
   ];
 
-  // ===== DOM cache =====
-
   const ui = {
-    // basics
     name: $("#name"),
     country: $("#country"),
     birthday: $("#birthday"),
     birthdayHint: $("#birthdayHint"),
 
-    // chips
     connectionChips: $("#connectionChips"),
     loveChips: $("#loveChips"),
     genderIdChips: $("#genderIdChips"),
@@ -174,11 +123,9 @@
     valueChips: $("#valueChips"),
     valueInput: $("#valueInput"),
 
-    // long-form text
     boundaries: $("#boundaries"),
     aboutMe: $("#aboutMe"),
 
-    // photos
     file1: $("#file1"),
     file2: $("#file2"),
     file3: $("#file3"),
@@ -195,13 +142,11 @@
     main2: $("#main2"),
     main3: $("#main3"),
 
-    // actions
     backQuiz: $("#backQuiz"),
     saveBtn: $("#saveBtn"),
     nextSoul: $("#nextSoul"),
     resetForm: $("#resetForm"),
 
-    // preview
     prevAvatar: $("#prevAvatar"),
     prevName: $("#prevName"),
     prevAge: $("#prevAge"),
@@ -215,45 +160,159 @@
     prevAbout: $("#prevAbout"),
   };
 
-  // Local snapshot of soul data, kept in sync with storage
-  let soul = readSoulData() || {};
-  if (!soul || typeof soul !== "object") soul = {};
+  function norm(s) {
+    return (s == null ? "" : String(s)).trim();
+  }
 
-  // ===== Small utils =====
+  function lower(s) {
+    return norm(s).toLowerCase();
+  }
 
   function toArray(v) {
     if (!v) return [];
-    if (Array.isArray(v)) return v;
+    if (Array.isArray(v)) return v.slice();
     return [v];
   }
 
-  function normaliseText(v) {
-    return (v || "").toString().trim();
-  }
-
-  function uniquePush(list, value) {
-    const out = list.slice();
-    if (!out.includes(value)) out.push(value);
+  function uniq(list) {
+    const out = [];
+    const seen = new Set();
+    (list || []).forEach((x) => {
+      const s = norm(x);
+      if (!s) return;
+      if (seen.has(s)) return;
+      seen.add(s);
+      out.push(s);
+    });
     return out;
   }
 
-  function removeFromList(list, value) {
-    return list.filter((v) => v !== value);
+  function readSoulRaw() {
+    try {
+      if (typeof getSoulData === "function") {
+        try {
+          const d = getSoulData({ ensureShape: true });
+          if (d && typeof d === "object") return d;
+        } catch (e) {
+          const d = getSoulData();
+          if (d && typeof d === "object") return d;
+        }
+      }
+    } catch (e) {}
+    try {
+      const raw = localStorage.getItem(PRIMARY_KEY) || localStorage.getItem(LEGACY_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function persistPatch(patch) {
+    if (!patch || typeof patch !== "object") return state;
+    const current = readSoulRaw() || {};
+    const merged = Object.assign({}, current, patch);
+
+    try {
+      if (typeof patchSoulData === "function") {
+        try {
+          patchSoulData(patch);
+        } catch (e) {}
+      }
+    } catch (e) {}
+
+    try {
+      const json = JSON.stringify(merged);
+      localStorage.setItem(PRIMARY_KEY, json);
+      localStorage.setItem(LEGACY_KEY, json);
+    } catch (e) {}
+
+    return merged;
+  }
+
+  function normaliseConnectionType(v) {
+    const s = lower(v);
+    if (!s) return "";
+    if (CONNECTION_TYPE_CODE_TO_LABEL[s]) return CONNECTION_TYPE_CODE_TO_LABEL[s];
+
+    const exact = CONNECTION_TYPE_LABELS.find((lbl) => lower(lbl) === s);
+    if (exact) return exact;
+
+    return norm(v);
+  }
+
+  function normaliseFromLabelsOrKeep(raw, labels, codeToLabel) {
+    const s = lower(raw);
+    if (!s) return "";
+    if (codeToLabel && codeToLabel[s]) return codeToLabel[s];
+    const found = labels.find((x) => lower(x) === s);
+    return found ? found : norm(raw);
+  }
+
+  function normaliseLoveLanguageOne(raw) {
+    const s = lower(raw);
+    if (!s) return "";
+
+    if (s === "words" || s === "wordsofaffirmation" || s === "words of affirmation") {
+      return "Words of Affirmation";
+    }
+    if (s === "quality" || s === "qualitytime" || s === "quality time") {
+      return "Quality Time";
+    }
+    if (s === "service" || s === "actsofservice" || s === "acts of service") {
+      return "Acts of Service";
+    }
+    if (s === "touch" || s === "physicaltouch" || s === "physical touch") {
+      return "Physical Touch";
+    }
+    if (
+      s === "gifts" ||
+      s === "gift" ||
+      s === "receivinggifts" ||
+      s === "receiving gifts" ||
+      s === "gifts (receiving)" ||
+      s === "gifts/receiving"
+    ) {
+      return "Receiving Gifts";
+    }
+
+    const match = LOVE_LANGUAGE_LIST.find((x) => lower(x) === s);
+    return match ? match : norm(raw);
+  }
+
+  function normaliseLoveLanguages(rawList, rawPrimary) {
+    const fromList = uniq(toArray(rawList).map(normaliseLoveLanguageOne)).filter(Boolean);
+    const primary = normaliseLoveLanguageOne(rawPrimary);
+    let out = fromList.slice();
+
+    if (primary) {
+      out = out.filter((x) => x !== primary);
+      out.unshift(primary);
+    }
+
+    out = out.filter((x) => LOVE_LANGUAGE_LIST.includes(x));
+    out = uniq(out);
+
+    return out;
   }
 
   function computeBirthdayInfo(birthdayRaw) {
-    const raw = normaliseText(birthdayRaw);
+    const raw = norm(birthdayRaw);
     if (!raw) return {};
 
-    // accept "YYYY-MM-DD" or "YYYYMMDD" or "YYYY.MM.DD"
     const digits = raw.replace(/[^\d]/g, "");
     let year, month, day;
+
     if (/^\d{8}$/.test(digits)) {
       year = Number(digits.slice(0, 4));
       month = Number(digits.slice(4, 6));
       day = Number(digits.slice(6, 8));
     } else if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
       const parts = raw.split("-");
+      year = Number(parts[0]);
+      month = Number(parts[1]);
+      day = Number(parts[2]);
+    } else if (/^\d{4}\.\d{2}\.\d{2}$/.test(raw)) {
+      const parts = raw.split(".");
       year = Number(parts[0]);
       month = Number(parts[1]);
       day = Number(parts[2]);
@@ -302,23 +361,17 @@
         "Dog",
         "Pig",
       ];
-      // 1900 is a Rat year; adjust index
       const idx = (y - 1900) % 12;
       return animals[(idx + 12) % 12];
     }
 
     function lifePath(yyyy, mm, dd) {
       const digitsAll =
-        String(yyyy) +
-        String(mm).padStart(2, "0") +
-        String(dd).padStart(2, "0");
-      const sumDigits = (s) =>
-        s.split("").reduce((acc, ch) => acc + Number(ch || 0), 0);
+        String(yyyy) + String(mm).padStart(2, "0") + String(dd).padStart(2, "0");
+      const sumDigits = (s) => s.split("").reduce((acc, ch) => acc + Number(ch || 0), 0);
       let n = sumDigits(digitsAll);
       const isMaster = (x) => x === 11 || x === 22 || x === 33;
-      while (n > 9 && !isMaster(n)) {
-        n = sumDigits(String(n));
-      }
+      while (n > 9 && !isMaster(n)) n = sumDigits(String(n));
       return n;
     }
 
@@ -335,28 +388,24 @@
   }
 
   function updateBirthdayHint() {
-    if (!ui.birthday || !ui.birthdayHint) return;
-    const info = computeBirthdayInfo(ui.birthday.value);
+    if (!ui.birthdayHint) return;
+    const info = computeBirthdayInfo(state.birthday);
     if (!info.date) {
-      ui.birthdayHint.textContent =
-        "Example: 1993-02-24 (or type 19930224)";
+      ui.birthdayHint.textContent = "Example: 1993-02-24 (or type 19930224)";
       return;
     }
-    const pieces = [];
-    if (Number.isFinite(info.age)) pieces.push("Age: " + info.age);
-    if (info.zodiac) pieces.push("Zodiac: " + info.zodiac);
-    if (info.chinese) pieces.push("Chinese sign: " + info.chinese);
-    if (info.lifePath) pieces.push("Life path: " + info.lifePath);
-    ui.birthdayHint.textContent = pieces.join(" • ");
+    const parts = [];
+    if (Number.isFinite(info.age)) parts.push("Age: " + info.age);
+    if (info.zodiac) parts.push("Zodiac: " + info.zodiac);
+    if (info.chinese) parts.push("Chinese sign: " + info.chinese);
+    if (info.lifePath) parts.push("Life path: " + info.lifePath);
+    ui.birthdayHint.textContent = parts.join(" • ");
   }
-
-  // ===== Preview rendering =====
 
   function renderListChips(container, items) {
     if (!container) return;
     const list = (items || []).filter(Boolean);
     container.innerHTML = "";
-    if (!list.length) return;
     list.forEach((label) => {
       const span = document.createElement("span");
       span.className = "chip gem";
@@ -366,91 +415,64 @@
   }
 
   function updatePreview() {
-    if (!ui.prevName || !ui.prevAge) return;
+    if (ui.prevName) ui.prevName.textContent = state.name || "Your Name";
 
-    const data = soul || {};
+    const info = computeBirthdayInfo(state.birthday);
+    if (ui.prevAge) ui.prevAge.textContent = info.date && Number.isFinite(info.age) ? "Age: " + info.age : "Age: –";
 
-    // Name
-    ui.prevName.textContent = normaliseText(data.name) || "Your Name";
-
-    // Age + tags
-    const info = computeBirthdayInfo(data.birthday);
-    if (info.date) {
-      ui.prevAge.textContent = Number.isFinite(info.age)
-        ? "Age: " + info.age
-        : "Age: –";
-      if (ui.tagZodiac) {
-        if (info.zodiac) {
-          ui.tagZodiac.hidden = false;
-          ui.tagZodiac.textContent = info.zodiac;
-        } else {
-          ui.tagZodiac.hidden = true;
-        }
+    if (ui.tagZodiac) {
+      if (info.zodiac) {
+        ui.tagZodiac.hidden = false;
+        ui.tagZodiac.textContent = info.zodiac;
+      } else {
+        ui.tagZodiac.hidden = true;
       }
-      if (ui.tagChinese) {
-        if (info.chinese) {
-          ui.tagChinese.hidden = false;
-          ui.tagChinese.textContent = info.chinese;
-        } else {
-          ui.tagChinese.hidden = true;
-        }
-      }
-      if (ui.tagLife) {
-        if (info.lifePath) {
-          ui.tagLife.hidden = false;
-          ui.tagLife.textContent = "Life path " + info.lifePath;
-        } else {
-          ui.tagLife.hidden = true;
-        }
-      }
-    } else {
-      ui.prevAge.textContent = "Age: –";
-      if (ui.tagZodiac) ui.tagZodiac.hidden = true;
-      if (ui.tagChinese) ui.tagChinese.hidden = true;
-      if (ui.tagLife) ui.tagLife.hidden = true;
     }
 
-    // Connection tag
+    if (ui.tagChinese) {
+      if (info.chinese) {
+        ui.tagChinese.hidden = false;
+        ui.tagChinese.textContent = info.chinese;
+      } else {
+        ui.tagChinese.hidden = true;
+      }
+    }
+
+    if (ui.tagLife) {
+      if (info.lifePath) {
+        ui.tagLife.hidden = false;
+        ui.tagLife.textContent = "Life path " + info.lifePath;
+      } else {
+        ui.tagLife.hidden = true;
+      }
+    }
+
     if (ui.tagConn) {
-      const ct = normaliseText(data.connectionType);
-      if (ct) {
+      if (state.connectionType) {
         ui.tagConn.hidden = false;
-        ui.tagConn.textContent = ct;
+        ui.tagConn.textContent = state.connectionType;
       } else {
         ui.tagConn.hidden = true;
       }
     }
 
-    // Lists
-    const loveList = toArray(data.loveLanguages || data.loveLanguage).map(
-      String
-    );
-    renderListChips(ui.prevLove, loveList);
-
-    renderListChips(ui.prevValues, toArray(data.values));
-    renderListChips(
-      ui.prevHobbies,
-      toArray(data.hobbies || data.interests)
-    );
+    renderListChips(ui.prevLove, state.loveLanguages);
+    renderListChips(ui.prevValues, state.values);
+    renderListChips(ui.prevHobbies, state.hobbies);
 
     if (ui.prevAbout) {
-      const about = normaliseText(data.about || data.aboutMe);
-      ui.prevAbout.textContent = about || "";
+      const about = norm(state.about);
+      ui.prevAbout.textContent = about || "—";
+      ui.prevAbout.classList.toggle("empty", !about);
     }
 
-    // Avatar
     if (ui.prevAvatar) {
-      const photos = [
-        data.profilePhoto1,
-        data.profilePhoto2,
-        data.profilePhoto3,
-      ].filter(Boolean);
-      const mainSlot = data.mainPhotoSlot || data.primaryPhotoSlot;
+      const mainSlot = state.mainPhotoSlot;
       let src = "";
-      if (mainSlot && data["profilePhoto" + mainSlot]) {
-        src = data["profilePhoto" + mainSlot];
-      } else if (photos.length) {
-        src = photos[0];
+      if (mainSlot && state["profilePhoto" + mainSlot]) {
+        src = state["profilePhoto" + mainSlot];
+      } else {
+        src = state.profilePhoto1 || state.profilePhoto2 || state.profilePhoto3 || "";
       }
       if (src) {
         ui.prevAvatar.src = src;
@@ -462,439 +484,487 @@
     }
   }
 
-  function applyPatch(patch) {
-    if (!patch || typeof patch !== "object") return;
-    soul = Object.assign({}, soul, patch);
-    writeSoulPatch(patch);
-    updatePreview();
-  }
-
-  // ===== Chip builders =====
-
-  function createChip(
-    label,
-    value,
-    { selected = false, onToggle, multiple = false } = {}
-  ) {
+  function makeChip(label, value, pressed) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "chip";
     btn.dataset.value = value;
-    btn.setAttribute("aria-pressed", selected ? "true" : "false");
-    btn.innerHTML = '<span class="ico">✦</span><span class="label"></span>';
-    const labelSpan = btn.querySelector(".label");
-    if (labelSpan) labelSpan.textContent = label;
-    else btn.textContent = label;
+    btn.setAttribute("aria-pressed", pressed ? "true" : "false");
 
-    btn.addEventListener("click", () => {
-      const nowPressed = btn.getAttribute("aria-pressed") === "true";
-      const nextPressed = multiple ? !nowPressed : true;
+    const ico = document.createElement("span");
+    ico.className = "ico";
+    ico.textContent = "✦";
 
-      if (!multiple && !nowPressed) {
-        // turn off siblings
-        const parent = btn.parentElement;
-        if (parent) {
-          $$("button.chip", parent).forEach((other) => {
-            if (other === btn) return;
-            other.setAttribute("aria-pressed", "false");
-          });
-        }
-      }
+    const lab = document.createElement("span");
+    lab.className = "label";
+    lab.textContent = label;
 
-      btn.setAttribute("aria-pressed", nextPressed ? "true" : "false");
-      if (typeof onToggle === "function") {
-        onToggle({ value, label, pressed: nextPressed, button: btn });
-      }
-    });
+    const check = document.createElement("span");
+    check.className = "check";
+    check.setAttribute("aria-hidden", "true");
+    check.textContent = pressed ? "✓" : "";
 
+    btn.appendChild(ico);
+    btn.appendChild(lab);
+    btn.appendChild(check);
+
+    btn._check = check;
     return btn;
   }
 
-  function initSingleChoiceChips(
-    container,
-    options,
-    currentValue,
-    { onChange } = {}
-  ) {
+  function setPressed(btn, on) {
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    if (btn._check) btn._check.textContent = on ? "✓" : "";
+  }
+
+  function buildSingleChips(container, labels, currentValue, onChange) {
     if (!container) return;
     container.innerHTML = "";
-    const currentNorm = normaliseText(currentValue).toLowerCase();
+    const cur = lower(currentValue);
 
-    options.forEach((opt) => {
-      const isSelected =
-        currentNorm &&
-        (currentNorm === String(opt.value).toLowerCase() ||
-          currentNorm === String(opt.label).toLowerCase());
-
-      const chip = createChip(opt.label, opt.value, {
-        selected: isSelected,
-        multiple: false,
-        onToggle: ({ pressed }) => {
-          if (!pressed) {
-            if (typeof onChange === "function") onChange("");
-            return;
-          }
-          if (typeof onChange === "function") onChange(opt.value);
-        },
+    labels.forEach((lbl) => {
+      const pressed = cur && lower(lbl) === cur;
+      const chip = makeChip(lbl, lbl, pressed);
+      chip.addEventListener("click", () => {
+        const already = chip.getAttribute("aria-pressed") === "true";
+        if (already) return;
+        $$("button.chip", container).forEach((b) => setPressed(b, b === chip));
+        onChange(lbl);
       });
       container.appendChild(chip);
     });
   }
 
-  function initMultiChoiceChips(
-    container,
-    options,
-    currentList,
-    { onChange } = {}
-  ) {
+  function buildMultiChips(container, labels, currentList, onChange) {
     if (!container) return;
     container.innerHTML = "";
+    const set = new Set((currentList || []).map((x) => norm(x)));
 
-    const set = new Set(toArray(currentList).map((v) => String(v)));
+    labels.forEach((lbl) => {
+      const pressed = set.has(lbl);
+      const chip = makeChip(lbl, lbl, pressed);
+      chip.addEventListener("click", () => {
+        const isOn = chip.getAttribute("aria-pressed") === "true";
+        const nextOn = !isOn;
+        setPressed(chip, nextOn);
 
-    options.forEach((opt) => {
-      const isSelected =
-        set.has(String(opt.value)) || set.has(String(opt.label));
+        let next = (currentList || []).map((x) => norm(x)).filter(Boolean);
+        if (nextOn) {
+          if (!next.includes(lbl)) next.push(lbl);
+        } else {
+          next = next.filter((x) => x !== lbl);
+        }
 
-      const chip = createChip(opt.label, opt.value, {
-        selected: isSelected,
-        multiple: true,
-        onToggle: ({ pressed }) => {
-          let next = toArray(currentList).map(String);
-          if (pressed) {
-            next = uniquePush(next, opt.value);
+        currentList = next;
+        onChange(next);
+      });
+      container.appendChild(chip);
+    });
+  }
+
+  function ensureTextInput(mount, id, placeholder) {
+    if (!mount) return null;
+    let input = $("#" + id);
+    if (input) return input;
+
+    input = document.createElement("input");
+    input.id = id;
+    input.type = "text";
+    input.placeholder = placeholder || "";
+    input.style.marginTop = "8px";
+    mount.appendChild(input);
+    return input;
+  }
+
+  function showGenderSelfInput(show) {
+    if (!ui.genderSelfMount) return null;
+    if (!show) {
+      ui.genderSelfMount.innerHTML = "";
+      return null;
+    }
+    const input = ensureTextInput(ui.genderSelfMount, "genderSelf", "Describe your gender…");
+    return input;
+  }
+
+  function showConnectWithCustomInput(show) {
+    if (!ui.connectWithCustomMount) return null;
+    if (!show) {
+      ui.connectWithCustomMount.innerHTML = "";
+      return null;
+    }
+    const input = ensureTextInput(ui.connectWithCustomMount, "connectWithCustom", "Custom preference…");
+    return input;
+  }
+
+  function initPhotos() {
+    function initSlot(slot) {
+      const file = ui["file" + slot];
+      const thumb = ui["thumb" + slot];
+      const remove = ui["remove" + slot];
+      const ph = ui["ph" + slot];
+      const main = ui["main" + slot];
+      const key = "profilePhoto" + slot;
+
+      function sync() {
+        const url = state[key] || "";
+        if (thumb) {
+          if (url) {
+            thumb.src = url;
+            thumb.style.opacity = "1";
           } else {
-            next = removeFromList(next, opt.value);
+            thumb.removeAttribute("src");
+            thumb.style.opacity = "0";
           }
-          if (typeof onChange === "function") onChange(next);
-          currentList = next;
-        },
-      });
-      container.appendChild(chip);
-    });
+        }
+        if (ph) {
+          if (url) ph.classList.add("has-photo");
+          else ph.classList.remove("has-photo");
+        }
+      }
+
+      sync();
+
+      if (file) {
+        file.addEventListener("change", (ev) => {
+          const f = ev.target.files && ev.target.files[0];
+          if (!f) return;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const dataUrl = String(e.target && e.target.result ? e.target.result : "");
+            state[key] = dataUrl;
+            state = persistPatch({ [key]: dataUrl });
+            sync();
+            updatePreview();
+          };
+          reader.readAsDataURL(f);
+        });
+      }
+
+      if (remove) {
+        remove.addEventListener("click", (ev) => {
+          ev.preventDefault();
+          state[key] = "";
+          state = persistPatch({ [key]: "" });
+          sync();
+          updatePreview();
+        });
+      }
+
+      if (main) {
+        main.addEventListener("click", (ev) => {
+          ev.preventDefault();
+          state.mainPhotoSlot = slot;
+          state = persistPatch({ mainPhotoSlot: slot });
+          updatePreview();
+        });
+      }
+    }
+
+    initSlot(1);
+    initSlot(2);
+    initSlot(3);
   }
 
-  function initTagChipGroup(container, defaults, existingList, fieldName) {
-    if (!container) return;
+  function initTags(container, defaults, initialList, onChange) {
+    if (!container) return { rerender() {}, addCustom() {} };
 
-    let current = toArray(existingList);
+    const base = defaults.slice();
+    let current = uniq(toArray(initialList).map(norm)).filter(Boolean);
 
-    const options = defaults.map((label) => ({ value: label, label }));
-
-    // Ensure custom items from data also appear as chips
-    toArray(existingList).forEach((label) => {
-      if (!defaults.includes(label)) {
-        options.push({ value: label, label });
-      }
+    current.forEach((x) => {
+      if (!base.includes(x)) base.push(x);
     });
 
-    const rerender = () => {
-      initMultiChoiceChips(container, options, current, {
-        onChange: (next) => {
-          current = next;
-          const patch = {};
-          patch[fieldName] = next;
-          applyPatch(patch);
-        },
+    function rerender() {
+      buildMultiChips(container, base, current, (next) => {
+        current = uniq(next);
+        onChange(current);
       });
-    };
+    }
+
+    function addCustom(label) {
+      const clean = norm(label);
+      if (!clean) return;
+      if (!base.includes(clean)) base.push(clean);
+      if (!current.includes(clean)) current.push(clean);
+      current = uniq(current);
+      onChange(current);
+      rerender();
+    }
 
     rerender();
+    return { rerender, addCustom };
+  }
 
-    return {
-      addCustom(label) {
-        const clean = normaliseText(label);
-        if (!clean) return;
-        if (!defaults.includes(clean)) defaults.push(clean);
-        if (!options.find((o) => o.label === clean)) {
-          options.push({ value: clean, label: clean });
-        }
-        current = uniquePush(current, clean);
-        const patch = {};
-        patch[fieldName] = current;
-        applyPatch(patch);
-        rerender();
-      },
+  function collectPayloadFromState() {
+    const love = normaliseLoveLanguages(state.loveLanguages, state.loveLanguages[0]);
+    const payload = {
+      name: norm(state.name),
+      country: norm(state.country),
+      birthday: norm(state.birthday),
+
+      connectionType: norm(state.connectionType),
+
+      loveLanguages: love,
+      loveLanguage: love[0] || "",
+
+      gender: norm(state.gender),
+      genderSelf: norm(state.genderSelf),
+
+      connectWith: uniq(toArray(state.connectWith).map(norm)).filter(Boolean),
+      seekingGender: uniq(toArray(state.connectWith).map(norm)).filter(Boolean),
+      connectWithCustom: norm(state.connectWithCustom),
+
+      orientation: norm(state.orientation),
+
+      hobbies: uniq(toArray(state.hobbies).map(norm)).filter(Boolean),
+      values: uniq(toArray(state.values).map(norm)).filter(Boolean),
+
+      unacceptable: norm(state.unacceptable),
+      boundaries: norm(state.unacceptable),
+
+      about: norm(state.about),
+      aboutMe: norm(state.about),
+
+      profilePhoto1: norm(state.profilePhoto1),
+      profilePhoto2: norm(state.profilePhoto2),
+      profilePhoto3: norm(state.profilePhoto3),
+
+      mainPhotoSlot: state.mainPhotoSlot || null,
     };
+
+    return payload;
   }
 
-  // ===== Photos =====
-
-  function initPhotoSlot(slot) {
-    const file = ui["file" + slot];
-    const thumb = ui["thumb" + slot];
-    const remove = ui["remove" + slot];
-    const ph = ui["ph" + slot];
-    const main = ui["main" + slot];
-
-    if (!file && !thumb && !remove && !ph && !main) return;
-
-    const key = "profilePhoto" + slot;
-
-    function syncFromData() {
-      const url = soul[key];
-      if (thumb) {
-        if (url) {
-          thumb.src = url;
-          thumb.style.opacity = "1";
-        } else {
-          thumb.removeAttribute("src");
-          thumb.style.opacity = "0";
-        }
-      }
-      if (ph) {
-        if (url) ph.classList.add("has-photo");
-        else ph.classList.remove("has-photo");
-      }
-    }
-
-    syncFromData();
-
-    if (file) {
-      file.addEventListener("change", (ev) => {
-        const f = ev.target.files && ev.target.files[0];
-        if (!f) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const dataUrl = String(e.target?.result || "");
-          const patch = {};
-          patch[key] = dataUrl;
-          applyPatch(patch);
-          syncFromData();
-        };
-        reader.readAsDataURL(f);
-      });
-    }
-
-    if (remove) {
-      remove.addEventListener("click", (ev) => {
-        ev.preventDefault();
-        const patch = {};
-        patch[key] = "";
-        applyPatch(patch);
-        syncFromData();
-      });
-    }
-
-    if (main) {
-      main.addEventListener("click", (ev) => {
-        ev.preventDefault();
-        applyPatch({ mainPhotoSlot: slot });
-      });
-    }
+  function saveAll() {
+    const payload = collectPayloadFromState();
+    state = persistPatch(payload);
+    updateBirthdayHint();
+    updatePreview();
   }
 
-  // ===== Binding for basics =====
+  function normaliseStateFromRaw(raw) {
+    const out = Object.assign({}, raw);
 
-  function bindTextField(el, fieldName, { transform, extraPatch } = {}) {
+    out.name = norm(raw.name);
+    out.country = norm(raw.country);
+    out.birthday = norm(raw.birthday);
+
+    out.connectionType = normaliseConnectionType(raw.connectionType);
+
+    const rawLoveList = raw.loveLanguages || raw.loveLanguage || [];
+    const rawLovePrimary = raw.loveLanguage || (Array.isArray(rawLoveList) ? rawLoveList[0] : rawLoveList);
+    out.loveLanguages = normaliseLoveLanguages(rawLoveList, rawLovePrimary);
+    out.loveLanguage = out.loveLanguages[0] || "";
+
+    const rawGender = norm(raw.genderSelf || raw.gender);
+    const genderStandard = GENDER_LABELS.slice(0, 4).find((x) => lower(x) === lower(rawGender));
+    if (genderStandard) {
+      out.gender = genderStandard;
+      out.genderSelf = "";
+      out._genderMode = "standard";
+    } else if (rawGender) {
+      out.gender = rawGender;
+      out.genderSelf = rawGender;
+      out._genderMode = "self";
+    } else {
+      out.gender = "";
+      out.genderSelf = "";
+      out._genderMode = "none";
+    }
+
+    const connectRaw = toArray(raw.connectWith || raw.seekingGender || []);
+    const mapped = [];
+    let customValue = norm(raw.connectWithCustom);
+
+    connectRaw.forEach((item) => {
+      const s = lower(item);
+      const mappedLabel = CONNECT_WITH_CODE_TO_LABEL[s] || CONNECT_WITH_LABELS.find((x) => lower(x) === s) || norm(item);
+      if (!mappedLabel) return;
+      if (CONNECT_WITH_LABELS.includes(mappedLabel)) {
+        mapped.push(mappedLabel);
+      } else {
+        if (!customValue) customValue = mappedLabel;
+        mapped.push("Custom preference");
+      }
+    });
+
+    out.connectWith = uniq(mapped);
+    out.seekingGender = uniq(mapped);
+    out.connectWithCustom = customValue;
+
+    out.orientation = normaliseFromLabelsOrKeep(raw.orientation, ORIENTATION_LABELS);
+
+    out.hobbies = uniq(toArray(raw.hobbies || raw.interests).map(norm)).filter(Boolean);
+    out.values = uniq(toArray(raw.values).map(norm)).filter(Boolean);
+
+    out.unacceptable = norm(raw.unacceptable || raw.boundaries || raw.unacceptableBehavior || raw.notAllowed || raw.noGo);
+    out.about = norm(raw.about || raw.aboutMe);
+
+    out.profilePhoto1 = norm(raw.profilePhoto1);
+    out.profilePhoto2 = norm(raw.profilePhoto2);
+    out.profilePhoto3 = norm(raw.profilePhoto3);
+    out.mainPhotoSlot = raw.mainPhotoSlot || raw.primaryPhotoSlot || null;
+
+    return out;
+  }
+
+  function prefillInputsFromState() {
+    if (ui.name) ui.name.value = state.name || "";
+    if (ui.country) ui.country.value = state.country || "";
+    if (ui.birthday) ui.birthday.value = state.birthday || "";
+    if (ui.boundaries) ui.boundaries.value = state.unacceptable || "";
+    if (ui.aboutMe) ui.aboutMe.value = state.about || "";
+  }
+
+  function bindText(el, key, { onAfter } = {}) {
     if (!el) return;
-
-    const initial = soul[fieldName];
-    if (initial != null && initial !== undefined) {
-      el.value = String(initial);
-    }
-
     const handler = () => {
-      let value = el.value;
-      if (transform) value = transform(value);
-      const patch = Object.assign({ [fieldName]: value }, extraPatch || {});
-      applyPatch(patch);
-      if (fieldName === "birthday") {
+      state[key] = el.value || "";
+      state = persistPatch({ [key]: state[key] });
+      if (key === "birthday") {
         updateBirthdayHint();
       }
-    };
-
-    el.addEventListener("change", handler);
-    el.addEventListener("blur", handler);
-  }
-
-  function bindLongTextField(el, fieldName) {
-    if (!el) return;
-    const initial =
-      soul[fieldName] ||
-      soul[fieldName === "about" ? "aboutMe" : "unacceptable"];
-    if (initial != null) el.value = String(initial);
-
-    const handler = () => {
-      const patch = {};
-      patch[fieldName] = el.value || "";
-      applyPatch(patch);
+      updatePreview();
+      if (onAfter) onAfter();
     };
     el.addEventListener("change", handler);
     el.addEventListener("blur", handler);
   }
-
-  function initBasics() {
-    bindTextField(ui.name, "name");
-    bindTextField(ui.country, "country");
-    bindTextField(ui.birthday, "birthday");
-
-    bindLongTextField(ui.boundaries, "unacceptable");
-    bindLongTextField(ui.aboutMe, "about");
-  }
-
-  // ===== Binding for chips & complex fields =====
 
   function initChips() {
-    // Connection type (single)
-    if (ui.connectionChips) {
-      initSingleChoiceChips(
-        ui.connectionChips,
-        CONNECTION_TYPES,
-        soul.connectionType,
-        {
-          onChange: (value) => {
-            // Store the readable label for connectionType
-            const opt = CONNECTION_TYPES.find((o) => o.value === value);
-            const label = opt ? opt.label : value;
-            applyPatch({ connectionType: label || "" });
-          },
+    buildSingleChips(ui.connectionChips, CONNECTION_TYPE_LABELS, state.connectionType, (lbl) => {
+      state.connectionType = lbl;
+      state = persistPatch({ connectionType: lbl });
+      updatePreview();
+    });
+
+    buildMultiChips(ui.loveChips, LOVE_LANGUAGE_LIST, state.loveLanguages, (next) => {
+      const normalised = normaliseLoveLanguages(next, next[0] || "");
+      state.loveLanguages = normalised;
+      state.loveLanguage = normalised[0] || "";
+      state = persistPatch({ loveLanguages: normalised, loveLanguage: state.loveLanguage });
+      updatePreview();
+    });
+
+    const genderSelected =
+      state._genderMode === "self"
+        ? "Self-describe"
+        : normaliseFromLabelsOrKeep(state.gender, GENDER_LABELS.slice(0, 4)) || "";
+
+    buildSingleChips(ui.genderIdChips, GENDER_LABELS, genderSelected, (lbl) => {
+      if (lbl === "Self-describe") {
+        const input = showGenderSelfInput(true);
+        if (input) {
+          input.value = state.genderSelf || state.gender || "";
+          const handler = () => {
+            const v = norm(input.value);
+            state.gender = v;
+            state.genderSelf = v;
+            state._genderMode = v ? "self" : "self";
+            state = persistPatch({ gender: v, genderSelf: v });
+            updatePreview();
+          };
+          input.addEventListener("change", handler);
+          input.addEventListener("blur", handler);
+          setTimeout(() => input.focus(), 0);
         }
-      );
-    }
+      } else {
+        showGenderSelfInput(false);
+        state.gender = lbl;
+        state.genderSelf = "";
+        state._genderMode = lbl ? "standard" : "none";
+        state = persistPatch({ gender: lbl, genderSelf: "" });
+        updatePreview();
+      }
+    });
 
-    // Love languages (multi, plus primary)
-    if (ui.loveChips) {
-      const existing = toArray(
-        soul.loveLanguages || soul.loveLanguage || []
-      );
-      initMultiChoiceChips(ui.loveChips, LOVE_LANGUAGES, existing, {
-        onChange: (next) => {
-          const arr = toArray(next);
-          const primary = arr[0] || "";
-          applyPatch({
-            loveLanguages: arr,
-            loveLanguage: primary,
-          });
-        },
-      });
-    }
+    const hasCustom = norm(state.connectWithCustom) !== "" || (state.connectWith || []).includes("Custom preference");
+    const initialConnectList = uniq([].concat(state.connectWith || []));
+    if (hasCustom && !initialConnectList.includes("Custom preference")) initialConnectList.push("Custom preference");
 
-    // Gender identity
-    if (ui.genderIdChips) {
-      const genderSelfInput =
-        $("#genderSelf") ||
-        (ui.genderSelfMount
-          ? ui.genderSelfMount.querySelector("input")
-          : null);
+    buildMultiChips(ui.connectWithChips, CONNECT_WITH_LABELS, initialConnectList, (next) => {
+      const nextList = uniq(next);
+      const customOn = nextList.includes("Custom preference");
 
-      const currentGender = soul.genderSelf || soul.gender || "";
+      let customValue = norm(state.connectWithCustom);
+      if (!customOn) customValue = "";
 
-      initSingleChoiceChips(
-        ui.genderIdChips,
-        GENDER_OPTS,
-        currentGender,
-        {
-          onChange: (value) => {
-            const opt = GENDER_OPTS.find((o) => o.value === value);
-            const label = opt ? opt.label : value;
+      state.connectWith = nextList;
+      state.seekingGender = nextList;
+      state.connectWithCustom = customValue;
 
-            if (value === "self") {
-              // ensure text input exists
-              let input = genderSelfInput;
-              if (!input && ui.genderSelfMount) {
-                input = document.createElement("input");
-                input.id = "genderSelf";
-                input.type = "text";
-                input.placeholder = "Describe your gender…";
-                ui.genderSelfMount.appendChild(input);
-              }
-              if (input) {
-                input.value = soul.genderSelf || "";
-                input.focus();
-                input.addEventListener("change", () => {
-                  applyPatch({
-                    gender: input.value || "",
-                    genderSelf: input.value || "",
-                  });
-                });
-              }
-            } else {
-              applyPatch({
-                gender: label,
-                genderSelf: "",
-              });
-            }
-          },
-        }
-      );
-    }
-
-    // Who you want to connect with (multi)
-    if (ui.connectWithChips) {
-      const existing = toArray(soul.seekingGender || soul.connectWith);
-      initMultiChoiceChips(ui.connectWithChips, CONNECT_OPTS, existing, {
-        onChange: (next) => {
-          applyPatch({
-            seekingGender: next,
-            connectWith: next,
-          });
-        },
-      });
-    }
-
-    // Orientation (single)
-    if (ui.orientationChips) {
-      initSingleChoiceChips(
-        ui.orientationChips,
-        ORIENTATION_OPTS,
-        soul.orientation,
-        {
-          onChange: (value) => {
-            const opt = ORIENTATION_OPTS.find((o) => o.value === value);
-            applyPatch({
-              orientation: opt ? opt.label : value,
+      if (customOn) {
+        const input = showConnectWithCustomInput(true);
+        if (input) {
+          input.value = customValue || "";
+          const handler = () => {
+            state.connectWithCustom = norm(input.value);
+            state = persistPatch({
+              connectWith: state.connectWith,
+              seekingGender: state.connectWith,
+              connectWithCustom: state.connectWithCustom,
             });
-          },
+            updatePreview();
+          };
+          input.addEventListener("change", handler);
+          input.addEventListener("blur", handler);
         }
-      );
-    }
+      } else {
+        showConnectWithCustomInput(false);
+      }
 
-    // Hobbies / Values tags
-    let hobbyGroup, valueGroup;
+      state = persistPatch({
+        connectWith: nextList,
+        seekingGender: nextList,
+        connectWithCustom: state.connectWithCustom,
+      });
+      updatePreview();
+    });
 
-    if (ui.hobbyChips) {
-      hobbyGroup = initTagChipGroup(
-        ui.hobbyChips,
-        DEFAULT_HOBBIES.slice(),
-        soul.hobbies || soul.interests,
-        "hobbies"
-      );
-    }
+    const orientationSelected = normaliseFromLabelsOrKeep(state.orientation, ORIENTATION_LABELS);
+    buildSingleChips(ui.orientationChips, ORIENTATION_LABELS, orientationSelected, (lbl) => {
+      state.orientation = lbl;
+      state = persistPatch({ orientation: lbl });
+      updatePreview();
+    });
+  }
 
-    if (ui.valueChips) {
-      valueGroup = initTagChipGroup(
-        ui.valueChips,
-        DEFAULT_VALUES.slice(),
-        soul.values,
-        "values"
-      );
-    }
+  function initTagGroups() {
+    const hobbyGroup = initTags(ui.hobbyChips, DEFAULT_HOBBIES, state.hobbies, (next) => {
+      state.hobbies = next;
+      state = persistPatch({ hobbies: next });
+      updatePreview();
+    });
 
-    if (ui.hobbyInput && hobbyGroup) {
+    const valueGroup = initTags(ui.valueChips, DEFAULT_VALUES, state.values, (next) => {
+      state.values = next;
+      state = persistPatch({ values: next });
+      updatePreview();
+    });
+
+    if (ui.hobbyInput) {
       ui.hobbyInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           e.preventDefault();
-          const txt = ui.hobbyInput.value;
+          const t = ui.hobbyInput.value;
           ui.hobbyInput.value = "";
-          hobbyGroup.addCustom(txt);
+          hobbyGroup.addCustom(t);
         }
       });
     }
 
-    if (ui.valueInput && valueGroup) {
+    if (ui.valueInput) {
       ui.valueInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           e.preventDefault();
-          const txt = ui.valueInput.value;
+          const t = ui.valueInput.value;
           ui.valueInput.value = "";
-          valueGroup.addCustom(txt);
+          valueGroup.addCustom(t);
         }
       });
     }
   }
-
-  // ===== Actions =====
 
   function initActions() {
     if (ui.backQuiz) {
@@ -911,78 +981,138 @@
       });
     }
 
+    if (ui.saveBtn) {
+      ui.saveBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        saveAll();
+        try {
+          const evt = new CustomEvent("soulink:saved", { bubbles: true });
+          document.dispatchEvent(evt);
+        } catch (e2) {}
+      });
+    }
+
     if (ui.resetForm) {
       ui.resetForm.addEventListener("click", (e) => {
         e.preventDefault();
-        const ok = window.confirm(
-          "Clear your saved profile on this device?"
-        );
+        const ok = window.confirm("Clear your saved profile on this device?");
         if (!ok) return;
-        const patch = {
+
+        try {
+          localStorage.removeItem(PRIMARY_KEY);
+          localStorage.removeItem(LEGACY_KEY);
+        } catch (e2) {}
+
+        state = {
           name: "",
-          birthday: "",
           country: "",
+          birthday: "",
           connectionType: "",
-          loveLanguage: "",
           loveLanguages: [],
+          loveLanguage: "",
           gender: "",
           genderSelf: "",
-          seekingGender: [],
           connectWith: [],
+          seekingGender: [],
+          connectWithCustom: "",
           orientation: "",
           hobbies: [],
           values: [],
           unacceptable: "",
           about: "",
-          aboutMe: "",
           profilePhoto1: "",
           profilePhoto2: "",
           profilePhoto3: "",
           mainPhotoSlot: null,
+          _genderMode: "none",
         };
-        applyPatch(patch);
-        // Also reset form fields visually
-        if (ui.name) ui.name.value = "";
-        if (ui.country) ui.country.value = "";
-        if (ui.birthday) ui.birthday.value = "";
-        if (ui.boundaries) ui.boundaries.value = "";
-        if (ui.aboutMe) ui.aboutMe.value = "";
-      });
-    }
 
-    if (ui.saveBtn) {
-      ui.saveBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        // All changes are already patched live; just give a gentle confirmation
         try {
-          const evt = new CustomEvent("soulink:saved", { bubbles: true });
-          document.dispatchEvent(evt);
-        } catch (e2) {
-          window.alert("Your profile has been saved on this device.");
-        }
+          const json = JSON.stringify({});
+          localStorage.setItem(PRIMARY_KEY, json);
+          localStorage.setItem(LEGACY_KEY, json);
+        } catch (e3) {}
+
+        if (ui.genderSelfMount) ui.genderSelfMount.innerHTML = "";
+        if (ui.connectWithCustomMount) ui.connectWithCustomMount.innerHTML = "";
+
+        prefillInputsFromState();
+        initChips();
+        initTagGroups();
+        initPhotos();
+
+        updateBirthdayHint();
+        updatePreview();
       });
     }
   }
 
-  // ===== Init =====
+  let state = {};
 
   function init() {
-    // Prefill raw inputs from data
-    initBasics();
+    const raw = readSoulRaw();
+    state = normaliseStateFromRaw(raw);
 
-    // Chips & tags
+    const needsFix =
+      JSON.stringify(normaliseLoveLanguages(raw.loveLanguages || raw.loveLanguage || [], raw.loveLanguage)) !==
+      JSON.stringify(state.loveLanguages) ||
+      normaliseConnectionType(raw.connectionType) !== state.connectionType;
+
+    if (needsFix) {
+      const patch = collectPayloadFromState();
+      state = persistPatch(patch);
+      state = normaliseStateFromRaw(state);
+    }
+
+    prefillInputsFromState();
+
+    bindText(ui.name, "name");
+    bindText(ui.country, "country");
+    bindText(ui.birthday, "birthday");
+
+    if (ui.boundaries) {
+      const handler = () => {
+        state.unacceptable = ui.boundaries.value || "";
+        state = persistPatch({ unacceptable: state.unacceptable, boundaries: state.unacceptable });
+        updatePreview();
+      };
+      ui.boundaries.addEventListener("change", handler);
+      ui.boundaries.addEventListener("blur", handler);
+    }
+
+    if (ui.aboutMe) {
+      const handler = () => {
+        state.about = ui.aboutMe.value || "";
+        state = persistPatch({ about: state.about, aboutMe: state.about });
+        updatePreview();
+      };
+      ui.aboutMe.addEventListener("change", handler);
+      ui.aboutMe.addEventListener("blur", handler);
+    }
+
+    updateBirthdayHint();
+
     initChips();
-
-    // Photos
-    initPhotoSlot(1);
-    initPhotoSlot(2);
-    initPhotoSlot(3);
-
-    // Actions (navigation, reset, save)
+    initTagGroups();
+    initPhotos();
     initActions();
 
-    // Initial hint + preview
-    updateBirthdayHint();
+    if (state._genderMode === "self") {
+      const input = showGenderSelfInput(true);
+      if (input) input.value = state.genderSelf || state.gender || "";
+      const chips = $$("button.chip", ui.genderIdChips || document);
+      chips.forEach((b) => {
+        if (b.dataset.value === "Self-describe") setPressed(b, true);
+        else setPressed(b, false);
+      });
+    }
+
+    const customOn = (state.connectWith || []).includes("Custom preference");
+    if (customOn) {
+      const input = showConnectWithCustomInput(true);
+      if (input) input.value = state.connectWithCustom || "";
+    }
+
     updatePreview();
   }
 
