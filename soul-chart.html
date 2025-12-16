@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta
     name="description"
-    content="Soulink Soul Chart — an AI-style dashboard of your love language, values, passions, zodiac and numerology in one glowing map."
+    content="Soulink Soul Chart — a clear, glowing dashboard of your love language, values, passions, zodiac and numerology."
   />
   <link rel="stylesheet" href="style.css" />
   <script src="auth.js" defer></script>
@@ -15,10 +15,18 @@
   <script src="soul-chart.js" defer></script>
 
   <style>
+    /* Ensure navbar stays visible above canvas overlays (mobile + desktop) */
+    header.topnav {
+      position: sticky;
+      top: 0;
+      z-index: 999;
+    }
+
     .soul-chart-page {
       position: relative;
       padding: 1.5rem 1rem 2.5rem;
       isolation: isolate;
+      z-index: 0;
     }
 
     @media (min-width: 900px) {
@@ -116,7 +124,7 @@
     .sc-hero-subtitle {
       font-size: 0.96rem;
       opacity: 0.92;
-      max-width: 32rem;
+      max-width: 34rem;
     }
 
     .sc-hero-meta {
@@ -347,10 +355,11 @@
       font-size: 0.85rem;
       opacity: 0.88;
       margin-top: 0.1rem;
+      max-width: 42rem;
     }
 
     .sc-chart-shell {
-      margin-top: 0.5rem;
+      margin-top: 0.55rem;
       display: flex;
       flex-direction: column;
       gap: 0.6rem;
@@ -360,6 +369,7 @@
       position: relative;
       width: 100%;
       aspect-ratio: 4 / 3;
+      min-height: 240px;
       border-radius: 18px;
       padding: 0.6rem;
       background:
@@ -371,6 +381,13 @@
       overflow: hidden;
     }
 
+    @media (max-width: 420px) {
+      .sc-chart-canvas-wrap {
+        aspect-ratio: 1 / 1;
+        min-height: 280px;
+      }
+    }
+
     .sc-chart-canvas-wrap canvas {
       width: 100%;
       height: 100%;
@@ -379,7 +396,34 @@
 
     .sc-chart-note {
       font-size: 0.84rem;
-      opacity: 0.9;
+      opacity: 0.92;
+    }
+
+    .sc-legend {
+      margin: 0.1rem 0 0.2rem;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 0.25rem;
+      font-size: 0.82rem;
+      opacity: 0.92;
+    }
+
+    .sc-legend li {
+      display: flex;
+      gap: 0.45rem;
+      align-items: baseline;
+    }
+
+    .sc-legend-dot {
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 253, 216, 0.65);
+      background: rgba(0, 253, 216, 0.12);
+      box-shadow: 0 0 10px rgba(0, 253, 216, 0.35);
+      flex: 0 0 auto;
+      margin-top: 0.22rem;
     }
 
     .sc-chip-row {
@@ -484,6 +528,24 @@
       max-width: 26rem;
     }
 
+    .sc-updated-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      padding: 0.25rem 0.65rem;
+      border: 1px solid rgba(0, 253, 216, 0.45);
+      background: rgba(0, 253, 216, 0.08);
+      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.2);
+      white-space: nowrap;
+      opacity: 0.92;
+    }
+
+    .sc-updated-pill .sc-legend-dot {
+      margin-top: 0;
+    }
+
     /* Entrance animations */
     .sc-animated {
       opacity: 0;
@@ -498,22 +560,12 @@
     .sc-delay-5 { animation-delay: 0.3s; }
 
     @keyframes sc-fade-up {
-      from {
-        opacity: 0;
-        transform: translateY(14px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .sc-animated {
-        opacity: 1;
-        transform: none;
-        animation: none;
-      }
+      .sc-animated { opacity: 1; transform: none; animation: none; }
     }
   </style>
 </head>
@@ -566,8 +618,7 @@
             <p class="sc-hero-kicker">AI Soul Dashboard</p>
             <h1 class="sc-hero-title">Soul Chart</h1>
             <p class="sc-hero-subtitle">
-              A living, glowing map of your soul energies — love language, values, passions,
-              zodiac and numerology woven into one visual dashboard.
+              Clear, readable charts built from your Quiz + Edit Profile. Each chart is a direct visual mirror of your selections.
             </p>
             <div class="sc-hero-meta">
               <span id="scMetaName" class="sc-meta-pill" hidden></span>
@@ -582,7 +633,7 @@
                 <div class="sc-orbit-core-title">Core vibe</div>
                 <div class="sc-orbit-core-main" id="scOrbitMain">Soul online</div>
                 <div class="sc-orbit-core-sub" id="scOrbitSub">
-                  Ready to translate your inner map into glowing charts.
+                  Ready to translate your inner map into clear charts.
                 </div>
               </div>
             </div>
@@ -597,8 +648,7 @@
           <span>Your Soul Chart is not ready yet</span>
         </div>
         <p class="sc-empty-text">
-          To unlock your Soul Chart, please complete the Soulink Quiz and share a few key details
-          about your love language, values and passions.
+          To unlock your Soul Chart, please complete the Soulink Quiz and save your profile.
         </p>
         <div class="btn-row">
           <a href="quiz.html" class="btn primary">Go to Quiz</a>
@@ -608,7 +658,7 @@
 
       <!-- MAIN DASHBOARD -->
       <section id="scDashboard" class="sc-grid sc-animated sc-delay-2" hidden>
-        <!-- Love Language Radar -->
+        <!-- Love Language -->
         <article class="sc-card">
           <div class="sc-card-inner">
             <header class="sc-card-header">
@@ -616,32 +666,35 @@
               <div>
                 <h2 class="sc-card-title">The Voice of Your Heart</h2>
                 <p class="sc-card-subtitle">
-                  Radar of the five love languages, highlighting how your heart naturally gives and receives love.
+                  Bars show the five love languages. The strongest bar is your primary love language.
                 </p>
               </div>
             </header>
 
             <div class="sc-chart-shell">
+              <ul class="sc-legend" aria-label="Love language chart legend">
+                <li><span class="sc-legend-dot" aria-hidden="true"></span><span><strong>Primary</strong> = biggest bar (your main love language)</span></li>
+                <li><span class="sc-legend-dot" aria-hidden="true"></span><span><strong>Selected</strong> = medium bars (also meaningful to you)</span></li>
+              </ul>
+
               <div class="sc-chart-canvas-wrap">
                 <canvas
                   id="loveLanguageChart"
-                  width="360"
-                  height="270"
-                  aria-label="Love language radar chart"
+                  aria-label="Love language bar chart"
                   role="img"
                 ></canvas>
               </div>
+
               <p id="loveLanguageSummary" class="sc-chart-note">
                 Your primary love language will appear here once you complete the Quiz.
               </p>
-              <div class="sc-chip-row" id="loveLanguageChips">
-                <!-- chips populated by JS -->
-              </div>
+
+              <div class="sc-chip-row" id="loveLanguageChips"></div>
             </div>
           </div>
         </article>
 
-        <!-- Hobbies & Passions Donut -->
+        <!-- Hobbies -->
         <article class="sc-card">
           <div class="sc-card-inner">
             <header class="sc-card-header">
@@ -649,32 +702,34 @@
               <div>
                 <h2 class="sc-card-title">Where Your Spirit Flows</h2>
                 <p class="sc-card-subtitle">
-                  A glowing donut of the activities and spaces where your energy feels most alive.
+                  Your top hobbies/interests in the order you chose them. Earlier = stronger signal.
                 </p>
               </div>
             </header>
 
             <div class="sc-chart-shell">
+              <ul class="sc-legend" aria-label="Hobbies chart legend">
+                <li><span class="sc-legend-dot" aria-hidden="true"></span><span>Bars reflect <strong>priority order</strong> (1st is strongest)</span></li>
+              </ul>
+
               <div class="sc-chart-canvas-wrap">
                 <canvas
                   id="hobbiesChart"
-                  width="360"
-                  height="270"
-                  aria-label="Hobbies and passions chart"
+                  aria-label="Hobbies ranked bar chart"
                   role="img"
                 ></canvas>
               </div>
+
               <p id="hobbiesSummary" class="sc-chart-note">
-                Your soul lights up most when you are around the things you love — they will appear here.
+                Your top hobbies will appear here after you add them in Quiz or Edit Profile.
               </p>
-              <div class="sc-chip-row" id="hobbiesChips">
-                <!-- chips populated by JS -->
-              </div>
+
+              <div class="sc-chip-row" id="hobbiesChips"></div>
             </div>
           </div>
         </article>
 
-        <!-- Core Values Compass -->
+        <!-- Values -->
         <article class="sc-card">
           <div class="sc-card-inner">
             <header class="sc-card-header">
@@ -682,32 +737,35 @@
               <div>
                 <h2 class="sc-card-title">The Compass of Your Soul</h2>
                 <p class="sc-card-subtitle">
-                  A triad of Heart, Mind and Spirit, showing which direction your inner compass leans toward.
+                  Your core values in priority order, plus a simple Heart / Mind / Spirit theme hint.
                 </p>
               </div>
             </header>
 
             <div class="sc-chart-shell">
+              <ul class="sc-legend" aria-label="Values chart legend">
+                <li><span class="sc-legend-dot" aria-hidden="true"></span><span>Bars reflect <strong>priority order</strong> (1st is strongest)</span></li>
+                <li><span class="sc-legend-dot" aria-hidden="true"></span><span>Theme hint is a soft guide (not a judgement)</span></li>
+              </ul>
+
               <div class="sc-chart-canvas-wrap">
                 <canvas
                   id="valuesCompassChart"
-                  width="360"
-                  height="270"
-                  aria-label="Core values compass chart"
+                  aria-label="Values ranked bar chart"
                   role="img"
                 ></canvas>
               </div>
+
               <p id="valuesSummary" class="sc-chart-note">
-                Once you share your core values, this compass will reveal where your soul naturally points.
+                Once you share your values, this section will become your clarity compass.
               </p>
-              <div class="sc-chip-row" id="valuesChips">
-                <!-- chips populated by JS -->
-              </div>
+
+              <div class="sc-chip-row" id="valuesChips"></div>
             </div>
           </div>
         </article>
 
-        <!-- Zodiac & Numerology quick card -->
+        <!-- Zodiac & Numerology -->
         <article class="sc-card">
           <div class="sc-card-inner">
             <header class="sc-card-header">
@@ -715,7 +773,7 @@
               <div>
                 <h2 class="sc-card-title">Zodiac &amp; Numerology Snapshot</h2>
                 <p class="sc-card-subtitle">
-                  A quick synthesis of your Western zodiac, Chinese animal and life path number.
+                  This is derived from your birthday (or saved zodiac fields if you already have them).
                 </p>
               </div>
             </header>
@@ -724,9 +782,7 @@
               <p id="zodiacLine" class="sc-chart-note">
                 Your zodiac and numerology snapshot will appear here after you add your birthday.
               </p>
-              <div class="sc-chip-row" id="zodiacChips">
-                <!-- zodiac chips -->
-              </div>
+              <div class="sc-chip-row" id="zodiacChips"></div>
             </div>
           </div>
         </article>
@@ -742,8 +798,7 @@
           Your Soul Chart will come alive once your core data is saved in Soulink.
         </p>
         <p id="scSummaryMeta" class="sc-summary-meta">
-          This paragraph weaves together your zodiac, Chinese animal, life path, primary love language,
-          values and passions into one gentle overview.
+          Refresh anytime after updating Quiz or Edit Profile.
         </p>
       </section>
 
@@ -755,10 +810,13 @@
           <button type="button" id="scRefreshBtn" class="btn outline">
             Refresh Chart
           </button>
+          <span id="scLastUpdated" class="sc-updated-pill" aria-live="polite">
+            <span class="sc-legend-dot" aria-hidden="true"></span>
+            <span>Updated: —</span>
+          </span>
         </div>
         <p class="sc-actions-note">
-          Your Soul Chart updates whenever you refine your Quiz or Edit Profile. Use it as a calm,
-          visual reminder of what keeps your soul balanced and bright.
+          Tip: After changing Quiz or Edit Profile, tap Refresh Chart here to re-read your saved data and redraw the visuals.
         </p>
       </section>
     </div>
