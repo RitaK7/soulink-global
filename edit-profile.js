@@ -299,35 +299,91 @@
     const raw = norm(birthdayRaw);
     if (!raw) return {};
 
-    const digits = raw.replace(/[^\d]/g, "");
+    const now = new Date();
+    const currentYear = now.getFullYear();
+
     let year, month, day;
 
+    function makeDateUTC(y, m, d) {
+      if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null;
+      if (y < 1000 || y > currentYear + 1) return null;
+      if (m < 1 || m > 12) return null;
+      if (d < 1 || d > 31) return null;
+
+      const dt = new Date(Date.UTC(y, m - 1, d));
+      if (isNaN(dt.getTime())) return null;
+
+      if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return null;
+
+      const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const birthLocal = new Date(y, m - 1, d);
+      if (birthLocal.getTime() > todayLocal.getTime()) return null;
+
+      return dt;
+    }
+
+    function trySet(y, m, d) {
+      const dt = makeDateUTC(y, m, d);
+      if (!dt) return null;
+      year = y;
+      month = m;
+      day = d;
+      return dt;
+    }
+
+    const digits = raw.replace(/[^\d]/g, "");
+
     if (/^\d{8}$/.test(digits)) {
-      year = Number(digits.slice(0, 4));
-      month = Number(digits.slice(4, 6));
-      day = Number(digits.slice(6, 8));
-    } else if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-      const parts = raw.split("-");
-      year = Number(parts[0]);
-      month = Number(parts[1]);
-      day = Number(parts[2]);
+      const y1 = Number(digits.slice(0, 4));
+      const m1 = Number(digits.slice(4, 6));
+      const d1 = Number(digits.slice(6, 8));
+
+      const d2 = Number(digits.slice(0, 2));
+      const m2 = Number(digits.slice(2, 4));
+      const y2 = Number(digits.slice(4, 8));
+
+      let dt = null;
+
+      if (y1 > currentYear + 1) {
+        dt = trySet(y2, m2, d2);
+      } else {
+        dt = trySet(y1, m1, d1);
+        if (!dt) dt = trySet(y2, m2, d2);
+      }
+
+      if (!dt) return {};
+    } else if (/^\d{4}-\d{2}-\d{2}$/.test(raw) || /^\d{4}\/\d{2}\/\d{2}$/.test(raw)) {
+      const parts = raw.split(/[-\/]/);
+      const y = Number(parts[0]);
+      const m = Number(parts[1]);
+      const d = Number(parts[2]);
+      const dt = trySet(y, m, d);
+      if (!dt) return {};
     } else if (/^\d{4}\.\d{2}\.\d{2}$/.test(raw)) {
       const parts = raw.split(".");
-      year = Number(parts[0]);
-      month = Number(parts[1]);
-      day = Number(parts[2]);
+      const y = Number(parts[0]);
+      const m = Number(parts[1]);
+      const d = Number(parts[2]);
+      const dt = trySet(y, m, d);
+      if (!dt) return {};
+    } else if (/^\d{2}\.\d{2}\.\d{4}$/.test(raw) || /^\d{2}\/\d{2}\/\d{4}$/.test(raw)) {
+      const parts = raw.split(/[\.\/]/);
+      const d = Number(parts[0]);
+      const m = Number(parts[1]);
+      const y = Number(parts[2]);
+      const dt = trySet(y, m, d);
+      if (!dt) return {};
     } else {
       return {};
     }
 
     const dt = new Date(Date.UTC(year, month - 1, day));
-    if (isNaN(dt.getTime())) return {};
 
-    const now = new Date();
     let age = now.getFullYear() - year;
-    const m = now.getMonth() - (month - 1);
-    const d = now.getDate() - day;
-    if (m < 0 || (m === 0 && d < 0)) age -= 1;
+    const mDiff = now.getMonth() - (month - 1);
+    const dDiff = now.getDate() - day;
+    if (mDiff < 0 || (mDiff === 0 && dDiff < 0)) age -= 1;
+    if (!Number.isFinite(age) || age < 0) return {};
 
     function zodiacSign(mo, da) {
       const md = mo * 100 + da;
@@ -1102,13 +1158,17 @@
       if (input) input.value = state.genderSelf || state.gender || "";
       const chips = $$("button.chip", ui.genderIdChips || document);
       chips.forEach((b) => {
-        if (b.dataset.value === "Self-describe") setPressed(b, true);
-        else setPressed(b, false);
+        if (b && b.dataset && b.dataset.value === "Self-describe") {
+          setPressed(b, true);
+        }
       });
     }
 
-    const customOn = (state.connectWith || []).includes("Custom preference");
-    if (customOn) {
+    const connectHasCustom =
+      norm(state.connectWithCustom) !== "" ||
+      (state.connectWith || []).includes("Custom preference") ||
+      (state.seekingGender || []).includes("Custom preference");
+    if (connectHasCustom) {
       const input = showConnectWithCustomInput(true);
       if (input) input.value = state.connectWithCustom || "";
     }
