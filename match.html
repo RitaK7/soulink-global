@@ -289,6 +289,26 @@
       .match-section-animated { opacity: 1 !important; transform: none !important; transition: none !important; }
       .m-card, .m-snapshot-chip, .match-toggle { transition: none !important; }
     }
+
+    /* Mobile navbar visibility safety */
+    header.topnav { position: sticky; top: 0; z-index: 5000; }
+    .topnav-inner { position: relative; z-index: 1; }
+
+    /* Flow navigation (Back / Next) */
+    .m-flow-nav {
+      margin-top: 1.6rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .m-flow-nav .btn { min-width: 180px; }
+
+    @media (max-width: 640px) {
+      .m-flow-nav { justify-content: stretch; }
+      .m-flow-nav .btn { flex: 1 1 160px; min-width: 0; }
+    }
   </style>
 </head>
 
@@ -356,7 +376,7 @@
               </header>
 
               <p id="matchSnapshotBody" class="m-snapshot-body">
-                Tap a card in the Match Lab to see a gentle compatibility portrait — love language, values, joys, and symbolic astro & numbers.
+                Tap a card in the Match Lab to see a gentle compatibility portrait — love language, values, joys, and symbolic astro &amp; numbers.
               </p>
 
               <div class="m-snapshot-meta">
@@ -404,6 +424,12 @@
           <div id="matchList" class="m-grid" aria-live="polite"></div>
         </section>
       </section>
+
+      <section class="m-flow-nav" aria-label="Match flow navigation">
+        <a href="soul-coach.html" class="btn outline">← Back to Soul Coach</a>
+        <a href="friends.html" class="btn">Next → Friends</a>
+      </section>
+
     </div>
   </main>
 

@@ -1080,10 +1080,7 @@
 
       animatePageOnce();
     } catch (_e) {
-      if (ui.empty) {
-        ui.empty.hidden = false;
-        ui.empty.textContent = "We could not load your Match data right now. Please refresh the page and try again.";
-      }
+      if (ui.empty) ui.empty.hidden = false;
       if (ui.layout) ui.layout.hidden = true;
     }
   }
