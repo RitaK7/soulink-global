@@ -1,4 +1,3 @@
-/* :contentReference[oaicite:1]{index=1} */
 (function () {
   if (typeof window === "undefined") return;
 
@@ -200,7 +199,8 @@
       }
     } catch (e) {}
     try {
-      const raw = localStorage.getItem(PRIMARY_KEY) || localStorage.getItem(LEGACY_KEY);
+      const raw =
+        localStorage.getItem(PRIMARY_KEY) || localStorage.getItem(LEGACY_KEY);
       return raw ? JSON.parse(raw) : {};
     } catch (e) {
       return {};
@@ -591,9 +591,12 @@
     });
   }
 
-  function buildMultiChips(container, labels, currentList, onChange) {
+  function buildMultiChips(container, labels, currentList, onChange, options) {
     if (!container) return;
     container.innerHTML = "";
+    const opts = options || {};
+    const reorderOnActiveClick = !!opts.reorderOnActiveClick;
+
     const set = new Set((currentList || []).map((x) => norm(x)));
 
     labels.forEach((lbl) => {
@@ -601,14 +604,20 @@
       const chip = makeChip(lbl, lbl, pressed);
       chip.addEventListener("click", () => {
         const isOn = chip.getAttribute("aria-pressed") === "true";
-        const nextOn = !isOn;
-        setPressed(chip, nextOn);
-
         let next = (currentList || []).map((x) => norm(x)).filter(Boolean);
-        if (nextOn) {
+
+        if (!isOn) {
+          setPressed(chip, true);
           if (!next.includes(lbl)) next.push(lbl);
         } else {
-          next = next.filter((x) => x !== lbl);
+          if (reorderOnActiveClick) {
+            setPressed(chip, true);
+            next = next.filter((x) => x !== lbl);
+            next.unshift(lbl);
+          } else {
+            setPressed(chip, false);
+            next = next.filter((x) => x !== lbl);
+          }
         }
 
         currentList = next;
@@ -735,7 +744,7 @@
       buildMultiChips(container, base, current, (next) => {
         current = uniq(next);
         onChange(current);
-      });
+      }, { reorderOnActiveClick: true });
     }
 
     function addCustom(label) {
@@ -835,7 +844,10 @@
 
     connectRaw.forEach((item) => {
       const s = lower(item);
-      const mappedLabel = CONNECT_WITH_CODE_TO_LABEL[s] || CONNECT_WITH_LABELS.find((x) => lower(x) === s) || norm(item);
+      const mappedLabel =
+        CONNECT_WITH_CODE_TO_LABEL[s] ||
+        CONNECT_WITH_LABELS.find((x) => lower(x) === s) ||
+        norm(item);
       if (!mappedLabel) return;
       if (CONNECT_WITH_LABELS.includes(mappedLabel)) {
         mapped.push(mappedLabel);
@@ -873,16 +885,13 @@
     if (ui.aboutMe) ui.aboutMe.value = state.about || "";
   }
 
-  function bindText(el, key, { onAfter } = {}) {
+  function bindText(el, key) {
     if (!el) return;
     const handler = () => {
       state[key] = el.value || "";
       state = persistPatch({ [key]: state[key] });
-      if (key === "birthday") {
-        updateBirthdayHint();
-      }
+      if (key === "birthday") updateBirthdayHint();
       updatePreview();
-      if (onAfter) onAfter();
     };
     el.addEventListener("change", handler);
     el.addEventListener("blur", handler);
@@ -917,7 +926,7 @@
             const v = norm(input.value);
             state.gender = v;
             state.genderSelf = v;
-            state._genderMode = v ? "self" : "self";
+            state._genderMode = "self";
             state = persistPatch({ gender: v, genderSelf: v });
             updatePreview();
           };
@@ -1111,7 +1120,7 @@
 
     const needsFix =
       JSON.stringify(normaliseLoveLanguages(raw.loveLanguages || raw.loveLanguage || [], raw.loveLanguage)) !==
-      JSON.stringify(state.loveLanguages) ||
+        JSON.stringify(state.loveLanguages) ||
       normaliseConnectionType(raw.connectionType) !== state.connectionType;
 
     if (needsFix) {
