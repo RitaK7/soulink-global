@@ -1,4 +1,4 @@
-\// soul-coach.js — Soulink "Soul Coach" page
+// soul-coach.js — Soulink "Soul Coach" page
 // Reads soul profile via data-helpers.js and generates gentle coaching ideas.
 
 (function () {
