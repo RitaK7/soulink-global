@@ -327,13 +327,14 @@
         type="button"
         aria-label="Toggle navigation"
         aria-expanded="false"
+        aria-controls="primaryNav"
       >
-        <span></span>
-        <span></span>
-        <span></span>
+        <span class="bar" aria-hidden="true"></span>
+        <span class="bar" aria-hidden="true"></span>
+        <span class="bar" aria-hidden="true"></span>
       </button>
 
-      <nav class="nav-links" aria-label="Primary">
+      <nav class="nav-links" id="primaryNav" aria-label="Primary">
         <a href="index.html" data-page="Home">Home</a>
         <a href="quiz.html" data-page="Quiz">Quiz</a>
         <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
@@ -358,93 +359,94 @@
         </p>
         <div class="m-empty-actions">
           <a href="quiz.html" class="btn outline">Go to Quiz</a>
-          <a href="my-soul.html" class="btn">View My Soul</a>
+          <a href="edit-profile.html" class="btn">Edit Your Profile</a>
         </div>
       </section>
 
-      <section id="matchLayout">
-        <section id="matchHero" class="m-hero match-section-animated m-delay-1">
-          <div class="m-hero-left">
-            <p class="m-kicker">Match Lab</p>
-            <h1 class="m-title">Demo matches computed from your real profile</h1>
-            <p class="m-subtitle">
-              This page reads your base profile via data-helpers.js, then scores each DEMO match. Later, we’ll switch the match source to real users by changing one function only.
-            </p>
+      <section class="m-hero match-section-animated m-delay-1">
+        <div class="m-hero-left">
+          <div class="m-kicker">Match Lab</div>
+          <h1 class="m-title">Explore your most aligned connections</h1>
+          <p class="m-subtitle">
+            This is your compatibility sandbox: filter romantic vs friendship energy, sort by best harmony or “spice”, and open a deep Match Profile when you’re ready.
+          </p>
 
-            <div class="m-pill-row">
-              <span class="m-pill"><span class="m-pill-label">Type</span><span class="m-pill-value" id="matchModeLabel">All connections</span></span>
-              <span class="m-pill"><span class="m-pill-label">Base</span><span class="m-pill-value" id="baseSoulStatus">Loaded</span></span>
-              <span class="m-pill m-pill-muted"><span class="m-pill-label">Future</span><span class="m-pill-value">Real users</span></span>
+          <div class="m-pill-row">
+            <span class="m-pill"><span class="m-pill-label">Mode:</span> <span id="matchModeLabel" class="m-pill-value">All</span></span>
+            <span class="m-pill m-pill-muted"><span class="m-pill-label">Matches:</span> <span id="matchCount" class="m-pill-value">0</span></span>
+            <span class="m-pill m-pill-muted"><span class="m-pill-label">Your Circle:</span> <span id="matchCircleCount" class="m-pill-value">0</span></span>
+          </div>
+
+          <div class="m-hero-footer">
+            Tip: Tap any card to update the snapshot on the right → then open “View Match Profile” for the deep portrait.
+          </div>
+        </div>
+
+        <div class="m-hero-right">
+          <div class="m-snapshot-card">
+            <div class="m-snapshot-header">
+              <div id="matchSnapshotTitle" class="m-snapshot-title">No match selected yet</div>
+              <div class="m-snapshot-score-pill"><span id="matchSnapshotScore">–%</span></div>
             </div>
 
-            <p class="m-hero-footer">Click any card to update the snapshot with a deeper view of that connection.</p>
+            <div class="m-snapshot-meta">
+              <span class="m-snapshot-meta-label">Focus:</span>
+              <span id="matchSnapshotFocus">Romantic &amp; Friendship</span>
+              <span class="m-snapshot-meta-label">Status:</span>
+              <span id="baseSoulStatus">Ready</span>
+            </div>
+
+            <div id="matchSnapshotBody" class="m-snapshot-body">
+              Tap a card in the Match Lab to see a gentle compatibility portrait — love language, values, joys, and symbolic astro &amp; numbers.
+            </div>
+
+            <div class="m-snapshot-highlight">
+              <span class="m-snapshot-highlight-label">Guidance:</span>
+              <span id="matchSnapshotHighlight" class="m-snapshot-highlight-text">
+                Scores are information, not fate. Communication and boundaries matter more than any number.
+              </span>
+            </div>
+
+            <div id="matchSnapshotPicker" class="m-snapshot-picker" aria-label="Snapshot focus">
+              <span class="m-snapshot-chip is-active" data-focus="overview" role="button" tabindex="0">Overview</span>
+              <span class="m-snapshot-chip" data-focus="love" role="button" tabindex="0">Love</span>
+              <span class="m-snapshot-chip" data-focus="values" role="button" tabindex="0">Values</span>
+              <span class="m-snapshot-chip" data-focus="joy" role="button" tabindex="0">Joy</span>
+              <span class="m-snapshot-chip" data-focus="astro" role="button" tabindex="0">Astro &amp; Numbers</span>
+            </div>
           </div>
-
-          <aside class="m-hero-right" aria-label="Selected match snapshot">
-            <article class="m-snapshot-card">
-              <header class="m-snapshot-header">
-                <h2 id="matchSnapshotTitle" class="m-snapshot-title">No match selected yet</h2>
-                <div class="m-snapshot-score-pill"><span id="matchSnapshotScore">–%</span></div>
-              </header>
-
-              <p id="matchSnapshotBody" class="m-snapshot-body">
-                Tap a card in the Match Lab to see a gentle compatibility portrait — love language, values, joys, and symbolic astro &amp; numbers.
-              </p>
-
-              <div class="m-snapshot-meta">
-                <span class="m-snapshot-meta-label">Focus</span>
-                <span id="matchSnapshotFocus">Romantic &amp; Friendship</span>
-              </div>
-
-              <div class="m-snapshot-highlight">
-                <span class="m-snapshot-highlight-label">Highlight</span>
-                <span id="matchSnapshotHighlight" class="m-snapshot-highlight-text">
-                  Scores are information, not fate. Communication and boundaries matter more than any number.
-                </span>
-              </div>
-
-              <div id="matchSnapshotPicker" class="m-snapshot-picker" aria-label="Snapshot focus picker">
-                <button type="button" class="m-snapshot-chip is-active" data-focus="overview">Overview</button>
-                <button type="button" class="m-snapshot-chip" data-focus="love">Love</button>
-                <button type="button" class="m-snapshot-chip" data-focus="values">Values</button>
-                <button type="button" class="m-snapshot-chip" data-focus="joy">Joy</button>
-                <button type="button" class="m-snapshot-chip" data-focus="astro">Astro</button>
-              </div>
-            </article>
-          </aside>
-        </section>
-
-        <section class="m-toolbar match-section-animated m-delay-2" aria-label="Match filters and sorting">
-          <div class="m-toggle-group">
-            <span class="m-toggle-label">Type</span>
-            <button type="button" class="match-toggle is-active" data-connection-mode="all">All</button>
-            <button type="button" class="match-toggle" data-connection-mode="romantic">Romantic</button>
-            <button type="button" class="match-toggle" data-connection-mode="friendship">Friendship</button>
-          </div>
-
-          <div class="m-sort">
-            <label for="matchSortSelect">Sort</label>
-            <select id="matchSortSelect" aria-label="Sort matches">
-              <option value="best">Best match</option>
-              <option value="name">Name A–Z</option>
-              <option value="spice">Spice factor</option>
-            </select>
-          </div>
-        </section>
-
-        <section class="match-section-animated m-delay-3">
-          <div id="matchList" class="m-grid" aria-live="polite"></div>
-        </section>
+        </div>
       </section>
 
-      <section class="m-flow-nav" aria-label="Match flow navigation">
-        <a href="soul-coach.html" class="btn outline">← Back to Soul Coach</a>
-        <a href="friends.html" class="btn">Next → Friends</a>
+      <section class="m-toolbar match-section-animated m-delay-2" aria-label="Match controls">
+        <div class="m-toggle-group" aria-label="Connection mode">
+          <div class="m-toggle-label">Show</div>
+          <button type="button" class="match-toggle is-active" data-connection-mode="all">All</button>
+          <button type="button" class="match-toggle" data-connection-mode="romantic">Romantic</button>
+          <button type="button" class="match-toggle" data-connection-mode="friendship">Friendship</button>
+        </div>
+
+        <div class="m-sort">
+          <label for="matchSortSelect">Sort</label>
+          <select id="matchSortSelect" aria-label="Sort matches">
+            <option value="best">Best Match</option>
+            <option value="spice">Most Spice</option>
+            <option value="name">Name</option>
+          </select>
+        </div>
       </section>
 
+      <section id="matchLayout" class="match-section-animated m-delay-3">
+        <div id="matchList" class="m-grid" aria-live="polite"></div>
+
+        <section class="m-flow-nav" aria-label="Flow navigation">
+          <a href="soul-coach.html" class="btn outline">← Back: Soul Coach</a>
+          <a href="friends.html" class="btn">Next → Friends</a>
+        </section>
+      </section>
     </div>
   </main>
 
-  <footer class="footer-note">© 2025 Soulink.global | Created with love by Soulink Team.</footer>
+  <footer class="footer">Created with love by Soulink Team.</footer>
 </body>
 </html>
