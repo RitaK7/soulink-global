@@ -182,6 +182,12 @@
 
   const FRIENDS_KEY = "soulink.friends.list";
 
+  const LEGACY_FRIENDS_KEYS = [
+    "soulink.friends",
+    "soulFriends",
+    "friends",
+  ];
+
   // (Kept for possible future demo usage; not used for real data)
   const DEMO_FRIENDS = [
     {
@@ -214,14 +220,59 @@
     },
   ];
 
+  function normaliseFriendsShape(parsed) {
+    if (!parsed) return [];
+    if (Array.isArray(parsed)) {
+      return parsed.filter((item) => item && typeof item === "object");
+    }
+    if (parsed && typeof parsed === "object") {
+      const probeKeys = ["list", "friends", "items", "data"];
+      for (const k of probeKeys) {
+        if (Array.isArray(parsed[k])) {
+          return parsed[k].filter((item) => item && typeof item === "object");
+        }
+      }
+
+      const vals = Object.values(parsed);
+      if (vals && vals.length) {
+        const arr = vals.filter((v) => v && typeof v === "object");
+        if (arr.length) return arr;
+      }
+    }
+    return [];
+  }
+
   function safeGetFriendsList() {
     if (typeof localStorage === "undefined") return [];
+
     try {
-      const raw = localStorage.getItem(FRIENDS_KEY);
-      if (!raw) return [];
-      const parsed = safeParseJSON(raw);
-      if (!parsed || !Array.isArray(parsed)) return [];
-      return parsed.filter((item) => item && typeof item === "object");
+      const primaryRaw = localStorage.getItem(FRIENDS_KEY);
+      const primaryParsed = safeParseJSON(primaryRaw);
+      const primaryList =
+        primaryParsed != null ? normaliseFriendsShape(primaryParsed) : [];
+
+      if (primaryList.length) return primaryList;
+
+      const primaryIsEmpty =
+        !primaryRaw || primaryParsed == null || primaryList.length === 0;
+
+      for (const legacyKey of LEGACY_FRIENDS_KEYS) {
+        const legacyRaw = localStorage.getItem(legacyKey);
+        if (!legacyRaw) continue;
+
+        const legacyParsed = safeParseJSON(legacyRaw);
+        if (legacyParsed == null) continue;
+
+        if (primaryIsEmpty) {
+          try {
+            localStorage.setItem(FRIENDS_KEY, legacyRaw);
+          } catch (_err) {}
+        }
+
+        return normaliseFriendsShape(legacyParsed);
+      }
+
+      return [];
     } catch (err) {
       console.warn("Friends: failed to read friends list", err);
       return [];
@@ -475,6 +526,13 @@
     const n = Number.isFinite(count) ? count : 0;
     const word = n === 1 ? "soul friend" : "soul friends";
     ui.countLabel.textContent = "You have " + n + " " + word + ".";
+  }
+
+  function setEmptySubtitle(text) {
+    if (!ui.empty) return;
+    const p = ui.empty.querySelector(".friends-empty-subtitle");
+    if (!p) return;
+    p.textContent = normaliseText(text) || "";
   }
 
   function updateFilterUI() {
@@ -742,8 +800,10 @@
 
     if (!filtered.length) {
       if (ui.empty) {
-        // Show empty state only if there are no friends at all, not just no matches for a filter.
         ui.empty.hidden = friendsWithMeta.length !== 0 ? true : false;
+        if (friendsWithMeta.length === 0 && ui.empty.hidden === false) {
+          setEmptySubtitle("No friends saved on this device yet.");
+        }
       }
       return;
     }
@@ -844,8 +904,9 @@
         });
       }
 
-      // If there are no friends at all, ensure empty state is shown and count is 0.
+      // If there are no friends at all, ensure empty state is shown.
       if (!friendsWithMeta.length && ui.empty) {
+        setEmptySubtitle("No friends saved on this device yet.");
         ui.empty.hidden = false;
       }
     } catch (err) {

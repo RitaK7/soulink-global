@@ -571,15 +571,9 @@
     </style>
   </head>
   <body class="soulink-bg">
-    <!-- Top Navigation (shared) -->
-    <header class="topnav" data-active="Friends" aria-label="Primary navigation">
-      <div class="topnav-inner">
-        <a
-          href="index.html"
-          class="brand"
-          data-page="Home"
-          aria-label="Soulink Home"
-        >
+    <header class="navbar soulink-nav" data-active="Friends" aria-label="Primary navigation">
+      <div class="nav-inner">
+        <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">
           Soulink
         </a>
 
@@ -589,8 +583,9 @@
           aria-label="Toggle navigation"
           aria-expanded="false"
         >
-          <span class="nav-toggle-line"></span>
-          <span class="nav-toggle-line"></span>
+          <span></span>
+          <span></span>
+          <span></span>
         </button>
 
         <nav class="nav-links" aria-label="Main navigation">
@@ -710,11 +705,19 @@
             <!-- Cards rendered by friends.js -->
           </div>
         </section>
+
+        <section class="friends-toolbar" aria-label="Flow navigation">
+          <div class="friends-toolbar-right">
+            <a href="match.html" class="btn outline">← Back to Match</a>
+            <a href="results.html" class="btn">Next to Results →</a>
+          </div>
+        </section>
+
       </div>
     </main>
 
     <footer class="footer-note">
-      © 2025 Soulink.global | Created with love and ChatGPT as a co-creator.
+      © 2025 Soulink.global | Created with love by Soulink Team.
     </footer>
   </body>
 </html>
