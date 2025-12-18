@@ -182,11 +182,7 @@
 
   const FRIENDS_KEY = "soulink.friends.list";
 
-  const LEGACY_FRIENDS_KEYS = [
-    "soulink.friends",
-    "soulFriends",
-    "friends",
-  ];
+  const LEGACY_FRIENDS_KEYS = ["soulink.friends", "soulFriends", "friends"];
 
   // (Kept for possible future demo usage; not used for real data)
   const DEMO_FRIENDS = [
@@ -303,7 +299,7 @@
     return { score, items };
   }
 
-  function computeHobbyScore(baseHobbies, matchHobbies) {
+  function computeHobbyOverlap(baseHobbies, matchHobbies) {
     const base = cleanList(baseHobbies);
     const other = cleanList(matchHobbies);
     if (!base.length || !other.length) {
@@ -316,146 +312,58 @@
     return { score, items };
   }
 
-  function loveLanguageScore(basePerson, matchPerson) {
-    const basePrimary = getPrimaryLoveLanguage(basePerson);
-    const matchPrimary = getPrimaryLoveLanguage(matchPerson);
-
-    const baseSet = normalisedSet(
-      toArray(basePerson.loveLanguages || []).concat(basePrimary)
-    );
-    const matchSet = normalisedSet(
-      toArray(matchPerson.loveLanguages || []).concat(matchPrimary)
-    );
-
-    let score = 0;
-    let label = "No clear overlap yet.";
-    let strong = false;
-
-    if (!baseSet.size || !matchSet.size) {
-      return { score, label, strong };
-    }
-
-    const primarySame =
-      normaliseText(basePrimary).toLowerCase() ===
-      normaliseText(matchPrimary).toLowerCase();
-
-    let anyOverlap = false;
-    for (const l of baseSet) {
-      if (matchSet.has(l)) {
-        anyOverlap = true;
-        break;
-      }
-    }
-
-    if (primarySame && basePrimary) {
-      score = WEIGHTS.love;
-      label = "Primary love languages mirror each other.";
-      strong = true;
-    } else if (anyOverlap) {
-      score = Math.round(WEIGHTS.love * 0.7);
-      label = "You share at least one love language.";
-      strong = true;
-    } else {
-      score = Math.round(WEIGHTS.love * 0.3);
-      label =
-        "Different love languages — with communication, this can still balance.";
-    }
-
-    return { score, label, strong, primarySame };
+  function loveLanguageScore(baseSoul, candidate) {
+    const a = canonicalLoveKey(getPrimaryLoveLanguage(baseSoul));
+    const b = canonicalLoveKey(getPrimaryLoveLanguage(candidate));
+    if (!a || !b) return { score: 0, match: false };
+    if (a === b) return { score: WEIGHTS.love, match: true };
+    return { score: Math.round(WEIGHTS.love * 0.25), match: false };
   }
 
-  function zodiacCompatibility(baseZodiacRaw, matchZodiacRaw) {
-    const baseZ = normaliseZodiac(baseZodiacRaw);
-    const matchZ = normaliseZodiac(matchZodiacRaw);
-    if (!baseZ || !matchZ) {
-      return { score: 0, label: "" };
+  function zodiacCompatibility(baseZodiacRaw, otherZodiacRaw) {
+    const a = normaliseZodiac(baseZodiacRaw);
+    const b = normaliseZodiac(otherZodiacRaw);
+    if (!a || !b) return { score: 0, label: "" };
+    if (a === b) return { score: WEIGHTS.zodiac, label: "Same sign" };
+    const ea = ZODIAC_ELEMENTS[a];
+    const eb = ZODIAC_ELEMENTS[b];
+    if (!ea || !eb) return { score: 0, label: "" };
+    if (ea === eb) return { score: Math.round(WEIGHTS.zodiac * 0.7), label: "Same element" };
+    const goodPairs = new Set(["fire-air", "air-fire", "earth-water", "water-earth"]);
+    if (goodPairs.has(ea + "-" + eb)) {
+      return { score: Math.round(WEIGHTS.zodiac * 0.55), label: "Complementary element" };
     }
-
-    const baseElem = ZODIAC_ELEMENTS[baseZ] || "";
-    const matchElem = ZODIAC_ELEMENTS[matchZ] || "";
-
-    let multiplier = 0.5;
-    let label = "Different elements — can be complementary with effort.";
-
-    if (baseZ === matchZ) {
-      multiplier = 1;
-      label = "Same sign — you may recognize each other easily.";
-    } else if (baseElem && matchElem && baseElem === matchElem) {
-      multiplier = 0.85;
-      label = "Same element — similar emotional climate.";
-    } else if (
-      (baseElem === "fire" && matchElem === "air") ||
-      (baseElem === "air" && matchElem === "fire") ||
-      (baseElem === "earth" && matchElem === "water") ||
-      (baseElem === "water" && matchElem === "earth")
-    ) {
-      multiplier = 0.75;
-      label = "Complementary elements — different but supportive.";
-    }
-
-    const score = Math.round(WEIGHTS.zodiac * multiplier);
-    return { score, label };
+    return { score: Math.round(WEIGHTS.zodiac * 0.25), label: "Different element" };
   }
 
-  function chineseZodiacCompatibility(baseChineseRaw, matchChineseRaw) {
-    const baseC = normaliseText(baseChineseRaw).toLowerCase();
-    const matchC = normaliseText(matchChineseRaw).toLowerCase();
-    if (!baseC || !matchC) {
-      return { score: 0, label: "" };
-    }
-
-    if (baseC === matchC) {
-      return {
-        score: WEIGHTS.chinese,
-        label: "Same Chinese sign — similar rhythm of growth.",
-      };
-    }
-
-    return {
-      score: Math.round(WEIGHTS.chinese * 0.6),
-      label: "Different Chinese signs — diversity that can enrich the dynamic.",
-    };
+  function chineseZodiacCompatibility(aRaw, bRaw) {
+    const a = normaliseText(aRaw).toLowerCase();
+    const b = normaliseText(bRaw).toLowerCase();
+    if (!a || !b) return { score: 0, label: "" };
+    if (a === b) return { score: WEIGHTS.chinese, label: "Same sign" };
+    return { score: Math.round(WEIGHTS.chinese * 0.45), label: "Different sign" };
   }
 
-  function numerologyCompatibility(baseLifePathRaw, matchLifePathRaw) {
-    const base = numericLifePath(baseLifePathRaw);
-    const match = numericLifePath(matchLifePathRaw);
-    if (base == null || match == null) {
-      return { score: 0, label: "" };
-    }
-
-    const diff = Math.abs(base - match);
-    let multiplier = 0.6;
-    let label = "Different life paths — can still learn from each other.";
-
-    if (diff === 0) {
-      multiplier = 1;
-      label =
-        "Same life path number — strong resonance in how you move through life.";
-    } else if (diff === 1) {
-      multiplier = 0.85;
-      label = "Adjacent life paths — similar lessons with different flavors.";
-    } else if (diff === 2) {
-      multiplier = 0.7;
-      label =
-        "Related but distinct life paths — potential for complementary growth.";
-    }
-
-    const score = Math.round(WEIGHTS.numerology * multiplier);
-    return { score, label };
+  function numerologyCompatibility(aNum, bNum) {
+    const a = numericLifePath(aNum);
+    const b = numericLifePath(bNum);
+    if (a == null || b == null) return { score: 0, label: "" };
+    if (a === b) return { score: WEIGHTS.numerology, label: "Same life path" };
+    const diff = Math.abs(a - b);
+    if (diff <= 2) return { score: Math.round(WEIGHTS.numerology * 0.7), label: "Close numbers" };
+    return { score: Math.round(WEIGHTS.numerology * 0.35), label: "Different numbers" };
   }
 
   function computeCompatibility(baseSoul, candidate) {
-    const baseValues = baseSoul.values || baseSoul.coreValues || [];
-    const baseHobbies =
-      baseSoul.hobbies || baseSoul.passions || baseSoul.interests || [];
-    const matchValues = candidate.values || candidate.coreValues || [];
-    const matchHobbies =
-      candidate.hobbies || candidate.passions || candidate.interests || [];
-
     const loveRes = loveLanguageScore(baseSoul, candidate);
-    const valuesRes = computeValueOverlap(baseValues, matchValues);
-    const hobbyRes = computeHobbyScore(baseHobbies, matchHobbies);
+    const valuesRes = computeValueOverlap(
+      baseSoul.values || baseSoul.coreValues || [],
+      candidate.values || candidate.coreValues || []
+    );
+    const hobbyRes = computeHobbyOverlap(
+      baseSoul.hobbies || baseSoul.passions || baseSoul.interests || [],
+      candidate.hobbies || candidate.passions || candidate.interests || []
+    );
 
     const baseZodiac = baseSoul.westernZodiac || baseSoul.zodiac;
     const matchZodiac = candidate.westernZodiac || candidate.zodiac;
@@ -649,11 +557,9 @@
     const main = document.createElement("div");
     main.className = "friends-card-main";
 
-    // Avatar
     const avatar = createAvatar(friend);
     main.appendChild(avatar);
 
-    // Name + meta
     const nameLine = document.createElement("div");
     nameLine.className = "friends-name-line";
 
@@ -696,7 +602,6 @@
     nameLine.appendChild(metaRow);
     main.appendChild(nameLine);
 
-    // Score pill
     const scorePill = document.createElement("div");
     scorePill.className = "friends-score-pill";
     const labelSpan = document.createElement("span");
@@ -711,63 +616,33 @@
     top.appendChild(main);
     top.appendChild(scorePill);
 
-    // Description
     const desc = document.createElement("p");
     desc.className = "friends-description";
+    desc.textContent =
+      normaliseText(friend.snapshot) ||
+      normaliseText(friend.summary) ||
+      normaliseText(friend.description) ||
+      "This friendship may be more about learning than perfect harmony. Treat it as a place to practice boundaries, honesty and soft curiosity.";
 
-    const baseName = normaliseText(baseSoul.name) || "You";
-    const friendName = normaliseText(friend.name) || "this person";
-
-    if (score >= 80) {
-      desc.textContent =
-        baseName +
-        " and " +
-        friendName +
-        " feel like a high-harmony connection. Keep the communication kind, honest and grounded, and this can stay a very nourishing friendship.";
-    } else if (score >= 60) {
-      desc.textContent =
-        "There’s solid potential here — with " +
-        friendName +
-        " the bond can grow deeper through small, consistent gestures rather than big dramas.";
-    } else if (score >= 40) {
-      desc.textContent =
-        "This seems like an exploration match. Let the connection unfold slowly, notice how your body feels around them, and move at a pace that feels safe.";
-    } else {
-      desc.textContent =
-        "This friendship may be more about learning than perfect harmony. Treat it as a place to practice boundaries, honesty and soft curiosity.";
-    }
-
-    // Actions
     const actions = document.createElement("div");
     actions.className = "friends-card-actions";
 
-    const idForLink = friendIdForLink(friend);
     const viewBtn = document.createElement("a");
-    viewBtn.className = "btn outline";
+    viewBtn.className = "btn";
+    const idForLink = friendIdForLink(friend);
+    viewBtn.href = idForLink ? "match-profile.html#id=" + idForLink : "match-profile.html";
     viewBtn.textContent = "View Match Profile";
-    viewBtn.href = idForLink
-      ? "match-profile.html?id=" + idForLink
-      : "match.html";
-    viewBtn.setAttribute(
-      "aria-label",
-      "View detailed match profile for " + (friendName || "this connection")
-    );
 
     const msgBtn = document.createElement("button");
-    msgBtn.className = "btn friends-btn-disabled";
+    msgBtn.className = "btn outline";
     msgBtn.type = "button";
     msgBtn.disabled = true;
-    msgBtn.setAttribute("aria-disabled", "true");
     msgBtn.textContent = "Message (coming soon)";
 
     const removeBtn = document.createElement("button");
     removeBtn.className = "friends-remove-btn";
     removeBtn.type = "button";
     removeBtn.textContent = "Remove";
-    removeBtn.setAttribute(
-      "aria-label",
-      "Remove this connection from your circle"
-    );
     removeBtn.addEventListener("click", function () {
       handleRemoveFriend(friend);
     });
@@ -800,9 +675,16 @@
 
     if (!filtered.length) {
       if (ui.empty) {
-        ui.empty.hidden = friendsWithMeta.length !== 0 ? true : false;
-        if (friendsWithMeta.length === 0 && ui.empty.hidden === false) {
+        ui.empty.hidden = false;
+
+        if (friendsWithMeta.length === 0) {
           setEmptySubtitle("No friends saved on this device yet.");
+        } else if (currentFilter === "romantic") {
+          setEmptySubtitle("No romantic connections saved in your circle yet.");
+        } else if (currentFilter === "friendship") {
+          setEmptySubtitle("No friendship connections saved in your circle yet.");
+        } else {
+          setEmptySubtitle("No connections match this filter yet.");
         }
       }
       return;
@@ -845,10 +727,9 @@
       arr.sort((a, b) => {
         const ai = Number.isFinite(a._index) ? a._index : -Infinity;
         const bi = Number.isFinite(b._index) ? b._index : -Infinity;
-        return bi - ai; // newest first
+        return bi - ai;
       });
     } else {
-      // score (default)
       arr.sort((a, b) => {
         const as = Number.isFinite(a._score) ? a._score : 0;
         const bs = Number.isFinite(b._score) ? b._score : 0;
@@ -904,7 +785,6 @@
         });
       }
 
-      // If there are no friends at all, ensure empty state is shown.
       if (!friendsWithMeta.length && ui.empty) {
         setEmptySubtitle("No friends saved on this device yet.");
         ui.empty.hidden = false;
