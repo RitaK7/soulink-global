@@ -13,7 +13,6 @@
   <script src="data-helpers.js" defer></script>
   <script src="nav.js" defer></script>
 
-  <!-- Optional helpers (results.js gracefully falls back if missing) -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
@@ -374,7 +373,6 @@
     #fbToast.is-error{ border-color: rgba(255, 90, 90, 0.45); }
     #fbToast.is-info{ border-color: rgba(255, 213, 74, 0.40); }
 
-    /* Feedback stars (yellow + responsive) */
     #fbStars{
       display:flex;
       flex-wrap: wrap;
@@ -429,18 +427,24 @@
 </head>
 
 <body class="soulink-bg">
-  <header class="topnav" data-active="Results" aria-label="Primary navigation">
-    <div class="topnav-inner">
+  <header class="navbar soulink-nav" data-active="Results" aria-label="Primary navigation">
+    <div class="nav-inner">
       <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">
-        <span class="brand-mark" aria-hidden="true">SL</span>
-        <span class="brand-name">Soulink</span>
+        Soulink
       </a>
 
-      <button class="nav-toggle" type="button" aria-label="Open menu" aria-controls="navDrawer" aria-expanded="false">
-        <span class="nav-toggle-lines" aria-hidden="true"></span>
+      <button
+        class="nav-toggle"
+        type="button"
+        aria-label="Toggle navigation"
+        aria-expanded="false"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
       </button>
 
-      <nav class="nav-links" aria-label="Primary">
+      <nav class="nav-links" aria-label="Main navigation">
         <a href="index.html" data-page="Home">Home</a>
         <a href="quiz.html" data-page="Quiz">Quiz</a>
         <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
@@ -570,6 +574,12 @@
               <div id="friendship" class="r-matches-grid" aria-label="Friendship match cards"></div>
             </div>
           </section>
+        </div>
+      </section>
+
+      <section class="r-section" aria-label="Back navigation">
+        <div class="r-actions">
+          <a href="friends.html" class="btn outline">← Back to Friends</a>
         </div>
       </section>
     </div>

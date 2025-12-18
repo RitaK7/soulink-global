@@ -30,16 +30,12 @@
 (function () {
   if (typeof window === "undefined" || typeof document === "undefined") return;
 
-  // ----- Tiny DOM helpers -----
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-  // ----- EmailJS config (public key only) -----
   const EMAILJS_PUBLIC_KEY = "SV7ptjuNI88paiVbz";
   const EMAILJS_SERVICE_ID = "service_ifo7026";
   const EMAILJS_TEMPLATE_ID = "template_99hg4ni";
-
-  // ----- Generic helpers -----
 
   function normaliseText(v) {
     return (v == null ? "" : String(v)).trim();
@@ -249,6 +245,18 @@
     return emailJsReady;
   }
 
+  function applyStarUI() {
+    $$("#fbStars button").forEach((b) => {
+      const val = Number(b.dataset.value || "0");
+      b.classList.toggle("active", val <= fbRating);
+    });
+  }
+
+  function setRating(value) {
+    fbRating = value;
+    applyStarUI();
+  }
+
   function initStars() {
     if (!ui.fbStars) return;
     ui.fbStars.innerHTML = "";
@@ -261,13 +269,17 @@
       btn.setAttribute("aria-label", `Rate ${i} out of 5`);
       btn.dataset.value = String(i);
       btn.textContent = "★";
-      btn.addEventListener("click", () => {
-        fbRating = i;
-        $$("#fbStars button").forEach((b) => {
-          const val = Number(b.dataset.value || "0");
-          b.classList.toggle("active", val <= fbRating);
-        });
-      });
+
+      const activate = (ev) => {
+        if (ev && ev.type === "touchstart") {
+          try { ev.preventDefault(); } catch (e) { /* ignore */ }
+        }
+        setRating(i);
+      };
+
+      btn.addEventListener("click", activate);
+      btn.addEventListener("touchstart", activate, { passive: false });
+
       ui.fbStars.appendChild(btn);
     }
   }
@@ -275,8 +287,13 @@
   function initFeedback() {
     if (!ui.fbSend) return;
 
-    ui.fbSend.addEventListener("click", (ev) => {
-      ev.preventDefault();
+    const sendNow = (ev) => {
+      if (ev) {
+        if (ev.type === "touchstart") {
+          try { ev.preventDefault(); } catch (e) { /* ignore */ }
+        }
+        try { ev.preventDefault(); } catch (e) { /* ignore */ }
+      }
 
       const email = ui.fbEmail ? normaliseText(ui.fbEmail.value) : "";
       const msg = ui.fbMsg ? normaliseText(ui.fbMsg.value) : "";
@@ -297,7 +314,7 @@
         if (ui.fbMsg) ui.fbMsg.value = "";
         if (ui.fbEmail) ui.fbEmail.value = "";
         fbRating = 0;
-        $$("#fbStars button").forEach((b) => b.classList.remove("active"));
+        applyStarUI();
         showToast(ui.fbToast, "Thank you for your feedback! 💚", "success");
         return;
       }
@@ -320,7 +337,7 @@
           if (ui.fbMsg) ui.fbMsg.value = "";
           if (ui.fbEmail) ui.fbEmail.value = "";
           fbRating = 0;
-          $$("#fbStars button").forEach((b) => b.classList.remove("active"));
+          applyStarUI();
           showToast(ui.fbToast, "Thank you for your feedback! 💚", "success");
         })
         .catch((err) => {
@@ -331,7 +348,10 @@
             "error"
           );
         });
-    });
+    };
+
+    ui.fbSend.addEventListener("click", sendNow);
+    ui.fbSend.addEventListener("touchstart", sendNow, { passive: false });
   }
 
   function buildBaseMatches(soul) {
