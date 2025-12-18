@@ -176,49 +176,28 @@
       background: radial-gradient(circle at 0 0, rgba(0, 253, 216, 0.22), transparent 55%), rgba(0, 0, 0, 0.98);
       opacity: 1;
     }
-    .m-sort { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; }
+    .m-sort { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; position: relative; }
     .m-sort label { text-transform: uppercase; letter-spacing: 0.13em; opacity: 0.78; }
-    .m-sort select { min-width: 150px; }
-    /* Match page: keep Sort select in dark theme (avoid white bar on mobile) */
-    .m-sort select#matchSortSelect{
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      background: rgba(0, 0, 0, 0.70);
-      color: inherit;
+    .m-sort select {
+      min-width: 150px;
+      background: rgba(0, 0, 0, 0.90);
+      color: rgba(224, 255, 250, 0.92);
       border: 1px solid rgba(0, 253, 216, 0.35);
       border-radius: 12px;
-      padding: 0.55rem 2.2rem 0.55rem 0.75rem;
-      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.15), 0 10px 26px rgba(0,0,0,0.75);
+      padding: 0.45rem 2.1rem 0.45rem 0.75rem;
       outline: none;
+      -webkit-appearance: none;
+      appearance: none;
     }
-    .m-sort select#matchSortSelect:focus{
-      border-color: rgba(0, 253, 216, 0.75);
-      box-shadow: 0 0 0 1px rgba(0, 253, 216, 0.35), 0 0 26px rgba(0, 253, 216, 0.35);
-    }
-    /* draw a subtle chevron */
-    .m-sort{ position: relative; }
-    .m-sort::after{
+    .m-sort::after {
       content: "▾";
       position: absolute;
-      right: 0.85rem;
+      right: 0.8rem;
       top: 50%;
       transform: translateY(-50%);
       pointer-events: none;
       opacity: 0.85;
     }
-    /* Ensure hamburger icon is visible (nav.js handles open/close) */
-    .nav-toggle{ background: transparent; border: 0; padding: 0.4rem 0.55rem; border-radius: 12px; }
-    .nav-toggle .bar{
-      display: block;
-      width: 22px;
-      height: 2px;
-      border-radius: 2px;
-      margin: 4px 0;
-      background: currentColor;
-      opacity: 0.95;
-    }
-
 
     .m-grid { margin-top: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.1rem; }
 
@@ -331,8 +310,8 @@
     }
 
     /* Mobile navbar visibility safety */
-    header.topnav { position: sticky; top: 0; z-index: 5000; }
-    .topnav-inner { position: relative; z-index: 1; }
+    header.navbar { position: sticky; top: 0; z-index: 5000; }
+    .nav-inner { position: relative; z-index: 1; }
 
     /* Flow navigation (Back / Next) */
     .m-flow-nav {
@@ -356,39 +335,45 @@
 <body class="soulink-bg">
 
   <!-- ✅ CANONICAL NAVBAR (IDENTIŠKAS Quiz / Soul Coach) -->
-  <header class="topnav" data-active="Match" aria-label="Primary navigation">
-    <div class="topnav-inner">
-      <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">
-        Soulink
-      </a>
+  <header
+      class="navbar soulink-nav"
+      data-active="Match"
+      aria-label="Primary navigation"
+    >
+      <div class="nav-inner">
+        <a
+          href="index.html"
+          class="brand"
+          data-page="Home"
+          aria-label="Soulink Home"
+        >
+          Soulink
+        </a>
 
-      <button
-        class="nav-toggle"
-        type="button"
-        aria-label="Toggle navigation"
-        aria-expanded="false"
-        aria-controls="primaryNav"
-      >
-        <span class="bar"></span>
-        <span class="bar"></span>
-        <span class="bar"></span>
-      </button>
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span></span><span></span><span></span>
+        </button>
 
-      <nav id="primaryNav" class="nav-links" aria-label="Primary">
-        <a href="index.html" data-page="Home">Home</a>
-        <a href="quiz.html" data-page="Quiz">Quiz</a>
-        <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
-        <a href="my-soul.html" data-page="My Soul">My Soul</a>
-        <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
-        <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
-        <a href="match.html" data-page="Match">Match</a>
-        <a href="friends.html" data-page="Friends">Friends</a>
-        <a href="results.html" data-page="Results">Results</a>
-        <a href="login.html" data-page="Login">Log In</a>
-        <a href="signup.html" data-page="Sign Up">Sign Up</a>
-      </nav>
-    </div>
-  </header>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="index.html" data-page="Home">Home</a>
+          <a href="quiz.html" data-page="Quiz">Quiz</a>
+          <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
+          <a href="my-soul.html" data-page="My Soul">My Soul</a>
+          <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
+          <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
+          <a href="match.html" data-page="Match">Match</a>
+          <a href="friends.html" data-page="Friends">Friends</a>
+          <a href="results.html" data-page="Results">Results</a>
+          <a href="login.html" data-page="Login">Log In</a>
+          <a href="signup.html" data-page="Sign Up">Sign Up</a>
+        </nav>
+      </div>
+    </header>
 
   <main class="page match-page">
     <div class="page-inner">
