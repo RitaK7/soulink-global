@@ -319,11 +319,29 @@
         return;
       }
 
+      // ✅ Build a single compact feedback string (EmailJS template uses {{feedback}})
+      const stars = fbRating
+        ? ("★".repeat(fbRating) + "☆".repeat(5 - fbRating))
+        : "No rating";
+
+      const userFeedback =
+        `Rating: ${stars}\n` +
+        `Email: ${email || "—"}\n` +
+        `Message: ${msg || "—"}\n` +
+        `Name: ${name || "—"}\n` +
+        `Love language: ${normaliseText(soulSnapshot.loveLanguage) || "—"}\n` +
+        `Type: ${normaliseText(soulSnapshot.connectionType) || "—"}\n` +
+        `Submitted: ${new Date().toISOString()}`;
+
       const templateParams = {
         from_name: name,
         from_email: email || "no-email-given",
         message: msg || "(no comment provided, rating only)",
         rating: fbRating ? String(fbRating) : "not given",
+
+        // ✅ IMPORTANT: your template uses {{feedback}} (subject + body)
+        feedback: userFeedback,
+
         soul_love_language: normaliseText(soulSnapshot.loveLanguage),
         soul_connection_type: normaliseText(soulSnapshot.connectionType),
         submitted_at: new Date().toISOString(),
