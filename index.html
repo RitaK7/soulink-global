@@ -4,35 +4,216 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Soulink – Home</title>
-  <!-- auth guard: turi būti prieš kitus skriptus -->
   <script src="auth.js"></script>
 
-  <!-- (palik, jei nori) bendras stilius -->
   <style>
     :root {
-      --bg:#003c43; --nav:#002e30; --card:#032f35; --accent:#00fdd8; --glow:rgba(0,253,216,.35);
+      --bg:#003c43;
+      --nav:#002e30;
+      --card:#032f35;
+      --accent:#00fdd8;
+      --glow:rgba(0,253,216,.35);
+      --text:#dff;
+      --muted:#c8f7f2;
     }
-    *{box-sizing:border-box} body{margin:0; font-family:system-ui,Segoe UI,sans-serif; color:#dff; background:var(--bg)}
-    .container{max-width:980px; margin:0 auto; padding:1rem}
-    .hero{background:var(--card); border-radius:24px; padding:2.2rem; box-shadow:0 0 24px var(--glow); text-align:center}
-    .hero h1{margin:0 0 1rem; font-size:clamp(28px,5.5vw,44px); color:var(--accent)}
-    .hero p{margin:.75rem 0; line-height:1.6; font-size:clamp(16px,2.4vw,20px)}
-    .btn{display:inline-block; padding:1rem 1.6rem; border-radius:18px; border:1px solid var(--accent); color:#002e30; background:var(--accent); font-weight:700; text-decoration:none}
-    .btn:hover{box-shadow:0 0 16px var(--glow)}
-    .btn-ghost{border-color:rgba(223,255,255,.6); color:#dff; background:transparent}
-    .btn-ghost:hover{box-shadow:0 0 12px var(--glow)}
-    nav.navbar{background:var(--nav); box-shadow:0 0 12px var(--glow)}
-    nav.navbar .brand{font-weight:700; color:var(--accent); text-decoration:none}
-    nav.navbar .wrap{display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.8rem 1rem}
-    footer{margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:var(--nav); box-shadow:0 0 12px var(--glow) inset}
 
+    * { box-sizing:border-box; }
+
+    body {
+      margin:0;
+      font-family:system-ui, Segoe UI, sans-serif;
+      color:var(--text);
+      background:var(--bg);
+    }
+
+    .container {
+      max-width:980px;
+      margin:0 auto;
+      padding:1rem;
+    }
+
+    nav.navbar {
+      background:var(--nav);
+      box-shadow:0 0 12px var(--glow);
+    }
+
+    nav.navbar .brand {
+      font-weight:700;
+      color:var(--accent);
+      text-decoration:none;
+    }
+
+    nav.navbar .wrap {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:1rem;
+      padding:.8rem 1rem;
+    }
+
+    .hero {
+      background:var(--card);
+      border-radius:24px;
+      padding:2.2rem;
+      box-shadow:0 0 24px var(--glow);
+      text-align:center;
+      margin-top:1rem;
+    }
+
+    .hero h1 {
+      margin:0 0 1rem;
+      font-size:clamp(28px,5.5vw,44px);
+      color:var(--accent);
+      line-height:1.15;
+    }
+
+    .hero p {
+      margin:.75rem 0;
+      line-height:1.6;
+      font-size:clamp(16px,2.4vw,20px);
+    }
+
+    .hero .lead {
+      max-width:760px;
+      margin:0.9rem auto;
+    }
+
+    .hero .highlight {
+      color:#ffffff;
+      font-weight:700;
+      letter-spacing:.01em;
+    }
+
+    .hero .micro {
+      font-size:clamp(14px,2vw,16px);
+      color:var(--muted);
+      opacity:.95;
+      margin-top:1rem;
+    }
+
+    .btn {
+      display:inline-block;
+      padding:1rem 1.6rem;
+      border-radius:18px;
+      border:1px solid var(--accent);
+      color:#002e30;
+      background:var(--accent);
+      font-weight:700;
+      text-decoration:none;
+      transition:box-shadow .2s ease, transform .2s ease;
+    }
+
+    .btn:hover {
+      box-shadow:0 0 16px var(--glow);
+      transform:translateY(-1px);
+    }
+
+    .btn-ghost {
+      border-color:rgba(223,255,255,.6);
+      color:#dff;
+      background:transparent;
+    }
+
+    .btn-ghost:hover {
+      box-shadow:0 0 12px var(--glow);
+    }
+
+    .section-card {
+      background:var(--card);
+      border-radius:24px;
+      padding:2rem;
+      box-shadow:0 0 18px rgba(0,253,216,.18);
+      margin-top:1.2rem;
+    }
+
+    .section-card h2 {
+      margin:0 0 1rem;
+      font-size:clamp(24px,4vw,32px);
+      color:var(--accent);
+      text-align:center;
+    }
+
+    .steps {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+      gap:1rem;
+      margin-top:1.25rem;
+    }
+
+    .step {
+      background:rgba(0,0,0,.12);
+      border:1px solid rgba(0,253,216,.18);
+      border-radius:18px;
+      padding:1.2rem;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
+    }
+
+    .step h3 {
+      margin:0 0 .65rem;
+      color:#ffffff;
+      font-size:1.05rem;
+    }
+
+    .step p {
+      margin:0;
+      color:var(--muted);
+      line-height:1.6;
+      font-size:0.98rem;
+    }
+
+    .soul-message {
+      text-align:center;
+    }
+
+    .soul-message p {
+      margin:.65rem 0;
+      font-size:clamp(17px,2.4vw,22px);
+      line-height:1.6;
+    }
+
+    .soul-message .big {
+      color:var(--accent);
+      font-weight:700;
+    }
+
+    footer {
+      margin-top:3rem;
+      padding:1.2rem;
+      text-align:center;
+      color:#bff;
+      background:var(--nav);
+      box-shadow:0 0 12px var(--glow) inset;
+    }
+
+    @media (max-width: 640px) {
+      nav.navbar .wrap {
+        flex-direction:column;
+        align-items:flex-start;
+      }
+
+      nav.navbar .wrap > div {
+        width:100%;
+      }
+
+      nav.navbar .wrap > div a {
+        text-align:center;
+        flex:1 1 auto;
+      }
+
+      .hero,
+      .section-card {
+        padding:1.4rem;
+        border-radius:20px;
+      }
+
+      .hero p {
+        line-height:1.5;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <!-- (palik, jei naudoji beta apsaugą) -->
-
-  <!-- Minimal header for HOME only (NO menu, NO nav.js here) -->
   <nav class="navbar">
     <div class="container wrap">
       <a href="index.html" class="brand">Soulink</a>
@@ -43,14 +224,52 @@
     </div>
   </nav>
 
-  <!-- Hero -->
   <main class="container">
     <section class="hero">
-      <h1>Welcome to Soulink 🌍💫</h1>
-      <p>You've just stepped into a new world of meaningful connections.</p>
-      <p>Soulink is more than a platform – it's a bridge between souls.</p>
-      <p>Whether you're here for love, friendship, or soul growth, your journey starts with one click.</p>
-      <p style="margin-top:1.2rem;"><a class="btn" href="quiz.html">Enter My Soul Journey ✨</a></p>
+      <h1>Find your most compatible connection — in minutes ✨</h1>
+
+      <p class="lead">
+        Get your personal Soul Match based on love language, values, personality, and deeper patterns.
+      </p>
+
+      <p class="highlight">Not random swipes. A real connection.</p>
+
+      <p class="lead">
+        Love, friendship, or something deeper — discover who truly matches your energy and your heart.
+      </p>
+
+      <p style="margin-top:1.2rem;">
+        <a class="btn" href="quiz.html">Start My Soul Match ✨</a>
+      </p>
+
+      <p class="micro">✨ Takes only 2–3 minutes • No registration required</p>
+    </section>
+
+    <section class="section-card">
+      <h2>How it works</h2>
+
+      <div class="steps">
+        <div class="step">
+          <h3>1. Answer a few questions</h3>
+          <p>Tell us about your personality, values, love language, and what truly matters to you.</p>
+        </div>
+
+        <div class="step">
+          <h3>2. Build your soul profile</h3>
+          <p>Soulink turns your answers into a deeper compatibility picture — beyond surface attraction.</p>
+        </div>
+
+        <div class="step">
+          <h3>3. Discover meaningful matches</h3>
+          <p>See who aligns with you for love, friendship, or a deeper kind of soul connection.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card soul-message">
+      <h2>More than a dating platform</h2>
+      <p>This is where compatibility becomes more intentional, more personal, and more real.</p>
+      <p class="big">A space for meaningful connections — not endless swiping.</p>
     </section>
   </main>
 
