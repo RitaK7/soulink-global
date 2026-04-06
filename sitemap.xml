@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <url>
+    <loc>https://soulink.global/</loc>
+    <priority>1.0</priority>
+  </url>
+
+  <url>
+    <loc>https://soulink.global/quiz.html</loc>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://soulink.global/edit-profile.html</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://soulink.global/my-soul.html</loc>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://soulink.global/soul-chart.html</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://soulink.global/soul-coach.html</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://soulink.global/match.html</loc>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://soulink.global/friends.html</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://soulink.global/results.html</loc>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://soulink.global/login.html</loc>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://soulink.global/signup.html</loc>
+    <priority>0.7</priority>
+  </url>
+
+</urlset>
