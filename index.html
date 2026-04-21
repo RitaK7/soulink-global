@@ -20,7 +20,7 @@
     }
 
     * { box-sizing:border-box; }
-
+    
     body {
       margin:0;
       font-family:system-ui, Segoe UI, sans-serif;
@@ -215,6 +215,7 @@
   </style>
  
 </head>
+
 <body>
 
   <nav class="navbar">
@@ -281,5 +282,11 @@
   <footer>
     © 2025 Soulink.global | All rights reserved · Created with love by Soulink Team
   </footer>
+  <script>
+   if ('serviceWorker' in navigator) {
+   navigator.serviceWorker.register('/sw.js')
+  .then(() => console.log('SW registered'));
+}
+</script>
 </body>
 </html>
