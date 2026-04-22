@@ -4,7 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Soulink – Home</title>
+
   <script src="auth.js"></script>
+
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#00fdd8">
 
@@ -19,7 +21,9 @@
       --muted:#c8f7f2;
     }
 
-    * { box-sizing:border-box; }
+    * {
+      box-sizing:border-box;
+    }
 
     body {
       margin:0;
@@ -205,7 +209,8 @@
       box-shadow:0 0 12px var(--glow) inset;
     }
 
-    @media (max-width: 640px) {
+    @media (max-width:640px) {
+
       nav.navbar .wrap {
         flex-direction:column;
         align-items:flex-start;
@@ -229,118 +234,231 @@
       .hero p {
         line-height:1.5;
       }
+
+      .install-wrap.install-fixed {
+        position:fixed;
+        left:12px;
+        right:12px;
+        bottom:14px;
+        z-index:9999;
+        margin-top:0;
+        justify-content:center;
+        pointer-events:none;
+      }
+
+      .install-wrap.install-fixed .install-cta {
+        width:100%;
+        max-width:none;
+        min-height:54px;
+        box-shadow:0 0 18px rgba(0,253,216,.35);
+        pointer-events:auto;
+      }
     }
   </style>
 </head>
 
 <body>
+
   <nav class="navbar">
     <div class="container wrap">
-      <a href="index.html" class="brand">Soulink</a>
+
+      <a href="index.html" class="brand">
+        Soulink
+      </a>
+
       <div style="display:flex; gap:.6rem; flex-wrap:wrap;">
-        <a class="btn-ghost btn" href="login.html">Log In</a>
-        <a class="btn" href="signup.html">Sign Up</a>
+        <a class="btn-ghost btn" href="login.html">
+          Log In
+        </a>
+
+        <a class="btn" href="signup.html">
+          Sign Up
+        </a>
       </div>
+
     </div>
   </nav>
 
   <main class="container">
+
     <section class="hero">
-      <h1>Find your most compatible connection — in minutes ✨</h1>
+
+      <h1>
+        Find your most compatible connection — in minutes ✨
+      </h1>
 
       <p class="lead">
-        Discover your Soul Match through the 5 love languages, values, personality, numerology, zodiac, and Chinese zodiac insights.
+        Discover your Soul Match through the 5 love languages,
+        values, personality, numerology, zodiac,
+        and Chinese zodiac insights.
       </p>
 
-      <p class="highlight">Not random swipes. A real connection.</p>
+      <p class="highlight">
+        Not random swipes. A real connection.
+      </p>
 
       <p class="lead">
-        Made for love, friendship, and deeper soul connections — so you can find people who truly match your heart, energy, and path.
+        Made for love, friendship, and deeper soul connections —
+        so you can find people who truly match your heart,
+        energy, and path.
       </p>
 
       <p style="margin-top:1.2rem;">
-        <a class="btn" href="quiz.html">Start My Soul Match ✨</a>
+        <a class="btn" href="quiz.html">
+          Start My Soul Match ✨
+        </a>
       </p>
 
       <div class="install-wrap">
-        <button id="installBtn" class="btn install-cta" type="button">
+
+        <button
+          id="installBtn"
+          class="btn install-cta"
+          type="button"
+        >
           Install Soulink ✨
         </button>
+
       </div>
 
-      <p id="iosHint" class="micro" style="display:none;">
+      <p
+        id="iosHint"
+        class="micro"
+        style="display:none;"
+      >
         To install Soulink on iPhone/iPad:<br>
         tap Share ⬆️ → Add to Home Screen
       </p>
 
       <p class="micro">
-        ✨ Takes only 2–3 minutes • For love, friendship, and soul-aligned connections
+        ✨ Takes only 2–3 minutes •
+        For love, friendship,
+        and soul-aligned connections
       </p>
+
     </section>
 
     <section class="section-card">
+
       <h2>How it works</h2>
 
       <div class="steps">
+
         <div class="step">
           <h3>1. Share who you are</h3>
-          <p>Answer a few questions about your values, personality, relationship goals, and the 5 love languages.</p>
+
+          <p>
+            Answer a few questions about your values,
+            personality, relationship goals,
+            and the 5 love languages.
+          </p>
         </div>
 
         <div class="step">
           <h3>2. Reveal your deeper patterns</h3>
-          <p>Soulink explores your numerology, zodiac, Chinese zodiac, and emotional compatibility signals.</p>
+
+          <p>
+            Soulink explores your numerology,
+            zodiac, Chinese zodiac,
+            and emotional compatibility signals.
+          </p>
         </div>
 
         <div class="step">
           <h3>3. Find love or friendship matches</h3>
-          <p>Discover meaningful connections for romance, friendship, or a deeper soul-aligned bond.</p>
+
+          <p>
+            Discover meaningful connections for romance,
+            friendship, or a deeper soul-aligned bond.
+          </p>
         </div>
+
       </div>
+
     </section>
 
     <section class="section-card soul-message">
+
       <h2>More than a dating platform</h2>
-      <p>This is where compatibility becomes more intentional, more personal, and more real.</p>
-      <p class="big">A space for meaningful connections — not endless swiping.</p>
+
+      <p>
+        This is where compatibility becomes
+        more intentional, more personal,
+        and more real.
+      </p>
+
+      <p class="big">
+        A space for meaningful connections —
+        not endless swiping.
+      </p>
+
     </section>
+
   </main>
 
   <footer>
-    © 2025 Soulink.global | All rights reserved · Created with love by Soulink Team
+    © 2025 Soulink.global |
+    All rights reserved ·
+    Created with love by Soulink Team
   </footer>
 
   <script>
     (function () {
+
       let deferredPrompt = null;
 
-      const installBtn = document.getElementById('installBtn');
-      const iosHint = document.getElementById('iosHint');
+      const installBtn =
+        document.getElementById('installBtn');
+
+      const iosHint =
+        document.getElementById('iosHint');
 
       const isStandalone =
         window.matchMedia('(display-mode: standalone)').matches ||
         window.navigator.standalone === true;
 
       const ua = window.navigator.userAgent || '';
+
       const isIOS =
         /iphone|ipad|ipod/i.test(ua) ||
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        (
+          navigator.platform === 'MacIntel' &&
+          navigator.maxTouchPoints > 1
+        );
 
-      const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+      const isSafari =
+        /^((?!chrome|android).)*safari/i.test(ua);
 
       function hideInstallButton() {
+
         if (!installBtn) return;
+
+        const wrap = installBtn.parentElement;
+
         installBtn.classList.remove('is-visible');
         installBtn.style.display = 'none';
+
+        if (wrap) {
+          wrap.classList.remove('install-fixed');
+        }
       }
 
       function showInstallButton() {
+
         if (!installBtn) return;
+
+        const wrap = installBtn.parentElement;
 
         installBtn.style.display = 'block';
         installBtn.classList.add('is-visible');
 
-        const rect = installBtn.getBoundingClientRect();
+        if (window.innerWidth <= 640 && wrap) {
+          wrap.classList.add('install-fixed');
+        }
+
+        const rect =
+          installBtn.getBoundingClientRect();
+
         console.log('Install button shown', {
           top: rect.top,
           bottom: rect.bottom,
@@ -349,10 +467,6 @@
           visibility: getComputedStyle(installBtn).visibility,
           opacity: getComputedStyle(installBtn).opacity
         });
-
-        if (rect.top > window.innerHeight || rect.bottom < 0) {
-          installBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
       }
 
       function showIOSHint() {
@@ -366,66 +480,126 @@
       }
 
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js', { scope: '/' })
-          .then((reg) => console.log('SW registered', reg))
-          .catch((err) => console.error('SW registration failed', err));
+
+        navigator.serviceWorker
+          .register('/sw.js', { scope: '/' })
+
+          .then((reg) => {
+            console.log('SW registered', reg);
+          })
+
+          .catch((err) => {
+            console.error(
+              'SW registration failed',
+              err
+            );
+          });
       }
 
       if (isStandalone) {
+
         hideInstallButton();
         hideIOSHint();
+
       } else if (isIOS && isSafari) {
+
         hideInstallButton();
         showIOSHint();
+
       } else {
+
         hideInstallButton();
         hideIOSHint();
       }
 
-      window.addEventListener('beforeinstallprompt', (event) => {
-        console.log('beforeinstallprompt fired');
-        event.preventDefault();
-        deferredPrompt = event;
+      window.addEventListener(
+        'beforeinstallprompt',
+        (event) => {
 
-        if (!isStandalone) {
-          showInstallButton();
+          console.log(
+            'beforeinstallprompt fired'
+          );
+
+          event.preventDefault();
+
+          deferredPrompt = event;
+
+          if (!isStandalone) {
+            showInstallButton();
+          }
         }
-      });
+      );
 
-      window.addEventListener('appinstalled', () => {
-        console.log('App installed');
-        deferredPrompt = null;
-        hideInstallButton();
-        hideIOSHint();
-      });
+      window.addEventListener(
+        'appinstalled',
+        () => {
+
+          console.log('App installed');
+
+          deferredPrompt = null;
+
+          hideInstallButton();
+          hideIOSHint();
+        }
+      );
 
       if (installBtn) {
-        installBtn.addEventListener('click', async () => {
-          console.log('Install button clicked');
 
-          if (deferredPrompt) {
-            try {
-              await deferredPrompt.prompt();
-              const result = await deferredPrompt.userChoice;
-              console.log('Install choice:', result ? result.outcome : 'unknown');
-            } catch (err) {
-              console.error('Install prompt failed', err);
-            } finally {
-              deferredPrompt = null;
-              hideInstallButton();
+        installBtn.addEventListener(
+          'click',
+          async () => {
+
+            console.log(
+              'Install button clicked'
+            );
+
+            if (deferredPrompt) {
+
+              try {
+
+                await deferredPrompt.prompt();
+
+                const result =
+                  await deferredPrompt.userChoice;
+
+                console.log(
+                  'Install choice:',
+                  result
+                    ? result.outcome
+                    : 'unknown'
+                );
+
+              } catch (err) {
+
+                console.error(
+                  'Install prompt failed',
+                  err
+                );
+
+              } finally {
+
+                deferredPrompt = null;
+                hideInstallButton();
+              }
+
+              return;
             }
-            return;
-          }
 
-          if (isIOS && !isStandalone) {
-            showIOSHint();
-            return;
-          }
+            if (isIOS && !isStandalone) {
 
-          alert('To install Soulink, open this site in Chrome on Android or Safari on iPhone/iPad.');
-        });
+              showIOSHint();
+              return;
+            }
+
+            alert(
+              'To install Soulink, open this site in Chrome on Android or Safari on iPhone/iPad.'
+            );
+          }
+        );
       }
+
     })();
   </script>
+
 </body>
 </html>
