@@ -1,10 +1,12 @@
 {
   "name": "Soulink",
   "short_name": "Soulink",
-  "start_url": "/index.html",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#003c43",
   "theme_color": "#00fdd8",
+  "description": "Soul connections for love and friendship",
   "icons": [
     {
       "src": "/icon-192.png",
