@@ -121,6 +121,23 @@
       box-shadow:0 0 12px var(--glow);
     }
 
+    .install-wrap {
+      margin-top:10px;
+      display:flex;
+      justify-content:center;
+    }
+
+    .install-cta {
+      display:none;
+      width:100%;
+      max-width:320px;
+      text-align:center;
+    }
+
+    .install-cta.is-visible {
+      display:block !important;
+    }
+
     .section-card {
       background:var(--card);
       border-radius:24px;
@@ -217,12 +234,11 @@
 </head>
 
 <body>
-
   <nav class="navbar">
     <div class="container wrap">
       <a href="index.html" class="brand">Soulink</a>
       <div style="display:flex; gap:.6rem; flex-wrap:wrap;">
-        <a class="btn-ghost btn" href="beta-login.html">Log In</a>
+        <a class="btn-ghost btn" href="login.html">Log In</a>
         <a class="btn" href="signup.html">Sign Up</a>
       </div>
     </div>
@@ -246,16 +262,16 @@
         <a class="btn" href="quiz.html">Start My Soul Match ✨</a>
       </p>
 
-      <div style="margin-top:10px;">
-        <button id="installBtn" class="btn" style="display:none;" hidden>
+      <div class="install-wrap">
+        <button id="installBtn" class="btn install-cta" type="button">
           Install Soulink ✨
         </button>
-
-        <p id="iosHint" class="micro" style="display:none;">
-          To install Soulink on iPhone/iPad:<br>
-          tap Share ⬆️ → Add to Home Screen
-        </p>
       </div>
+
+      <p id="iosHint" class="micro" style="display:none;">
+        To install Soulink on iPhone/iPad:<br>
+        tap Share ⬆️ → Add to Home Screen
+      </p>
 
       <p class="micro">
         ✨ Takes only 2–3 minutes • For love, friendship, and soul-aligned connections
@@ -312,22 +328,31 @@
 
       const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
 
-      function hideAllInstallUi() {
-        if (installBtn) {
-          installBtn.style.display = 'none';
-          installBtn.hidden = true;
-        }
-        if (iosHint) {
-          iosHint.style.display = 'none';
-        }
+      function hideInstallButton() {
+        if (!installBtn) return;
+        installBtn.classList.remove('is-visible');
+        installBtn.style.display = 'none';
       }
 
       function showInstallButton() {
         if (!installBtn) return;
 
-        installBtn.hidden = false;
-        installBtn.style.display = 'inline-block';
-        console.log('Install button shown');
+        installBtn.style.display = 'block';
+        installBtn.classList.add('is-visible');
+
+        const rect = installBtn.getBoundingClientRect();
+        console.log('Install button shown', {
+          top: rect.top,
+          bottom: rect.bottom,
+          viewport: window.innerHeight,
+          display: getComputedStyle(installBtn).display,
+          visibility: getComputedStyle(installBtn).visibility,
+          opacity: getComputedStyle(installBtn).opacity
+        });
+
+        if (rect.top > window.innerHeight || rect.bottom < 0) {
+          installBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       }
 
       function showIOSHint() {
@@ -335,29 +360,26 @@
         iosHint.style.display = 'block';
       }
 
-      async function registerSW() {
-        if (!('serviceWorker' in navigator)) return;
-
-        try {
-          const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-          console.log('SW registered', reg);
-
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            console.log('SW controller changed');
-          });
-        } catch (err) {
-          console.error('SW registration failed', err);
-        }
+      function hideIOSHint() {
+        if (!iosHint) return;
+        iosHint.style.display = 'none';
       }
 
-      registerSW();
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .then((reg) => console.log('SW registered', reg))
+          .catch((err) => console.error('SW registration failed', err));
+      }
 
       if (isStandalone) {
-        hideAllInstallUi();
+        hideInstallButton();
+        hideIOSHint();
       } else if (isIOS && isSafari) {
+        hideInstallButton();
         showIOSHint();
       } else {
-        hideAllInstallUi();
+        hideInstallButton();
+        hideIOSHint();
       }
 
       window.addEventListener('beforeinstallprompt', (event) => {
@@ -373,7 +395,8 @@
       window.addEventListener('appinstalled', () => {
         console.log('App installed');
         deferredPrompt = null;
-        hideAllInstallUi();
+        hideInstallButton();
+        hideIOSHint();
       });
 
       if (installBtn) {
@@ -384,13 +407,13 @@
             try {
               await deferredPrompt.prompt();
               const result = await deferredPrompt.userChoice;
-              console.log('Install choice:', result.outcome);
+              console.log('Install choice:', result ? result.outcome : 'unknown');
             } catch (err) {
               console.error('Install prompt failed', err);
+            } finally {
+              deferredPrompt = null;
+              hideInstallButton();
             }
-
-            deferredPrompt = null;
-            hideAllInstallUi();
             return;
           }
 
