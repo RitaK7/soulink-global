@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Soulink – Home</title>
   <script src="auth.js"></script>
-   <link rel="manifest" href="/manifest.json">
-   <meta name="theme-color" content="#00fdd8">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#00fdd8">
 
   <style>
     :root {
@@ -20,7 +20,7 @@
     }
 
     * { box-sizing:border-box; }
-    
+
     body {
       margin:0;
       font-family:system-ui, Segoe UI, sans-serif;
@@ -103,6 +103,7 @@
       font-weight:700;
       text-decoration:none;
       transition:box-shadow .2s ease, transform .2s ease;
+      cursor:pointer;
     }
 
     .btn:hover {
@@ -213,7 +214,6 @@
       }
     }
   </style>
- 
 </head>
 
 <body>
@@ -244,6 +244,17 @@
 
       <p style="margin-top:1.2rem;">
         <a class="btn" href="quiz.html">Start My Soul Match ✨</a>
+      </p>
+
+      <p style="margin-top:10px;">
+        <button id="installBtn" class="btn" style="display:none;">
+          Install Soulink ✨
+        </button>
+      </p>
+
+      <p id="iosHint" class="micro" style="display:none;">
+        To install Soulink on iPhone/iPad:<br>
+        tap Share ⬆️ → Add to Home Screen
       </p>
 
       <p class="micro">
@@ -282,11 +293,44 @@
   <footer>
     © 2025 Soulink.global | All rights reserved · Created with love by Soulink Team
   </footer>
+
   <script>
-   if ('serviceWorker' in navigator) {
-   navigator.serviceWorker.register('/sw.js')
-  .then(() => console.log('SW registered'));
-}
-</script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log('SW registered'));
+    }
+
+    let deferredPrompt;
+
+    const installBtn = document.getElementById('installBtn');
+    const iosHint = document.getElementById('iosHint');
+
+    const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'inline-block';
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+
+      if (choice.outcome === 'accepted') {
+        console.log('Soulink installed');
+      }
+
+      deferredPrompt = null;
+      installBtn.style.display = 'none';
+    });
+
+    if (isIOS && !isStandalone) {
+      iosHint.style.display = 'block';
+    }
+  </script>
 </body>
 </html>
