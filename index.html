@@ -242,20 +242,21 @@
         Made for love, friendship, and deeper soul connections — so you can find people who truly match your heart, energy, and path.
       </p>
 
+     
+
       <p style="margin-top:1.2rem;">
-        <a class="btn" href="quiz.html">Start My Soul Match ✨</a>
+      <a class="btn" href="quiz.html">Start My Soul Match ✨</a>
       </p>
 
-      <p style="margin-top:10px;">
-        <button id="installBtn" class="btn" style="display:none;">
-          Install Soulink ✨
-        </button>
-      </p>
-
-      <p id="iosHint" class="micro" style="display:none;">
-        To install Soulink on iPhone/iPad:<br>
-        tap Share ⬆️ → Add to Home Screen
-      </p>
+     <p style="margin-top:10px;">
+     <button id="installBtn" class="btn" style="display:none;">
+      Install Soulink ✨
+    </button>
+   
+<p id="iosHint" class="micro" style="display:none;">
+  To install Soulink on iPhone/iPad:<br>
+  tap Share ⬆️ → Add to Home Screen
+</p>
 
       <p class="micro">
         ✨ Takes only 2–3 minutes • For love, friendship, and soul-aligned connections
@@ -293,44 +294,93 @@
   <footer>
     © 2025 Soulink.global | All rights reserved · Created with love by Soulink Team
   </footer>
+<script>
+(function () {
+  let deferredPrompt = null;
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then(() => console.log('SW registered'));
+  const installBtn = document.getElementById('installBtn');
+  const iosHint = document.getElementById('iosHint');
+
+  const isStandalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+
+  const ua = window.navigator.userAgent || '';
+  const isIOS =
+    /iphone|ipad|ipod/i.test(ua) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+
+  function hideAllInstallUi() {
+    if (installBtn) installBtn.style.display = 'none';
+    if (iosHint) iosHint.style.display = 'none';
+  }
+
+  function showInstallButton() {
+    if (installBtn) installBtn.style.display = 'inline-block';
+  }
+
+  function showIOSHint() {
+    if (iosHint) iosHint.style.display = 'block';
+  }
+
+  async function registerSW() {
+    if (!('serviceWorker' in navigator)) return;
+
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      console.log('SW registered', reg);
+
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        console.log('SW controller changed');
+      });
+    } catch (err) {
+      console.error('SW registration failed', err);
     }
+  }
 
-    let deferredPrompt;
+  registerSW();
 
-    const installBtn = document.getElementById('installBtn');
-    const iosHint = document.getElementById('iosHint');
+  hideAllInstallUi();
 
-    const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+  window.addEventListener('beforeinstallprompt', (event) => {
+    console.log('beforeinstallprompt fired');
+    event.preventDefault();
+    deferredPrompt = event;
+    if (!isStandalone) showInstallButton();
+  });
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      installBtn.style.display = 'inline-block';
-    });
+  window.addEventListener('appinstalled', () => {
+    console.log('App installed');
+    deferredPrompt = null;
+    hideAllInstallUi();
+  });
 
+  if (installBtn) {
     installBtn.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-
-      deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-
-      if (choice.outcome === 'accepted') {
-        console.log('Soulink installed');
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const result = await deferredPrompt.userChoice;
+        console.log('Install choice:', result.outcome);
+        deferredPrompt = null;
+        hideAllInstallUi();
+        return;
       }
 
-      deferredPrompt = null;
-      installBtn.style.display = 'none';
-    });
+      if (isIOS && !isStandalone) {
+        showIOSHint();
+        return;
+      }
 
-    if (isIOS && !isStandalone) {
-      iosHint.style.display = 'block';
-    }
-  </script>
+      alert('To install Soulink, open this site in Chrome on Android or Safari on iPhone/iPad.');
+    });
+  }
+
+  if (!isStandalone && isIOS && isSafari) {
+    showIOSHint();
+  }
+})();
+</script>
 </body>
 </html>
