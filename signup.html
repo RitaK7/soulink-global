@@ -75,28 +75,7 @@
   </main>
 
   <footer>© 2025 Soulink.global · Made with love</footer>
-
-  <script>
-    (function(){
-      const form = document.getElementById('signupForm');
-      const msg  = document.getElementById('msg');
-      form.addEventListener('submit', e => {
-        e.preventDefault();
-        const pwd = document.getElementById('password').value;
-        const confirm = document.getElementById('confirm').value;
-        const ok = document.getElementById('agree').checked;
-        if(pwd !== confirm){ msg.textContent='Passwords do not match'; return; }
-        if(!ok){ msg.textContent='Please agree to Terms'; return; }
-        try{
-          sessionStorage.setItem('soulinkBeta','true');
-          sessionStorage.setItem('soulinkBetaStartedAt', String(Date.now()));
-          msg.textContent = 'Account created ✓ Redirecting...';
-          setTimeout(()=>{ location.href='quiz.html'; }, 600);
-        }catch(err){
-          msg.textContent = 'Error: ' + err.message;
-        }
-      });
-    })();
   </script>
+  <script type="module" src="signup.js"></script>
 </body>
 </html>

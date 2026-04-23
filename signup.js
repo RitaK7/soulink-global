@@ -1,65 +1,95 @@
-// src/signup.js
-import { initializeApp } from "firebase/app";
+import { auth, db } from "./firebase-config.js";
+
 import {
-  getAuth,
   createUserWithEmailAndPassword,
   updateProfile
-} from "firebase/auth";
-import { firebaseConfig } from "./firebase-config.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// Inicializuojame Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+import {
+  doc,
+  setDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Gaunam formą
 const form = document.getElementById("signupForm");
-const messageDiv = document.getElementById("message");
+const msg = document.getElementById("msg");
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // Paimam įrašytus duomenis
-  const name = document.getElementById("fullName").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-  const confirmPassword = document.getElementById("confirmPassword").value;
-  const agreed = document.getElementById("terms").checked;
+  const name = document.getElementById("name").value.trim();
 
-  // Tikrinimai
-  if (!agreed) {
-    return showMessage("❗ You must agree to the Terms & Conditions.");
+  const email = document.getElementById("email").value.trim();
+
+  const password = document.getElementById("password").value;
+
+  const confirm = document.getElementById("confirm").value;
+
+  const agree = document.getElementById("agree").checked;
+
+  if (password !== confirm) {
+    msg.textContent = "Passwords do not match";
+    return;
   }
 
-  if (password !== confirmPassword) {
-    return showMessage("❗ Passwords do not match.");
+  if (!agree) {
+    msg.textContent = "Please agree to Terms";
+    return;
   }
 
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(userCredential.user, { displayName: name });
 
-    showMessage("✅ Account created successfully!", "success");
+    const userCredential =
+      await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
 
-    // Optionally išsaugom naudotoją localStorage (pvz.)
-    localStorage.setItem("soulinkUser", JSON.stringify({
-      email: email,
-      name: name,
-      uid: userCredential.user.uid
-    }));
+    const user = userCredential.user;
 
-    // Po 2 sek. perkeliam į my-soul.html
+    await updateProfile(user, {
+      displayName: name
+    });
+
+    await setDoc(doc(db, "users", user.uid), {
+
+      uid: user.uid,
+
+      name,
+
+      email,
+
+      createdAt: serverTimestamp(),
+
+      profileCompleted: false
+
+    });
+
+    localStorage.setItem(
+      "soulinkUser",
+      JSON.stringify({
+        uid: user.uid,
+        name,
+        email
+      })
+    );
+
+    msg.textContent =
+      "Account created successfully ✓";
+
     setTimeout(() => {
-      window.location.href = "/my-soul.html";
-    }, 2000);
 
-    form.reset();
+      window.location.href =
+        "quiz.html";
+
+    }, 1200);
+
   } catch (err) {
-    showMessage("❌ " + err.message);
-  }
-});
 
-// Pranešimų rodymo funkcija
-function showMessage(msg, type = "error") {
-  messageDiv.textContent = msg;
-  messageDiv.style.color = type === "success" ? "#00ff88" : "#ff4444";
-}
+    msg.textContent =
+      err.message;
+
+  }
+
+});

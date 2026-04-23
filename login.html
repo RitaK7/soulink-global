@@ -10,7 +10,7 @@
     .wrap{max-width:420px;margin:10vh auto;padding:1.5rem;background:#014247;border-radius:16px;box-shadow:0 0 24px rgba(0,253,216,.45)}
     h1{margin:0 0 .75rem;color:#00fdd8;font-size:1.4rem;text-align:center}
     label{display:block;margin:.75rem 0 .25rem}
-    input{width:100%;padding:.7rem;border-radius:10px;border:0;background:#003c43;color:#eaffff}
+    input{width:100%;padding:.7rem;border-radius:10px;border:0;background:#003c43;color:#000000}
     button{width:100%;padding:.8rem;margin-top:1rem;border:0;border-radius:12px;background:#00fdd8;color:#003c43;font-weight:700;cursor:pointer}
     button:disabled{opacity:.6;cursor:not-allowed}
     .note{font-size:.9rem;opacity:.9;margin:.5rem 0 0}
@@ -43,52 +43,23 @@
 
   <main class="wrap" role="main">
     <h1>Welcome back</h1>
-    <form id="betaLoginForm" novalidate>
-      <label for="email">Email</label>
-      <input id="email" name="email" type="email" autocomplete="email" required />
+    <form id="loginForm" novalidate>
 
-      <label for="password">Password</label>
-      <input id="password" name="password" type="password" autocomplete="current-password" required />
+  <label for="email">Email</label>
+  <input id="email" name="email" type="email" autocomplete="email" required />
 
-      <p class="note">Beta access uses a shared password. If you don’t have it, ask Rita.</p>
+  <label for="password">Password</label>
+  <input id="password" name="password" type="password" autocomplete="current-password" required />
 
-      <button id="loginBtn" type="submit">Log In</button>
-      <div id="msg" class="msg"></div>
-    </form>
+  <button id="loginBtn" type="submit">Log In</button>
+
+  <div id="msg" class="msg"></div>
+
+</form>
   </main>
 
   <footer>© 2025 Soulink.global · Made with love</footer>
 
-  <script>
-    (function(){
-      const form = document.getElementById('betaLoginForm');
-      const btn  = document.getElementById('loginBtn');
-      const msg  = document.getElementById('msg');
-
-      const BETA_KEY = 'soulinktest2025';
-
-      function getNext(){
-        const p = new URLSearchParams(location.search).get('next');
-        return (p && /\.html$/.test(p)) ? p : 'index.html';
-        }
-
-      form.addEventListener('submit', e => {
-        e.preventDefault();
-        const pwd = document.getElementById('password').value.trim();
-        const email = document.getElementById('email').value.trim();
-        if(!email){ msg.textContent = 'Please enter email'; return; }
-        if(pwd !== BETA_KEY){ msg.textContent = 'Wrong password'; return; }
-        try{
-          sessionStorage.setItem('soulinkBeta','true');
-          sessionStorage.setItem('soulinkBetaStartedAt', String(Date.now()));
-          msg.textContent = 'Logged in ✓ Redirecting...';
-          btn.disabled = true;
-          setTimeout(()=>{ location.href = getNext(); }, 600);
-        }catch(err){
-          msg.textContent = 'Error: ' + err.message;
-        }
-      });
-    })();
-  </script>
+  <script type="module" src="login.js"></script>
 </body>
 </html>

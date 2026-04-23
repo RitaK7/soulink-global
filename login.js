@@ -1,38 +1,65 @@
-// src/login.js
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase-config.js";
 
+import {
+  signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
 const form = document.getElementById("loginForm");
-const messageDiv = document.getElementById("message");
+
+const msg = document.getElementById("msg");
 
 form.addEventListener("submit", async (e) => {
+
   e.preventDefault();
 
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
+  const email =
+    document.getElementById("email")
+    .value
+    .trim();
+
+  const password =
+    document.getElementById("password")
+    .value;
 
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+    const userCredential =
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
     const user = userCredential.user;
 
-    // Išsaugom į localStorage (jei reikia)
-    localStorage.setItem("soulinkUser", JSON.stringify({
-      email: user.email,
-      name: user.displayName,
-      uid: user.uid
-    }));
+    localStorage.setItem(
+      "soulinkUser",
+      JSON.stringify({
 
-    showMessage("✅ Logged in successfully!", "success");
+        uid: user.uid,
+
+        name: user.displayName,
+
+        email: user.email
+
+      })
+    );
+
+    msg.textContent =
+      "Logged in successfully ✓";
 
     setTimeout(() => {
-      window.location.href = "/my-soul.html";
-    }, 1500);
-  } catch (err) {
-    showMessage("❌ " + err.message);
-  }
-});
 
-function showMessage(msg, type = "error") {
-  messageDiv.textContent = msg;
-  messageDiv.style.color = type === "success" ? "#00ff88" : "#ff4444";
-}
+      window.location.href =
+        "my-soul.html";
+
+    }, 1000);
+
+  } catch (err) {
+
+    msg.textContent =
+      err.message;
+
+  }
+
+});
