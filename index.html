@@ -95,6 +95,7 @@
       color:var(--muted);
       opacity:.95;
       margin-top:1rem;
+      line-height:1.7;
     }
 
     .btn {
@@ -123,23 +124,6 @@
 
     .btn-ghost:hover {
       box-shadow:0 0 12px var(--glow);
-    }
-
-    .install-wrap {
-      margin-top:10px;
-      display:flex;
-      justify-content:center;
-    }
-
-    .install-cta {
-      display:none;
-      width:100%;
-      max-width:320px;
-      text-align:center;
-    }
-
-    .install-cta.is-visible {
-      display:block !important;
     }
 
     .section-card {
@@ -234,25 +218,6 @@
       .hero p {
         line-height:1.5;
       }
-
-      .install-wrap.install-fixed {
-        position:fixed;
-        left:12px;
-        right:12px;
-        bottom:14px;
-        z-index:9999;
-        margin-top:0;
-        justify-content:center;
-        pointer-events:none;
-      }
-
-      .install-wrap.install-fixed .install-cta {
-        width:100%;
-        max-width:none;
-        min-height:54px;
-        box-shadow:0 0 18px rgba(0,253,216,.35);
-        pointer-events:auto;
-      }
     }
   </style>
 </head>
@@ -267,6 +232,7 @@
       </a>
 
       <div style="display:flex; gap:.6rem; flex-wrap:wrap;">
+
         <a class="btn-ghost btn" href="login.html">
           Log In
         </a>
@@ -274,6 +240,7 @@
         <a class="btn" href="signup.html">
           Sign Up
         </a>
+
       </div>
 
     </div>
@@ -309,26 +276,20 @@
         </a>
       </p>
 
-      <div class="install-wrap">
+      <div style="margin-top:18px; text-align:center;">
 
-        <button
-          id="installBtn"
-          class="btn install-cta"
-          type="button"
-        >
-          Install Soulink ✨
-        </button>
+        <p class="micro" style="margin-bottom:10px;">
+          📱 <strong>Install Soulink on Android:</strong><br>
+          tap ⋮ (top right menu) → <strong>Install app</strong><br>
+          or → <strong>Add to Home screen</strong>
+        </p>
+
+        <p class="micro">
+          🍎 <strong>Install Soulink on iPhone/iPad:</strong><br>
+          tap Share ⬆️ → <strong>Add to Home Screen</strong>
+        </p>
 
       </div>
-
-      <p
-        id="iosHint"
-        class="micro"
-        style="display:none;"
-      >
-        To install Soulink on iPhone/iPad:<br>
-        tap Share ⬆️ → Add to Home Screen
-      </p>
 
       <p class="micro">
         ✨ Takes only 2–3 minutes •
@@ -403,202 +364,19 @@
   </footer>
 
   <script>
-    (function () {
+    if ('serviceWorker' in navigator) {
 
-      let deferredPrompt = null;
+      navigator.serviceWorker
+        .register('/sw.js', { scope: '/' })
 
-      const installBtn =
-        document.getElementById('installBtn');
+        .then((reg) => {
+          console.log('SW registered', reg);
+        })
 
-      const iosHint =
-        document.getElementById('iosHint');
-
-      const isStandalone =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        window.navigator.standalone === true;
-
-      const ua = window.navigator.userAgent || '';
-
-      const isIOS =
-        /iphone|ipad|ipod/i.test(ua) ||
-        (
-          navigator.platform === 'MacIntel' &&
-          navigator.maxTouchPoints > 1
-        );
-
-      const isSafari =
-        /^((?!chrome|android).)*safari/i.test(ua);
-
-      function hideInstallButton() {
-
-        if (!installBtn) return;
-
-        const wrap = installBtn.parentElement;
-
-        installBtn.classList.remove('is-visible');
-        installBtn.style.display = 'none';
-
-        if (wrap) {
-          wrap.classList.remove('install-fixed');
-        }
-      }
-
-      function showInstallButton() {
-
-        if (!installBtn) return;
-
-        const wrap = installBtn.parentElement;
-
-        installBtn.style.display = 'block';
-        installBtn.classList.add('is-visible');
-
-        if (window.innerWidth <= 640 && wrap) {
-          wrap.classList.add('install-fixed');
-        }
-
-        const rect =
-          installBtn.getBoundingClientRect();
-
-        console.log('Install button shown', {
-          top: rect.top,
-          bottom: rect.bottom,
-          viewport: window.innerHeight,
-          display: getComputedStyle(installBtn).display,
-          visibility: getComputedStyle(installBtn).visibility,
-          opacity: getComputedStyle(installBtn).opacity
+        .catch((err) => {
+          console.error('SW registration failed', err);
         });
-      }
-
-      function showIOSHint() {
-        if (!iosHint) return;
-        iosHint.style.display = 'block';
-      }
-
-      function hideIOSHint() {
-        if (!iosHint) return;
-        iosHint.style.display = 'none';
-      }
-
-      if ('serviceWorker' in navigator) {
-
-        navigator.serviceWorker
-          .register('/sw.js', { scope: '/' })
-
-          .then((reg) => {
-            console.log('SW registered', reg);
-          })
-
-          .catch((err) => {
-            console.error(
-              'SW registration failed',
-              err
-            );
-          });
-      }
-
-      if (isStandalone) {
-
-        hideInstallButton();
-        hideIOSHint();
-
-      } else if (isIOS && isSafari) {
-
-        hideInstallButton();
-        showIOSHint();
-
-      } else {
-
-        hideInstallButton();
-        hideIOSHint();
-      }
-
-      window.addEventListener(
-        'beforeinstallprompt',
-        (event) => {
-
-          console.log(
-            'beforeinstallprompt fired'
-          );
-
-          event.preventDefault();
-
-          deferredPrompt = event;
-
-          if (!isStandalone) {
-            showInstallButton();
-          }
-        }
-      );
-
-      window.addEventListener(
-        'appinstalled',
-        () => {
-
-          console.log('App installed');
-
-          deferredPrompt = null;
-
-          hideInstallButton();
-          hideIOSHint();
-        }
-      );
-
-      if (installBtn) {
-
-        installBtn.addEventListener(
-          'click',
-          async () => {
-
-            console.log(
-              'Install button clicked'
-            );
-
-            if (deferredPrompt) {
-
-              try {
-
-                await deferredPrompt.prompt();
-
-                const result =
-                  await deferredPrompt.userChoice;
-
-                console.log(
-                  'Install choice:',
-                  result
-                    ? result.outcome
-                    : 'unknown'
-                );
-
-              } catch (err) {
-
-                console.error(
-                  'Install prompt failed',
-                  err
-                );
-
-              } finally {
-
-                deferredPrompt = null;
-                hideInstallButton();
-              }
-
-              return;
-            }
-
-            if (isIOS && !isStandalone) {
-
-              showIOSHint();
-              return;
-            }
-
-            alert(
-              'To install Soulink, open this site in Chrome on Android or Safari on iPhone/iPad.'
-            );
-          }
-        );
-      }
-
-    })();
+    }
   </script>
 
 </body>
