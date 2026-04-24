@@ -512,19 +512,21 @@ function bindSubmit() {
 
     safePatchSoulData(fragment);
 
-    saveQuizToFirestore(fragment).catch((err) => {
-      console.error("[Soulink][quiz] Firestore save failed:", err);
-    });
+   let nextUrl = "edit-profile.html";
 
-    let nextUrl = "edit-profile.html";
+const attrNext = form.getAttribute("data-next");
 
-    const attrNext = form.getAttribute("data-next");
+if (attrNext) {
+  nextUrl = attrNext;
+}
 
-    if (attrNext) {
-      nextUrl = attrNext;
-    }
-
+saveQuizToFirestore(fragment)
+  .catch((err) => {
+    console.error("[Soulink][quiz] Firestore save failed:", err);
+  })
+  .finally(() => {
     window.location.href = nextUrl;
+  });
   });
 }
 
