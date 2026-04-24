@@ -1,3 +1,13 @@
+import { auth, db } from "./firebase-config.js";
+
+import {
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 (function () {
   "use strict";
 
@@ -660,12 +670,44 @@
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    const data = loadSoulData();
-    if (!hasMeaningfulData(data)) {
+
+  onAuthStateChanged(auth, async (user) => {
+
+    if (!user) {
       renderEmpty();
-    } else {
-      renderFull(data);
+      return;
     }
-    bindStaticLinks();
+
+    try {
+
+      const ref = doc(db, "users", user.uid);
+
+      const snap = await getDoc(ref);
+
+      if (!snap.exists()) {
+        renderEmpty();
+        return;
+      }
+
+      const data = snap.data();
+
+      if (!hasMeaningfulData(data)) {
+        renderEmpty();
+      } else {
+        renderFull(data);
+      }
+
+    } catch (err) {
+
+      console.error("[My Soul] Firestore load failed:", err);
+
+      renderEmpty();
+
+    }
+
   });
+
+  bindStaticLinks();
+
+});
 })();
