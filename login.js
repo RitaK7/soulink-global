@@ -8,6 +8,24 @@ const form = document.getElementById("loginForm");
 
 const msg = document.getElementById("msg");
 
+function clearOldSoulData() {
+  localStorage.removeItem("soulQuiz");
+  localStorage.removeItem("soulink.soulQuiz");
+
+  localStorage.removeItem("soulCoach");
+  localStorage.removeItem("soulink.soulCoach");
+
+  localStorage.removeItem("soulMatches");
+  localStorage.removeItem("soulink.matches");
+
+  localStorage.removeItem("soulFriends");
+  localStorage.removeItem("soulink.friends.list");
+
+  localStorage.removeItem("profilePhoto1");
+  localStorage.removeItem("profilePhoto2");
+  localStorage.removeItem("profilePhoto3");
+}
+
 form.addEventListener("submit", async (e) => {
 
   e.preventDefault();
@@ -31,6 +49,7 @@ form.addEventListener("submit", async (e) => {
       );
 
     const user = userCredential.user;
+    clearOldSoulData();
 
     localStorage.setItem(
       "soulinkUser",
