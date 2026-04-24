@@ -1,6 +1,23 @@
 // quiz.js — Soulink Core Quiz Flow
 // Uses shared helpers: getSoulData, saveSoulData, patchSoulData (from data-helpers.js)
 
+import { auth, db } from "./firebase-config.js";
+
+import {
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+  doc,
+  setDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+let currentUser = null;
+
+onAuthStateChanged(auth, (user) => {
+  currentUser = user || null;
+});
 (function () {
   const form =
     document.getElementById("quizForm") ||
@@ -458,45 +475,71 @@
       valid = false;
     }
 
-    return valid;
+    return valid;}
+
+// ---------- Submit handling ----------
+
+async function saveQuizToFirestore(fragment) {
+  if (!currentUser) {
+    console.warn("[Soulink][quiz] No authenticated user.");
+    return;
   }
 
-  // ---------- Submit handling ----------
+  await setDoc(
+    doc(db, "users", currentUser.uid),
+    {
+      ...fragment,
+      uid: currentUser.uid,
+      email: currentUser.email || "",
+      updatedAt: serverTimestamp(),
+      profileCompleted: true
+    },
+    { merge: true }
+  );
 
-  function bindSubmit() {
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
+  console.log("[Soulink][quiz] Saved to Firestore");
+}
 
-      if (!validate()) {
-        // Do not submit if required fields missing
-        return;
-      }
+function bindSubmit() {
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
 
-      const fragment = collectQuizData();
-      safePatchSoulData(fragment);
+    if (!validate()) {
+      return;
+    }
 
-      // Determine next page: use data-next if present, else edit-profile.html
-      let nextUrl = "edit-profile.html";
-      const attrNext = form.getAttribute("data-next");
-      if (attrNext) {
-        nextUrl = attrNext;
-      }
+    const fragment = collectQuizData();
 
-      window.location.href = nextUrl;
+    safePatchSoulData(fragment);
+
+    saveQuizToFirestore(fragment).catch((err) => {
+      console.error("[Soulink][quiz] Firestore save failed:", err);
     });
-  }
 
-  // ---------- Init ----------
+    let nextUrl = "edit-profile.html";
 
-  function init() {
-    prefillFromData();
-    bindAutosave();
-    bindSubmit();
-  }
+    const attrNext = form.getAttribute("data-next");
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
+    if (attrNext) {
+      nextUrl = attrNext;
+    }
+
+    window.location.href = nextUrl;
+  });
+}
+
+// ---------- Init ----------
+
+function init() {
+  prefillFromData();
+  bindAutosave();
+  bindSubmit();
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+
 })();
