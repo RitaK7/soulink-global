@@ -36,6 +36,15 @@ function saveUserToLocalStorage(user) {
 
 function clearUserStorage() {
   localStorage.removeItem("soulinkUser");
+
+  localStorage.removeItem("soulQuiz");
+  localStorage.removeItem("soulink.soulQuiz");
+  localStorage.removeItem("soulCoach");
+  localStorage.removeItem("soulink.soulCoach");
+  localStorage.removeItem("soulMatches");
+  localStorage.removeItem("soulink.matches");
+  localStorage.removeItem("soulFriends");
+  localStorage.removeItem("soulink.friends.list");
 }
 
 onAuthStateChanged(auth, (user) => {
