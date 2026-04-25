@@ -675,140 +675,185 @@ import { storage } from "./firebase-config.js";
     return input;
   }
 
-  function initPhotos() {
-    function initSlot(slot) {
-      const file = ui["file" + slot];
-      const thumb = ui["thumb" + slot];
-      const remove = ui["remove" + slot];
-      const ph = ui["ph" + slot];
-      const main = ui["main" + slot];
-      const key = "profilePhoto" + slot;
+ function initPhotos() {
+  function initSlot(slot) {
+    const file = ui["file" + slot];
+    const thumb = ui["thumb" + slot];
+    const remove = ui["remove" + slot];
+    const ph = ui["ph" + slot];
+    const main = ui["main" + slot];
+    const key = "profilePhoto" + slot;
 
-      function sync() {
-        const url = state[key] || "";
-        if (thumb) {
-          if (url) {
-            thumb.src = url;
-            thumb.style.opacity = "1";
-          } else {
-            thumb.removeAttribute("src");
-            thumb.style.opacity = "0";
-          }
-        }
-        if (ph) {
-          if (url) ph.classList.add("has-photo");
-          else ph.classList.remove("has-photo");
+    function sync() {
+      const url = state[key] || "";
+
+      if (thumb) {
+        if (url) {
+          thumb.src = url;
+          thumb.style.opacity = "1";
+        } else {
+          thumb.removeAttribute("src");
+          thumb.style.opacity = "0";
         }
       }
 
-      sync();
-
-      if (file) {
-        file.addEventListener("change", (ev) => {
-          const f = ev.target.files && ev.target.files[0];
-
-console.log("[Soulink] Photo selected:", f);
-
-if (!f) return;
-          const reader = new FileReader();
-          reader.onload = async (e) => {
-
-  const dataUrl = String(
-    e.target && e.target.result
-      ? e.target.result
-      : ""
-  );
-
-  state[key] = dataUrl;
-
-  state = persistPatch({ [key]: dataUrl });
-
-  sync();
-
-  updatePreview();
-
-  try {
-
-    const user = auth.currentUser;
-
-    if (!user) {
-      console.warn("[Soulink] No authenticated user for upload.");
-      return;
+      if (ph) {
+        if (url) ph.classList.add("has-photo");
+        else ph.classList.remove("has-photo");
+      }
     }
-
-    const storageRef = ref(
-      storage,
-      `users/${user.uid}/${key}.jpg`
-    );
-
-    const response = await fetch(dataUrl);
-
-    const blob = await response.blob();
-
-    await uploadBytes(storageRef, blob);
-
-    const downloadURL = await getDownloadURL(storageRef);
-
-    state[key] = downloadURL;
-
-    state = persistPatch({
-      [key]: downloadURL
-    });
-
-    await setDoc(
-      doc(db, "users", user.uid),
-      {
-        [key]: downloadURL
-      },
-      { merge: true }
-    );
 
     sync();
 
-    updatePreview();
+    console.log(`[Soulink] initPhotos slot ${slot}`, {
+      fileFound: !!file,
+      thumbFound: !!thumb,
+      removeFound: !!remove,
+      phFound: !!ph,
+      mainFound: !!main
+    });
 
-    console.log(
-      `[Soulink] ${key} uploaded successfully`
-    );
+    if (file && !file.dataset.boundChange) {
+      file.dataset.boundChange = "1";
 
-  } catch (err) {
+      file.addEventListener("change", async (ev) => {
+        const f = ev.target.files && ev.target.files[0];
 
-    console.error(
-      `[Soulink] Upload failed for ${key}:`,
-      err
-    );
+        console.log("[Soulink] Photo selected:", f);
 
-  }
+        if (!f) {
+          file.value = "";
+          return;
+        }
 
-};
-          reader.readAsDataURL(f);
-        });
-      }
+        const user = auth.currentUser;
 
-      if (remove) {
-        remove.addEventListener("click", (ev) => {
-          ev.preventDefault();
-          state[key] = "";
-          state = persistPatch({ [key]: "" });
+        if (!user) {
+          console.warn("[Soulink] No authenticated user for upload.");
+          file.value = "";
+          return;
+        }
+
+        let tempUrl = "";
+
+        try {
+          tempUrl = URL.createObjectURL(f);
+
+          if (thumb) {
+            thumb.src = tempUrl;
+            thumb.style.opacity = "1";
+          }
+
+          if (ph) {
+            ph.classList.add("has-photo");
+          }
+
+          const storageRef = ref(storage, `users/${user.uid}/${key}`);
+
+          await uploadBytes(storageRef, f, {
+            contentType: f.type || "image/jpeg"
+          });
+
+          const downloadURL = await getDownloadURL(storageRef);
+
+          state[key] = downloadURL;
+          state = persistPatch({ [key]: downloadURL });
+
+          await setDoc(
+            doc(db, "users", user.uid),
+            { [key]: downloadURL },
+            { merge: true }
+          );
+
           sync();
           updatePreview();
-        });
-      }
 
-      if (main) {
-        main.addEventListener("click", (ev) => {
-          ev.preventDefault();
-          state.mainPhotoSlot = slot;
-          state = persistPatch({ mainPhotoSlot: slot });
-          updatePreview();
-        });
-      }
+          console.log(`[Soulink] ${key} uploaded successfully:`, downloadURL);
+        } catch (err) {
+          console.error(`[Soulink] Upload failed for ${key}:`, err);
+        } finally {
+          if (tempUrl) URL.revokeObjectURL(tempUrl);
+          file.value = "";
+        }
+      });
     }
 
-    initSlot(1);
-    initSlot(2);
-    initSlot(3);
+    if (file && !file.dataset.boundTrigger) {
+      const triggers = document.querySelectorAll(
+        `[data-file-trigger="file${slot}"]`
+      );
+
+      console.log(`[Soulink] Photo triggers for file${slot}:`, triggers.length);
+
+      triggers.forEach((el) => {
+        el.addEventListener("click", (ev) => {
+          if (
+            ev.target &&
+            ev.target.closest &&
+            ev.target.closest(".star")
+          ) {
+            return;
+          }
+
+          ev.preventDefault();
+
+          console.log(`[Soulink] Opening picker for file${slot}`);
+          file.click();
+        });
+      });
+
+      file.dataset.boundTrigger = "1";
+    }
+
+    if (remove && !remove.dataset.boundClick) {
+      remove.dataset.boundClick = "1";
+
+      remove.addEventListener("click", async (ev) => {
+        ev.preventDefault();
+
+        state[key] = "";
+        state = persistPatch({ [key]: "" });
+
+        if (file) file.value = "";
+
+        const user = auth.currentUser;
+
+        if (user) {
+          try {
+            await setDoc(
+              doc(db, "users", user.uid),
+              { [key]: "" },
+              { merge: true }
+            );
+          } catch (err) {
+            console.error(`[Soulink] Failed to clear ${key} in Firestore:`, err);
+          }
+        }
+
+        sync();
+        updatePreview();
+      });
+    }
+
+    if (main && !main.dataset.boundClick) {
+      main.dataset.boundClick = "1";
+
+      main.addEventListener("click", (ev) => {
+        ev.preventDefault();
+
+        state.mainPhotoSlot = slot;
+        state = persistPatch({ mainPhotoSlot: slot });
+
+        updatePreview();
+      });
+    }
   }
+
+  initSlot(1);
+  initSlot(2);
+  initSlot(3);
+}
+
 
   function initTags(container, defaults, initialList, onChange) {
     if (!container) return { rerender() {}, addCustom() {} };

@@ -475,8 +475,17 @@
       }
 
       .edit-profile-page .ph input[type="file"] {
-        display: none;
-      }
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 
       .edit-profile-page .star {
         position: absolute;
@@ -921,19 +930,19 @@
                         >
                           ⭐
                         </button>
-                        <label for="file1" class="photo-circle">
-                          <img id="thumb1" class="thumb" alt="Photo 1 preview" />
-                          <div class="ph-placeholder">
-                            Tap to upload your main photo
-                          </div>
-                        </label>
+                       <label for="file1" class="photo-circle" data-file-trigger="file1">
+                       <img id="thumb1" class="thumb" alt="Photo 1 preview" />
+                      <div class="ph-placeholder">
+                      Tap to upload your main photo
+                     </div>
+                     </label>
                         <input id="file1" type="file" accept="image/*" />
                       </div>
                       <div class="photo-actions">
-                        <label for="file1" class="btn replace">Replace photo</label>
+                        <button type="button" class="btn replace" data-file-trigger="file1">Replace photo</button>
                         <button class="btn remove" id="remove1" type="button">
                           Remove
-                        </button>
+                        </button
                       </div>
                     </div>
 
@@ -948,16 +957,16 @@
                         >
                           ⭐
                         </button>
-                        <label for="file2" class="photo-circle">
-                          <img id="thumb2" class="thumb" alt="Photo 2 preview" />
-                          <div class="ph-placeholder">
-                            Tap to add another angle or moment
-                          </div>
+                        <label for="file2" class="photo-circle" data-file-trigger="file2">
+                        <img id="thumb2" class="thumb" alt="Photo 2 preview" />
+                        <div class="ph-placeholder">
+                         Tap to add another angle or moment
+                        </div>
                         </label>
                         <input id="file2" type="file" accept="image/*" />
                       </div>
                       <div class="photo-actions">
-                        <label for="file2" class="btn replace">Replace photo</label>
+                        <button type="button" class="btn replace" data-file-trigger="file2">Replace photo</button>
                         <button class="btn remove" id="remove2" type="button">
                           Remove
                         </button>
@@ -975,16 +984,16 @@
                         >
                           ⭐
                         </button>
-                        <label for="file3" class="photo-circle">
-                          <img id="thumb3" class="thumb" alt="Photo 3 preview" />
-                          <div class="ph-placeholder">
-                            Tap to add one more piece of your world
-                          </div>
-                        </label>
+                        <label for="file3" class="photo-circle" data-file-trigger="file3">
+                       <img id="thumb3" class="thumb" alt="Photo 3 preview" />
+                       <div class="ph-placeholder">
+                       Tap to add one more piece of your world
+                       </div>
+                       </label>
                         <input id="file3" type="file" accept="image/*" />
                       </div>
                       <div class="photo-actions">
-                        <label for="file3" class="btn replace">Replace photo</label>
+                        <button type="button" class="btn replace" data-file-trigger="file3">Replace photo</button>
                         <button class="btn remove" id="remove3" type="button">
                           Remove
                         </button>
