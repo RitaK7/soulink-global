@@ -13,7 +13,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC5NOF2WAQM7-9SoEtm_9Mc3QuX0h2m1lg",
+  apiKey: "AIzaSyCb0TOXVrP1dQe16T6RNRvAg8lwu9Pnf4",
   authDomain: "soulink-342bb.firebaseapp.com",
   projectId: "soulink-342bb",
   storageBucket: "soulink-342bb.firebasestorage.app",
