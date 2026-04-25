@@ -926,12 +926,80 @@ import { storage } from "./firebase-config.js";
     return payload;
   }
 
-  function saveAll() {
-    const payload = collectPayloadFromState();
-    state = persistPatch(payload);
-    updateBirthdayHint();
-    updatePreview();
+  async function saveAll() {
+  if (ui.name) state.name = ui.name.value || "";
+  if (ui.country) state.country = ui.country.value || "";
+  if (ui.birthday) state.birthday = ui.birthday.value || "";
+
+  if (ui.boundaries) {
+    state.unacceptable = ui.boundaries.value || "";
   }
+
+  if (ui.aboutMe) {
+    state.about = ui.aboutMe.value || "";
+  }
+
+  const genderSelfInput = document.getElementById("genderSelf");
+  if (genderSelfInput && genderSelfInput.value) {
+    state.gender = genderSelfInput.value || "";
+    state.genderSelf = genderSelfInput.value || "";
+    state._genderMode = "self";
+  }
+
+  const connectWithCustomInput = document.getElementById("connectWithCustom");
+  if (connectWithCustomInput) {
+    state.connectWithCustom = connectWithCustomInput.value || "";
+  }
+
+  const payload = collectPayloadFromState();
+
+  const optionalTextFields = [
+    "height",
+    "weight",
+    "kg",
+    "mantra",
+    "spiritualBeliefs",
+    "soulSummary"
+  ];
+
+  optionalTextFields.forEach((field) => {
+    const el = document.getElementById(field);
+    if (el) payload[field] = norm(el.value);
+  });
+
+  const info = computeBirthdayInfo(payload.birthday);
+
+  if (Number.isFinite(info.age)) payload.age = info.age;
+  if (info.zodiac) payload.zodiac = info.zodiac;
+  if (info.chinese) payload.chineseZodiac = info.chinese;
+  if (info.lifePath) payload.lifePath = info.lifePath;
+
+  payload.profileCompleted = true;
+  payload.updatedAt = new Date();
+
+  state = persistPatch(payload);
+
+  updateBirthdayHint();
+  updatePreview();
+
+  const user = auth.currentUser;
+
+  if (!user) {
+    console.warn("[Soulink] No authenticated user for Firestore profile save.");
+    return;
+  }
+
+  await setDoc(
+    doc(db, "users", user.uid),
+    {
+      ...payload,
+      email: user.email || payload.email || ""
+    },
+    { merge: true }
+  );
+
+  console.log("[Soulink] Profile text saved to Firestore");
+}
 
   function normaliseStateFromRaw(raw) {
     const out = Object.assign({}, raw);
@@ -1165,22 +1233,33 @@ import { storage } from "./firebase-config.js";
     }
 
     if (ui.nextSoul) {
-      ui.nextSoul.addEventListener("click", (e) => {
-        e.preventDefault();
-        window.location.href = "my-soul.html";
-      });
+  ui.nextSoul.addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    try {
+      await saveAll();
+    } catch (err) {
+      console.error("[Soulink] Save before My Soul failed:", err);
     }
 
+    window.location.href = "my-soul.html";
+  });
+}
+
     if (ui.saveBtn) {
-      ui.saveBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        saveAll();
-        try {
-          const evt = new CustomEvent("soulink:saved", { bubbles: true });
-          document.dispatchEvent(evt);
-        } catch (e2) {}
-      });
+  ui.saveBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    try {
+      await saveAll();
+
+      const evt = new CustomEvent("soulink:saved", { bubbles: true });
+      document.dispatchEvent(evt);
+    } catch (err) {
+      console.error("[Soulink] Profile save failed:", err);
     }
+  });
+}
 
     if (ui.resetForm) {
       ui.resetForm.addEventListener("click", (e) => {
