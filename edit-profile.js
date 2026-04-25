@@ -1,3 +1,17 @@
+import { auth, db } from "./firebase-config.js";
+
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+import {
+  doc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import { storage } from "./firebase-config.js";
 (function () {
   if (typeof window === "undefined") return;
 
@@ -694,13 +708,76 @@
           const f = ev.target.files && ev.target.files[0];
           if (!f) return;
           const reader = new FileReader();
-          reader.onload = (e) => {
-            const dataUrl = String(e.target && e.target.result ? e.target.result : "");
-            state[key] = dataUrl;
-            state = persistPatch({ [key]: dataUrl });
-            sync();
-            updatePreview();
-          };
+          reader.onload = async (e) => {
+
+  const dataUrl = String(
+    e.target && e.target.result
+      ? e.target.result
+      : ""
+  );
+
+  state[key] = dataUrl;
+
+  state = persistPatch({ [key]: dataUrl });
+
+  sync();
+
+  updatePreview();
+
+  try {
+
+    const user = auth.currentUser;
+
+    if (!user) {
+      console.warn("[Soulink] No authenticated user for upload.");
+      return;
+    }
+
+    const storageRef = ref(
+      storage,
+      `users/${user.uid}/${key}.jpg`
+    );
+
+    const response = await fetch(dataUrl);
+
+    const blob = await response.blob();
+
+    await uploadBytes(storageRef, blob);
+
+    const downloadURL = await getDownloadURL(storageRef);
+
+    state[key] = downloadURL;
+
+    state = persistPatch({
+      [key]: downloadURL
+    });
+
+    await setDoc(
+      doc(db, "users", user.uid),
+      {
+        [key]: downloadURL
+      },
+      { merge: true }
+    );
+
+    sync();
+
+    updatePreview();
+
+    console.log(
+      `[Soulink] ${key} uploaded successfully`
+    );
+
+  } catch (err) {
+
+    console.error(
+      `[Soulink] Upload failed for ${key}:`,
+      err
+    );
+
+  }
+
+};
           reader.readAsDataURL(f);
         });
       }
