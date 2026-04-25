@@ -706,7 +706,10 @@ import { storage } from "./firebase-config.js";
       if (file) {
         file.addEventListener("change", (ev) => {
           const f = ev.target.files && ev.target.files[0];
-          if (!f) return;
+
+console.log("[Soulink] Photo selected:", f);
+
+if (!f) return;
           const reader = new FileReader();
           reader.onload = async (e) => {
 
