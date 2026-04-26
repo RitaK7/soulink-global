@@ -1,6 +1,10 @@
 import { auth, db } from "./firebase-config.js";
 
 import {
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
   ref,
   uploadBytes,
   getDownloadURL
@@ -8,7 +12,8 @@ import {
 
 import {
   doc,
-  setDoc
+  setDoc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import { storage } from "./firebase-config.js";
@@ -222,6 +227,7 @@ import { storage } from "./firebase-config.js";
   }
 
   function persistPatch(patch) {
+
     if (!patch || typeof patch !== "object") return state;
     const current = readSoulRaw() || {};
     const merged = Object.assign({}, current, patch);
@@ -242,6 +248,85 @@ import { storage } from "./firebase-config.js";
 
     return merged;
   }
+  function showSaveStatus(message, ok = true) {
+  let toast = document.getElementById("soulinkSaveToast");
+
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "soulinkSaveToast";
+    toast.setAttribute("role", "status");
+    toast.style.position = "fixed";
+    toast.style.right = "18px";
+    toast.style.bottom = "18px";
+    toast.style.zIndex = "9999";
+    toast.style.padding = "12px 16px";
+    toast.style.borderRadius = "999px";
+    toast.style.fontWeight = "800";
+    toast.style.fontSize = "0.9rem";
+    toast.style.boxShadow = "0 0 22px rgba(0,253,216,0.75)";
+    toast.style.transition = "opacity 0.2s ease, transform 0.2s ease";
+    document.body.appendChild(toast);
+  }
+
+  toast.textContent = message;
+  toast.style.color = ok ? "#003c43" : "#ffd4dc";
+  toast.style.background = ok ? "#00fdd8" : "rgba(80,0,20,0.95)";
+  toast.style.border = ok
+    ? "1px solid rgba(0,253,216,1)"
+    : "1px solid rgba(255,154,162,0.8)";
+  toast.style.opacity = "1";
+  toast.style.transform = "translateY(0)";
+
+  window.clearTimeout(toast._timer);
+  toast._timer = window.setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(8px)";
+  }, 2200);
+}
+
+function waitForAuthUser(timeoutMs = 4000) {
+  return new Promise((resolve) => {
+    if (auth.currentUser) {
+      resolve(auth.currentUser);
+      return;
+    }
+
+    let done = false;
+
+    const timer = window.setTimeout(() => {
+      if (done) return;
+      done = true;
+      unsubscribe();
+      resolve(auth.currentUser || null);
+    }, timeoutMs);
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (done) return;
+      done = true;
+      window.clearTimeout(timer);
+      unsubscribe();
+      resolve(user || null);
+    });
+  });
+}
+async function readFirestoreProfile() {
+  const user = await waitForAuthUser();
+
+  if (!user) {
+    console.warn("[Soulink] No authenticated user for Firestore profile load.");
+    return null;
+  }
+
+  const snap = await getDoc(doc(db, "users", user.uid));
+
+  if (!snap.exists()) {
+    console.log("[Soulink] No Firestore profile found yet.");
+    return null;
+  }
+
+  console.log("[Soulink] Profile loaded from Firestore.");
+  return snap.data();
+}
 
   function normaliseConnectionType(v) {
     const s = lower(v);
@@ -982,12 +1067,13 @@ import { storage } from "./firebase-config.js";
   updateBirthdayHint();
   updatePreview();
 
-  const user = auth.currentUser;
+  const user = await waitForAuthUser();
 
   if (!user) {
-    console.warn("[Soulink] No authenticated user for Firestore profile save.");
-    return;
-  }
+  console.warn("[Soulink] No authenticated user for Firestore profile save.");
+  showSaveStatus("Saved locally only — please log in", false);
+  return;
+}
 
   await setDoc(
     doc(db, "users", user.uid),
@@ -999,6 +1085,7 @@ import { storage } from "./firebase-config.js";
   );
 
   console.log("[Soulink] Profile text saved to Firestore");
+  showSaveStatus("Saved to Soulink ✨", true);
 }
 
   function normaliseStateFromRaw(raw) {
@@ -1255,9 +1342,10 @@ import { storage } from "./firebase-config.js";
 
       const evt = new CustomEvent("soulink:saved", { bubbles: true });
       document.dispatchEvent(evt);
-    } catch (err) {
-      console.error("[Soulink] Profile save failed:", err);
-    }
+   } catch (err) {
+  console.error("[Soulink] Profile save failed:", err);
+  showSaveStatus("Save failed — check Console", false);
+}
   });
 }
 
@@ -1318,9 +1406,22 @@ import { storage } from "./firebase-config.js";
 
   let state = {};
 
-  function init() {
-    const raw = readSoulRaw();
-    state = normaliseStateFromRaw(raw);
+  async function init() {
+  const localRaw = readSoulRaw();
+  let raw = localRaw;
+
+  try {
+    const firestoreRaw = await readFirestoreProfile();
+
+    if (firestoreRaw && typeof firestoreRaw === "object") {
+      raw = Object.assign({}, localRaw, firestoreRaw);
+      persistPatch(raw);
+    }
+  } catch (err) {
+    console.warn("[Soulink] Firestore profile load failed, using local data:", err);
+  }
+
+  state = normaliseStateFromRaw(raw);
 
     const needsFix =
       JSON.stringify(normaliseLoveLanguages(raw.loveLanguages || raw.loveLanguage || [], raw.loveLanguage)) !==
@@ -1389,9 +1490,15 @@ import { storage } from "./firebase-config.js";
     updatePreview();
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
+  function startEditProfile() {
+  init().catch((err) => {
+    console.error("[Soulink] Edit Profile init failed:", err);
+  });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", startEditProfile);
+} else {
+  startEditProfile();
+}
 })();
