@@ -8,8 +8,12 @@ import {
   doc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 (function () {
   "use strict";
+
+  const PRIMARY_KEY = "soulink.soulQuiz";
+  const LEGACY_KEY = "soulQuiz";
 
   const $ = (selector) => document.querySelector(selector);
 
@@ -49,53 +53,131 @@ import {
 
     backQuizTop: $("#msBackToQuizTop"),
     backQuizBottom: $("#msBackToQuizBottom"),
-    goToChart: $("#msGoToChart"),
+    goToChart: $("#msGoToChart")
   };
 
-  function loadSoulData() {
-    try {
-      if (typeof window.getSoulData === "function") {
-        const data = window.getSoulData({
-          fallbackToLegacy: true,
-          ensureShape: true,
-        });
-        return data || null;
-      }
-    } catch (e) {
-      console.error("My Soul: failed to load soul data", e);
-    }
-    return null;
+  const LOVE_DESCRIPTIONS = {
+    "Words of Affirmation": "Warm, sincere words help your heart feel seen, valued and emotionally safe.",
+    "Quality Time": "Undivided attention and shared presence create the deepest sense of connection for you.",
+    "Acts of Service": "Care becomes real when it is expressed through thoughtful help and dependable action.",
+    "Physical Touch": "Affection, closeness and gentle touch help you feel grounded, loved and reassured.",
+    "Receiving Gifts": "Meaningful gifts and symbols of care remind you that love is intentional and remembered."
+  };
+
+  function norm(value) {
+    return value == null ? "" : String(value).trim();
   }
 
-  function hasMeaningfulData(data) {
-    if (!data) return false;
-    const keys = [
-      "name",
-      "birthday",
-      "country",
-      "connectionType",
-      "loveLanguage",
-      "loveLanguages",
-      "values",
-      "hobbies",
-      "about",
-      "aboutMe",
-      "soulSummary",
-    ];
-    return keys.some((key) => {
-      const value = data[key];
-      if (Array.isArray(value)) return value.length > 0;
-      if (value == null) return false;
-      return String(value).trim().length > 0;
+  function lower(value) {
+    return norm(value).toLowerCase();
+  }
+
+  function toArray(value) {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.slice();
+    return [value];
+  }
+
+  function uniq(list) {
+    const out = [];
+    const seen = new Set();
+    (list || []).forEach((item) => {
+      const clean = norm(item);
+      if (!clean || seen.has(clean)) return;
+      seen.add(clean);
+      out.push(clean);
     });
+    return out;
+  }
+
+  function safeParse(raw) {
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function readLocalSoulData() {
+    try {
+      if (typeof window.getSoulData === "function") {
+        const data = window.getSoulData({ ensureShape: true });
+        if (data && typeof data === "object") return data;
+      }
+    } catch (err) {
+      console.warn("[Soulink] Local helper read failed", err);
+    }
+
+    const raw = safeParse(localStorage.getItem(PRIMARY_KEY)) || safeParse(localStorage.getItem(LEGACY_KEY));
+    return raw && typeof raw === "object" ? raw : null;
+  }
+
+  function writeLocalSoulData(data) {
+    if (!data || typeof data !== "object") return;
+
+    try {
+      if (typeof window.saveSoulData === "function") {
+        window.saveSoulData(data);
+        return;
+      }
+    } catch (err) {
+      console.warn("[Soulink] Local helper save failed", err);
+    }
+
+    try {
+      const json = JSON.stringify(data);
+      localStorage.setItem(PRIMARY_KEY, json);
+      localStorage.setItem(LEGACY_KEY, json);
+    } catch (err) {
+      console.warn("[Soulink] Local fallback save failed", err);
+    }
+  }
+
+  function waitForAuthUser(timeoutMs = 5000) {
+    return new Promise((resolve) => {
+      if (auth.currentUser) {
+        console.log("[Soulink] Auth user ready", auth.currentUser.uid);
+        resolve(auth.currentUser);
+        return;
+      }
+
+      let settled = false;
+
+      const timer = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        unsubscribe();
+        console.log("[Soulink] Auth user ready", auth.currentUser ? auth.currentUser.uid : "none");
+        resolve(auth.currentUser || null);
+      }, timeoutMs);
+
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timer);
+        unsubscribe();
+        console.log("[Soulink] Auth user ready", user ? user.uid : "none");
+        resolve(user || null);
+      });
+    });
+  }
+
+  async function readFirestoreProfile(user) {
+    if (!user) return null;
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (!snap.exists()) return null;
+    const data = snap.data() || null;
+    if (data) {
+      console.log("[Soulink] Loaded profile from Firestore");
+    }
+    return data;
   }
 
   function normalizeList(value) {
     if (!value) return [];
     if (Array.isArray(value)) {
-      return value
-        .map((v) => String(v).trim())
-        .filter(Boolean);
+      return value.map((v) => String(v).trim()).filter(Boolean);
     }
     return String(value)
       .split(/[\n,;]+/)
@@ -104,27 +186,36 @@ import {
   }
 
   function parseBirthdayToDate(raw) {
-    if (!raw) return null;
-    const str = String(raw).trim();
+    const str = norm(raw);
     if (!str) return null;
 
-    // YYYY-MM-DD or YYYY/MM/DD
     if (/^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(str)) {
       const d = new Date(str);
       return isNaN(d.getTime()) ? null : d;
     }
 
-    // DD.MM.YYYY or DD/MM/YYYY
-    const match = str.match(/^(\d{1,2})[./](\d{1,2})[./](\d{2,4})$/);
+    if (/^\d{4}\.\d{2}\.\d{2}$/.test(str)) {
+      const [y, m, d] = str.split(".").map(Number);
+      const dt = new Date(y, m - 1, d);
+      return isNaN(dt.getTime()) ? null : dt;
+    }
+
+    const match = str.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})$/);
     if (match) {
       const day = parseInt(match[1], 10);
       const month = parseInt(match[2], 10) - 1;
       let year = parseInt(match[3], 10);
-      if (year < 100) {
-        year += year >= 50 ? 1900 : 2000;
-      }
-      const d = new Date(year, month, day);
-      return isNaN(d.getTime()) ? null : d;
+      if (year < 100) year += year >= 50 ? 1900 : 2000;
+      const dt = new Date(year, month, day);
+      return isNaN(dt.getTime()) ? null : dt;
+    }
+
+    if (/^\d{8}$/.test(str)) {
+      const y = Number(str.slice(0, 4));
+      const m = Number(str.slice(4, 6));
+      const d = Number(str.slice(6, 8));
+      const dt = new Date(y, m - 1, d);
+      return isNaN(dt.getTime()) ? null : dt;
     }
 
     const d = new Date(str);
@@ -136,9 +227,7 @@ import {
     const now = new Date();
     let age = now.getFullYear() - date.getFullYear();
     const m = now.getMonth() - date.getMonth();
-    if (m < 0 || (m === 0 && now.getDate() < date.getDate())) {
-      age -= 1;
-    }
+    if (m < 0 || (m === 0 && now.getDate() < date.getDate())) age -= 1;
     return age >= 0 && age < 130 ? age : null;
   }
 
@@ -191,188 +280,175 @@ import {
       "Monkey",
       "Rooster",
       "Dog",
-      "Pig",
+      "Pig"
     ];
     const index = (year - 1900) % 12;
-    const safeIndex = (index + 12) % 12;
-    return animals[safeIndex];
+    return animals[(index + 12) % 12];
   }
 
   function getLifePathNumber(rawBirthday) {
-    if (!rawBirthday) return null;
-    const digits = String(rawBirthday).replace(/\D/g, "");
+    const digits = String(rawBirthday || "").replace(/\D/g, "");
     if (!digits) return null;
 
+    const sumDigits = (value) => String(value).split("").reduce((acc, ch) => acc + Number(ch || 0), 0);
     const isMaster = (n) => n === 11 || n === 22 || n === 33;
-    const sumDigits = (n) =>
-      String(n)
-        .split("")
-        .reduce((acc, ch) => acc + Number(ch || 0), 0);
 
-    let n = digits
-      .split("")
-      .reduce((acc, ch) => acc + Number(ch || 0), 0);
-
+    let n = sumDigits(digits);
     while (n > 9 && !isMaster(n)) {
       n = sumDigits(n);
     }
     return n;
   }
 
-  const LOVE_DESCRIPTIONS = {
-    "Words of Affirmation":
-      "You feel loved through kind words, encouragement and sincere appreciation.",
-    "Quality Time":
-      "You value presence, deep conversations and shared moments without distraction.",
-    "Acts of Service":
-      "Support, thoughtful help and practical care speak love to you.",
-    "Physical Touch":
-      "Warm hugs, gentle touch and physical closeness nourish your heart.",
-    "Receiving Gifts":
-      "Meaningful, thoughtful gifts make you feel seen and remembered.",
-  };
+  function hasMeaningfulData(data) {
+    if (!data || typeof data !== "object") return false;
+    const keys = [
+      "name",
+      "birthday",
+      "country",
+      "connectionType",
+      "loveLanguage",
+      "loveLanguages",
+      "values",
+      "hobbies",
+      "about",
+      "aboutMe",
+      "soulSummary",
+      "profilePhoto1",
+      "profilePhoto2",
+      "profilePhoto3"
+    ];
 
-  function formatListForSentence(items, max) {
-    if (!items || !items.length) return "";
-    const arr = items.slice(0, max || 3);
-    if (arr.length === 1) return arr[0];
-    if (arr.length === 2) return `${arr[0]} and ${arr[1]}`;
-    return `${arr.slice(0, -1).join(", ")}, and ${arr[arr.length - 1]}`;
+    return keys.some((key) => {
+      const value = data[key];
+      if (Array.isArray(value)) return value.length > 0;
+      return norm(value).length > 0;
+    });
   }
 
-  function buildSoulSummary(data) {
-    if (data.soulSummary) {
-      return String(data.soulSummary).trim();
+  function normalizeProfile(raw) {
+    const data = raw && typeof raw === "object" ? { ...raw } : {};
+
+    const birthday = norm(data.birthday || data.birthdate);
+    const birthdayDate = parseBirthdayToDate(birthday);
+    const age = data.age != null && data.age !== "" ? Number(data.age) : calculateAge(birthdayDate);
+    const year = getYearFromDate(birthdayDate);
+
+    const zodiac = norm(data.zodiac || data.zodiacSign || getWesternZodiac(birthdayDate));
+    const chineseZodiac = norm(data.chineseZodiac || data.chinese || getChineseZodiac(year));
+    const lifePath = data.lifePath != null && data.lifePath !== ""
+      ? data.lifePath
+      : data.lifePathNumber != null && data.lifePathNumber !== ""
+        ? data.lifePathNumber
+        : getLifePathNumber(birthday);
+
+    const loveLanguages = uniq(
+      normalizeList(data.loveLanguages && data.loveLanguages.length ? data.loveLanguages : data.loveLanguage)
+    );
+    const primaryLoveLanguage = norm(data.loveLanguage || loveLanguages[0]);
+    if (primaryLoveLanguage && !loveLanguages.includes(primaryLoveLanguage)) {
+      loveLanguages.unshift(primaryLoveLanguage);
     }
 
-    const name = data.name || "Your soul";
-    const connectionType =
-      data.connectionType || "meaningful connections with aligned souls";
-
-    const loves = normalizeList(data.loveLanguages || data.loveLanguage);
-    const primaryLove = loves[0] || null;
-
-    const values = normalizeList(data.values);
-    const hobbies = normalizeList(data.hobbies);
-
-    const topValues = formatListForSentence(values, 3);
-    const topHobbies = formatListForSentence(hobbies, 3);
-
-    const parts = [];
-
-    parts.push(
-      primaryLove
-        ? `${name} is seeking ${connectionType.toLowerCase()}, with a heart that speaks mainly in ${primaryLove}.`
-        : `${name} is seeking ${connectionType.toLowerCase()}, guided by quiet inner truth.`
+    const values = uniq(normalizeList(data.values));
+    const hobbies = uniq(normalizeList(data.hobbies && data.hobbies.length ? data.hobbies : data.interests));
+    const connectWith = uniq(
+      normalizeList(data.connectWith && data.connectWith.length ? data.connectWith : data.seekingGender)
     );
 
-    if (topValues) {
-      parts.push(`Core values like ${topValues} keep this path aligned.`);
-    }
-
-    if (topHobbies) {
-      parts.push(
-        `Joy flows through ${topHobbies}, making everyday life feel more alive.`
-      );
-    }
-
-    parts.push(
-      "As you refine your profile, this summary will grow with you – a living reflection of your current chapter."
-    );
-
-    return parts.join(" ");
-  }
-
-  function buildEnergyText(data, birthdayDate, year) {
-    const tokens = [];
-    const explicitZodiac =
-      data.zodiacSign || data.zodiac || data.sunSign || null;
-    const explicitChinese = data.chineseSign || data.chineseZodiac || null;
-    const explicitLifePath =
-      data.lifePathNumber || data.lifePath || data.lifePathNum || null;
-
-    const zodiac = explicitZodiac || getWesternZodiac(birthdayDate);
-    const chinese = explicitChinese || getChineseZodiac(year);
-    const lifePath = explicitLifePath || getLifePathNumber(data.birthday);
-
-    if (zodiac) tokens.push(zodiac);
-    if (chinese) tokens.push(chinese);
-    if (lifePath) tokens.push(`Life Path ${lifePath}`);
-
-    if (!tokens.length) {
-      return {
-        text: "Add your birthday in the Quiz to unlock your zodiac, Chinese sign and life path number here.",
-        zodiac,
-        chinese,
-        lifePath,
-      };
-    }
-
-    const baseLine = tokens.join(" • ");
-
-    const flavor = [];
-    if (zodiac) {
-      flavor.push("a unique way of seeing the world");
-    }
-    if (lifePath) {
-      flavor.push("a quiet inner compass");
-    }
-    if (chinese) {
-      flavor.push("a particular flavor of courage and playfulness");
-    }
-
-    let secondLine = "";
-    if (flavor.length) {
-      secondLine = `— together they describe your energy pattern: ${formatListForSentence(
-        flavor,
-        flavor.length
-      )}.`;
-    } else {
-      secondLine = "— together they sketch the outline of your current chapter.";
-    }
+    const profilePhoto1 = norm(data.profilePhoto1);
+    const profilePhoto2 = norm(data.profilePhoto2);
+    const profilePhoto3 = norm(data.profilePhoto3);
 
     return {
-      text: `${baseLine} ${secondLine}`,
+      ...data,
+      name: norm(data.name),
+      country: norm(data.country),
+      birthday,
+      age: Number.isFinite(age) ? age : null,
       zodiac,
-      chinese,
+      chineseZodiac,
       lifePath,
+      connectionType: norm(data.connectionType),
+      loveLanguage: primaryLoveLanguage,
+      loveLanguages,
+      values,
+      hobbies,
+      connectWith,
+      boundaries: norm(data.boundaries || data.nonNegotiables || data.unacceptable || data.unacceptableBehavior || data.notAllowed || data.noGo),
+      about: norm(data.aboutMe || data.about || data.story),
+      mantra: norm(data.mantra || data.intention),
+      soulSummary: norm(data.soulSummary),
+      profilePhoto1,
+      profilePhoto2,
+      profilePhoto3,
+      mainPhotoSlot: data.mainPhotoSlot || data.primaryPhotoSlot || null
     };
   }
 
-  function renderChips(list, container, options) {
-    const opts = options || {};
-    const max = typeof opts.max === "number" ? opts.max : 6;
-    const placeholderLabel = opts.placeholder || "Not set yet";
+  function textOrDash(value) {
+    const clean = norm(value);
+    return clean || "—";
+  }
+
+  function buildEnergyText(data) {
+    const parts = [];
+    if (data.connectionType) parts.push(`Seeking ${data.connectionType.toLowerCase()}`);
+    if (data.loveLanguage) parts.push(`led by ${data.loveLanguage.toLowerCase()}`);
+    if (data.zodiac) parts.push(`with ${data.zodiac} energy`);
+    if (data.country) parts.push(`from ${data.country}`);
+
+    if (!parts.length) {
+      return {
+        text: "Complete your profile to reveal the energy of your soul snapshot.",
+        zodiac: data.zodiac || "",
+        chinese: data.chineseZodiac || "",
+        lifePath: data.lifePath || null
+      };
+    }
+
+    return {
+      text: parts.join(" • "),
+      zodiac: data.zodiac || "",
+      chinese: data.chineseZodiac || "",
+      lifePath: data.lifePath || null
+    };
+  }
+
+  function renderChips(container, values, options = {}) {
+    if (!container) return;
     container.innerHTML = "";
 
-    const values = normalizeList(list);
-    if (!values.length) {
+    const list = normalizeList(values);
+    if (!list.length) {
       const chip = document.createElement("span");
       chip.className = "ms-chip ghost";
-      chip.textContent = placeholderLabel;
+      chip.textContent = options.emptyText || "Not added yet.";
       container.appendChild(chip);
       return;
     }
 
-    const items = values.slice(0, max);
-    items.forEach((item, index) => {
+    const max = options.max || list.length;
+    list.slice(0, max).forEach((item, index) => {
       const chip = document.createElement("span");
-      chip.className = "ms-chip" + (opts.primary && index === 0 ? " primary" : "");
+      chip.className = "ms-chip" + (options.primary && index === 0 ? " primary" : "");
       chip.textContent = item;
       container.appendChild(chip);
     });
 
-    if (values.length > max) {
+    if (list.length > max) {
       const moreChip = document.createElement("span");
       moreChip.className = "ms-chip ghost";
-      moreChip.textContent = `+${values.length - max} more`;
+      moreChip.textContent = `+${list.length - max} more`;
       container.appendChild(moreChip);
     }
   }
 
-  function renderLoveLanguageChips(loves, container) {
+  function renderLoveLanguageChips(values, container) {
+    if (!container) return;
     container.innerHTML = "";
-    const list = normalizeList(loves);
+    const list = normalizeList(values);
+
     if (!list.length) {
       const chip = document.createElement("span");
       chip.className = "ms-chip ghost";
@@ -383,10 +459,7 @@ import {
 
     list.forEach((label, index) => {
       const wrapper = document.createElement("div");
-      wrapper.className = "ms-chip";
-      if (index === 0) {
-        wrapper.className += " primary";
-      }
+      wrapper.className = "ms-chip" + (index === 0 ? " primary" : "");
 
       const title = document.createElement("div");
       title.style.fontSize = "0.9rem";
@@ -396,9 +469,7 @@ import {
       const desc = document.createElement("div");
       desc.style.fontSize = "0.8rem";
       desc.style.opacity = "0.9";
-      desc.textContent =
-        LOVE_DESCRIPTIONS[label] ||
-        "A personal way your heart likes to both give and receive care.";
+      desc.textContent = LOVE_DESCRIPTIONS[label] || "A personal way your heart likes to both give and receive care.";
 
       wrapper.appendChild(title);
       wrapper.appendChild(desc);
@@ -422,23 +493,19 @@ import {
   function render(data) {
     const name = data.name || "My Soul";
 
-    // HERO TITLE
     if (ui.heroTitle) {
       ui.heroTitle.textContent = name ? `My Soul • ${name}` : "My Soul";
     }
 
     if (ui.heroSubtitle) {
-      ui.heroSubtitle.textContent =
-        "Your core soul snapshot – built from your answers and updated each time you change your profile.";
+      ui.heroSubtitle.textContent = "Your core soul snapshot – built from your answers and updated each time you change your profile.";
     }
 
-    // AVATAR & PHOTOS
-    const photo1 = data.profilePhoto1;
-    const photo2 = data.profilePhoto2;
-    const photo3 = data.profilePhoto3;
+    const avatarUrl = data.mainPhotoSlot && data[`profilePhoto${data.mainPhotoSlot}`]
+      ? data[`profilePhoto${data.mainPhotoSlot}`]
+      : data.profilePhoto1 || data.profilePhoto2 || data.profilePhoto3 || "";
 
     if (ui.avatar) {
-      const avatarUrl = photo1 || photo2 || photo3 || "";
       if (avatarUrl) {
         ui.avatar.src = avatarUrl;
         ui.avatar.alt = "Soul avatar";
@@ -448,17 +515,11 @@ import {
       }
     }
 
-    renderPhoto(ui.photo1, photo1);
-    renderPhoto(ui.photo2, photo2);
-    renderPhoto(ui.photo3, photo3);
+    renderPhoto(ui.photo1, data.profilePhoto1);
+    renderPhoto(ui.photo2, data.profilePhoto2);
+    renderPhoto(ui.photo3, data.profilePhoto3);
 
-    // BASIC DATE / AGE / ASTRO
-    const birthdayDate = parseBirthdayToDate(data.birthday || data.birthdate);
-    const age = calculateAge(birthdayDate);
-    const year = getYearFromDate(birthdayDate);
-
-    // ENERGY TEXT & TAGS
-    const energy = buildEnergyText(data, birthdayDate, year);
+    const energy = buildEnergyText(data);
 
     if (ui.energyText) {
       ui.energyText.textContent = energy.text;
@@ -466,195 +527,92 @@ import {
     }
 
     if (ui.zodiacTag) {
-      if (energy.zodiac) {
-        ui.zodiacTag.textContent = energy.zodiac;
-        ui.zodiacTag.hidden = false;
-      } else {
-        ui.zodiacTag.hidden = true;
-      }
+      ui.zodiacTag.hidden = !energy.zodiac;
+      if (energy.zodiac) ui.zodiacTag.textContent = energy.zodiac;
     }
 
     if (ui.chineseTag) {
-      if (energy.chinese) {
-        ui.chineseTag.textContent = energy.chinese;
-        ui.chineseTag.hidden = false;
-      } else {
-        ui.chineseTag.hidden = true;
-      }
+      ui.chineseTag.hidden = !energy.chinese;
+      if (energy.chinese) ui.chineseTag.textContent = energy.chinese;
     }
 
     if (ui.lifePathTag) {
-      if (energy.lifePath != null) {
-        ui.lifePathTag.textContent = `Life Path ${energy.lifePath}`;
-        ui.lifePathTag.hidden = false;
-      } else {
-        ui.lifePathTag.hidden = true;
-      }
+      ui.lifePathTag.hidden = !(energy.lifePath != null && energy.lifePath !== "");
+      if (!ui.lifePathTag.hidden) ui.lifePathTag.textContent = `Life Path ${energy.lifePath}`;
     }
 
     if (ui.connectionTag) {
-      const ct = data.connectionType;
-      if (ct) {
-        ui.connectionTag.textContent = ct;
-        ui.connectionTag.hidden = false;
+      ui.connectionTag.hidden = !data.connectionType;
+      if (data.connectionType) ui.connectionTag.textContent = data.connectionType;
+    }
+
+    if (ui.snapshotName) ui.snapshotName.textContent = textOrDash(data.name);
+    if (ui.snapshotAge) ui.snapshotAge.textContent = data.age != null ? String(data.age) : "—";
+    if (ui.snapshotCountry) ui.snapshotCountry.textContent = textOrDash(data.country);
+    if (ui.snapshotConnection) ui.snapshotConnection.textContent = textOrDash(data.connectionType);
+    if (ui.snapshotLoveLanguage) ui.snapshotLoveLanguage.textContent = textOrDash(data.loveLanguage || data.loveLanguages[0]);
+
+    renderChips(ui.snapshotValues, data.values, { max: 4, emptyText: "Add values in Quiz or Edit Profile." });
+    renderChips(ui.snapshotHobbies, data.hobbies, { max: 4, emptyText: "Add hobbies in Quiz or Edit Profile." });
+
+    if (ui.soulSummary) {
+      if (data.soulSummary) {
+        ui.soulSummary.textContent = data.soulSummary;
+        ui.soulSummary.classList.remove("ms-placeholder");
       } else {
-        ui.connectionTag.hidden = true;
+        ui.soulSummary.textContent = "Complete your profile to see your Soul Summary ✨";
+        ui.soulSummary.classList.add("ms-placeholder");
       }
     }
 
-    // CORE SNAPSHOT
-    if (ui.snapshotName) {
-      ui.snapshotName.textContent = name || "—";
-    }
-
-    if (ui.snapshotAge) {
-      ui.snapshotAge.textContent = age != null ? `${age}` : "—";
-    }
-
-    if (ui.snapshotCountry) {
-      ui.snapshotCountry.textContent =
-        (data.country && String(data.country).trim()) || "—";
-    }
-
-    if (ui.snapshotConnection) {
-      ui.snapshotConnection.textContent =
-        data.connectionType || "Not chosen yet";
-    }
-
-    const loveArray = normalizeList(
-      data.loveLanguages || data.loveLanguage || []
-    );
-    const primaryLove = loveArray[0];
-
-    if (ui.snapshotLoveLanguage) {
-      ui.snapshotLoveLanguage.textContent = primaryLove || "Not chosen yet";
-    }
-
-    if (ui.snapshotValues) {
-      renderChips(data.values, ui.snapshotValues, {
-        max: 6,
-        primary: false,
-        placeholder: "No values selected yet.",
-      });
-    }
-
-    if (ui.snapshotHobbies) {
-      renderChips(data.hobbies, ui.snapshotHobbies, {
-        max: 6,
-        primary: false,
-        placeholder: "No hobbies added yet.",
-      });
-    }
-
-    // SOUL SUMMARY
-    if (ui.soulSummary) {
-      const summary = buildSoulSummary(data);
-      ui.soulSummary.textContent = summary;
-      ui.soulSummary.classList.toggle(
-        "ms-placeholder",
-        !summary || !summary.trim()
-      );
-    }
-
-    // LOVE & CONNECTION STYLE
-    if (ui.loveLanguages) {
-      renderLoveLanguageChips(
-        data.loveLanguages || data.loveLanguage || [],
-        ui.loveLanguages
-      );
-    }
-
-    if (ui.connectWith) {
-      const connectList = normalizeList(
-        data.whoYouWantToConnectWith || data.connectionPreferences || []
-      );
-      renderChips(connectList, ui.connectWith, {
-        max: 6,
-        placeholder:
-          "You can describe who you want to meet in Edit Profile.",
-      });
-    }
-
-    // BOUNDARIES & VOICE
-    const boundaries = (
-      data.boundaries ||
-      data.nonNegotiables ||
-      data.unacceptable ||
-      ""
-    )
-      .toString()
-      .trim();
+    renderLoveLanguageChips(data.loveLanguages, ui.loveLanguages);
+    renderChips(ui.connectWith, data.connectWith, { emptyText: "Add who you want to connect with in Quiz or Edit Profile." });
 
     if (ui.boundariesText) {
-      if (boundaries) {
-        ui.boundariesText.textContent = boundaries;
+      if (data.boundaries) {
+        ui.boundariesText.textContent = data.boundaries;
         ui.boundariesText.classList.remove("ms-placeholder");
       } else {
-        ui.boundariesText.textContent =
-          "You haven’t written your boundaries yet. When you add them, they will appear here.";
+        ui.boundariesText.textContent = "You haven’t written your boundaries yet. When you add them, they will appear here.";
         ui.boundariesText.classList.add("ms-placeholder");
       }
     }
 
-    const about = (
-      data.aboutMe ||
-      data.about ||
-      data.story ||
-      ""
-    )
-      .toString()
-      .trim();
-
     if (ui.aboutText) {
-      if (about) {
-        ui.aboutText.textContent = about;
+      if (data.about) {
+        ui.aboutText.textContent = data.about;
         ui.aboutText.classList.remove("ms-placeholder");
       } else {
-        ui.aboutText.textContent =
-          "Share a few lines about yourself in the Quiz or Edit Profile – your story will be reflected here.";
+        ui.aboutText.textContent = "Share a few lines about yourself in the Quiz or Edit Profile – your story will be reflected here.";
         ui.aboutText.classList.add("ms-placeholder");
       }
     }
 
-    const mantra = (data.mantra || data.intention || "")
-      .toString()
-      .trim();
-
     if (ui.mantraText) {
-      if (mantra) {
-        ui.mantraText.textContent = mantra;
+      if (data.mantra) {
+        ui.mantraText.textContent = data.mantra;
         ui.mantraText.classList.remove("ms-placeholder");
       } else {
-        ui.mantraText.textContent =
-          "Add a mantra to carry with you – something short you can return to on difficult days.";
+        ui.mantraText.textContent = "Add a mantra to carry with you – something short you can return to on difficult days.";
         ui.mantraText.classList.add("ms-placeholder");
       }
     }
   }
 
   function renderEmpty() {
-    if (ui.content) {
-      ui.content.hidden = true;
-    }
-    if (ui.empty) {
-      ui.empty.hidden = false;
-    }
+    if (ui.content) ui.content.hidden = true;
+    if (ui.empty) ui.empty.hidden = false;
   }
 
   function renderFull(data) {
-    if (ui.empty) {
-      ui.empty.hidden = true;
-    }
-    if (ui.content) {
-      ui.content.hidden = false;
-    }
+    if (ui.empty) ui.empty.hidden = true;
+    if (ui.content) ui.content.hidden = false;
     render(data);
   }
 
   function bindStaticLinks() {
-    const goToChart = ui.goToChart;
-    if (goToChart) {
-      goToChart.addEventListener("click", function (event) {
+    if (ui.goToChart) {
+      ui.goToChart.addEventListener("click", function (event) {
         event.preventDefault();
         window.location.href = "soul-chart.html";
       });
@@ -669,45 +627,52 @@ import {
     });
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
-
-  onAuthStateChanged(auth, async (user) => {
+  async function loadProfileSourceOfTruth() {
+    const local = readLocalSoulData();
+    const user = await waitForAuthUser();
 
     if (!user) {
-      renderEmpty();
-      return;
+      console.log("[Soulink] Using local fallback");
+      return local;
     }
 
     try {
+      const firestoreData = await readFirestoreProfile(user);
+      if (firestoreData && typeof firestoreData === "object") {
+        const merged = { ...(local || {}), ...firestoreData };
+        writeLocalSoulData(merged);
+        return merged;
+      }
+    } catch (err) {
+      console.error("[Soulink] My Soul Firestore load failed", err);
+    }
 
-      const ref = doc(db, "users", user.uid);
+    console.log("[Soulink] Using local fallback");
+    return local;
+  }
 
-      const snap = await getDoc(ref);
+  async function start() {
+    bindStaticLinks();
 
-      if (!snap.exists()) {
+    try {
+      const raw = await loadProfileSourceOfTruth();
+      const data = normalizeProfile(raw || {});
+
+      if (!hasMeaningfulData(data)) {
         renderEmpty();
         return;
       }
 
-      const data = snap.data();
-
-      if (!hasMeaningfulData(data)) {
-        renderEmpty();
-      } else {
-        renderFull(data);
-      }
-
+      renderFull(data);
     } catch (err) {
-
-      console.error("[My Soul] Firestore load failed:", err);
-
+      console.error("[Soulink] My Soul init failed", err);
       renderEmpty();
-
     }
+  }
 
-  });
-
-  bindStaticLinks();
-
-});
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    start();
+  }
 })();
