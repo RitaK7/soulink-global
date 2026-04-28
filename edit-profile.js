@@ -1145,6 +1145,17 @@ import {
       });
     }
 
+    const topNextSoul = document.getElementById("topNextSoul");
+
+if (topNextSoul) {
+  topNextSoul.addEventListener("click", async (e) => {
+    e.preventDefault();
+    saveAll();
+    const ok = await saveToFirestore();
+    if (ok) window.location.href = "my-soul.html";
+  });
+}
+
     if (ui.resetForm) {
       ui.resetForm.addEventListener("click", (e) => {
         e.preventDefault();
