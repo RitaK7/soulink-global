@@ -34,9 +34,12 @@ function saveUserToLocalStorage(user) {
   );
 }
 
-function clearUserStorage() {
+function clearSessionOnly() {
   localStorage.removeItem("soulinkUser");
+}
 
+function clearAllUserStorage() {
+  localStorage.removeItem("soulinkUser");
   localStorage.removeItem("soulQuiz");
   localStorage.removeItem("soulink.soulQuiz");
   localStorage.removeItem("soulCoach");
@@ -51,7 +54,7 @@ onAuthStateChanged(auth, (user) => {
   const page = getCurrentPage();
 
   if (!user && !isPublicPage()) {
-    clearUserStorage();
+    clearSessionOnly();
     window.location.href = `login.html?next=${encodeURIComponent(page)}`;
     return;
   }
@@ -64,7 +67,7 @@ onAuthStateChanged(auth, (user) => {
 window.soulinkLogout = async function () {
   try {
     await signOut(auth);
-    clearUserStorage();
+    clearAllUserStorage();
     window.location.href = "login.html";
   } catch (err) {
     console.error("Logout failed:", err);
