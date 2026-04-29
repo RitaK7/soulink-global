@@ -498,6 +498,13 @@ import {
 
 async function saveQuizToFirestore(fragment) {
   const user = await waitForAuthUser();
+  console.log("[Soulink][Quiz] saveQuizToFirestore start", {
+  uid: user ? user.uid : null,
+  name: fragment?.name || "",
+  birthday: fragment?.birthday || "",
+  country: fragment?.country || "",
+  about: fragment?.about || ""
+});
 
   if (!user) {
     console.log("[Soulink] Using local fallback");
@@ -640,8 +647,10 @@ function bindNextFlow() {
 
   async function handleNext(event) {
     if (event) event.preventDefault();
+    console.log("[Soulink][Quiz] handleNext fired");
 
     const fragment = syncLocalFromDom();
+    console.log("[Soulink][Quiz] fragment before Firestore save", fragment);
     const ok = await saveQuizToFirestore(fragment);
 
     if (ok) {
@@ -659,37 +668,37 @@ function bindNextFlow() {
 }
 
   async function init() {
-    try {
-      const local = readLocalSoulData();
-      const user = await waitForAuthUser();
+  try {
+    const local = readLocalSoulData();
+    const user = await waitForAuthUser();
 
-      if (user) {
-        const fire = await readFirestoreProfile(user);
-        if (fire && typeof fire === "object") {
-          state = Object.assign({}, local || {}, fire);
-          writeLocalSoulData(state);
-        } else {
-          console.log("[Soulink] Using local fallback");
-          state = local || {};
-        }
+    if (user) {
+      const fire = await readFirestoreProfile(user);
+      if (fire && typeof fire === "object") {
+        state = Object.assign({}, local || {}, fire);
+        writeLocalSoulData(state);
       } else {
         console.log("[Soulink] Using local fallback");
         state = local || {};
       }
-
-      prefillFromData(state);
-      bindAutosave();
-      bindNextFlow();
-      bindNavSave();
-    } catch (err) {
-      console.error("[Soulink][quiz] init failed", err);
-      state = readLocalSoulData() || {};
-      prefillFromData(state);
-      bindAutosave();
-      bindNextFlow();
-      bindNavSave();
+    } else {
+      console.log("[Soulink] Using local fallback");
+      state = local || {};
     }
+
+    prefillFromData(state);
+    bindAutosave();
+    bindNextFlow();
+    bindNavSave();
+  } catch (err) {
+    console.error("[Soulink][quiz] init failed", err);
+    state = readLocalSoulData() || {};
+    prefillFromData(state);
+    bindAutosave();
+    bindNextFlow();
+    bindNavSave();
   }
+}
 
   onAuthStateChanged(auth, (user) => {
     currentUser = user || null;
