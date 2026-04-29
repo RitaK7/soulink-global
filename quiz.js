@@ -489,132 +489,174 @@ import {
     };
   }
 
-  function syncLocalFromDom() {
-    const fragment = collectQuizData();
-    state = Object.assign({}, state, fragment);
-    writeLocalSoulData(state);
-    return fragment;
+   function syncLocalFromDom() {
+  const fragment = collectQuizData();
+  state = Object.assign({}, state, fragment);
+  writeLocalSoulData(state);
+  return fragment;
+}
+
+async function saveQuizToFirestore(fragment) {
+  const user = await waitForAuthUser();
+
+  if (!user) {
+    console.log("[Soulink] Using local fallback");
+    return true;
   }
 
-  async function saveQuizToFirestore(fragment) {
-    const user = await waitForAuthUser();
-
-    if (!user) {
-      console.log("[Soulink] Using local fallback");
-      return true;
-    }
-
-    try {
-      await setDoc(
-        doc(db, "users", user.uid),
-        {
-          ...fragment,
-          uid: user.uid,
-          email: user.email || "",
-          profileCompleted: true,
-          updatedAt: serverTimestamp()
-        },
-        { merge: true }
-      );
-
-      console.log("[Soulink] Saved profile to Firestore");
-      return true;
-    } catch (err) {
-      console.error("[Soulink] Save failed", err);
-      return false;
-    }
-  }
-
-  function bindAutosave() {
-    [
-      "name",
-      "birthday",
-      "country",
-      "height",
-      "weight",
-      "genderSelf",
-      "orientationText",
-      "unacceptable",
-      "about",
-      "mantra",
-      "soulSummary",
-      "hobbiesExtra",
-      "valuesExtra"
-    ].forEach((id) => {
-      const el = byId(id);
-      if (!el) return;
-
-      const handler = () => {
-        syncLocalFromDom();
-      };
-
-      el.addEventListener("change", handler);
-      el.addEventListener("blur", handler);
-      el.addEventListener("input", handler);
-    });
-
-    ["gender", "connectionType", "orientation", "loveLanguage"].forEach((name) => {
-      $$(
-        `input[type="radio"][name="${name}"], input[type="radio"][name="${name}[]"]`
-      ).forEach((node) => {
-        node.addEventListener("change", () => {
-          syncLocalFromDom();
-        });
-      });
-    });
-
-    ["loveLanguages", "hobbies", "values"].forEach((name) => {
-      $$(
-        `input[type="checkbox"][name="${name}"], input[type="checkbox"][name="${name}[]"]`
-      ).forEach((node) => {
-        node.addEventListener("change", () => {
-          syncLocalFromDom();
-        });
-      });
-    });
-  }
-
-  function findNextTriggers() {
-    const triggers = [];
-
-    const byHref = $$('a[href="edit-profile.html"], a[href="./edit-profile.html"]');
-    const byDataNext = $$('[data-next="edit-profile.html"]');
-    const byButtonText = $$("button, a").filter((el) =>
-      /next\s*→?\s*edit profile/i.test((el.textContent || "").trim())
+  try {
+    await setDoc(
+      doc(db, "users", user.uid),
+      {
+        ...fragment,
+        uid: user.uid,
+        email: user.email || "",
+        profileCompleted: true,
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
     );
-    const submitButtons = $$('button[type="submit"], input[type="submit"]');
 
-    [...byHref, ...byDataNext, ...byButtonText, ...submitButtons].forEach((el) => {
-      if (!triggers.includes(el)) triggers.push(el);
-    });
-
-    return triggers;
+    console.log("[Soulink] Saved profile to Firestore");
+    return true;
+  } catch (err) {
+    console.error("[Soulink] Save failed", err);
+    return false;
   }
+}
 
-  function bindNextFlow() {
-    const nextUrl = "edit-profile.html";
-    const form = byId("quizForm") || byId("quiz-form") || $("form");
-    const nextTriggers = findNextTriggers();
+let autosaveTimer = null;
 
-    async function handleNext(event) {
-      if (event) event.preventDefault();
+function scheduleFirestoreAutosave() {
+  window.clearTimeout(autosaveTimer);
 
+  autosaveTimer = window.setTimeout(async () => {
+    try {
       const fragment = syncLocalFromDom();
-      const ok = await saveQuizToFirestore(fragment);
-
-      if (ok) {
-        window.location.href = nextUrl;
-      }
+      await saveQuizToFirestore(fragment);
+    } catch (err) {
+      console.error("[Soulink] Autosave failed", err);
     }
+  }, 900);
+}
 
-    if (form) {
-      form.addEventListener("submit", handleNext);
-    }
+function bindAutosave() {
+  [
+    "name",
+    "birthday",
+    "country",
+    "height",
+    "weight",
+    "genderSelf",
+    "orientationText",
+    "unacceptable",
+    "about",
+    "mantra",
+    "soulSummary",
+    "hobbiesExtra",
+    "valuesExtra"
+  ].forEach((id) => {
+    const el = byId(id);
+    if (!el) return;
 
-    nextTriggers.forEach((el) => {
-      el.addEventListener("click", handleNext);
+    const handler = () => {
+      syncLocalFromDom();
+      scheduleFirestoreAutosave();
+    };
+
+    el.addEventListener("change", handler);
+    el.addEventListener("blur", handler);
+    el.addEventListener("input", handler);
+  });
+
+  ["gender", "connectionType", "orientation", "loveLanguage"].forEach((name) => {
+    $$(
+      `input[type="radio"][name="${name}"], input[type="radio"][name="${name}[]"]`
+    ).forEach((node) => {
+      node.addEventListener("change", () => {
+        syncLocalFromDom();
+        scheduleFirestoreAutosave();
+      });
     });
+  });
+
+  ["loveLanguages", "hobbies", "values"].forEach((name) => {
+    $$(
+      `input[type="checkbox"][name="${name}"], input[type="checkbox"][name="${name}[]"]`
+    ).forEach((node) => {
+      node.addEventListener("change", () => {
+        syncLocalFromDom();
+        scheduleFirestoreAutosave();
+      });
+    });
+  });
+}
+
+function bindNavSave() {
+  const navLinks = $$('header.navbar a[href], .nav-links a[href]');
+
+  navLinks.forEach((link) => {
+    link.addEventListener("click", async (event) => {
+      const href = link.getAttribute("href") || "";
+
+      if (!href || href.startsWith("#")) return;
+      if (href === "quiz.html" || href === "./quiz.html") return;
+
+      event.preventDefault();
+
+      try {
+        const fragment = syncLocalFromDom();
+        await saveQuizToFirestore(fragment);
+      } catch (err) {
+        console.error("[Soulink] Nav save failed", err);
+      }
+
+      window.location.href = href;
+    });
+  });
+}
+
+function findNextTriggers() {
+  const triggers = [];
+
+  const byHref = $$('a[href="edit-profile.html"], a[href="./edit-profile.html"]');
+  const byDataNext = $$('[data-next="edit-profile.html"]');
+  const byButtonText = $$("button, a").filter((el) =>
+    /next\s*→?\s*edit profile/i.test((el.textContent || "").trim())
+  );
+  const submitButtons = $$('button[type="submit"], input[type="submit"]');
+
+  [...byHref, ...byDataNext, ...byButtonText, ...submitButtons].forEach((el) => {
+    if (!triggers.includes(el)) triggers.push(el);
+  });
+
+  return triggers;
+}
+
+function bindNextFlow() {
+  const nextUrl = "edit-profile.html";
+  const form = byId("quizForm") || byId("quiz-form") || $("form");
+  const nextTriggers = findNextTriggers();
+
+  async function handleNext(event) {
+    if (event) event.preventDefault();
+
+    const fragment = syncLocalFromDom();
+    const ok = await saveQuizToFirestore(fragment);
+
+    if (ok) {
+      window.location.href = nextUrl;
+    }
   }
+
+  if (form) {
+    form.addEventListener("submit", handleNext);
+  }
+
+  nextTriggers.forEach((el) => {
+    el.addEventListener("click", handleNext);
+  });
+}
 
   async function init() {
     try {
@@ -638,12 +680,14 @@ import {
       prefillFromData(state);
       bindAutosave();
       bindNextFlow();
+      bindNavSave();
     } catch (err) {
       console.error("[Soulink][quiz] init failed", err);
       state = readLocalSoulData() || {};
       prefillFromData(state);
       bindAutosave();
       bindNextFlow();
+      bindNavSave();
     }
   }
 
