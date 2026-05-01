@@ -598,73 +598,75 @@ function bindAutosave() {
     });
   });
 }
-
 function bindNavSave() {
-  const navLinks = $$('header.navbar a[href], .nav-links a[href]');
-
-  navLinks.forEach((link) => {
-    link.addEventListener("click", async (event) => {
-      const href = link.getAttribute("href") || "";
-
-      if (!href || href.startsWith("#")) return;
-      if (href === "quiz.html" || href === "./quiz.html") return;
-
-      event.preventDefault();
-
-      try {
-        const fragment = syncLocalFromDom();
-        await saveQuizToFirestore(fragment);
-      } catch (err) {
-        console.error("[Soulink] Nav save failed", err);
-      }
-
-      window.location.href = href;
-    });
-  });
-}
-
-function findNextTriggers() {
-  const triggers = [];
-
-  const byHref = $$('a[href="edit-profile.html"], a[href="./edit-profile.html"]');
-  const byDataNext = $$('[data-next="edit-profile.html"]');
-  const byButtonText = $$("button, a").filter((el) =>
-    /next\s*→?\s*edit profile/i.test((el.textContent || "").trim())
-  );
-  const submitButtons = $$('button[type="submit"], input[type="submit"]');
-
-  [...byHref, ...byDataNext, ...byButtonText, ...submitButtons].forEach((el) => {
-    if (!triggers.includes(el)) triggers.push(el);
-  });
-
-  return triggers;
+  // Intentionally disabled.
+  // Navbar should navigate normally and must not overwrite Firestore
+  // with partial or stale quiz form data.
 }
 
 function bindNextFlow() {
   const nextUrl = "edit-profile.html";
   const form = byId("quizForm") || byId("quiz-form") || $("form");
-  const nextTriggers = findNextTriggers();
+
+  if (!form || form.dataset.boundNextFlow === "1") return;
+  form.dataset.boundNextFlow = "1";
+
+  const nextButton =
+    form.querySelector('button[type="submit"]') ||
+    form.querySelector('input[type="submit"]');
+
+  let isSavingAndNavigating = false;
 
   async function handleNext(event) {
     if (event) event.preventDefault();
+
+    if (isSavingAndNavigating) {
+      console.log("[Soulink][Quiz] Next already running, ignored duplicate click");
+      return;
+    }
+
+    isSavingAndNavigating = true;
+
+    const originalText = nextButton ? nextButton.textContent : "";
+
+    if (nextButton) {
+      nextButton.disabled = true;
+      if (nextButton.tagName === "BUTTON") {
+        nextButton.textContent = "Saving...";
+      }
+    }
+
     console.log("[Soulink][Quiz] handleNext fired");
 
-    const fragment = syncLocalFromDom();
-    console.log("[Soulink][Quiz] fragment before Firestore save", fragment);
-    const ok = await saveQuizToFirestore(fragment);
+    try {
+      const fragment = syncLocalFromDom();
 
-    if (ok) {
-      window.location.href = nextUrl;
+      console.log("[Soulink][Quiz] fragment before Firestore save", fragment);
+
+      const ok = await saveQuizToFirestore(fragment);
+
+      if (ok) {
+        console.log("[Soulink][Quiz] Saved, navigating to Edit Profile");
+        window.location.assign(nextUrl);
+        return;
+      }
+
+      console.warn("[Soulink][Quiz] Save returned false, navigation stopped");
+    } catch (err) {
+      console.error("[Soulink][Quiz] Next save/navigation failed", err);
+    }
+
+    isSavingAndNavigating = false;
+
+    if (nextButton) {
+      nextButton.disabled = false;
+      if (nextButton.tagName === "BUTTON") {
+        nextButton.textContent = originalText || "Next → Edit Profile";
+      }
     }
   }
 
-  if (form) {
-    form.addEventListener("submit", handleNext);
-  }
-
-  nextTriggers.forEach((el) => {
-    el.addEventListener("click", handleNext);
-  });
+  form.addEventListener("submit", handleNext);
 }
 
   async function init() {
