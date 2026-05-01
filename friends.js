@@ -102,6 +102,118 @@
     return data;
   }
 
+  function writeLocalSoulData(data) {
+    if (!data || typeof data !== "object") return;
+    try {
+      if (typeof window.saveSoulData === "function") {
+        window.saveSoulData(data);
+        return;
+      }
+    } catch (_e) {}
+    try {
+      const json = JSON.stringify(data);
+      localStorage.setItem("soulink.soulQuiz", json);
+      localStorage.setItem("soulQuiz", json);
+    } catch (_e) {}
+  }
+
+  function userFriendsKey(uid) {
+    const cleanUid = normaliseText(uid);
+    return cleanUid ? FRIENDS_KEY + "." + cleanUid : FRIENDS_KEY;
+  }
+
+  function writeLocalFriends(list, uid) {
+    if (typeof localStorage === "undefined") return;
+    try {
+      const clean = Array.isArray(list) ? list.filter((x) => x && typeof x === "object") : [];
+      const json = JSON.stringify(clean);
+      localStorage.setItem(userFriendsKey(uid), json);
+      localStorage.setItem(FRIENDS_KEY, json);
+    } catch (_e) {}
+  }
+
+  async function getFirebaseContext() {
+    try {
+      const cfg = await import("./firebase-config.js");
+      const authMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+      const fsMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+      return { auth: cfg.auth, db: cfg.db, onAuthStateChanged: authMod.onAuthStateChanged, doc: fsMod.doc, getDoc: fsMod.getDoc, setDoc: fsMod.setDoc, serverTimestamp: fsMod.serverTimestamp };
+    } catch (err) {
+      console.warn("[Soulink][Friends] Firebase unavailable, using local fallback", err);
+      return null;
+    }
+  }
+
+  async function waitForAuthUser(ctx, timeoutMs = 5000) {
+    if (!ctx || !ctx.auth || !ctx.onAuthStateChanged) return null;
+    if (ctx.auth.currentUser) return ctx.auth.currentUser;
+    return new Promise((resolve) => {
+      let settled = false;
+      let unsubscribe = function () {};
+      const timer = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        try { unsubscribe(); } catch (_e) {}
+        resolve(ctx.auth.currentUser || null);
+      }, timeoutMs);
+      unsubscribe = ctx.onAuthStateChanged(ctx.auth, (user) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timer);
+        try { unsubscribe(); } catch (_e) {}
+        resolve(user || null);
+      });
+    });
+  }
+
+  function getFirestoreFriends(profile) {
+    if (!profile || typeof profile !== "object") return [];
+    const candidates = [profile.soulFriends, profile.friendCircle, profile.friendsList, profile.friends];
+    for (const value of candidates) {
+      const list = normaliseFriendsShape(value);
+      if (list.length) return list;
+    }
+    return [];
+  }
+
+  async function loadProfileAndFriends() {
+    const fallbackProfile = safeGetSoulData();
+    const ctx = await getFirebaseContext();
+    const user = await waitForAuthUser(ctx);
+    if (!ctx || !user) return { user: null, profile: fallbackProfile, friends: safeGetFriendsList(null) };
+    try {
+      const ref = ctx.doc(ctx.db, "users", user.uid);
+      const snap = await ctx.getDoc(ref);
+      if (!snap.exists()) {
+        writeLocalFriends([], user.uid);
+        return { user, profile: {}, friends: [] };
+      }
+      const profile = snap.data() || {};
+      writeLocalSoulData(profile);
+      const firestoreFriends = getFirestoreFriends(profile);
+      writeLocalFriends(firestoreFriends, user.uid);
+      return { user, profile, friends: firestoreFriends };
+    } catch (err) {
+      console.warn("[Soulink][Friends] Firestore read failed, using local fallback", err);
+      return { user, profile: fallbackProfile, friends: safeGetFriendsList(user && user.uid) };
+    }
+  }
+
+  async function saveFriendsForCurrentUser(list) {
+    const ctx = await getFirebaseContext();
+    const user = await waitForAuthUser(ctx);
+    writeLocalFriends(list, user && user.uid);
+    if (!ctx || !user) return true;
+    try {
+      const clean = Array.isArray(list) ? list.filter((item) => item && typeof item === "object") : [];
+      await ctx.setDoc(ctx.doc(ctx.db, "users", user.uid), { soulFriends: clean, friendCircle: clean, updatedAt: ctx.serverTimestamp() }, { merge: true });
+      return true;
+    } catch (err) {
+      console.error("[Soulink][Friends] Could not save friends to Firestore", err);
+      return false;
+    }
+  }
+
   function hasAnyCoreData(soul) {
     if (!soul || typeof soul !== "object") return false;
     if (normaliseText(soul.name)) return true;
@@ -238,36 +350,21 @@
     return [];
   }
 
-  function safeGetFriendsList() {
+  function safeGetFriendsList(uid) {
     if (typeof localStorage === "undefined") return [];
-
     try {
-      const primaryRaw = localStorage.getItem(FRIENDS_KEY);
-      const primaryParsed = safeParseJSON(primaryRaw);
-      const primaryList =
-        primaryParsed != null ? normaliseFriendsShape(primaryParsed) : [];
-
-      if (primaryList.length) return primaryList;
-
-      const primaryIsEmpty =
-        !primaryRaw || primaryParsed == null || primaryList.length === 0;
-
-      for (const legacyKey of LEGACY_FRIENDS_KEYS) {
-        const legacyRaw = localStorage.getItem(legacyKey);
-        if (!legacyRaw) continue;
-
-        const legacyParsed = safeParseJSON(legacyRaw);
-        if (legacyParsed == null) continue;
-
-        if (primaryIsEmpty) {
-          try {
-            localStorage.setItem(FRIENDS_KEY, legacyRaw);
-          } catch (_err) {}
-        }
-
-        return normaliseFriendsShape(legacyParsed);
+      const keys = [];
+      const scoped = userFriendsKey(uid);
+      if (scoped !== FRIENDS_KEY) keys.push(scoped);
+      keys.push(FRIENDS_KEY, ...LEGACY_FRIENDS_KEYS);
+      for (const key of keys) {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        const parsed = safeParseJSON(raw);
+        if (parsed == null) continue;
+        const list = normaliseFriendsShape(parsed);
+        if (list.length) return list;
       }
-
       return [];
     } catch (err) {
       console.warn("Friends: failed to read friends list", err);
@@ -502,41 +599,29 @@
     return wrap;
   }
 
-  function handleRemoveFriend(friend) {
-    if (typeof localStorage === "undefined") return;
-
-    const confirmed = window.confirm(
-      "Are you sure you want to remove this connection from your circle?"
-    );
+  async function handleRemoveFriend(friend) {
+    const confirmed = window.confirm("Are you sure you want to remove this connection from your circle?");
     if (!confirmed) return;
-
     try {
-      const current = safeGetFriendsList();
+      const current = Array.isArray(friendsRaw) ? friendsRaw.slice() : safeGetFriendsList();
       if (!current.length) return;
-
       const id = normaliseText(friend.id);
       const name = normaliseText(friend.name);
       const connType = normaliseText(friend.connectionType);
-
       let removed = false;
       const next = current.filter((item) => {
         if (removed) return true;
-        const sameId =
-          id && normaliseText(item.id) && normaliseText(item.id) === id;
-        const sameNameType =
-          !id &&
-          normaliseText(item.name) === name &&
-          normaliseText(item.connectionType) === connType;
+        const sameId = id && normaliseText(item.id) && normaliseText(item.id) === id;
+        const sameNameType = !id && normaliseText(item.name) === name && normaliseText(item.connectionType) === connType;
         if (sameId || sameNameType) {
           removed = true;
           return false;
         }
         return true;
       });
-
-      localStorage.setItem(FRIENDS_KEY, JSON.stringify(next));
-
       friendsRaw = next;
+      writeLocalFriends(next, null);
+      await saveFriendsForCurrentUser(next);
       rebuildFriendsWithMeta();
       sortFriends(currentSort);
     } catch (err) {
@@ -678,7 +763,7 @@
         ui.empty.hidden = false;
 
         if (friendsWithMeta.length === 0) {
-          setEmptySubtitle("No friends saved on this device yet.");
+          setEmptySubtitle("No friends saved in your Soulink circle yet.");
         } else if (currentFilter === "romantic") {
           setEmptySubtitle("No romantic connections saved in your circle yet.");
         } else if (currentFilter === "friendship") {
@@ -754,28 +839,23 @@
 
   // ===================== Init =====================
 
-  function init() {
+  async function init() {
     try {
-      baseSoul = safeGetSoulData();
-      friendsRaw = safeGetFriendsList();
+      const loaded = await loadProfileAndFriends();
+      baseSoul = loaded.profile || {};
+      friendsRaw = loaded.friends || [];
       rebuildFriendsWithMeta();
 
-      filterButtons = Array.from(
-        document.querySelectorAll(".friends-filter-tab")
-      );
+      filterButtons = Array.from(document.querySelectorAll(".friends-filter-tab"));
       updateFilterUI();
 
-      const initialSort =
-        (ui.sortSelect && ui.sortSelect.value) || currentSort || "score";
+      const initialSort = (ui.sortSelect && ui.sortSelect.value) || currentSort || "score";
       currentSort = initialSort;
       sortFriends(initialSort);
 
       if (ui.sortSelect) {
-        ui.sortSelect.addEventListener("change", function (e) {
-          sortFriends(e.target.value);
-        });
+        ui.sortSelect.addEventListener("change", function (e) { sortFriends(e.target.value); });
       }
-
       if (filterButtons && filterButtons.length) {
         filterButtons.forEach((btn) => {
           btn.addEventListener("click", function () {
@@ -784,17 +864,15 @@
           });
         });
       }
-
       if (!friendsWithMeta.length && ui.empty) {
-        setEmptySubtitle("No friends saved on this device yet.");
+        setEmptySubtitle("No friends saved in your Soulink circle yet.");
         ui.empty.hidden = false;
       }
     } catch (err) {
       console.error("Friends: init failed", err);
       if (ui.empty) {
         ui.empty.hidden = false;
-        ui.empty.textContent =
-          "We couldn’t load your soul friends right now. Please refresh the page or try again later.";
+        ui.empty.textContent = "We couldn’t load your soul friends right now. Please refresh the page or try again later.";
       }
       updateCircleSize(0);
     }

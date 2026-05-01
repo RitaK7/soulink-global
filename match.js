@@ -435,28 +435,163 @@
     return base;
   }
 
+  function userFriendsKey(uid) {
+    const cleanUid = normaliseText(uid);
+    return cleanUid ? FRIENDS_KEY + "." + cleanUid : FRIENDS_KEY;
+  }
+
+  function writeLocalSoulData(data) {
+    if (!data || typeof data !== "object") return;
+    try {
+      if (typeof window.saveSoulData === "function") {
+        window.saveSoulData(data);
+        return;
+      }
+    } catch (_e) {}
+    try {
+      const json = JSON.stringify(data);
+      localStorage.setItem("soulink.soulQuiz", json);
+      localStorage.setItem("soulQuiz", json);
+    } catch (_e) {}
+  }
+
+  function readLocalFriends(uid) {
+    if (typeof localStorage === "undefined") return [];
+    const keys = [];
+    const scoped = userFriendsKey(uid);
+    if (scoped !== FRIENDS_KEY) keys.push(scoped);
+    keys.push(FRIENDS_KEY, "soulink.friends", "soulFriends", "friends");
+
+    for (const key of keys) {
+      try {
+        const raw = localStorage.getItem(key);
+        const parsed = safeParseJSON(raw);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((item) => item && typeof item === "object");
+        }
+      } catch (_e) {}
+    }
+    return [];
+  }
+
+  function writeLocalFriends(list, uid) {
+    if (typeof localStorage === "undefined") return;
+    try {
+      const clean = Array.isArray(list) ? list.filter((x) => x && typeof x === "object") : [];
+      const json = JSON.stringify(clean);
+      localStorage.setItem(userFriendsKey(uid), json);
+      localStorage.setItem(FRIENDS_KEY, json);
+    } catch (_e) {}
+  }
+
+  async function getFirebaseContext() {
+    try {
+      const cfg = await import("./firebase-config.js");
+      const authMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+      const fsMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+      return {
+        auth: cfg.auth,
+        db: cfg.db,
+        onAuthStateChanged: authMod.onAuthStateChanged,
+        doc: fsMod.doc,
+        getDoc: fsMod.getDoc,
+        setDoc: fsMod.setDoc,
+        serverTimestamp: fsMod.serverTimestamp
+      };
+    } catch (err) {
+      console.warn("[Soulink][Match] Firebase unavailable, using local fallback", err);
+      return null;
+    }
+  }
+
+  async function waitForAuthUser(ctx, timeoutMs = 5000) {
+    if (!ctx || !ctx.auth || !ctx.onAuthStateChanged) return null;
+    if (ctx.auth.currentUser) return ctx.auth.currentUser;
+
+    return new Promise((resolve) => {
+      let settled = false;
+      let unsubscribe = function () {};
+      const timer = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        try { unsubscribe(); } catch (_e) {}
+        resolve(ctx.auth.currentUser || null);
+      }, timeoutMs);
+      unsubscribe = ctx.onAuthStateChanged(ctx.auth, (user) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timer);
+        try { unsubscribe(); } catch (_e) {}
+        resolve(user || null);
+      });
+    });
+  }
+
+  function getFirestoreFriends(profile) {
+    if (!profile || typeof profile !== "object") return [];
+    const candidates = [profile.soulFriends, profile.friendCircle, profile.friendsList, profile.friends];
+    for (const value of candidates) {
+      if (Array.isArray(value)) {
+        return value.filter((item) => item && typeof item === "object");
+      }
+    }
+    return [];
+  }
+
+  async function loadProfileAndFriends() {
+    const fallbackProfile = loadBaseSoul();
+    const ctx = await getFirebaseContext();
+    const user = await waitForAuthUser(ctx);
+    if (!ctx || !user) return { user: null, profile: fallbackProfile, friends: readLocalFriends(null) };
+
+    try {
+      const ref = ctx.doc(ctx.db, "users", user.uid);
+      const snap = await ctx.getDoc(ref);
+      if (!snap.exists()) {
+        writeLocalFriends([], user.uid);
+        return { user, profile: {}, friends: [] };
+      }
+      const profile = snap.data() || {};
+      writeLocalSoulData(profile);
+      const firestoreFriends = getFirestoreFriends(profile);
+      writeLocalFriends(firestoreFriends, user.uid);
+      return { user, profile, friends: firestoreFriends };
+    } catch (err) {
+      console.warn("[Soulink][Match] Firestore read failed, using local fallback", err);
+      return { user, profile: fallbackProfile, friends: readLocalFriends(user && user.uid) };
+    }
+  }
+
+  async function saveFriendsForCurrentUser(list) {
+    const ctx = await getFirebaseContext();
+    const user = await waitForAuthUser(ctx);
+    writeLocalFriends(list, user && user.uid);
+    if (!ctx || !user) return true;
+    try {
+      const clean = Array.isArray(list) ? list.filter((item) => item && typeof item === "object") : [];
+      await ctx.setDoc(
+        ctx.doc(ctx.db, "users", user.uid),
+        { soulFriends: clean, friendCircle: clean, updatedAt: ctx.serverTimestamp() },
+        { merge: true }
+      );
+      return true;
+    } catch (err) {
+      console.error("[Soulink][Match] Could not save friends to Firestore", err);
+      return false;
+    }
+  }
+
   function loadMatchesDataSource() {
     return DEMO_MATCHES.slice().map((m) => ({ ...m }));
   }
 
   function safeReadFriends() {
-    if (typeof localStorage === "undefined") return [];
-    try {
-      const raw = localStorage.getItem(FRIENDS_KEY);
-      const parsed = safeParseJSON(raw);
-      if (!parsed || !Array.isArray(parsed)) return [];
-      return parsed.filter((item) => item && typeof item === "object");
-    } catch (_e) {
-      return [];
-    }
+    if (Array.isArray(state.friends)) return state.friends.slice();
+    return readLocalFriends(null);
   }
 
   function safeWriteFriends(list) {
-    if (typeof localStorage === "undefined") return;
-    try {
-      const clean = Array.isArray(list) ? list.filter((x) => x && typeof x === "object") : [];
-      localStorage.setItem(FRIENDS_KEY, JSON.stringify(clean));
-    } catch (_e) {}
+    writeLocalFriends(list, null);
   }
 
   function isInFriends(match, friendsList) {
@@ -471,7 +606,7 @@
     });
   }
 
-  function addMatchToFriends(match) {
+  async function addMatchToFriends(match) {
     const friends = safeReadFriends();
     if (isInFriends(match, friends)) return { added: false, already: true };
 
@@ -486,13 +621,16 @@
       westernZodiac: normaliseText(match.westernZodiac || match.zodiac) || null,
       chineseZodiac: normaliseText(match.chineseZodiac) || null,
       lifePathNumber: toLifePath(match.lifePathNumber),
+      loveLanguage: getPrimaryLoveLanguage(match) || null,
       contactHandle: normaliseText(getContactHandle(match)) || null,
       contactPlatform: normaliseText(match.contactPlatform) || null,
       createdAt: new Date().toISOString(),
     };
 
-    friends.push(payload);
-    safeWriteFriends(friends);
+    const next = friends.concat(payload);
+    state.friends = next;
+    safeWriteFriends(next);
+    await saveFriendsForCurrentUser(next);
     return { added: true, already: false };
   }
 
@@ -913,16 +1051,22 @@
     addBtn.disabled = inCircle;
     addBtn.setAttribute("aria-disabled", inCircle ? "true" : "false");
 
-    addBtn.addEventListener("click", (e) => {
+    addBtn.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
       if (addBtn.disabled) return;
-      const res = addMatchToFriends(match);
+      addBtn.disabled = true;
+      addBtn.textContent = "Saving…";
+      const res = await addMatchToFriends(match);
       if (res.added || res.already) {
         state.friends = safeReadFriends();
         addBtn.textContent = "In Your Circle";
         addBtn.disabled = true;
         addBtn.setAttribute("aria-disabled", "true");
+      } else {
+        addBtn.textContent = "Add to My Circle";
+        addBtn.disabled = false;
+        addBtn.setAttribute("aria-disabled", "false");
       }
     });
 
@@ -1057,10 +1201,11 @@
     ui.baseSoulStatus.textContent = hasAny ? "Loaded" : "Empty";
   }
 
-  function init() {
+  async function init() {
     try {
-      state.friends = safeReadFriends();
-      state.baseSoul = loadBaseSoul();
+      const loaded = await loadProfileAndFriends();
+      state.friends = loaded.friends || [];
+      state.baseSoul = loaded.profile || {};
       updateBaseSoulStatus();
       computeMatches();
 
@@ -1079,7 +1224,8 @@
       }
 
       animatePageOnce();
-    } catch (_e) {
+    } catch (err) {
+      console.error("[Soulink][Match] init failed", err);
       if (ui.empty) ui.empty.hidden = false;
       if (ui.layout) ui.layout.hidden = true;
     }
