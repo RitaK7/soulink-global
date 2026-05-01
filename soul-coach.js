@@ -1,5 +1,5 @@
 // soul-coach.js — Soulink "Soul Coach" page
-// Reads soul profile via data-helpers.js and generates gentle coaching ideas.
+// Reads the logged-in profile from Firestore first, then falls back to local cache only when no user is logged in.
 
 (function () {
   if (typeof window === "undefined" || typeof document === "undefined") return;
@@ -46,6 +46,109 @@
     }
     if (!data || typeof data !== "object") return {};
     return data;
+  }
+
+  function writeSoulCache(data) {
+    if (!data || typeof data !== "object") return;
+
+    try {
+      if (typeof window.saveSoulData === "function") {
+        window.saveSoulData(data);
+        return;
+      }
+    } catch (err) {
+      console.warn("Soul Coach: saveSoulData helper failed", err);
+    }
+
+    try {
+      const json = JSON.stringify(data);
+      window.localStorage.setItem("soulink.soulQuiz", json);
+      window.localStorage.setItem("soulQuiz", json);
+    } catch (err) {
+      console.warn("Soul Coach: failed to update local profile cache", err);
+    }
+  }
+
+  async function getFirebaseModules() {
+    const [configModule, authModule, firestoreModule] = await Promise.all([
+      import("./firebase-config.js"),
+      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"),
+      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js")
+    ]);
+
+    return {
+      auth: configModule.auth,
+      db: configModule.db,
+      onAuthStateChanged: authModule.onAuthStateChanged,
+      doc: firestoreModule.doc,
+      getDoc: firestoreModule.getDoc
+    };
+  }
+
+  async function waitForAuthUser(timeoutMs = 5000) {
+    try {
+      const modules = await getFirebaseModules();
+
+      return await new Promise((resolve) => {
+        if (modules.auth && modules.auth.currentUser) {
+          resolve({ user: modules.auth.currentUser, modules });
+          return;
+        }
+
+        let settled = false;
+        let unsubscribe = function () {};
+
+        const timer = window.setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          try { unsubscribe(); } catch (err) {}
+          resolve({ user: modules.auth ? modules.auth.currentUser || null : null, modules });
+        }, timeoutMs);
+
+        unsubscribe = modules.onAuthStateChanged(modules.auth, (user) => {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timer);
+          try { unsubscribe(); } catch (err) {}
+          resolve({ user: user || null, modules });
+        });
+      });
+    } catch (err) {
+      console.warn("Soul Coach: Firebase modules unavailable, using local cache fallback", err);
+      return { user: null, modules: null };
+    }
+  }
+
+  async function loadSoulData() {
+    const authState = await waitForAuthUser();
+    const user = authState && authState.user ? authState.user : null;
+    const modules = authState ? authState.modules : null;
+
+    if (user && modules && modules.db) {
+      try {
+        const snap = await modules.getDoc(modules.doc(modules.db, "users", user.uid));
+
+        if (!snap.exists()) {
+          console.log("[Soulink][Soul Coach] No Firestore profile yet for user", user.uid);
+          return {};
+        }
+
+        const firestoreData = snap.data() || {};
+        const profile = Object.assign({}, firestoreData, {
+          uid: firestoreData.uid || user.uid,
+          email: firestoreData.email || user.email || ""
+        });
+
+        writeSoulCache(profile);
+        console.log("[Soulink][Soul Coach] Loaded profile from Firestore", user.uid);
+        return profile;
+      } catch (err) {
+        console.warn("Soul Coach: Firestore read failed, using local cache fallback", err);
+        return safeGetSoulData();
+      }
+    }
+
+    return safeGetSoulData();
   }
 
   function pickPrimaryLoveLanguage(soul) {
@@ -547,33 +650,39 @@
 
   // ===================== Init =====================
 
-  function init() {
-    try {
-      soulData = safeGetSoulData();
-      const hasData = hasMeaningfulData(soulData);
+  async function refreshFromProfileSource() {
+    soulData = await loadSoulData();
 
-      if (!hasData) {
-        if (ui.empty) ui.empty.hidden = false;
-        if (ui.layout) ui.layout.hidden = true;
-      } else {
-        if (ui.empty) ui.empty.hidden = true;
-        if (ui.layout) ui.layout.hidden = false;
-        renderAll();
-      }
+    if (hasMeaningfulData(soulData)) {
+      if (ui.empty) ui.empty.hidden = true;
+      if (ui.layout) ui.layout.hidden = false;
+      renderAll();
+      return;
+    }
+
+    if (ui.empty) ui.empty.hidden = false;
+    if (ui.layout) ui.layout.hidden = true;
+  }
+
+  async function init() {
+    try {
+      await refreshFromProfileSource();
 
       if (ui.refreshBtn) {
-        ui.refreshBtn.addEventListener("click", function (event) {
+        ui.refreshBtn.addEventListener("click", async function (event) {
           event.preventDefault();
-          soulData = safeGetSoulData();
-          if (hasMeaningfulData(soulData)) {
-            if (ui.empty) ui.empty.hidden = true;
-            if (ui.layout) ui.layout.hidden = false;
-            renderAll();
-          } else if (ui.empty) {
-            ui.empty.hidden = false;
-          }
+          await refreshFromProfileSource();
         });
       }
+
+      window.addEventListener("storage", function (event) {
+        try {
+          const key = event && event.key ? String(event.key) : "";
+          if (key === "soulink.soulQuiz" || key === "soulQuiz" || key.indexOf("soulink.soulQuiz") !== -1) {
+            refreshFromProfileSource();
+          }
+        } catch (err) {}
+      });
 
       animateSectionsOnce();
     } catch (err) {
@@ -583,6 +692,7 @@
         ui.empty.textContent =
           "We could not load your Soul Coach data right now. Please refresh the page or try again later.";
       }
+      if (ui.layout) ui.layout.hidden = true;
     }
   }
 

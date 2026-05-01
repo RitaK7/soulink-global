@@ -1,5 +1,5 @@
 // soul-chart.js — Soulink "Soul Chart" dashboard (clear, responsive, no libraries)
-// Reads soul profile via data-helpers.js getSoulData() and renders readable charts.
+// Reads the logged-in profile from Firestore first, then falls back to local cache only when no user is logged in.
 
 (function () {
   "use strict";
@@ -62,6 +62,109 @@
     }
     if (!data || typeof data !== "object") return {};
     return data;
+  }
+
+  function writeSoulCache(data) {
+    if (!data || typeof data !== "object") return;
+
+    try {
+      if (typeof window.saveSoulData === "function") {
+        window.saveSoulData(data);
+        return;
+      }
+    } catch (err) {
+      console.warn("Soul Chart: saveSoulData helper failed", err);
+    }
+
+    try {
+      const json = JSON.stringify(data);
+      window.localStorage.setItem("soulink.soulQuiz", json);
+      window.localStorage.setItem("soulQuiz", json);
+    } catch (err) {
+      console.warn("Soul Chart: failed to update local profile cache", err);
+    }
+  }
+
+  async function getFirebaseModules() {
+    const [configModule, authModule, firestoreModule] = await Promise.all([
+      import("./firebase-config.js"),
+      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"),
+      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js")
+    ]);
+
+    return {
+      auth: configModule.auth,
+      db: configModule.db,
+      onAuthStateChanged: authModule.onAuthStateChanged,
+      doc: firestoreModule.doc,
+      getDoc: firestoreModule.getDoc
+    };
+  }
+
+  async function waitForAuthUser(timeoutMs = 5000) {
+    try {
+      const modules = await getFirebaseModules();
+
+      return await new Promise((resolve) => {
+        if (modules.auth && modules.auth.currentUser) {
+          resolve({ user: modules.auth.currentUser, modules });
+          return;
+        }
+
+        let settled = false;
+        let unsubscribe = function () {};
+
+        const timer = window.setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          try { unsubscribe(); } catch (err) {}
+          resolve({ user: modules.auth ? modules.auth.currentUser || null : null, modules });
+        }, timeoutMs);
+
+        unsubscribe = modules.onAuthStateChanged(modules.auth, (user) => {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timer);
+          try { unsubscribe(); } catch (err) {}
+          resolve({ user: user || null, modules });
+        });
+      });
+    } catch (err) {
+      console.warn("Soul Chart: Firebase modules unavailable, using local cache fallback", err);
+      return { user: null, modules: null };
+    }
+  }
+
+  async function loadSoulData() {
+    const authState = await waitForAuthUser();
+    const user = authState && authState.user ? authState.user : null;
+    const modules = authState ? authState.modules : null;
+
+    if (user && modules && modules.db) {
+      try {
+        const snap = await modules.getDoc(modules.doc(modules.db, "users", user.uid));
+
+        if (!snap.exists()) {
+          console.log("[Soulink][Soul Chart] No Firestore profile yet for user", user.uid);
+          return {};
+        }
+
+        const firestoreData = snap.data() || {};
+        const profile = Object.assign({}, firestoreData, {
+          uid: firestoreData.uid || user.uid,
+          email: firestoreData.email || user.email || ""
+        });
+
+        writeSoulCache(profile);
+        console.log("[Soulink][Soul Chart] Loaded profile from Firestore", user.uid);
+        return profile;
+      } catch (err) {
+        console.warn("Soul Chart: Firestore read failed, using local cache fallback", err);
+        return safeGetSoulData();
+      }
+    }
+
+    return safeGetSoulData();
   }
 
   function hasAnyCoreData(soul) {
@@ -801,7 +904,7 @@
     }
 
     ui.scSummaryMeta.textContent =
-      "Refresh Chart re-reads your saved profile (localStorage) and redraws everything instantly.";
+      "Refresh Chart re-reads your saved Soulink profile and redraws everything instantly.";
   }
 
   function setLastUpdatedNow() {
@@ -840,18 +943,28 @@
     if (ui.scSummarySection) ui.scSummarySection.hidden = false;
   }
 
-  function refreshFromStorage() {
-    soulData = safeGetSoulData();
-    const hasData = hasAnyCoreData(soulData);
+  async function refreshFromProfileSource() {
+    try {
+      soulData = await loadSoulData();
+      const hasData = hasAnyCoreData(soulData);
 
-    if (!hasData) {
+      if (!hasData) {
+        showEmptyState();
+        setLastUpdatedNow();
+        return;
+      }
+
+      showDashboard();
+      renderAll();
+    } catch (err) {
+      console.error("Soul Chart: refresh failed", err);
       showEmptyState();
       setLastUpdatedNow();
-      return;
     }
+  }
 
-    showDashboard();
-    renderAll();
+  function refreshFromStorage() {
+    return refreshFromProfileSource();
   }
 
   let resizeTimer = null;
@@ -865,9 +978,9 @@
     }, 120);
   }
 
-  function init() {
+  async function init() {
     try {
-      soulData = safeGetSoulData();
+      soulData = await loadSoulData();
       const hasData = hasAnyCoreData(soulData);
 
       if (!hasData) {
@@ -890,7 +1003,7 @@
 
   if (ui.refreshBtn) {
     ui.refreshBtn.addEventListener("click", function () {
-      refreshFromStorage();
+      refreshFromProfileSource();
     });
   }
 
@@ -900,7 +1013,7 @@
       const k = e && e.key ? String(e.key) : "";
       if (!k) return;
       if (k === "soulink.soulQuiz" || k === "soulQuiz" || k.indexOf("soulink.soulQuiz") !== -1) {
-        refreshFromStorage();
+        refreshFromProfileSource();
       }
     } catch (err) {}
   });
