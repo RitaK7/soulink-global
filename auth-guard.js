@@ -15,6 +15,24 @@ const PUBLIC_PAGES = new Set([
   "404.html"
 ]);
 
+const EXACT_LOCAL_KEYS_TO_CLEAR = [
+  "soulinkUser",
+  "soulinkLastUid",
+  "soulink.soulQuiz",
+  "soulQuiz",
+  "soulCoach",
+  "soulink.soulCoach",
+  "soulMatches",
+  "soulink.matches",
+  "soulFriends",
+  "soulink.friends.list",
+  "profilePhoto1",
+  "profilePhoto2",
+  "profilePhoto3",
+  "mainPhotoSlot",
+  "primaryPhotoSlot"
+];
+
 function getCurrentPage() {
   return window.location.pathname.split("/").pop() || "index.html";
 }
@@ -32,6 +50,34 @@ function saveUserToLocalStorage(user) {
       name: user.displayName || ""
     })
   );
+  localStorage.setItem("soulinkLastUid", user.uid);
+}
+
+function removeMatchingLocalStorageKeys() {
+  const keys = [];
+
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (!key) continue;
+
+    const lower = key.toLowerCase();
+
+    if (
+      lower.startsWith("soulink.") ||
+      lower.startsWith("soulink:") ||
+      lower.startsWith("soulink_") ||
+      lower.startsWith("soul") ||
+      lower.includes("profilephoto") ||
+      lower.includes("soulquiz") ||
+      lower.includes("soulcoach") ||
+      lower.includes("soulmatch") ||
+      lower.includes("soulfriend")
+    ) {
+      keys.push(key);
+    }
+  }
+
+  keys.forEach((key) => localStorage.removeItem(key));
 }
 
 function clearSessionOnly() {
@@ -39,15 +85,20 @@ function clearSessionOnly() {
 }
 
 function clearAllUserStorage() {
-  localStorage.removeItem("soulinkUser");
-  localStorage.removeItem("soulQuiz");
-  localStorage.removeItem("soulink.soulQuiz");
-  localStorage.removeItem("soulCoach");
-  localStorage.removeItem("soulink.soulCoach");
-  localStorage.removeItem("soulMatches");
-  localStorage.removeItem("soulink.matches");
-  localStorage.removeItem("soulFriends");
-  localStorage.removeItem("soulink.friends.list");
+  EXACT_LOCAL_KEYS_TO_CLEAR.forEach((key) => localStorage.removeItem(key));
+  removeMatchingLocalStorageKeys();
+}
+
+function clearProfileCacheIfUserChanged(user) {
+  if (!user) return;
+
+  const lastUid = localStorage.getItem("soulinkLastUid");
+
+  if (lastUid && lastUid !== user.uid) {
+    clearAllUserStorage();
+  }
+
+  saveUserToLocalStorage(user);
 }
 
 onAuthStateChanged(auth, (user) => {
@@ -60,13 +111,24 @@ onAuthStateChanged(auth, (user) => {
   }
 
   if (user) {
-    saveUserToLocalStorage(user);
+    clearProfileCacheIfUserChanged(user);
   }
 });
 
+window.soulinkClearUserStorage = clearAllUserStorage;
+
 window.soulinkLogout = async function () {
   try {
+    clearAllUserStorage();
+
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: "SOULINK_CLEAR_RUNTIME_CACHE"
+      });
+    }
+
     await signOut(auth);
+
     clearAllUserStorage();
     window.location.href = "login.html";
   } catch (err) {

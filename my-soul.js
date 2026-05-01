@@ -15,7 +15,19 @@ import {
 const PRIMARY_KEY = "soulink.soulQuiz";
 const LEGACY_KEY = "soulQuiz";
 
+let currentUser = null;
+
 const $ = (selector) => document.querySelector(selector);
+
+function activeUid() {
+return (currentUser && currentUser.uid) || (auth.currentUser && auth.currentUser.uid) || "";
+}
+
+function ownsLocalCache(data, user) {
+if (!user || !data || typeof data !== "object") return true;
+const owner = data.__soulinkUid || data.uid || data.ownerUid || "";
+return owner === user.uid;
+}
 
 const ui = {
 content: $("#mySoulContent"),
@@ -117,9 +129,12 @@ return raw && typeof raw === "object" ? raw : null;
 function writeLocalSoulData(data) {
 if (!data || typeof data !== "object") return;
 
+const uid = activeUid();
+const payload = uid ? Object.assign({}, data, { __soulinkUid: uid }) : Object.assign({}, data);
+
 try {
   if (typeof window.saveSoulData === "function") {
-    window.saveSoulData(data);
+    window.saveSoulData(payload);
     return;
   }
 } catch (err) {
@@ -127,7 +142,7 @@ try {
 }
 
 try {
-  const json = JSON.stringify(data);
+  const json = JSON.stringify(payload);
   localStorage.setItem(PRIMARY_KEY, json);
   localStorage.setItem(LEGACY_KEY, json);
 } catch (err) {
@@ -139,6 +154,7 @@ try {
 function waitForAuthUser(timeoutMs = 5000) {
 return new Promise((resolve) => {
 if (auth.currentUser) {
+currentUser = auth.currentUser;
 console.log("[Soulink] Auth user ready", auth.currentUser.uid);
 resolve(auth.currentUser);
 return;
@@ -150,8 +166,9 @@ return;
     if (settled) return;
     settled = true;
     unsubscribe();
-    console.log("[Soulink] Auth user ready", auth.currentUser ? auth.currentUser.uid : "none");
-    resolve(auth.currentUser || null);
+    currentUser = auth.currentUser || null;
+    console.log("[Soulink] Auth user ready", currentUser ? currentUser.uid : "none");
+    resolve(currentUser);
   }, timeoutMs);
 
   const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -159,8 +176,9 @@ return;
     settled = true;
     window.clearTimeout(timer);
     unsubscribe();
-    console.log("[Soulink] Auth user ready", user ? user.uid : "none");
-    resolve(user || null);
+    currentUser = user || null;
+    console.log("[Soulink] Auth user ready", currentUser ? currentUser.uid : "none");
+    resolve(currentUser);
   });
 });
 
@@ -697,8 +715,8 @@ window.location.href = "soul-chart.html";
 }
 
 async function loadProfileSourceOfTruth() {
-const local = readLocalSoulData();
 const user = await waitForAuthUser();
+const local = readLocalSoulData();
 
 if (!user) {
   console.log("[Soulink] Using local fallback");
@@ -708,16 +726,23 @@ if (!user) {
 try {
   const firestoreData = await readFirestoreProfile(user);
   if (firestoreData && typeof firestoreData === "object") {
-    const merged = { ...(local || {}), ...firestoreData };
-    writeLocalSoulData(merged);
-    return merged;
+    // Firestore is the source of truth for logged-in users.
+    // Refresh localStorage FROM Firestore; never let localStorage override it.
+    const source = Object.assign({}, firestoreData, { __soulinkUid: user.uid });
+    writeLocalSoulData(source);
+    return source;
   }
 } catch (err) {
   console.error("[Soulink] My Soul Firestore load failed", err);
 }
 
-console.log("[Soulink] Using local fallback");
-return local;
+if (ownsLocalCache(local, user)) {
+  console.log("[Soulink] No Firestore profile yet; using only this user's local draft");
+  return local;
+}
+
+console.log("[Soulink] No Firestore profile and local cache belongs to another user");
+return null;
 
 }
 

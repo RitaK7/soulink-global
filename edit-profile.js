@@ -186,6 +186,24 @@ import {
   };
 
   let state = {};
+  let currentUser = null;
+  const PHOTO_KEYS = ["profilePhoto1", "profilePhoto2", "profilePhoto3"];
+  const touchedPhotoKeys = new Set();
+
+  function activeUid() {
+    return (currentUser && currentUser.uid) || (auth.currentUser && auth.currentUser.uid) || "";
+  }
+
+  function ownsLocalCache(data, user) {
+    if (!user || !data || typeof data !== "object") return true;
+    const owner = data.__soulinkUid || data.uid || data.ownerUid || "";
+    return owner === user.uid;
+  }
+
+  function readSoulRawForUser(user) {
+    const local = readSoulRaw();
+    return ownsLocalCache(local, user) ? local : {};
+  }
 
   function norm(s) {
     return s == null ? "" : String(s).trim();
@@ -236,15 +254,18 @@ import {
   function writeSoulRaw(obj) {
     if (!obj || typeof obj !== "object") return;
 
+    const uid = activeUid();
+    const payload = uid ? Object.assign({}, obj, { __soulinkUid: uid }) : Object.assign({}, obj);
+
     try {
       if (typeof window.saveSoulData === "function") {
-        window.saveSoulData(obj);
+        window.saveSoulData(payload);
         return;
       }
     } catch (e) {}
 
     try {
-      const json = JSON.stringify(obj);
+      const json = JSON.stringify(payload);
       localStorage.setItem(PRIMARY_KEY, json);
       localStorage.setItem(LEGACY_KEY, json);
     } catch (e) {}
@@ -252,7 +273,7 @@ import {
 
   function persistPatch(patch) {
     if (!patch || typeof patch !== "object") return state;
-    const merged = Object.assign({}, readSoulRaw() || {}, patch);
+    const merged = Object.assign({}, state || {}, patch);
     writeSoulRaw(merged);
     return merged;
   }
@@ -296,6 +317,7 @@ import {
   function waitForAuthUser(timeoutMs = 5000) {
     return new Promise((resolve) => {
       if (auth.currentUser) {
+        currentUser = auth.currentUser;
         console.log("[Soulink] Auth user ready", auth.currentUser.uid);
         resolve(auth.currentUser);
         return;
@@ -307,8 +329,9 @@ import {
         if (done) return;
         done = true;
         unsubscribe();
-        console.log("[Soulink] Auth user ready", auth.currentUser ? auth.currentUser.uid : "none");
-        resolve(auth.currentUser || null);
+        currentUser = auth.currentUser || null;
+        console.log("[Soulink] Auth user ready", currentUser ? currentUser.uid : "none");
+        resolve(currentUser);
       }, timeoutMs);
 
       const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -316,8 +339,9 @@ import {
         done = true;
         window.clearTimeout(timer);
         unsubscribe();
-        console.log("[Soulink] Auth user ready", user ? user.uid : "none");
-        resolve(user || null);
+        currentUser = user || null;
+        console.log("[Soulink] Auth user ready", currentUser ? currentUser.uid : "none");
+        resolve(currentUser);
       });
     });
   }
@@ -686,44 +710,62 @@ import {
           if (!f) return;
 
           const reader = new FileReader();
+
           reader.onload = async (e) => {
             const dataUrl = String(e.target && e.target.result ? e.target.result : "");
+            const previousValue = state[key] || "";
+
             state[key] = dataUrl;
-            state = persistPatch({ [key]: dataUrl });
+            touchedPhotoKeys.add(key);
             sync();
             updatePreview();
 
             try {
               const user = await waitForAuthUser();
+
               if (!user) {
-                console.warn("[Soulink] No authenticated user for upload.");
+                state = persistPatch({ [key]: dataUrl });
+                showSaveStatus("Photo saved locally ✨", true);
                 file.value = "";
                 return;
               }
 
-              const storageRef = ref(storage, `users/${user.uid}/${key}`);
+              const storageRef = ref(storage, `users/${user.uid}/${key}-${Date.now()}`);
               const response = await fetch(dataUrl);
               const blob = await response.blob();
+
               await uploadBytes(storageRef, blob);
               const downloadURL = await getDownloadURL(storageRef);
 
               state[key] = downloadURL;
               state = persistPatch({ [key]: downloadURL });
 
-              await setDoc(doc(db, "users", user.uid), {
-                [key]: downloadURL,
-                updatedAt: serverTimestamp()
-              }, { merge: true });
+              await setDoc(
+                doc(db, "users", user.uid),
+                {
+                  [key]: downloadURL,
+                  uid: user.uid,
+                  updatedAt: serverTimestamp()
+                },
+                { merge: true }
+              );
 
               sync();
               updatePreview();
+              showSaveStatus("Saved to Soulink ✨", true);
               console.log(`[Soulink] ${key} uploaded successfully`);
             } catch (err) {
               console.error(`[Soulink] Upload failed for ${key}:`, err);
+              state[key] = previousValue;
+              state = persistPatch({ [key]: previousValue });
+              sync();
+              updatePreview();
+              showSaveStatus("Photo upload failed — check Console", false);
             } finally {
               file.value = "";
             }
           };
+
           reader.readAsDataURL(f);
         });
       }
@@ -742,13 +784,35 @@ import {
 
       if (remove && !remove.dataset.boundClick) {
         remove.dataset.boundClick = "1";
-        remove.addEventListener("click", (ev) => {
+        remove.addEventListener("click", async (ev) => {
           ev.preventDefault();
+
           state[key] = "";
+          touchedPhotoKeys.add(key);
           state = persistPatch({ [key]: "" });
+
           if (file) file.value = "";
           sync();
           updatePreview();
+
+          try {
+            const user = await waitForAuthUser();
+            if (user) {
+              await setDoc(
+                doc(db, "users", user.uid),
+                {
+                  [key]: "",
+                  uid: user.uid,
+                  updatedAt: serverTimestamp()
+                },
+                { merge: true }
+              );
+              showSaveStatus("Saved to Soulink ✨", true);
+            }
+          } catch (err) {
+            console.error(`[Soulink] Could not remove ${key} from Firestore`, err);
+            showSaveStatus("Photo removal failed — check Console", false);
+          }
         });
       }
 
@@ -1095,20 +1159,46 @@ import {
     try {
       const user = await waitForAuthUser();
       const payload = collectPayloadFromState();
-      state = normaliseStateFromRaw(Object.assign({}, state, payload));
-      writeSoulRaw(state);
 
       if (!user) {
+        state = normaliseStateFromRaw(Object.assign({}, state, payload));
+        writeSoulRaw(state);
         console.log("[Soulink] Using local fallback");
         showSaveStatus("Saved locally ✨", true);
         return true;
       }
 
-      await setDoc(doc(db, "users", user.uid), {
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      const existing = snap.exists() ? snap.data() || {} : {};
+
+      // Preserve Firestore photos unless this page actually changed/removed them.
+      PHOTO_KEYS.forEach((key) => {
+        if (!touchedPhotoKeys.has(key)) {
+          delete payload[key];
+        }
+      });
+
+      const firestorePayload = {
         ...payload,
         uid: user.uid,
+        email: user.email || existing.email || "",
         updatedAt: serverTimestamp()
-      }, { merge: true });
+      };
+
+      await setDoc(ref, firestorePayload, { merge: true });
+
+      const mergedForCache = normaliseStateFromRaw(
+        Object.assign({}, existing, payload, {
+          uid: user.uid,
+          email: user.email || existing.email || "",
+          __soulinkUid: user.uid
+        })
+      );
+
+      state = mergedForCache;
+      writeSoulRaw(state);
+      touchedPhotoKeys.clear();
 
       console.log("[Soulink] Saved profile to Firestore");
       showSaveStatus("Saved to Soulink ✨", true);
@@ -1180,18 +1270,29 @@ if (topNextSoul) {
 
   async function init() {
     try {
-      const local = readSoulRaw();
-      const fire = await readFirestoreProfile();
-      if (fire && typeof fire === "object") {
-        state = normaliseStateFromRaw(Object.assign({}, local || {}, fire));
-        writeSoulRaw(state);
+      const user = await waitForAuthUser();
+      const local = readSoulRawForUser(user);
+
+      if (user) {
+        const fire = await readFirestoreProfile();
+        if (fire && typeof fire === "object") {
+          // Firestore is the source of truth for logged-in users.
+          // Do not merge stale localStorage over Firestore on page load.
+          state = normaliseStateFromRaw(Object.assign({}, fire, { __soulinkUid: user.uid }));
+          writeSoulRaw(state);
+        } else {
+          console.log("[Soulink] No Firestore profile yet; using only this user's local draft");
+          state = normaliseStateFromRaw(Object.assign({}, local || {}, { __soulinkUid: user.uid }));
+          writeSoulRaw(state);
+        }
       } else {
         console.log("[Soulink] Using local fallback");
         state = normaliseStateFromRaw(local || {});
       }
     } catch (err) {
       console.error("[Soulink] Firestore profile hydrate failed:", err);
-      state = normaliseStateFromRaw(readSoulRaw() || {});
+      const user = auth.currentUser || currentUser || null;
+      state = normaliseStateFromRaw(readSoulRawForUser(user) || {});
     }
 
     prefillInputsFromState();

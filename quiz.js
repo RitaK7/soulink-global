@@ -24,6 +24,67 @@ import {
   let state = {};
   let currentUser = null;
 
+  const PHOTO_KEYS = ["profilePhoto1", "profilePhoto2", "profilePhoto3"];
+
+  function activeUid() {
+    return (currentUser && currentUser.uid) || (auth.currentUser && auth.currentUser.uid) || "";
+  }
+
+  function ownsLocalCache(data, user) {
+    if (!user || !data || typeof data !== "object") return true;
+    const owner = data.__soulinkUid || data.uid || data.ownerUid || "";
+    return owner === user.uid;
+  }
+
+  function readLocalSoulDataForUser(user) {
+    const local = readLocalSoulData();
+    return ownsLocalCache(local, user) ? local : {};
+  }
+
+  function stripPhotoKeys(obj) {
+    const clean = Object.assign({}, obj || {});
+    PHOTO_KEYS.forEach((key) => delete clean[key]);
+    delete clean.mainPhotoSlot;
+    delete clean.primaryPhotoSlot;
+    return clean;
+  }
+
+  function showSaveStatus(message, ok = true) {
+    let toast = document.getElementById("soulinkSaveToast");
+
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "soulinkSaveToast";
+      toast.setAttribute("role", "status");
+      toast.style.position = "fixed";
+      toast.style.right = "18px";
+      toast.style.bottom = "18px";
+      toast.style.zIndex = "9999";
+      toast.style.padding = "12px 16px";
+      toast.style.borderRadius = "999px";
+      toast.style.fontWeight = "800";
+      toast.style.fontSize = "0.9rem";
+      toast.style.boxShadow = "0 0 22px rgba(0,253,216,0.75)";
+      toast.style.transition = "opacity 0.2s ease, transform 0.2s ease";
+      document.body.appendChild(toast);
+    }
+
+    toast.textContent = message;
+    toast.style.color = ok ? "#003c43" : "#ffd4dc";
+    toast.style.background = ok ? "#00fdd8" : "rgba(80,0,20,0.95)";
+    toast.style.border = ok
+      ? "1px solid rgba(0,253,216,1)"
+      : "1px solid rgba(255,154,162,0.8)";
+    toast.style.opacity = "1";
+    toast.style.transform = "translateY(0)";
+
+    window.clearTimeout(toast._timer);
+    toast._timer = window.setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.style.transform = "translateY(8px)";
+    }, 2200);
+  }
+
   const QUIZ_TO_CANONICAL_CONNECTION = {
     "Romantic": "Romantic relationship",
     "Friendship": "Friendship",
@@ -94,9 +155,12 @@ import {
   function writeLocalSoulData(data) {
     if (!data || typeof data !== "object") return;
 
+    const uid = activeUid();
+    const payload = uid ? Object.assign({}, data, { __soulinkUid: uid }) : Object.assign({}, data);
+
     try {
       if (typeof window.saveSoulData === "function") {
-        window.saveSoulData(data);
+        window.saveSoulData(payload);
         return;
       }
     } catch (err) {
@@ -104,7 +168,7 @@ import {
     }
 
     try {
-      const json = JSON.stringify(data);
+      const json = JSON.stringify(payload);
       localStorage.setItem(PRIMARY_KEY, json);
       localStorage.setItem(LEGACY_KEY, json);
     } catch (err) {
@@ -114,7 +178,7 @@ import {
 
   function patchLocalSoulData(fragment) {
     if (!fragment || typeof fragment !== "object") return state;
-    const merged = Object.assign({}, readLocalSoulData() || {}, fragment);
+    const merged = Object.assign({}, state || {}, fragment);
     writeLocalSoulData(merged);
     return merged;
   }
@@ -496,26 +560,37 @@ import {
   return fragment;
 }
 
-async function saveQuizToFirestore(fragment) {
+async function saveQuizToFirestore(fragment, options = {}) {
   const user = await waitForAuthUser();
+  const shouldToast = !!options.showToast;
+
   console.log("[Soulink][Quiz] saveQuizToFirestore start", {
-  uid: user ? user.uid : null,
-  name: fragment?.name || "",
-  birthday: fragment?.birthday || "",
-  country: fragment?.country || "",
-  about: fragment?.about || ""
-});
+    uid: user ? user.uid : null,
+    name: fragment?.name || "",
+    birthday: fragment?.birthday || "",
+    country: fragment?.country || "",
+    about: fragment?.about || ""
+  });
 
   if (!user) {
     console.log("[Soulink] Using local fallback");
+    if (shouldToast) showSaveStatus("Saved locally ✨", true);
     return true;
   }
 
   try {
+    const ref = doc(db, "users", user.uid);
+    const snap = await getDoc(ref);
+    const existing = snap.exists() ? snap.data() || {} : {};
+
+    // Quiz does not edit photos. Never let stale localStorage photo fields
+    // overwrite Firestore profilePhoto1/2/3 from this page.
+    const payload = stripPhotoKeys(fragment);
+
     await setDoc(
-      doc(db, "users", user.uid),
+      ref,
       {
-        ...fragment,
+        ...payload,
         uid: user.uid,
         email: user.email || "",
         profileCompleted: true,
@@ -524,10 +599,21 @@ async function saveQuizToFirestore(fragment) {
       { merge: true }
     );
 
+    const mergedForCache = Object.assign({}, existing, payload, {
+      uid: user.uid,
+      email: user.email || existing.email || "",
+      profileCompleted: true
+    });
+
+    state = Object.assign({}, state, mergedForCache);
+    writeLocalSoulData(state);
+
     console.log("[Soulink] Saved profile to Firestore");
+    if (shouldToast) showSaveStatus("Saved to Soulink ✨", true);
     return true;
   } catch (err) {
     console.error("[Soulink] Save failed", err);
+    if (shouldToast) showSaveStatus("Save failed — check Console", false);
     return false;
   }
 }
@@ -643,7 +729,7 @@ function bindNextFlow() {
 
       console.log("[Soulink][Quiz] fragment before Firestore save", fragment);
 
-      const ok = await saveQuizToFirestore(fragment);
+      const ok = await saveQuizToFirestore(fragment, { showToast: true });
 
       if (ok) {
         console.log("[Soulink][Quiz] Saved, navigating to Edit Profile");
@@ -670,37 +756,42 @@ function bindNextFlow() {
 }
 
   async function init() {
-  try {
-    const local = readLocalSoulData();
-    const user = await waitForAuthUser();
+    try {
+      const user = await waitForAuthUser();
+      const local = readLocalSoulDataForUser(user);
 
-    if (user) {
-      const fire = await readFirestoreProfile(user);
-      if (fire && typeof fire === "object") {
-        state = Object.assign({}, local || {}, fire);
-        writeLocalSoulData(state);
+      if (user) {
+        const fire = await readFirestoreProfile(user);
+        if (fire && typeof fire === "object") {
+          // Firestore is the source of truth for logged-in users.
+          // Local cache is refreshed FROM Firestore, never merged over it on page load.
+          state = Object.assign({}, fire, { __soulinkUid: user.uid });
+          writeLocalSoulData(state);
+        } else {
+          console.log("[Soulink] No Firestore profile yet; using only this user's local draft");
+          state = ownsLocalCache(local, user) ? local || {} : {};
+          state.__soulinkUid = user.uid;
+          writeLocalSoulData(state);
+        }
       } else {
         console.log("[Soulink] Using local fallback");
         state = local || {};
       }
-    } else {
-      console.log("[Soulink] Using local fallback");
-      state = local || {};
-    }
 
-    prefillFromData(state);
-    bindAutosave();
-    bindNextFlow();
-    bindNavSave();
-  } catch (err) {
-    console.error("[Soulink][quiz] init failed", err);
-    state = readLocalSoulData() || {};
-    prefillFromData(state);
-    bindAutosave();
-    bindNextFlow();
-    bindNavSave();
+      prefillFromData(state);
+      bindAutosave();
+      bindNextFlow();
+      bindNavSave();
+    } catch (err) {
+      console.error("[Soulink][quiz] init failed", err);
+      const user = auth.currentUser || currentUser || null;
+      state = readLocalSoulDataForUser(user) || {};
+      prefillFromData(state);
+      bindAutosave();
+      bindNextFlow();
+      bindNavSave();
+    }
   }
-}
 
   onAuthStateChanged(auth, (user) => {
     currentUser = user || null;

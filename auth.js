@@ -1,96 +1,165 @@
-/* Soulink Beta Access Guard – auth.js
+/* Soulink Auth Helper – auth.js
  *
- * This file controls an optional "beta/password gate" for internal pages.
- * Right now BETA_MODE is set to false, which means:
- *   – NO pages are blocked,
- *   – The whole site is open for normal users.
+ * Static vanilla JS file.
+ * Loaded as:
+ *   <script src="auth.js" defer></script>
  *
- * If in the future you want to re-enable the beta gate, just change:
- *   const BETA_MODE = false;
- * to:
- *   const BETA_MODE = true;
+ * Responsibilities:
+ * 1. Provide one safe global logout function: window.soulinkLogout().
+ * 2. On logout:
+ *    - Firebase signOut()
+ *    - clear Soulink local/session profile cache
+ *    - clear old photo/profile keys
+ *    - clear Soulink service worker caches
+ *    - redirect to login.html
  */
 
-const BETA_MODE = false; // <— beta/password gate is DISABLED globally
+(function () {
+  "use strict";
 
-const BETA_LOGIN_PAGE = "login.html";
+  const LOGIN_PAGE = "login.html";
 
-const PUBLIC_PAGES = new Set([
-  "index.html",
-  BETA_LOGIN_PAGE,
-  "signup.html",
-  "privacy.html",
-  "terms.html",
-  "404.html",
-  "robots.txt",
-  "sitemap.xml"
-]);
+  const EXACT_STORAGE_KEYS = [
+    "soulinkUser",
 
-function currentPageName() {
-  try {
-    const path = window.location.pathname.split("/").pop() || "index.html";
-    // Strip query string and hash
-    return path.toLowerCase().split("?")[0].split("#")[0] || "index.html";
-  } catch {
-    return "index.html";
+    "soulink.soulQuiz",
+    "soulQuiz",
+
+    "soulink.soulCoach",
+    "soulCoach",
+
+    "soulink.matches",
+    "soulMatches",
+
+    "soulink.friends.list",
+    "soulFriends",
+
+    "soulink.profile",
+    "soulink.userProfile",
+    "userProfile",
+    "profile",
+
+    "profilePhoto1",
+    "profilePhoto2",
+    "profilePhoto3",
+
+    "soulink.profilePhoto1",
+    "soulink.profilePhoto2",
+    "soulink.profilePhoto3",
+
+    "photo1",
+    "photo2",
+    "photo3",
+
+    "soulink.photo1",
+    "soulink.photo2",
+    "soulink.photo3"
+  ];
+
+  function shouldRemoveSoulinkStorageKey(key) {
+    if (!key) return false;
+
+    const lower = String(key).toLowerCase();
+
+    if (EXACT_STORAGE_KEYS.includes(key)) return true;
+
+    return (
+      lower === "soulquiz" ||
+      lower.startsWith("soulink.") ||
+      lower.startsWith("soulink:") ||
+      lower.startsWith("soulink_") ||
+      lower.includes("profilephoto") ||
+      lower.includes("soulquiz") ||
+      lower.includes("soulcoach") ||
+      lower.includes("soulmatches") ||
+      lower.includes("soulfriends")
+    );
   }
-}
 
-function isPublicPage() {
-  // If beta mode is OFF – treat all pages as public
-  if (!BETA_MODE) return true;
-  return PUBLIC_PAGES.has(currentPageName());
-}
+  function clearStorageArea(storage) {
+    if (!storage) return;
 
-function hasBetaAccess() {
-  // If beta mode is OFF – always allow access
-  if (!BETA_MODE) return true;
-  return sessionStorage.getItem("soulinkBeta") === "true";
-}
-
-// Main guard – runs immediately when the script loads
-(function enforceBetaAccess() {
-  if (!BETA_MODE) return;      // beta disabled – do nothing
-  if (isPublicPage()) return;  // public pages are always allowed
-
-  if (!hasBetaAccess()) {
     try {
-      sessionStorage.removeItem("soulinkBeta");
-      sessionStorage.removeItem("soulinkBetaStartedAt");
-      const page = currentPageName();
-      const url = `${BETA_LOGIN_PAGE}?next=${encodeURIComponent(page)}`;
-      window.location.replace(url);
-    } catch {
-      window.location.href = BETA_LOGIN_PAGE;
+      EXACT_STORAGE_KEYS.forEach((key) => {
+        try {
+          storage.removeItem(key);
+        } catch (err) {}
+      });
+
+      const keysToRemove = [];
+
+      for (let i = 0; i < storage.length; i += 1) {
+        const key = storage.key(i);
+        if (shouldRemoveSoulinkStorageKey(key)) {
+          keysToRemove.push(key);
+        }
+      }
+
+      keysToRemove.forEach((key) => {
+        try {
+          storage.removeItem(key);
+        } catch (err) {}
+      });
+    } catch (err) {
+      console.warn("[Soulink] Storage clear failed", err);
     }
   }
-})();
 
-// Shared logout helper – can be called from any page
-window.soulinkLogout = function () {
-  try {
-    sessionStorage.removeItem("soulinkBeta");
-    sessionStorage.removeItem("soulinkBetaStartedAt");
-  } finally {
-    window.location.replace(BETA_LOGIN_PAGE);
+  function clearSoulinkStorage() {
+    clearStorageArea(localStorage);
+    clearStorageArea(sessionStorage);
   }
-};
 
-// Simple beta session timeout (default 12h) – only used when BETA_MODE is true
-(function sessionTimeout(hours = 12) {
-  if (!BETA_MODE) return;             // when beta is disabled – do nothing
-  if (!hasBetaAccess()) return;       // no active session – nothing to track
+  async function clearSoulinkCaches() {
+    if (!("caches" in window)) return;
 
-  const KEY = "soulinkBetaStartedAt";
-  const now = Date.now();
+    try {
+      const keys = await caches.keys();
 
-  const started = Number(sessionStorage.getItem(KEY) || 0);
-  if (!started) {
-    sessionStorage.setItem(KEY, String(now));
-  } else {
-    const msLimit = hours * 60 * 60 * 1000;
-    if (now - started > msLimit) {
-      window.soulinkLogout();
+      await Promise.all(
+        keys
+          .filter((key) => String(key).toLowerCase().startsWith("soulink"))
+          .map((key) => caches.delete(key))
+      );
+
+      console.log("[Soulink] Local Soulink caches cleared");
+    } catch (err) {
+      console.warn("[Soulink] Cache clear failed", err);
     }
   }
+
+  async function firebaseSignOutIfPossible() {
+    try {
+      const firebaseConfigModule = await import("./firebase-config.js");
+      const firebaseAuthModule = await import(
+        "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
+      );
+
+      if (!firebaseConfigModule || !firebaseConfigModule.auth) return;
+      if (!firebaseAuthModule || typeof firebaseAuthModule.signOut !== "function") return;
+
+      await firebaseAuthModule.signOut(firebaseConfigModule.auth);
+      console.log("[Soulink] Firebase signed out");
+    } catch (err) {
+      console.warn("[Soulink] Firebase signOut skipped or failed", err);
+    }
+  }
+
+  function redirectAfterLogout() {
+    window.location.replace(`${LOGIN_PAGE}?loggedout=1&v=${Date.now()}`);
+  }
+
+  window.soulinkLogout = async function () {
+    try {
+      await firebaseSignOutIfPossible();
+    } finally {
+      clearSoulinkStorage();
+      await clearSoulinkCaches();
+      redirectAfterLogout();
+    }
+  };
+
+  window.soulinkClearLocalProfileCache = function () {
+    clearSoulinkStorage();
+  };
 })();
