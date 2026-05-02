@@ -1,74 +1,296 @@
-
 <!DOCTYPE html>
-
 <html lang="en">
-<head><meta content="width=device-width, initial-scale=1" name="viewport"/>
-<meta charset="utf-8"/>
-<title>Privacy Policy – Soulink</title>
-<link href="style.css" rel="stylesheet"/>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy Policy – Soulink</title>
+  <meta
+    name="description"
+    content="Privacy Policy for Soulink.global — how Soulink handles account data, profile data, photos and Firebase storage."
+  />
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    .legal-page {
+      padding: 1.5rem 1rem 3rem;
+    }
+
+    .legal-inner {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .legal-hero,
+    .legal-card {
+      border: 1px solid rgba(0, 253, 216, 0.28);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.14), transparent 55%),
+        rgba(0, 0, 0, 0.42);
+      box-shadow:
+        0 16px 36px rgba(0, 0, 0, 0.55),
+        0 0 22px rgba(0, 253, 216, 0.18);
+      border-radius: 22px;
+      backdrop-filter: blur(12px);
+    }
+
+    .legal-hero {
+      padding: 1.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .legal-card {
+      padding: 1.35rem 1.6rem;
+      line-height: 1.65;
+    }
+
+    .legal-kicker {
+      color: #00fdd8;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.78rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .legal-title {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3rem);
+      color: #eaffff;
+    }
+
+    .legal-subtitle {
+      max-width: 760px;
+      margin: 0.65rem 0 0;
+      color: rgba(234, 255, 255, 0.88);
+      font-size: 1rem;
+    }
+
+    .legal-card h2 {
+      color: #00fdd8;
+      margin-top: 1.4rem;
+      margin-bottom: 0.45rem;
+      font-size: 1.2rem;
+    }
+
+    .legal-card p,
+    .legal-card li {
+      color: rgba(234, 255, 255, 0.9);
+    }
+
+    .legal-card a {
+      color: #00fdd8;
+      font-weight: 700;
+    }
+
+    .legal-card ul {
+      padding-left: 1.2rem;
+    }
+
+    .legal-note {
+      margin-top: 1rem;
+      padding: 0.85rem 1rem;
+      border-radius: 16px;
+      border: 1px solid rgba(0, 253, 216, 0.25);
+      background: rgba(0, 0, 0, 0.28);
+      color: rgba(234, 255, 255, 0.88);
+    }
+
+    .footer-note {
+      text-align: center;
+      padding: 1.4rem 1rem 2rem;
+      color: rgba(234, 255, 255, 0.86);
+    }
+
+    @media (max-width: 640px) {
+      .legal-hero,
+      .legal-card {
+        padding: 1rem;
+        border-radius: 18px;
+      }
+    }
+  </style>
 </head>
-<body><nav class="navbar" style="background:#002e30; box-shadow:0 0 12px rgba(0,253,216,0.25);">
-<div class="container" style="display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.8rem 1rem;">
-<a class="brand" href="index.html" style="font-weight:700; text-decoration:none; color:#00fdd8;">Soulink</a>
-<button aria-label="Toggle navigation" id="navToggle" style="background:transparent; border:1px solid #00fdd8; border-radius:10px; padding:.4rem .6rem; color:#00fdd8; display:none;">☰</button>
-<ul id="navMenu" style="list-style:none; display:flex; flex-wrap:wrap; gap:.6rem; margin:0; padding:0;">
-<li><a href="index.html">Home</a></li>
-<li><a href="quiz.html">Quiz</a></li>
-<li><a href="edit-profile.html">Edit Profile</a></li>
-<li><a href="my-soul.html">My Soul</a></li>
-<li><a href="soul-chart.html">Soul Chart</a></li>
-<li><a href="soul-coach.html">Soul Coach</a></li>
-<li><a href="result.html">Results</a></li>
-<li><a href="friends.html">Friends</a></li>
-<li><a href="beta-login.html">Log In</a></li>
-<li><a href="signup.html">Sign Up</a></li>
-</ul>
-</div>
-</nav>
-<script>
-// Minimal responsive toggle
-(function(){
-  const btn = document.getElementById('navToggle');
-  const menu = document.getElementById('navMenu');
-  function onResize(){
-    if(window.innerWidth<800){ btn.style.display='block'; menu.style.display='none'; }
-    else { btn.style.display='none'; menu.style.display='flex'; }
-  }
-  if(btn && menu){
-    btn.addEventListener('click', ()=>{
-      menu.style.display = (menu.style.display==='none' || !menu.style.display) ? 'flex' : 'none';
-    });
-    window.addEventListener('resize', onResize);
-    onResize();
-  }
-})();
-</script>
-<style>
-nav.navbar a { color:#dff; text-decoration:none; padding:.35rem .55rem; border-radius:10px; }
-nav.navbar a:hover { box-shadow:0 0 10px rgba(0,253,216,0.45), inset 0 0 12px rgba(0,253,216,0.15); }
-</style>
-<main style="padding: 2rem; color: white; background-color: #003c43; font-family: 'Poppins', sans-serif;">
-<h1>Privacy Policy</h1>
-<p>Effective Date: July 4, 2025</p>
-<p>Soulink respects your privacy. This policy explains what data we collect, how we use it, and your rights.</p>
-<h2>1. Information We Collect</h2>
-<ul>
-<li>Personal Data (e.g., name, birth date, love language)</li>
-<li>Usage Data (quiz answers, preferences)</li>
-<li>Feedback (optional comments and ratings)</li>
-</ul>
-<h2>2. How We Use Your Data</h2>
-<p>We use your data to generate soul compatibility analysis and provide personalized experiences.</p>
-<h2>3. Data Sharing</h2>
-<p>We do not sell or share your data with third parties. Your data stays local unless you submit feedback.</p>
-<h2>4. Your Rights</h2>
-<p>You can request to delete your data anytime by contacting us at <a href="mailto:ritakairiene7@gmail.com">ritakairiene7@gmail.com</a>.</p>
-<h2>5. Cookies</h2>
-<p>We may use cookies to improve your experience. You can disable them in your browser.</p>
-<h2>6. Contact</h2>
-<p>If you have any questions, contact us at <a href="mailto:ritakairiene7@gmail.com">ritakairiene7@gmail.com</a>.</p>
-</main>
-<footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
-  © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
-</footer></body>
+
+<body class="soulink-bg">
+  <header
+    class="navbar soulink-nav"
+    data-active="Privacy"
+    aria-label="Primary navigation"
+  >
+    <div class="nav-inner">
+      <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">
+        Soulink
+      </a>
+
+      <button
+        class="nav-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="nav-links" aria-label="Primary">
+        <a href="index.html" data-page="Home">Home</a>
+        <a href="quiz.html" data-page="Quiz">Quiz</a>
+        <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
+        <a href="my-soul.html" data-page="My Soul">My Soul</a>
+        <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
+        <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
+        <a href="match.html" data-page="Match">Match</a>
+        <a href="friends.html" data-page="Friends">Friends</a>
+        <a href="results.html" data-page="Results">Results</a>
+        <a href="login.html" data-page="Login">Log In</a>
+        <a href="signup.html" data-page="Sign Up">Sign Up</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container legal-page">
+    <div class="legal-inner">
+      <section class="legal-hero">
+        <div class="legal-kicker">Soulink.global</div>
+        <h1 class="legal-title">Privacy Policy</h1>
+        <p class="legal-subtitle">
+          This Privacy Policy explains how Soulink collects, uses, stores and protects
+          information when you create an account, complete the quiz, upload photos or use
+          Soulink profile features.
+        </p>
+      </section>
+
+      <section class="legal-card">
+        <p><strong>Effective date:</strong> May 2, 2026</p>
+
+        <div class="legal-note">
+          Soulink is currently a beta platform. We are still improving the service,
+          security, data flow and user experience. Please do not upload or share anything
+          you would not want stored in your Soulink account.
+        </div>
+
+        <h2>1. Who We Are</h2>
+        <p>
+          Soulink is an AI-assisted compatibility and self-reflection platform designed to
+          help people explore love languages, values, personality patterns, friendship
+          compatibility and deeper connection themes.
+        </p>
+
+        <h2>2. Information We Collect</h2>
+        <p>Depending on how you use Soulink, we may collect or store:</p>
+        <ul>
+          <li>Account information, such as name and email address.</li>
+          <li>Profile information, such as birthday, country, gender, orientation, connection preferences and love languages.</li>
+          <li>Quiz answers, hobbies, values, boundaries, mantra, soul summary and “about me” text.</li>
+          <li>Profile photos uploaded by you.</li>
+          <li>Technical information needed to keep your account signed in and your profile synced.</li>
+          <li>Optional feedback, comments or ratings if you choose to submit them.</li>
+        </ul>
+
+        <h2>3. How We Store Your Data</h2>
+        <p>
+          When you create an account or log in, Soulink uses Firebase services, including
+          Firebase Authentication, Cloud Firestore and Firebase Storage. Your profile data
+          is stored in Firestore under your user account, and profile photos may be stored
+          in Firebase Storage.
+        </p>
+        <p>
+          Soulink may also use localStorage in your browser as a temporary fallback or cache.
+          For logged-in users, Firestore is intended to be the main source of truth.
+        </p>
+
+        <h2>4. How We Use Your Data</h2>
+        <p>We use your data to:</p>
+        <ul>
+          <li>Create and save your Soulink profile.</li>
+          <li>Generate My Soul, Soul Chart, Soul Coach, matching and compatibility views.</li>
+          <li>Improve the user experience and debug technical issues.</li>
+          <li>Help your profile stay available after refresh, logout and login.</li>
+          <li>Protect the platform from misuse and unauthorized access.</li>
+        </ul>
+
+        <h2>5. Photos</h2>
+        <p>
+          If you upload profile photos, they may be stored in Firebase Storage and linked
+          to your Soulink profile. You should only upload photos you have the right to use.
+          You can replace or remove your photos from your profile.
+        </p>
+
+        <h2>6. Data Sharing</h2>
+        <p>
+          We do not sell your personal data. We do not intentionally share your profile data
+          with advertisers or unrelated third parties. Your data may be processed by service
+          providers needed to operate Soulink, such as Firebase / Google Cloud services.
+        </p>
+
+        <h2>7. Cookies and Local Storage</h2>
+        <p>
+          Soulink may use browser storage, including localStorage, to keep your profile cached
+          locally, improve page loading and maintain a smoother experience. You can clear this
+          data in your browser settings, but doing so may log you out or reset local fallback data.
+        </p>
+
+        <h2>8. Your Rights</h2>
+        <p>
+          Depending on your location, you may have rights to access, correct, export or delete
+          your personal data. You may also request that we stop processing certain data where
+          legally applicable.
+        </p>
+        <p>
+          To request access, correction or deletion of your Soulink data, contact us at:
+          <a href="mailto:ritakairiene7@gmail.com">ritakairiene7@gmail.com</a>.
+        </p>
+
+        <h2>9. Data Retention</h2>
+        <p>
+          We keep your account and profile data while your account is active or while needed
+          to provide the Soulink service. If you request deletion, we will make reasonable
+          efforts to delete or anonymize your data unless we are required to keep it for legal
+          or security reasons.
+        </p>
+
+        <h2>10. Security</h2>
+        <p>
+          We use Firebase security rules, authentication and storage rules to help protect
+          user data. However, no online service can be guaranteed to be completely secure.
+          Please use a strong password and do not share your login details.
+        </p>
+
+        <h2>11. AI and Personal Insights</h2>
+        <p>
+          Soulink may generate reflective or compatibility-style insights based on the profile
+          information you provide. These insights are for self-reflection and entertainment /
+          personal growth purposes only. They are not medical, psychological, legal, financial
+          or professional advice.
+        </p>
+
+        <h2>12. Children and Age</h2>
+        <p>
+          During the beta stage, Soulink is intended for adult users. If you are under the
+          legal age required in your country to use this kind of service, please do not create
+          an account without appropriate permission.
+        </p>
+
+        <h2>13. Changes to This Policy</h2>
+        <p>
+          We may update this Privacy Policy as Soulink develops. If we make important changes,
+          we will update the effective date and may provide additional notice on the platform.
+        </p>
+
+        <h2>14. Contact</h2>
+        <p>
+          If you have questions about this Privacy Policy or your data, contact us at:
+          <a href="mailto:ritakairiene7@gmail.com">ritakairiene7@gmail.com</a>.
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer-note">
+    © 2026 Soulink.global | Created with love by Soulink Team.
+    <br />
+    <a href="terms.html">Terms of Use</a> · <a href="privacy.html">Privacy Policy</a>
+  </footer>
+
+  <script src="nav.js" defer></script>
+</body>
 </html>

@@ -1,71 +1,306 @@
-
 <!DOCTYPE html>
-
 <html lang="en">
-<head><meta content="width=device-width, initial-scale=1" name="viewport"/>
-<meta charset="utf-8"/>
-<title>Terms of Use – Soulink</title>
-<link href="style.css" rel="stylesheet"/>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Terms of Use – Soulink</title>
+  <meta
+    name="description"
+    content="Terms of Use for Soulink.global — beta AI-assisted compatibility and soul profile platform."
+  />
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    .legal-page {
+      padding: 1.5rem 1rem 3rem;
+    }
+
+    .legal-inner {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .legal-hero,
+    .legal-card {
+      border: 1px solid rgba(0, 253, 216, 0.28);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.14), transparent 55%),
+        rgba(0, 0, 0, 0.42);
+      box-shadow:
+        0 16px 36px rgba(0, 0, 0, 0.55),
+        0 0 22px rgba(0, 253, 216, 0.18);
+      border-radius: 22px;
+      backdrop-filter: blur(12px);
+    }
+
+    .legal-hero {
+      padding: 1.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .legal-card {
+      padding: 1.35rem 1.6rem;
+      line-height: 1.65;
+    }
+
+    .legal-kicker {
+      color: #00fdd8;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.78rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .legal-title {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3rem);
+      color: #eaffff;
+    }
+
+    .legal-subtitle {
+      max-width: 760px;
+      margin: 0.65rem 0 0;
+      color: rgba(234, 255, 255, 0.88);
+      font-size: 1rem;
+    }
+
+    .legal-card h2 {
+      color: #00fdd8;
+      margin-top: 1.4rem;
+      margin-bottom: 0.45rem;
+      font-size: 1.2rem;
+    }
+
+    .legal-card p,
+    .legal-card li {
+      color: rgba(234, 255, 255, 0.9);
+    }
+
+    .legal-card a {
+      color: #00fdd8;
+      font-weight: 700;
+    }
+
+    .legal-card ul {
+      padding-left: 1.2rem;
+    }
+
+    .legal-note {
+      margin-top: 1rem;
+      padding: 0.85rem 1rem;
+      border-radius: 16px;
+      border: 1px solid rgba(0, 253, 216, 0.25);
+      background: rgba(0, 0, 0, 0.28);
+      color: rgba(234, 255, 255, 0.88);
+    }
+
+    .footer-note {
+      text-align: center;
+      padding: 1.4rem 1rem 2rem;
+      color: rgba(234, 255, 255, 0.86);
+    }
+
+    @media (max-width: 640px) {
+      .legal-hero,
+      .legal-card {
+        padding: 1rem;
+        border-radius: 18px;
+      }
+    }
+  </style>
 </head>
-<body><nav class="navbar" style="background:#002e30; box-shadow:0 0 12px rgba(0,253,216,0.25);">
-<div class="container" style="display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.8rem 1rem;">
-<a class="brand" href="index.html" style="font-weight:700; text-decoration:none; color:#00fdd8;">Soulink</a>
-<button aria-label="Toggle navigation" id="navToggle" style="background:transparent; border:1px solid #00fdd8; border-radius:10px; padding:.4rem .6rem; color:#00fdd8; display:none;">☰</button>
-<ul id="navMenu" style="list-style:none; display:flex; flex-wrap:wrap; gap:.6rem; margin:0; padding:0;">
-<li><a href="index.html">Home</a></li>
-<li><a href="quiz.html">Quiz</a></li>
-<li><a href="edit-profile.html">Edit Profile</a></li>
-<li><a href="my-soul.html">My Soul</a></li>
-<li><a href="soul-chart.html">Soul Chart</a></li>
-<li><a href="soul-coach.html">Soul Coach</a></li>
-<li><a href="result.html">Results</a></li>
-<li><a href="friends.html">Friends</a></li>
-<li><a href="beta-login.html">Log In</a></li>
-<li><a href="signup.html">Sign Up</a></li>
-</ul>
-</div>
-</nav>
-<script>
-// Minimal responsive toggle
-(function(){
-  const btn = document.getElementById('navToggle');
-  const menu = document.getElementById('navMenu');
-  function onResize(){
-    if(window.innerWidth<800){ btn.style.display='block'; menu.style.display='none'; }
-    else { btn.style.display='none'; menu.style.display='flex'; }
-  }
-  if(btn && menu){
-    btn.addEventListener('click', ()=>{
-      menu.style.display = (menu.style.display==='none' || !menu.style.display) ? 'flex' : 'none';
-    });
-    window.addEventListener('resize', onResize);
-    onResize();
-  }
-})();
-</script>
-<style>
-nav.navbar a { color:#dff; text-decoration:none; padding:.35rem .55rem; border-radius:10px; }
-nav.navbar a:hover { box-shadow:0 0 10px rgba(0,253,216,0.45), inset 0 0 12px rgba(0,253,216,0.15); }
-</style>
-<main style="padding: 2rem; color: white; background-color: #003c43; font-family: 'Poppins', sans-serif;">
-<h1>Terms of Use</h1>
-<p>Effective Date: July 4, 2025</p>
-<h2>1. Acceptance of Terms</h2>
-<p>By accessing or using Soulink, you agree to these Terms of Use and our Privacy Policy.</p>
-<h2>2. Use of the Platform</h2>
-<p>You agree to use Soulink only for lawful purposes. Do not misuse or attempt to access data of other users.</p>
-<h2>3. Intellectual Property</h2>
-<p>All content, designs, and features on Soulink are the intellectual property of Soulink creators.</p>
-<h2>4. User Content</h2>
-<p>You retain ownership of your data. By submitting feedback, you give us permission to review and improve our service.</p>
-<h2>5. Disclaimer</h2>
-<p>Soulink is a beta platform and is provided "as-is" without guarantees. We are not responsible for decisions made based on Soul Analysis results.</p>
-<h2>6. Changes</h2>
-<p>We may update these terms and will notify you of any major changes on the platform.</p>
-<h2>7. Contact</h2>
-<p>For questions, contact us at <a href="mailto:ritakairiene7@gmail.com">ritakairiene7@gmail.com</a>.</p>
-</main>
-<footer style="margin-top:3rem; padding:1.2rem; text-align:center; color:#bff; background:#002e30; box-shadow:0 -0 12px rgba(0,253,216,0.25) inset;">
-  © 2025 Soulink.global | All rights reserved · Sukurta su meile ir ChatGPT pagalba
-</footer></body>
+
+<body class="soulink-bg">
+  <header
+    class="navbar soulink-nav"
+    data-active="Terms"
+    aria-label="Primary navigation"
+  >
+    <div class="nav-inner">
+      <a href="index.html" class="brand" data-page="Home" aria-label="Soulink Home">
+        Soulink
+      </a>
+
+      <button
+        class="nav-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="nav-links" aria-label="Primary">
+        <a href="index.html" data-page="Home">Home</a>
+        <a href="quiz.html" data-page="Quiz">Quiz</a>
+        <a href="edit-profile.html" data-page="Edit Profile">Edit Profile</a>
+        <a href="my-soul.html" data-page="My Soul">My Soul</a>
+        <a href="soul-chart.html" data-page="Soul Chart">Soul Chart</a>
+        <a href="soul-coach.html" data-page="Soul Coach">Soul Coach</a>
+        <a href="match.html" data-page="Match">Match</a>
+        <a href="friends.html" data-page="Friends">Friends</a>
+        <a href="results.html" data-page="Results">Results</a>
+        <a href="login.html" data-page="Login">Log In</a>
+        <a href="signup.html" data-page="Sign Up">Sign Up</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container legal-page">
+    <div class="legal-inner">
+      <section class="legal-hero">
+        <div class="legal-kicker">Soulink.global</div>
+        <h1 class="legal-title">Terms of Use</h1>
+        <p class="legal-subtitle">
+          These Terms explain the rules for using Soulink, creating an account,
+          uploading profile data and using AI-assisted soul profile features.
+        </p>
+      </section>
+
+      <section class="legal-card">
+        <p><strong>Effective date:</strong> May 2, 2026</p>
+
+        <div class="legal-note">
+          Soulink is currently in beta. Features, data flow, matching logic and
+          AI-generated insights may change as the platform improves.
+        </div>
+
+        <h2>1. Acceptance of Terms</h2>
+        <p>
+          By accessing or using Soulink, you agree to these Terms of Use and our
+          <a href="privacy.html">Privacy Policy</a>. If you do not agree, please do not use the platform.
+        </p>
+
+        <h2>2. About Soulink</h2>
+        <p>
+          Soulink is an AI-assisted compatibility and self-reflection platform. It may use
+          profile information such as love languages, values, hobbies, birthday, photos and
+          personal preferences to create profile summaries, soul insights and compatibility-style
+          experiences.
+        </p>
+
+        <h2>3. Beta Status</h2>
+        <p>
+          Soulink is provided as a beta platform. This means some features may be incomplete,
+          experimental, unavailable or changed without notice. We may improve, remove or adjust
+          features as we test the service.
+        </p>
+
+        <h2>4. Account Responsibilities</h2>
+        <p>
+          You are responsible for keeping your login details safe. Do not share your password
+          or allow another person to access your account. You are responsible for the information
+          and photos you upload.
+        </p>
+
+        <h2>5. Age and Eligibility</h2>
+        <p>
+          During the beta stage, Soulink is intended for adult users. If you are under the legal
+          age required in your country to use this kind of service, please do not create an account
+          without appropriate permission.
+        </p>
+
+        <h2>6. User Content</h2>
+        <p>
+          You keep ownership of the content you provide, including profile text, quiz answers and
+          photos. By uploading or submitting content to Soulink, you give Soulink permission to use
+          that content only as needed to operate and improve the platform.
+        </p>
+        <p>You agree not to upload content that:</p>
+        <ul>
+          <li>Violates the rights or privacy of another person.</li>
+          <li>Contains illegal, abusive, hateful or harmful material.</li>
+          <li>Contains photos you do not have permission to use.</li>
+          <li>Attempts to impersonate another person.</li>
+        </ul>
+
+        <h2>7. Acceptable Use</h2>
+        <p>You agree not to:</p>
+        <ul>
+          <li>Misuse the platform or try to access another user’s data.</li>
+          <li>Attempt to bypass authentication, security rules or Firebase protections.</li>
+          <li>Use Soulink for harassment, stalking, fraud, spam or illegal activity.</li>
+          <li>Copy, scrape or clone the platform without permission.</li>
+        </ul>
+
+        <h2>8. AI-Generated Insights</h2>
+        <p>
+          Soulink may generate AI-assisted reflections, compatibility-style notes and personal
+          insights. These are for self-reflection, entertainment and personal growth purposes only.
+          They are not medical, psychological, legal, financial or professional advice.
+        </p>
+        <p>
+          You should not make major life decisions only because of Soulink-generated content.
+        </p>
+
+        <h2>9. No Guarantee of Matches or Outcomes</h2>
+        <p>
+          Soulink does not guarantee that you will find a partner, friend, match or specific
+          relationship outcome. Compatibility scores and insights are experimental and should be
+          treated as supportive reflections, not absolute truth.
+        </p>
+
+        <h2>10. Privacy and Data</h2>
+        <p>
+          Your use of Soulink is also governed by our <a href="privacy.html">Privacy Policy</a>.
+          It explains how we collect, store and use account data, profile data and photos.
+        </p>
+
+        <h2>11. Intellectual Property</h2>
+        <p>
+          Soulink’s name, design, interface, copy, visual style, matching logic and platform
+          structure belong to the Soulink project and its creators. You may not copy, resell,
+          reproduce or present Soulink as your own product without written permission.
+        </p>
+
+        <h2>12. Service Availability</h2>
+        <p>
+          Soulink may be unavailable from time to time due to maintenance, Firebase/Vercel issues,
+          technical errors, internet problems or beta development changes. We are not responsible
+          for temporary interruptions.
+        </p>
+
+        <h2>13. Account or Data Removal</h2>
+        <p>
+          We may suspend or restrict access if a user misuses the platform, violates these Terms or
+          creates security or safety risks. You may also request deletion of your data by contacting us.
+        </p>
+
+        <h2>14. Disclaimer</h2>
+        <p>
+          Soulink is provided “as is” and “as available.” We do not promise that the platform will
+          always be error-free, accurate, uninterrupted or suitable for your specific personal situation.
+        </p>
+
+        <h2>15. Limitation of Liability</h2>
+        <p>
+          To the maximum extent permitted by law, Soulink and its creators are not responsible for
+          indirect, emotional, financial or relationship-related consequences arising from use of the
+          platform or reliance on its insights.
+        </p>
+
+        <h2>16. Changes to These Terms</h2>
+        <p>
+          We may update these Terms as Soulink develops. If we make important changes, we will update
+          the effective date and may provide notice on the platform.
+        </p>
+
+        <h2>17. Contact</h2>
+        <p>
+          For questions about these Terms, contact:
+          <a href="mailto:ritakairiene7@gmail.com">ritakairiene7@gmail.com</a>.
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer-note">
+    © 2026 Soulink.global | Created with love by Soulink Team.
+    <br />
+    <a href="terms.html">Terms of Use</a> · <a href="privacy.html">Privacy Policy</a>
+  </footer>
+
+  <script src="nav.js" defer></script>
+</body>
 </html>
