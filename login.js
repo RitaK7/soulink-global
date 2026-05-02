@@ -49,6 +49,7 @@ form.addEventListener("submit", async (e) => {
       );
 
     const user = userCredential.user;
+    clearOldSoulData();
   
     localStorage.setItem(
       "soulinkUser",

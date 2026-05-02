@@ -14,82 +14,99 @@ import {
 const form = document.getElementById("signupForm");
 const msg = document.getElementById("msg");
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+function clearOldSoulData() {
+  localStorage.removeItem("soulQuiz");
+  localStorage.removeItem("soulink.soulQuiz");
 
-  const name = document.getElementById("name").value.trim();
+  localStorage.removeItem("soulCoach");
+  localStorage.removeItem("soulink.soulCoach");
 
-  const email = document.getElementById("email").value.trim();
+  localStorage.removeItem("soulMatches");
+  localStorage.removeItem("soulink.matches");
 
-  const password = document.getElementById("password").value;
+  localStorage.removeItem("soulFriends");
+  localStorage.removeItem("soulink.friends.list");
 
-  const confirm = document.getElementById("confirm").value;
+  localStorage.removeItem("profilePhoto1");
+  localStorage.removeItem("profilePhoto2");
+  localStorage.removeItem("profilePhoto3");
 
-  const agree = document.getElementById("agree").checked;
+  localStorage.removeItem("soulinkUser");
+}
 
-  if (password !== confirm) {
-    msg.textContent = "Passwords do not match";
-    return;
-  }
+if (form) {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  if (!agree) {
-    msg.textContent = "Please agree to Terms";
-    return;
-  }
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const confirm = document.getElementById("confirm").value;
+    const agree = document.getElementById("agree").checked;
 
-  try {
+    if (!name) {
+      msg.textContent = "Please enter your name";
+      return;
+    }
 
-    const userCredential =
-      await createUserWithEmailAndPassword(
+    if (!email) {
+      msg.textContent = "Please enter your email";
+      return;
+    }
+
+    if (password !== confirm) {
+      msg.textContent = "Passwords do not match";
+      return;
+    }
+
+    if (!agree) {
+      msg.textContent = "Please agree to Terms & Privacy";
+      return;
+    }
+
+    try {
+      msg.textContent = "Creating your account...";
+
+      const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
 
-    const user = userCredential.user;
+      const user = userCredential.user;
 
-    await updateProfile(user, {
-      displayName: name
-    });
+      clearOldSoulData();
 
-    await setDoc(doc(db, "users", user.uid), {
+      await updateProfile(user, {
+        displayName: name
+      });
 
-      uid: user.uid,
-
-      name,
-
-      email,
-
-      createdAt: serverTimestamp(),
-
-      profileCompleted: false
-
-    });
-
-    localStorage.setItem(
-      "soulinkUser",
-      JSON.stringify({
+      await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         name,
-        email
-      })
-    );
+        email,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        profileCompleted: false
+      });
 
-    msg.textContent =
-      "Account created successfully ✓";
+      localStorage.setItem(
+        "soulinkUser",
+        JSON.stringify({
+          uid: user.uid,
+          name,
+          email
+        })
+      );
 
-    setTimeout(() => {
+      msg.textContent = "Account created successfully ✓";
 
-      window.location.href =
-        "quiz.html";
-
-    }, 1200);
-
-  } catch (err) {
-
-    msg.textContent =
-      err.message;
-
-  }
-
-});
+      setTimeout(() => {
+        window.location.href = "quiz.html";
+      }, 1200);
+    } catch (err) {
+      console.error("[Soulink] Signup failed:", err);
+      msg.textContent = err.message || "Signup failed. Please try again.";
+    }
+  });
+}
