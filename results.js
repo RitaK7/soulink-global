@@ -24,8 +24,9 @@
 //    #topOverview, #insights – overview / insight sentences
 //
 // Data source:
-//   Uses data-helpers.js (getSoulData) when available; otherwise falls back to
-//   localStorage["soulink.soulQuiz"] / "soulQuiz" for backward compatibility.
+//   Logged-in users: Firebase Auth → Firestore users/{uid} is the source of truth.
+//   localStorage is only refreshed FROM Firestore as a cache/fallback.
+//   Guests/no-auth fallback: data-helpers.js / localStorage for backward compatibility.
 
 (function () {
   if (typeof window === "undefined" || typeof document === "undefined") return;
@@ -50,27 +51,220 @@
     return normaliseText(v).toLowerCase();
   }
 
+  const PRIMARY_SOUL_KEY = "soulink.soulQuiz";
+  const LEGACY_SOUL_KEY = "soulQuiz";
+  const FRIENDS_KEY = "soulink.friends.list";
+
+  function safeParseJSON(raw) {
+    if (!raw || typeof raw !== "string") return null;
+    try {
+      return JSON.parse(raw);
+    } catch (_err) {
+      return null;
+    }
+  }
+
   function safeGetSoulData() {
     let data = {};
     try {
-      if (typeof getSoulData === "function") {
+      if (typeof window.getSoulData === "function") {
         try {
-          data = getSoulData({ ensureShape: true }) || {};
-        } catch (e) {
-          data = getSoulData() || {};
+          data = window.getSoulData({ ensureShape: true }) || {};
+        } catch (_e) {
+          data = window.getSoulData() || {};
         }
       } else if (typeof localStorage !== "undefined") {
-        const primary = localStorage.getItem("soulink.soulQuiz");
-        const legacy = localStorage.getItem("soulQuiz");
+        const primary = localStorage.getItem(PRIMARY_SOUL_KEY);
+        const legacy = localStorage.getItem(LEGACY_SOUL_KEY);
         const raw = primary || legacy;
         data = raw ? JSON.parse(raw) : {};
       }
     } catch (err) {
-      console.warn("[Soulink Results] failed to read soul data", err);
+      console.warn("[Soulink Results] failed to read local soul data", err);
       data = {};
     }
     if (!data || typeof data !== "object") return {};
     return data;
+  }
+
+  function writeLocalSoulCache(data) {
+    if (!data || typeof data !== "object") return;
+
+    try {
+      if (typeof window.saveSoulData === "function") {
+        window.saveSoulData(data);
+        return;
+      }
+    } catch (err) {
+      console.warn("[Soulink Results] saveSoulData cache update failed", err);
+    }
+
+    try {
+      const json = JSON.stringify(data);
+      localStorage.setItem(PRIMARY_SOUL_KEY, json);
+      localStorage.setItem(LEGACY_SOUL_KEY, json);
+    } catch (err) {
+      console.warn("[Soulink Results] local soul cache update failed", err);
+    }
+  }
+
+  function normaliseFriendsShape(raw) {
+    if (!raw) return [];
+
+    if (Array.isArray(raw)) {
+      return raw.filter((item) => item && typeof item === "object");
+    }
+
+    if (raw && typeof raw === "object") {
+      const keys = ["soulFriends", "friendCircle", "friends", "list", "items", "data"];
+      for (const key of keys) {
+        if (Array.isArray(raw[key])) {
+          return raw[key].filter((item) => item && typeof item === "object");
+        }
+      }
+
+      const values = Object.values(raw).filter((item) => item && typeof item === "object");
+      return values.length ? values : [];
+    }
+
+    return [];
+  }
+
+  function readLocalFriendsCache() {
+    if (typeof localStorage === "undefined") return [];
+
+    try {
+      const primary = safeParseJSON(localStorage.getItem(FRIENDS_KEY));
+      const legacyA = safeParseJSON(localStorage.getItem("soulFriends"));
+      const legacyB = safeParseJSON(localStorage.getItem("soulink.friends"));
+      const list = normaliseFriendsShape(primary).length
+        ? normaliseFriendsShape(primary)
+        : normaliseFriendsShape(legacyA).length
+          ? normaliseFriendsShape(legacyA)
+          : normaliseFriendsShape(legacyB);
+      return list;
+    } catch (err) {
+      console.warn("[Soulink Results] failed to read local friends cache", err);
+      return [];
+    }
+  }
+
+  function writeLocalFriendsCache(list) {
+    if (typeof localStorage === "undefined") return;
+
+    try {
+      const clean = normaliseFriendsShape(list);
+      localStorage.setItem(FRIENDS_KEY, JSON.stringify(clean));
+      localStorage.setItem("soulFriends", JSON.stringify(clean));
+    } catch (err) {
+      console.warn("[Soulink Results] local friends cache update failed", err);
+    }
+  }
+
+  async function getFirebaseModules() {
+    const configModule = await import("./firebase-config.js");
+    const authModule = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+    const firestoreModule = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+
+    return {
+      auth: configModule.auth,
+      db: configModule.db,
+      onAuthStateChanged: authModule.onAuthStateChanged,
+      doc: firestoreModule.doc,
+      getDoc: firestoreModule.getDoc,
+    };
+  }
+
+  async function waitForAuthUser(timeoutMs = 5000) {
+    try {
+      const { auth, onAuthStateChanged } = await getFirebaseModules();
+
+      if (auth && auth.currentUser) {
+        console.log("[Soulink Results] Auth user ready", auth.currentUser.uid);
+        return auth.currentUser;
+      }
+
+      return await new Promise((resolve) => {
+        let settled = false;
+
+        const timer = window.setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          try { unsubscribe(); } catch (_err) {}
+          const user = auth ? auth.currentUser || null : null;
+          console.log("[Soulink Results] Auth user ready", user ? user.uid : "none");
+          resolve(user);
+        }, timeoutMs);
+
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timer);
+          try { unsubscribe(); } catch (_err) {}
+          console.log("[Soulink Results] Auth user ready", user ? user.uid : "none");
+          resolve(user || null);
+        });
+      });
+    } catch (err) {
+      console.warn("[Soulink Results] Auth check failed; using local fallback", err);
+      return null;
+    }
+  }
+
+  async function readFirestoreUserProfile(user) {
+    if (!user) return null;
+
+    try {
+      const { db, doc, getDoc } = await getFirebaseModules();
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (!snap.exists()) return null;
+      const data = snap.data() || null;
+      if (data) console.log("[Soulink Results] Loaded profile from Firestore");
+      return data;
+    } catch (err) {
+      console.warn("[Soulink Results] Firestore profile read failed", err);
+      return null;
+    }
+  }
+
+  async function loadSoulinkData() {
+    const user = await waitForAuthUser();
+
+    if (user) {
+      const firestoreProfile = await readFirestoreUserProfile(user);
+
+      if (firestoreProfile && typeof firestoreProfile === "object") {
+        const soul = {
+          ...firestoreProfile,
+          uid: firestoreProfile.uid || user.uid,
+          email: firestoreProfile.email || user.email || "",
+        };
+
+        const friends = normaliseFriendsShape(
+          firestoreProfile.soulFriends ||
+          firestoreProfile.friendCircle ||
+          firestoreProfile.friends ||
+          []
+        );
+
+        writeLocalSoulCache(soul);
+        writeLocalFriendsCache(friends);
+
+        return { soul, friends, source: "firestore" };
+      }
+
+      return {
+        soul: { uid: user.uid, email: user.email || "" },
+        friends: [],
+        source: "firestore-empty",
+      };
+    }
+
+    return {
+      soul: safeGetSoulData(),
+      friends: readLocalFriendsCache(),
+      source: "local",
+    };
   }
 
   function hasAnyCoreData(data) {
@@ -188,6 +382,8 @@
   };
 
   let soulSnapshot = {};
+  let savedConnections = [];
+  let profileSource = "local";
   let fbRating = 0;
 
   let baseMatches = [];
@@ -457,7 +653,11 @@
     const loveScore = loveLanguageMatch ? 36 * loveWeight : 8 * Math.max(0.25, loveWeight * 0.35);
 
     const raw = loveScore + valueScore + hobbyScore;
-    const score = Math.max(0, Math.min(100, Math.round(raw)));
+    const computedScore = Math.max(0, Math.min(100, Math.round(raw)));
+    const savedScore = Number(match.score ?? match.compatibilityScore ?? match.matchScore ?? match._score);
+    const score = Number.isFinite(savedScore) && savedScore > 0
+      ? Math.max(computedScore, Math.round(savedScore))
+      : computedScore;
 
     const tags = [];
     if (loveLanguageMatch) tags.push("Same Love Language");
@@ -586,8 +786,46 @@
     }
   }
 
+  function normaliseSavedConnectionAsMatch(connection, index) {
+    const c = connection && typeof connection === "object" ? connection : {};
+    const rawKind = lower(c.kind || c.connectionType || c.type || c.mode || "");
+    const kind = rawKind.includes("romantic") || rawKind.includes("love")
+      ? "romantic"
+      : "friendship";
+
+    const name = normaliseText(c.name) || normaliseText(c.displayName) || `Soul Friend ${index + 1}`;
+    const scoreValue = Number(c.score ?? c.compatibilityScore ?? c.matchScore ?? c._score);
+
+    return {
+      id: normaliseText(c.id) || `saved-${index}-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+      kind,
+      name,
+      connectionLabel:
+        normaliseText(c.connectionLabel) ||
+        normaliseText(c.connectionType) ||
+        (kind === "romantic" ? "Saved romantic connection" : "Saved soul friend"),
+      loveLanguage: normaliseText(c.loveLanguage) || normaliseText(toArray(c.loveLanguages || [])[0]) || "",
+      hobbies: listFromSoul(c, ["hobbies", "interests", "passions"]),
+      values: listFromSoul(c, ["values", "coreValues"]),
+      about: normaliseText(c.about || c.aboutMe || c.description || c.vibeTag),
+      contact: normaliseText(c.contact || c.contactHandle || c.email || c.url),
+      score: Number.isFinite(scoreValue) ? scoreValue : null,
+      source: "saved-circle",
+    };
+  }
+
+  function buildResultsDataSource(soul, savedList) {
+    const saved = normaliseFriendsShape(savedList).map(normaliseSavedConnectionAsMatch);
+
+    if (saved.length) {
+      return saved;
+    }
+
+    return buildBaseMatches(soul);
+  }
+
   function initMatches() {
-    baseMatches = buildBaseMatches(soulSnapshot);
+    baseMatches = buildResultsDataSource(soulSnapshot, savedConnections);
     updateMatches();
   }
 
@@ -612,7 +850,9 @@
             settings: {
               loveLanguageWeight: ui.llWeight ? Number(ui.llWeight.value || "1") : 1,
             },
+            source: profileSource,
             soul: soulSnapshot,
+            savedConnections,
             matches: lastRenderedMatches,
           };
           const json = JSON.stringify(payload, null, 2);
@@ -694,12 +934,17 @@
     }
   }
 
-  function init() {
+  async function init() {
     try {
-      soulSnapshot = safeGetSoulData();
-      renderSnapshot();
       initStars();
       initFeedback();
+
+      const loaded = await loadSoulinkData();
+      soulSnapshot = loaded.soul || {};
+      savedConnections = loaded.friends || [];
+      profileSource = loaded.source || "local";
+
+      renderSnapshot();
       initSettings();
       initMatches();
       tryInitEmailJs();
