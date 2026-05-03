@@ -14,6 +14,7 @@ import {
   doc,
   setDoc,
   getDoc,
+  deleteDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -167,6 +168,8 @@ import {
     main2: $("#main2"),
     main3: $("#main3"),
 
+    discoverableProfile: $("#discoverableProfile"),
+
     backQuiz: $("#backQuiz"),
     saveBtn: $("#saveBtn"),
     nextSoul: $("#nextSoul"),
@@ -186,24 +189,6 @@ import {
   };
 
   let state = {};
-  let currentUser = null;
-  const PHOTO_KEYS = ["profilePhoto1", "profilePhoto2", "profilePhoto3"];
-  const touchedPhotoKeys = new Set();
-
-  function activeUid() {
-    return (currentUser && currentUser.uid) || (auth.currentUser && auth.currentUser.uid) || "";
-  }
-
-  function ownsLocalCache(data, user) {
-    if (!user || !data || typeof data !== "object") return true;
-    const owner = data.__soulinkUid || data.uid || data.ownerUid || "";
-    return owner === user.uid;
-  }
-
-  function readSoulRawForUser(user) {
-    const local = readSoulRaw();
-    return ownsLocalCache(local, user) ? local : {};
-  }
 
   function norm(s) {
     return s == null ? "" : String(s).trim();
@@ -254,18 +239,15 @@ import {
   function writeSoulRaw(obj) {
     if (!obj || typeof obj !== "object") return;
 
-    const uid = activeUid();
-    const payload = uid ? Object.assign({}, obj, { __soulinkUid: uid }) : Object.assign({}, obj);
-
     try {
       if (typeof window.saveSoulData === "function") {
-        window.saveSoulData(payload);
+        window.saveSoulData(obj);
         return;
       }
     } catch (e) {}
 
     try {
-      const json = JSON.stringify(payload);
+      const json = JSON.stringify(obj);
       localStorage.setItem(PRIMARY_KEY, json);
       localStorage.setItem(LEGACY_KEY, json);
     } catch (e) {}
@@ -273,7 +255,7 @@ import {
 
   function persistPatch(patch) {
     if (!patch || typeof patch !== "object") return state;
-    const merged = Object.assign({}, state || {}, patch);
+    const merged = Object.assign({}, readSoulRaw() || {}, patch);
     writeSoulRaw(merged);
     return merged;
   }
@@ -317,7 +299,6 @@ import {
   function waitForAuthUser(timeoutMs = 5000) {
     return new Promise((resolve) => {
       if (auth.currentUser) {
-        currentUser = auth.currentUser;
         console.log("[Soulink] Auth user ready", auth.currentUser.uid);
         resolve(auth.currentUser);
         return;
@@ -329,9 +310,8 @@ import {
         if (done) return;
         done = true;
         unsubscribe();
-        currentUser = auth.currentUser || null;
-        console.log("[Soulink] Auth user ready", currentUser ? currentUser.uid : "none");
-        resolve(currentUser);
+        console.log("[Soulink] Auth user ready", auth.currentUser ? auth.currentUser.uid : "none");
+        resolve(auth.currentUser || null);
       }, timeoutMs);
 
       const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -339,9 +319,8 @@ import {
         done = true;
         window.clearTimeout(timer);
         unsubscribe();
-        currentUser = user || null;
-        console.log("[Soulink] Auth user ready", currentUser ? currentUser.uid : "none");
-        resolve(currentUser);
+        console.log("[Soulink] Auth user ready", user ? user.uid : "none");
+        resolve(user || null);
       });
     });
   }
@@ -677,6 +656,71 @@ import {
     return ensureTextInput(ui.connectWithCustomMount, "connectWithCustom", "Custom preference…");
   }
 
+
+  function boolFromAny(value) {
+    return value === true || value === "true" || value === 1 || value === "1";
+  }
+
+  function bestPublicPhoto(data) {
+    if (!data || typeof data !== "object") return "";
+    const slot = Number(data.mainPhotoSlot || data.primaryPhotoSlot || 1);
+    const slotKey = Number.isFinite(slot) && slot >= 1 && slot <= 3 ? `profilePhoto${slot}` : "profilePhoto1";
+    return norm(data[slotKey] || data.profilePhoto1 || data.profilePhoto2 || data.profilePhoto3);
+  }
+
+  function buildPublicProfilePayload(privateProfile, user) {
+    const data = privateProfile && typeof privateProfile === "object" ? privateProfile : {};
+    const displayName = norm(data.name || (user && user.displayName) || "Soulink tester");
+    const publicPhoto = bestPublicPhoto(data);
+
+    return {
+      uid: user.uid,
+      ownerUid: user.uid,
+      discoverable: true,
+      displayName,
+      name: displayName,
+      age: norm(data.age),
+      country: norm(data.country),
+      connectionType: norm(data.connectionType),
+      connectWith: uniq(toArray(data.connectWith || data.seekingGender).map(norm)).filter(Boolean),
+      seekingGender: uniq(toArray(data.connectWith || data.seekingGender).map(norm)).filter(Boolean),
+      loveLanguage: norm(data.loveLanguage),
+      loveLanguages: uniq(toArray(data.loveLanguages || data.loveLanguage).map(normaliseLoveLanguageOne)).filter(Boolean),
+      values: uniq(toArray(data.values).map(norm)).filter(Boolean).slice(0, 8),
+      hobbies: uniq(toArray(data.hobbies || data.interests).map(norm)).filter(Boolean).slice(0, 8),
+      interests: uniq(toArray(data.hobbies || data.interests).map(norm)).filter(Boolean).slice(0, 8),
+      zodiac: norm(data.zodiac),
+      westernZodiac: norm(data.zodiac || data.westernZodiac),
+      chineseZodiac: norm(data.chineseZodiac),
+      lifePathNumber: norm(data.lifePathNumber || data.lifePath),
+      lifePath: norm(data.lifePath || data.lifePathNumber),
+      publicPhoto,
+      profilePhoto1: publicPhoto,
+      shortAbout: norm(data.about || data.aboutMe || data.soulSummary).slice(0, 280),
+      updatedAt: serverTimestamp()
+    };
+  }
+
+  async function syncPublicProfile(user, profilePayload) {
+    if (!user) return;
+
+    const wantsPublic = !!(profilePayload && profilePayload.discoverableProfile);
+    const publicRef = doc(db, "publicProfiles", user.uid);
+
+    if (!wantsPublic) {
+      try {
+        await deleteDoc(publicRef);
+        console.log("[Soulink] Public tester profile disabled");
+      } catch (err) {
+        console.warn("[Soulink] Public tester profile delete skipped", err);
+      }
+      return;
+    }
+
+    await setDoc(publicRef, buildPublicProfilePayload(profilePayload, user), { merge: true });
+    console.log("[Soulink] Public tester profile synced");
+  }
+
   function initPhotos() {
     function initSlot(slot) {
       const file = ui[`file${slot}`];
@@ -710,62 +754,49 @@ import {
           if (!f) return;
 
           const reader = new FileReader();
-
           reader.onload = async (e) => {
             const dataUrl = String(e.target && e.target.result ? e.target.result : "");
-            const previousValue = state[key] || "";
-
             state[key] = dataUrl;
-            touchedPhotoKeys.add(key);
+            state = persistPatch({ [key]: dataUrl });
             sync();
             updatePreview();
 
             try {
               const user = await waitForAuthUser();
-
               if (!user) {
-                state = persistPatch({ [key]: dataUrl });
-                showSaveStatus("Photo saved locally ✨", true);
+                console.warn("[Soulink] No authenticated user for upload.");
                 file.value = "";
                 return;
               }
 
-              const storageRef = ref(storage, `users/${user.uid}/${key}-${Date.now()}`);
+              const storageRef = ref(storage, `users/${user.uid}/${key}`);
               const response = await fetch(dataUrl);
               const blob = await response.blob();
-
               await uploadBytes(storageRef, blob);
               const downloadURL = await getDownloadURL(storageRef);
 
               state[key] = downloadURL;
               state = persistPatch({ [key]: downloadURL });
 
-              await setDoc(
-                doc(db, "users", user.uid),
-                {
-                  [key]: downloadURL,
-                  uid: user.uid,
-                  updatedAt: serverTimestamp()
-                },
-                { merge: true }
-              );
+              await setDoc(doc(db, "users", user.uid), {
+                [key]: downloadURL,
+                updatedAt: serverTimestamp()
+              }, { merge: true });
+
+              if (state.discoverableProfile) {
+                const publicPayload = collectPayloadFromState();
+                await syncPublicProfile(user, publicPayload);
+              }
 
               sync();
               updatePreview();
-              showSaveStatus("Saved to Soulink ✨", true);
               console.log(`[Soulink] ${key} uploaded successfully`);
             } catch (err) {
               console.error(`[Soulink] Upload failed for ${key}:`, err);
-              state[key] = previousValue;
-              state = persistPatch({ [key]: previousValue });
-              sync();
-              updatePreview();
-              showSaveStatus("Photo upload failed — check Console", false);
             } finally {
               file.value = "";
             }
           };
-
           reader.readAsDataURL(f);
         });
       }
@@ -784,35 +815,13 @@ import {
 
       if (remove && !remove.dataset.boundClick) {
         remove.dataset.boundClick = "1";
-        remove.addEventListener("click", async (ev) => {
+        remove.addEventListener("click", (ev) => {
           ev.preventDefault();
-
           state[key] = "";
-          touchedPhotoKeys.add(key);
           state = persistPatch({ [key]: "" });
-
           if (file) file.value = "";
           sync();
           updatePreview();
-
-          try {
-            const user = await waitForAuthUser();
-            if (user) {
-              await setDoc(
-                doc(db, "users", user.uid),
-                {
-                  [key]: "",
-                  uid: user.uid,
-                  updatedAt: serverTimestamp()
-                },
-                { merge: true }
-              );
-              showSaveStatus("Saved to Soulink ✨", true);
-            }
-          } catch (err) {
-            console.error(`[Soulink] Could not remove ${key} from Firestore`, err);
-            showSaveStatus("Photo removal failed — check Console", false);
-          }
         });
       }
 
@@ -923,6 +932,7 @@ import {
     out.mantra = norm(raw.mantra);
     out.spiritualBeliefs = norm(raw.spiritualBeliefs);
     out.soulSummary = norm(raw.soulSummary);
+    out.discoverableProfile = boolFromAny(raw.discoverableProfile || raw.discoverable || raw.showInDiscovery || raw.publicProfileVisible);
     out.profilePhoto1 = norm(raw.profilePhoto1);
     out.profilePhoto2 = norm(raw.profilePhoto2);
     out.profilePhoto3 = norm(raw.profilePhoto3);
@@ -976,6 +986,8 @@ import {
       mantra: norm(state.mantra),
       spiritualBeliefs: norm(state.spiritualBeliefs),
       soulSummary: norm(state.soulSummary),
+      discoverableProfile: !!state.discoverableProfile,
+      publicProfileVisible: !!state.discoverableProfile,
       profilePhoto1: norm(state.profilePhoto1),
       profilePhoto2: norm(state.profilePhoto2),
       profilePhoto3: norm(state.profilePhoto3),
@@ -990,6 +1002,7 @@ import {
     if (ui.birthday) ui.birthday.value = state.birthday || "";
     if (ui.boundaries) ui.boundaries.value = state.unacceptable || "";
     if (ui.aboutMe) ui.aboutMe.value = state.about || "";
+    if (ui.discoverableProfile) ui.discoverableProfile.checked = !!state.discoverableProfile;
   }
 
   function bindText(el, key) {
@@ -1012,6 +1025,21 @@ import {
     };
     el.addEventListener("change", handler);
     el.addEventListener("blur", handler);
+  }
+
+
+
+  function bindDiscoverableProfile() {
+    if (!ui.discoverableProfile) return;
+    ui.discoverableProfile.checked = !!state.discoverableProfile;
+    ui.discoverableProfile.addEventListener("change", () => {
+      state.discoverableProfile = !!ui.discoverableProfile.checked;
+      state.publicProfileVisible = !!state.discoverableProfile;
+      state = persistPatch({
+        discoverableProfile: state.discoverableProfile,
+        publicProfileVisible: state.publicProfileVisible
+      });
+    });
   }
 
   function initChips() {
@@ -1159,46 +1187,22 @@ import {
     try {
       const user = await waitForAuthUser();
       const payload = collectPayloadFromState();
+      state = normaliseStateFromRaw(Object.assign({}, state, payload));
+      writeSoulRaw(state);
 
       if (!user) {
-        state = normaliseStateFromRaw(Object.assign({}, state, payload));
-        writeSoulRaw(state);
         console.log("[Soulink] Using local fallback");
         showSaveStatus("Saved locally ✨", true);
         return true;
       }
 
-      const ref = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
-      const existing = snap.exists() ? snap.data() || {} : {};
-
-      // Preserve Firestore photos unless this page actually changed/removed them.
-      PHOTO_KEYS.forEach((key) => {
-        if (!touchedPhotoKeys.has(key)) {
-          delete payload[key];
-        }
-      });
-
-      const firestorePayload = {
+      await setDoc(doc(db, "users", user.uid), {
         ...payload,
         uid: user.uid,
-        email: user.email || existing.email || "",
         updatedAt: serverTimestamp()
-      };
+      }, { merge: true });
 
-      await setDoc(ref, firestorePayload, { merge: true });
-
-      const mergedForCache = normaliseStateFromRaw(
-        Object.assign({}, existing, payload, {
-          uid: user.uid,
-          email: user.email || existing.email || "",
-          __soulinkUid: user.uid
-        })
-      );
-
-      state = mergedForCache;
-      writeSoulRaw(state);
-      touchedPhotoKeys.clear();
+      await syncPublicProfile(user, Object.assign({}, payload, { uid: user.uid }));
 
       console.log("[Soulink] Saved profile to Firestore");
       showSaveStatus("Saved to Soulink ✨", true);
@@ -1270,29 +1274,18 @@ if (topNextSoul) {
 
   async function init() {
     try {
-      const user = await waitForAuthUser();
-      const local = readSoulRawForUser(user);
-
-      if (user) {
-        const fire = await readFirestoreProfile();
-        if (fire && typeof fire === "object") {
-          // Firestore is the source of truth for logged-in users.
-          // Do not merge stale localStorage over Firestore on page load.
-          state = normaliseStateFromRaw(Object.assign({}, fire, { __soulinkUid: user.uid }));
-          writeSoulRaw(state);
-        } else {
-          console.log("[Soulink] No Firestore profile yet; using only this user's local draft");
-          state = normaliseStateFromRaw(Object.assign({}, local || {}, { __soulinkUid: user.uid }));
-          writeSoulRaw(state);
-        }
+      const local = readSoulRaw();
+      const fire = await readFirestoreProfile();
+      if (fire && typeof fire === "object") {
+        state = normaliseStateFromRaw(Object.assign({}, local || {}, fire));
+        writeSoulRaw(state);
       } else {
         console.log("[Soulink] Using local fallback");
         state = normaliseStateFromRaw(local || {});
       }
     } catch (err) {
       console.error("[Soulink] Firestore profile hydrate failed:", err);
-      const user = auth.currentUser || currentUser || null;
-      state = normaliseStateFromRaw(readSoulRawForUser(user) || {});
+      state = normaliseStateFromRaw(readSoulRaw() || {});
     }
 
     prefillInputsFromState();
@@ -1301,6 +1294,7 @@ if (topNextSoul) {
     bindText(ui.birthday, "birthday");
     bindText(ui.boundaries, "unacceptable");
     bindText(ui.aboutMe, "about");
+    bindDiscoverableProfile();
 
     initChips();
     initTagGroups();

@@ -371,6 +371,54 @@
         box-shadow: 0 0 20px rgba(0, 253, 216, 0.7);
       }
 
+
+      /* Discoverability consent */
+      .edit-profile-page .ep-consent-card {
+        margin-top: 0.3rem;
+        padding: 0.95rem 1rem;
+        border-radius: 18px;
+        border: 1px solid rgba(0, 253, 216, 0.28);
+        background:
+          radial-gradient(circle at 0% 0%, rgba(0, 253, 216, 0.12), transparent 55%),
+          rgba(0, 0, 0, 0.42);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+      }
+
+      .edit-profile-page .ep-consent-label {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.65rem;
+        cursor: pointer;
+        margin: 0;
+      }
+
+      .edit-profile-page .ep-consent-label input {
+        width: 1.1rem;
+        height: 1.1rem;
+        margin-top: 0.12rem;
+        accent-color: #00fdd8;
+        flex: 0 0 auto;
+      }
+
+      .edit-profile-page .ep-consent-title {
+        display: block;
+        font-weight: 800;
+        color: #eaffff;
+      }
+
+      .edit-profile-page .ep-consent-copy {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.8rem;
+        line-height: 1.45;
+        color: rgba(234, 255, 255, 0.84);
+      }
+
+      .edit-profile-page .ep-consent-copy a {
+        color: #00fdd8;
+        font-weight: 700;
+      }
+
       /* Photo section */
 
       .edit-profile-page .photos {
@@ -798,7 +846,7 @@
                   <h2 class="ep-section-title">Profile Details</h2>
                 </div>
                 <p class="ep-section-subtitle">
-                  Update your basic information, preferences and soul story. Everything is stored locally in your browser.
+                  Update your basic information, preferences and soul story. When you are logged in, changes are securely saved to your Soulink account. Some data may also be cached on this device for a smoother experience.
                 </p>
               </header>
 
@@ -912,6 +960,23 @@
                       placeholder="Tell us about your soul journey… ✨"
                     ></textarea>
                   </div>
+                </div>
+
+
+                <!-- Public testing visibility -->
+                <div class="ep-consent-card">
+                  <label class="ep-consent-label" for="discoverableProfile">
+                    <input id="discoverableProfile" type="checkbox" />
+                    <span>
+                      <span class="ep-consent-title">Show my profile to other Soulink testers</span>
+                      <span class="ep-consent-copy">
+                        If enabled, Soulink may create a limited public tester profile for Match discovery.
+                        This profile can include your display name, age, country, connection type, love language, values, hobbies, zodiac signs, life path and one public photo.
+                        Your email, full birthday, private boundaries and personal account data stay private.
+                        You can turn this off anytime. See the <a href="privacy.html">Privacy Policy</a>.
+                      </span>
+                    </span>
+                  </label>
                 </div>
 
                 <!-- Photos -->
