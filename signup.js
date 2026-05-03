@@ -60,7 +60,7 @@ if (form) {
     }
 
     if (!agree) {
-      msg.textContent = "Please agree to Terms & Privacy";
+      msg.textContent = "Please read and accept the Terms of Use and Privacy Policy before creating your account.";
       return;
     }
 
