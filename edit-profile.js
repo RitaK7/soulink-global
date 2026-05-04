@@ -1184,35 +1184,60 @@ import {
   }
 
   async function saveToFirestore() {
-    try {
-      const user = await waitForAuthUser();
-      const payload = collectPayloadFromState();
-      state = normaliseStateFromRaw(Object.assign({}, state, payload));
-      writeSoulRaw(state);
+  try {
+    const user = await waitForAuthUser();
 
-      if (!user) {
-        console.log("[Soulink] Using local fallback");
-        showSaveStatus("Saved locally ✨", true);
-        return true;
-      }
-
-      await setDoc(doc(db, "users", user.uid), {
-        ...payload,
-        uid: user.uid,
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-
-      await syncPublicProfile(user, Object.assign({}, payload, { uid: user.uid }));
-
-      console.log("[Soulink] Saved profile to Firestore");
-      showSaveStatus("Saved to Soulink ✨", true);
-      return true;
-    } catch (err) {
-      console.error("[Soulink] Save failed", err);
-      showSaveStatus("Save failed — check Console", false);
-      return false;
+    // Hard sync checkbox from DOM before collecting payload.
+    // This prevents old state/localStorage from overriding the visible checkbox.
+    const discoverableEl = document.getElementById("discoverableProfile");
+    if (discoverableEl) {
+      state.discoverableProfile = !!discoverableEl.checked;
+      state.publicProfileVisible = !!discoverableEl.checked;
+      writeSoulRaw(Object.assign({}, state, {
+        discoverableProfile: state.discoverableProfile,
+        publicProfileVisible: state.publicProfileVisible
+      }));
     }
+
+    const payload = collectPayloadFromState();
+
+    // Force payload to match the visible checkbox too.
+    if (discoverableEl) {
+      payload.discoverableProfile = !!discoverableEl.checked;
+      payload.publicProfileVisible = !!discoverableEl.checked;
+    }
+
+    console.log("[Soulink] Save payload discoverable:", {
+      checked: discoverableEl ? discoverableEl.checked : null,
+      payloadDiscoverable: payload.discoverableProfile
+    });
+
+    state = normaliseStateFromRaw(Object.assign({}, state, payload));
+    writeSoulRaw(state);
+
+    if (!user) {
+      console.log("[Soulink] Using local fallback");
+      showSaveStatus("Saved locally ✨", true);
+      return true;
+    }
+
+    await setDoc(doc(db, "users", user.uid), {
+      ...payload,
+      uid: user.uid,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    await syncPublicProfile(user, Object.assign({}, payload, { uid: user.uid }));
+
+    console.log("[Soulink] Saved profile to Firestore");
+    showSaveStatus("Saved to Soulink ✨", true);
+    return true;
+  } catch (err) {
+    console.error("[Soulink] Save failed", err);
+    showSaveStatus("Save failed — check Console", false);
+    return false;
   }
+}
 
   function initActions() {
     if (ui.backQuiz) {
