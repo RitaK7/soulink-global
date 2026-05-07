@@ -1,13 +1,16 @@
 import { auth, db, storage } from "./firebase-config.js";
 
 import {
-  onAuthStateChanged
+  onAuthStateChanged,
+  signOut,
+  deleteUser
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
   ref,
   uploadBytes,
-  getDownloadURL
+  getDownloadURL,
+  deleteObject
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 import {
@@ -174,6 +177,7 @@ import {
     saveBtn: $("#saveBtn"),
     nextSoul: $("#nextSoul"),
     resetForm: $("#resetForm"),
+    deleteAccount: $("#deleteAccount"),
 
     prevAvatar: $("#prevAvatar"),
     prevName: $("#prevName"),
@@ -1239,6 +1243,105 @@ import {
   }
 }
 
+
+  function clearLocalSoulinkData(user) {
+    try {
+      localStorage.removeItem(PRIMARY_KEY);
+      localStorage.removeItem(LEGACY_KEY);
+      localStorage.removeItem("soulink.friends.list");
+      localStorage.removeItem("soulink.friends");
+      localStorage.removeItem("soulFriends");
+      localStorage.removeItem("friends");
+      if (user && user.uid) {
+        localStorage.removeItem("soulink.friends.list." + user.uid);
+      }
+    } catch (err) {
+      console.warn("[Soulink] Local cleanup skipped", err);
+    }
+  }
+
+  async function deleteKnownStoragePhotos(user) {
+    if (!user || !user.uid) return;
+    const paths = PHOTO_KEYS.map((key) => `users/${user.uid}/${key}`);
+
+    await Promise.all(paths.map(async (path) => {
+      try {
+        await deleteObject(ref(storage, path));
+      } catch (err) {
+        // It is OK if a photo was never uploaded or was already removed.
+        console.warn("[Soulink] Photo delete skipped:", path, err && err.code ? err.code : err);
+      }
+    }));
+  }
+
+  async function deleteSoulinkAccount() {
+    const firstConfirm = window.confirm(
+      "Delete your Soulink profile? This will remove your private profile, public tester profile, saved local data, and uploaded profile photos. This cannot be undone."
+    );
+    if (!firstConfirm) return;
+
+    const typed = window.prompt('Type DELETE to confirm permanent deletion.');
+    if (typed !== "DELETE") {
+      showSaveStatus("Deletion cancelled", true);
+      return;
+    }
+
+    const user = await waitForAuthUser();
+    if (!user) {
+      clearLocalSoulinkData(null);
+      state = normaliseStateFromRaw({});
+      showSaveStatus("Local Soulink data deleted", true);
+      window.location.href = "index.html";
+      return;
+    }
+
+    const btn = ui.deleteAccount;
+    const oldText = btn ? btn.textContent : "";
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Deleting...";
+    }
+
+    try {
+      await deleteKnownStoragePhotos(user);
+
+      try {
+        await deleteDoc(doc(db, "publicProfiles", user.uid));
+      } catch (err) {
+        console.warn("[Soulink] Public profile delete skipped", err);
+      }
+
+      try {
+        await deleteDoc(doc(db, "users", user.uid));
+      } catch (err) {
+        console.warn("[Soulink] Private profile delete skipped", err);
+      }
+
+      clearLocalSoulinkData(user);
+      state = normaliseStateFromRaw({});
+
+      try {
+        await deleteUser(user);
+        showSaveStatus("Soulink account deleted", true);
+      } catch (err) {
+        console.warn("[Soulink] Auth account delete skipped; recent login may be required", err);
+        await signOut(auth);
+        showSaveStatus("Profile data deleted. Login account may require recent sign-in to remove fully.", true);
+      }
+
+      window.setTimeout(() => {
+        window.location.href = "index.html";
+      }, 900);
+    } catch (err) {
+      console.error("[Soulink] Account deletion failed", err);
+      showSaveStatus("Delete failed — check Console", false);
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = oldText || "Delete My Account";
+      }
+    }
+  }
+
   function initActions() {
     if (ui.backQuiz) {
       ui.backQuiz.addEventListener("click", (e) => {
@@ -1293,6 +1396,13 @@ if (topNextSoul) {
         updateBirthdayHint();
         updatePreview();
         showSaveStatus("Profile reset locally", true);
+      });
+    }
+
+    if (ui.deleteAccount) {
+      ui.deleteAccount.addEventListener("click", async (e) => {
+        e.preventDefault();
+        await deleteSoulinkAccount();
       });
     }
   }
