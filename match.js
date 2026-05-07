@@ -83,8 +83,6 @@
       chineseZodiac: "Dragon",
       lifePathNumber: 7,
       birthday: "1986-12-03",
-      contactHandle: "@aurora_soul",
-      contactPlatform: "Telegram",
     },
     {
       id: "match-luna",
@@ -111,8 +109,6 @@
       chineseZodiac: "Goat",
       lifePathNumber: 11,
       birthday: "1992-03-15",
-      contactHandle: "river@demo.soulink.global",
-      contactPlatform: "Email",
     },
     {
       id: "match-nova",
@@ -152,8 +148,6 @@
       chineseZodiac: "Tiger",
       lifePathNumber: 5,
       birthday: "1984-08-01",
-      contactHandle: "@leo_vibes",
-      contactPlatform: "Telegram",
     },
   ];
 
@@ -796,7 +790,7 @@
     if (!hasMatch) {
       if (ui.snapshotTitle) ui.snapshotTitle.textContent = "No match selected yet";
       if (ui.snapshotScore) ui.snapshotScore.textContent = "–%";
-      if (ui.snapshotBody) ui.snapshotBody.textContent = "Tap a card in the Match Lab to see a gentle compatibility portrait — love language, values, joys, and symbolic astro & numbers.";
+      if (ui.snapshotBody) ui.snapshotBody.textContent = "Tap a card to see a gentle compatibility portrait — love language, values, shared joys, and symbolic astro & numbers.";
       if (ui.snapshotFocus) ui.snapshotFocus.textContent = "Romantic & Friendship";
       if (ui.snapshotHighlight) ui.snapshotHighlight.textContent = "Scores are information, not fate. Communication and boundaries matter more than any number.";
       return;
@@ -834,7 +828,7 @@
 
     const labelSpan = document.createElement("span");
     labelSpan.className = "m-score-label";
-    labelSpan.textContent = "Compat";
+    labelSpan.textContent = "Match";
 
     inner.appendChild(valueSpan);
     inner.appendChild(labelSpan);
@@ -1075,8 +1069,8 @@
       const msgBtn = document.createElement("button");
       msgBtn.type = "button";
       msgBtn.className = "btn outline";
-      msgBtn.textContent = "Message";
-      msgBtn.setAttribute("aria-label", "Copy contact handle for " + (normaliseText(match.name) || "this match"));
+      msgBtn.textContent = "Contact Info";
+      msgBtn.setAttribute("aria-label", "Copy contact info for " + (normaliseText(match.name) || "this match"));
       msgBtn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -1167,7 +1161,7 @@
 
     if (!matches.length) {
       const note = document.createElement("p");
-      note.textContent = "No matches fit this filter yet. Try another type or sort.";
+      note.textContent = "No connections fit this filter yet. Try another type or sort.";
       ui.list.appendChild(note);
       return;
     }
@@ -1249,8 +1243,8 @@
     const hasAny = !!(getPrimaryLoveLanguage(base) || getValues(base).length || getHobbies(base).length || normaliseText(base.zodiac || base.westernZodiac || base.hiddenZodiac));
     ui.baseSoulStatus.textContent = hasAny ? "Loaded" : "Empty";
     if (ui.matchSourceStatus) {
-      if (state.matchSource === "public") ui.matchSourceStatus.textContent = "Tester profiles";
-      else ui.matchSourceStatus.textContent = "Demo profiles";
+      if (state.matchSource === "public") ui.matchSourceStatus.textContent = "Live beta";
+      else ui.matchSourceStatus.textContent = "Preview";
     }
   }
 
