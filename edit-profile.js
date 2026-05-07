@@ -26,6 +26,7 @@ import {
 
   const PRIMARY_KEY = "soulink.soulQuiz";
   const LEGACY_KEY = "soulQuiz";
+  const PHOTO_KEYS = ["profilePhoto1", "profilePhoto2", "profilePhoto3"];
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
