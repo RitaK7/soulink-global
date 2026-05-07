@@ -516,6 +516,32 @@
 }
 
 
+      /* --- Launch-ready hero trust row --- */
+
+      .quiz-trust-row {
+        margin-top: 0.9rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+      }
+
+      .quiz-trust-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.28rem;
+        padding: 0.28rem 0.75rem;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 253, 216, 0.45);
+        background: rgba(0, 0, 0, 0.72);
+        box-shadow: 0 0 12px rgba(0, 253, 216, 0.18);
+        font-size: 0.78rem;
+        color: rgba(235, 255, 252, 0.94);
+      }
+
+      .quiz-trust-pill strong {
+        color: #00fdd8;
+      }
+
       /* --- Footer alignment for quiz --- */
 
       .quiz-page + .footer-note {
@@ -574,9 +600,19 @@
           <div class="page-hero-text">
             <h1 class="page-title section-title">Soulink Quiz</h1>
             <p class="page-subtitle hint">
-              Core profile that powers your My Soul, Soul Chart, Match and
-              Friends pages.
+              Build your private Soulink profile in about 5–8 minutes.
+              The deeper text answers are optional, and your progress auto-saves as you go.
             </p>
+            <p class="page-subtitle hint">
+              Soulink uses your answers to create My Soul, Soul Chart, Match, Friends,
+              and Results insights — with love language, values, boundaries, and symbolic patterns working together.
+            </p>
+            <div class="quiz-trust-row" aria-label="Quiz privacy and timing notes">
+              <span class="quiz-trust-pill">⏱️ <strong>About 5–8 minutes</strong></span>
+              <span class="quiz-trust-pill">✨ Optional deeper answers</span>
+              <span class="quiz-trust-pill">💾 Auto-saves progress</span>
+              <span class="quiz-trust-pill">🔒 You control what you share</span>
+            </div>
           </div>
         </section>
 
@@ -1193,7 +1229,7 @@
                 </h2>
               </div>
               <p class="quiz-section-subtitle">
-                This is where you gently name what is not OK for you in any
+                Optional, but powerful: gently name what is not OK for you in any
                 connection.
               </p>
             </header>
@@ -1222,7 +1258,7 @@
                 <h2 class="quiz-section-title">Your Soul Voice</h2>
               </div>
               <p class="quiz-section-subtitle">
-                Share a little piece of your story and how you want to feel in
+                Optional deeper reflection: share a little piece of your story and how you want to feel in
                 your connections.
               </p>
             </header>
@@ -1283,7 +1319,7 @@
               </button>
             </div>
             <p class="quiz-actions-hint">
-              When you are logged in, your answers are securely saved to your Soulink account and used in Edit Profile, My Soul, Soul Chart, Match and Friends. Some data may also be cached on this device for a smoother experience. See the <a href="privacy.html">Privacy Policy</a>.
+              Your progress auto-saves as you fill the quiz. When you are logged in, your answers are saved to your Soulink account and used in Edit Profile, My Soul, Soul Chart, Match and Friends. Some data may also be cached on this device for a smoother experience. See the <a href="privacy.html">Privacy Policy</a>.
             </p>
           </section>
         </form>
