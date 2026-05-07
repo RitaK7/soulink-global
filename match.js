@@ -1064,26 +1064,6 @@
 
     actions.appendChild(viewBtn);
 
-    const contact = getContactHandle(match);
-    if (contact) {
-      const msgBtn = document.createElement("button");
-      msgBtn.type = "button";
-      msgBtn.className = "btn outline";
-      msgBtn.textContent = "Contact Info";
-      msgBtn.setAttribute("aria-label", "Copy contact info for " + (normaliseText(match.name) || "this match"));
-      msgBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        copyToClipboard(contact).then((ok) => {
-          const platform = normaliseText(match.contactPlatform) || "Contact";
-          const text = platform + ": " + contact;
-          if (!ok) alert(text);
-          else alert("Copied: " + text);
-        });
-      });
-      actions.appendChild(msgBtn);
-    }
-
     const addBtn = document.createElement("button");
     addBtn.type = "button";
     addBtn.className = "btn outline m-add-circle-btn";
@@ -1250,6 +1230,7 @@
 
   async function init() {
     try {
+      if (ui.matchSourceStatus) ui.matchSourceStatus.textContent = "Preview";
       const loaded = await loadFirestoreContext();
       state.friends = loaded.friends || [];
       state.baseSoul = loaded.profile || {};
