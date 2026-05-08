@@ -9,6 +9,12 @@
     return v == null ? "" : String(v).trim();
   }
 
+  function cleanDisplayText(v) {
+    return normaliseText(v)
+      .replace(/\bAffirmtion\b/gi, "Affirmation")
+      .replace(/\bspituality\b/gi, "spirituality");
+  }
+
   function toArray(v) {
     if (v == null) return [];
     return Array.isArray(v) ? v : [v];
@@ -629,6 +635,53 @@
     }
   }
 
+  function buildConnectionDescription(friend) {
+    const existing =
+      cleanDisplayText(friend.snapshot) ||
+      cleanDisplayText(friend.summary) ||
+      cleanDisplayText(friend.description);
+    if (existing) return existing;
+
+    const score = Number.isFinite(friend._score) ? friend._score : 0;
+    const name = cleanDisplayText(friend.name) || "This connection";
+    const love = cleanDisplayText(getPrimaryLoveLanguage(friend));
+    const sharedValues = overlapList(
+      baseSoul.values || baseSoul.coreValues || [],
+      friend.values || friend.coreValues || []
+    ).slice(0, 3).map(cleanDisplayText);
+    const sharedJoys = overlapList(
+      baseSoul.hobbies || baseSoul.passions || baseSoul.interests || [],
+      friend.hobbies || friend.passions || friend.interests || []
+    ).slice(0, 3).map(cleanDisplayText);
+
+    const bits = [];
+    if (love) bits.push("a " + love + " heart signal");
+    if (sharedValues.length) bits.push("shared values around " + sharedValues.join(", "));
+    if (sharedJoys.length) bits.push("shared joys like " + sharedJoys.join(", "));
+
+    if (score >= 70 && bits.length) {
+      return name + " feels like a warm circle connection — " + bits.join(" and ") + ". Let this stay gentle, mutual and respectful.";
+    }
+
+    if (bits.length) {
+      return name + " may be a meaningful connection to explore through " + bits.join(" and ") + ". Stay curious and let trust grow slowly.";
+    }
+
+    return name + " is saved in your circle as a gentle connection to revisit. Let real communication, consent and boundaries matter more than any score.";
+  }
+
+  function connectionMatchesFilter(friend, filter) {
+    const type = normaliseText(friend.connectionType || "Friendship").toLowerCase();
+    if (filter === "all") return true;
+    if (filter === "friendship") {
+      return type.includes("friend") || type.includes("both");
+    }
+    if (filter === "romantic") {
+      return type.includes("romantic") || type.includes("love") || type.includes("both");
+    }
+    return true;
+  }
+
   function createFriendCard(friend) {
     const card = document.createElement("article");
     card.className = "friends-card friends-card-animated";
@@ -653,7 +706,7 @@
 
     const nameEl = document.createElement("h3");
     nameEl.className = "friends-name";
-    nameEl.textContent = normaliseText(friend.name) || "Soul friend";
+    nameEl.textContent = cleanDisplayText(friend.name) || "Soul friend";
     nameRow.appendChild(nameEl);
 
     const pronounsRaw =
@@ -673,7 +726,7 @@
     const connectionType = normaliseText(friend.connectionType) || "Friendship";
     const connPill = document.createElement("span");
     connPill.className = "friends-meta-pill";
-    connPill.textContent = connectionType;
+    connPill.textContent = cleanDisplayText(connectionType);
     metaRow.appendChild(connPill);
 
     const score = Number.isFinite(friend._score) ? friend._score : 0;
@@ -681,7 +734,7 @@
 
     const vibePill = document.createElement("span");
     vibePill.className = "friends-meta-pill friends-vibe-pill";
-    vibePill.textContent = vibeTag;
+    vibePill.textContent = cleanDisplayText(vibeTag);
     metaRow.appendChild(vibePill);
 
     nameLine.appendChild(metaRow);
@@ -703,11 +756,7 @@
 
     const desc = document.createElement("p");
     desc.className = "friends-description";
-    desc.textContent =
-      normaliseText(friend.snapshot) ||
-      normaliseText(friend.summary) ||
-      normaliseText(friend.description) ||
-      "This friendship may be more about learning than perfect harmony. Treat it as a place to practice boundaries, honesty and soft curiosity.";
+    desc.textContent = buildConnectionDescription(friend);
 
     const actions = document.createElement("div");
     actions.className = "friends-card-actions";
@@ -718,11 +767,6 @@
     viewBtn.href = idForLink ? "match-profile.html#id=" + idForLink : "match-profile.html";
     viewBtn.textContent = "View Match Profile";
 
-    const msgBtn = document.createElement("button");
-    msgBtn.className = "btn outline";
-    msgBtn.type = "button";
-    msgBtn.disabled = true;
-    msgBtn.textContent = "Message (coming soon)";
 
     const removeBtn = document.createElement("button");
     removeBtn.className = "friends-remove-btn";
@@ -733,7 +777,6 @@
     });
 
     actions.appendChild(viewBtn);
-    actions.appendChild(msgBtn);
     actions.appendChild(removeBtn);
 
     inner.appendChild(top);
@@ -750,13 +793,7 @@
 
     const allSorted = Array.isArray(list) ? list : [];
 
-    const filtered = allSorted.filter((friend) => {
-      if (currentFilter === "all") return true;
-      const type = normaliseText(friend.connectionType || "Friendship").toLowerCase();
-      if (currentFilter === "friendship") return type === "friendship";
-      if (currentFilter === "romantic") return type === "romantic";
-      return true;
-    });
+    const filtered = allSorted.filter((friend) => connectionMatchesFilter(friend, currentFilter));
 
     if (!filtered.length) {
       if (ui.empty) {
