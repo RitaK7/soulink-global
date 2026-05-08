@@ -554,6 +554,43 @@ img.classList.add("is-empty");
 }
 }
 
+
+function buildGeneratedSoulSummary(data) {
+  const name = norm(data.name);
+  const love = norm(data.loveLanguage || (data.loveLanguages && data.loveLanguages[0]));
+  const values = normalizeList(data.values).slice(0, 3);
+  const hobbies = normalizeList(data.hobbies).slice(0, 2);
+  const connection = norm(data.connectionType);
+  const zodiac = norm(data.zodiac);
+
+  const parts = [];
+  const introName = name ? name : "This soul";
+
+  let first = `${introName} carries a gentle pattern of depth, self-awareness and emotional honesty.`;
+  if (values.length) {
+    first = `${introName} is guided by ${values.join(", ").toLowerCase()} — values that shape how trust, safety and connection are built.`;
+  }
+  parts.push(first);
+
+  if (love) {
+    parts.push(`Your heart seems to feel most seen through ${love.toLowerCase()}, so connection grows when care is expressed in a way that feels consistent and real.`);
+  }
+
+  if (connection) {
+    parts.push(`At this stage, you are calling in ${connection.toLowerCase()}, with space for a bond that feels meaningful rather than rushed.`);
+  }
+
+  if (hobbies.length) {
+    parts.push(`Your joys — ${hobbies.join(", ").toLowerCase()} — show where your energy naturally softens and comes alive.`);
+  }
+
+  if (zodiac) {
+    parts.push(`${zodiac} energy adds another symbolic layer to your soul map, but your choices, boundaries and communication remain the true guide.`);
+  }
+
+  return parts.join(" ");
+}
+
 function render(data) {
 const name = data.name || "My Soul";
 
@@ -635,8 +672,11 @@ renderChips(ui.snapshotHobbies, data.hobbies, {
 });
 
 if (ui.soulSummary) {
-  if (data.soulSummary) {
-    ui.soulSummary.textContent = data.soulSummary;
+  const generatedSummary = buildGeneratedSoulSummary(data);
+  const finalSummary = norm(data.soulSummary) || generatedSummary;
+
+  if (finalSummary) {
+    ui.soulSummary.textContent = finalSummary;
     ui.soulSummary.classList.remove("ms-placeholder");
   } else {
     ui.soulSummary.textContent = "Complete your profile to see your Soul Summary ✨";

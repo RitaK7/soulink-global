@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Soulink – My Soul</title>
+  <meta name="description" content="Your private Soulink soul snapshot — a personal reflection of your values, love language, symbolic patterns and connection style." />
   <!-- Global Soulink styles -->
   <link rel="stylesheet" href="style.css" />
   <!-- Global scripts -->
@@ -676,10 +677,11 @@
           <span>Your Soul report is waiting</span>
         </div>
         <p class="ms-empty-subtitle">
-          Start with the Soulink Quiz to create your core soul profile. Once you complete it,
-          this page will become your glowing soul snapshot.
+          Start with the Soulink Quiz to create your private soul profile. Once you complete it,
+          this page becomes your glowing snapshot — values, love language, energy map and connection style in one place.
         </p>
         <a href="quiz.html" id="mySoulStartQuiz" class="btn primary">Start with Quiz</a>
+        <p class="ms-empty-subtitle" style="margin-top:0.75rem; margin-bottom:0;">Your answers stay under your control and can be edited or deleted anytime.</p>
       </section>
 
       <!-- MAIN CONTENT (hidden until data is loaded) -->
@@ -694,7 +696,7 @@
               <p class="page-kicker">Soul Snapshot</p>
               <h1 class="page-title fade-in-up" id="msHeroTitle">My Soul</h1>
               <p class="page-subtitle fade-in-up" id="msHeroSubtitle">
-                This is your living soul profile – a gentle mirror built from your answers in Soulink.
+                Your private soul snapshot — a gentle mirror of your values, love language, emotional needs and symbolic patterns.
               </p>
 
               <div class="ms-tags">
@@ -730,7 +732,7 @@
                   <div>
                     <h2 id="msSummaryHeading" class="ms-section-title">Soul Summary</h2>
                     <p class="ms-section-subtitle">
-                      A short, human explanation of what your soul is seeking and how it shines.
+                      A warm reflection created from your answers — not a judgement, just a mirror.
                     </p>
                   </div>
                 </header>
@@ -875,9 +877,10 @@
           <div class="btn-row">
             <a href="quiz.html" class="btn outline" id="msBackToQuizBottom">← Back to Quiz</a>
             <a href="soul-chart.html" class="btn" id="msGoToChart">Next → Soul Chart</a>
+            <button type="button" class="btn outline" onclick="soulinkLogout()">Log Out</button>
           </div>
           <p class="ms-actions-note">
-            Your soul data is private to you. You can refine it anytime in the Quiz or Edit Profile.
+            Your soul data stays under your control. You can refine it anytime in the Quiz or Edit Profile, and delete your Soulink data from Edit Profile.
           </p>
         </section>
       </div>
@@ -949,10 +952,5 @@
     })();
   </script>
   <script type="module" src="auth-guard.js"></script>
-  <p style="text-align:center; margin-top:20px;">
-  <button type="button" onclick="soulinkLogout()" class="btn">
-    Log Out
-  </button>
-</p>
 </body>
 </html>
