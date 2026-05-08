@@ -541,6 +541,65 @@ list.forEach((label, index) => {
 
 }
 
+
+function sentenceJoin(parts) {
+const clean = (parts || []).map((part) => norm(part)).filter(Boolean);
+return clean.join(" ");
+}
+
+function buildSoulReflection(data) {
+const name = norm(data.name) || "Your soul";
+const values = normalizeList(data.values).slice(0, 3);
+const hobbies = normalizeList(data.hobbies).slice(0, 3);
+const love = norm(data.loveLanguage || (data.loveLanguages && data.loveLanguages[0]));
+const connection = norm(data.connectionType);
+const zodiac = norm(data.zodiac);
+const lifePath = norm(data.lifePath || data.lifePathNumber);
+const userSummary = norm(data.soulSummary);
+const about = norm(data.about);
+const mantra = norm(data.mantra);
+
+const parts = [];
+
+if (values.length) {
+  parts.push(`${name}, your soul pattern speaks through ${values.join(", ").toLowerCase()} — qualities that shape the kind of connection where you can feel safe, respected and fully seen.`);
+} else {
+  parts.push(`${name}, your soul profile is beginning to form. Each answer adds more light, texture and meaning to the way Soulink understands your emotional pattern.`);
+}
+
+if (love) {
+  const loveDesc = LOVE_DESCRIPTIONS[love] || "Your heart has its own language for giving and receiving care.";
+  parts.push(`With ${love.toLowerCase()} as your leading love language, ${loveDesc.charAt(0).toLowerCase()}${loveDesc.slice(1)}`);
+}
+
+if (connection) {
+  parts.push(`Right now, your connection path is tuned toward ${connection.toLowerCase()}, which means your profile is looking for alignment that feels intentional rather than random.`);
+}
+
+if (hobbies.length) {
+  parts.push(`Your joys — ${hobbies.join(", ").toLowerCase()} — show where your energy naturally comes alive.`);
+}
+
+if (zodiac || lifePath) {
+  const symbolic = [];
+  if (zodiac) symbolic.push(`${zodiac} energy`);
+  if (lifePath) symbolic.push(`Life Path ${lifePath}`);
+  parts.push(`${symbolic.join(" and ")} add a symbolic layer to your profile: not a rule, but a gentle mirror for self-understanding.`);
+}
+
+if (userSummary) {
+  parts.push(`Your own soul note says: “${userSummary}”`);
+} else if (about) {
+  parts.push(`Your story adds this human layer: “${about.slice(0, 180)}${about.length > 180 ? "…" : ""}”`);
+}
+
+if (mantra) {
+  parts.push(`Your current intention — “${mantra}” — becomes the emotional compass of this profile.`);
+}
+
+return sentenceJoin(parts);
+}
+
 function renderPhoto(img, url) {
 if (!img) return;
 if (url) {
@@ -552,43 +611,6 @@ img.removeAttribute("src");
 img.alt = "";
 img.classList.add("is-empty");
 }
-}
-
-
-function buildGeneratedSoulSummary(data) {
-  const name = norm(data.name);
-  const love = norm(data.loveLanguage || (data.loveLanguages && data.loveLanguages[0]));
-  const values = normalizeList(data.values).slice(0, 3);
-  const hobbies = normalizeList(data.hobbies).slice(0, 2);
-  const connection = norm(data.connectionType);
-  const zodiac = norm(data.zodiac);
-
-  const parts = [];
-  const introName = name ? name : "This soul";
-
-  let first = `${introName} carries a gentle pattern of depth, self-awareness and emotional honesty.`;
-  if (values.length) {
-    first = `${introName} is guided by ${values.join(", ").toLowerCase()} — values that shape how trust, safety and connection are built.`;
-  }
-  parts.push(first);
-
-  if (love) {
-    parts.push(`Your heart seems to feel most seen through ${love.toLowerCase()}, so connection grows when care is expressed in a way that feels consistent and real.`);
-  }
-
-  if (connection) {
-    parts.push(`At this stage, you are calling in ${connection.toLowerCase()}, with space for a bond that feels meaningful rather than rushed.`);
-  }
-
-  if (hobbies.length) {
-    parts.push(`Your joys — ${hobbies.join(", ").toLowerCase()} — show where your energy naturally softens and comes alive.`);
-  }
-
-  if (zodiac) {
-    parts.push(`${zodiac} energy adds another symbolic layer to your soul map, but your choices, boundaries and communication remain the true guide.`);
-  }
-
-  return parts.join(" ");
 }
 
 function render(data) {
@@ -672,11 +694,9 @@ renderChips(ui.snapshotHobbies, data.hobbies, {
 });
 
 if (ui.soulSummary) {
-  const generatedSummary = buildGeneratedSoulSummary(data);
-  const finalSummary = norm(data.soulSummary) || generatedSummary;
-
-  if (finalSummary) {
-    ui.soulSummary.textContent = finalSummary;
+  const reflection = buildSoulReflection(data);
+  if (reflection) {
+    ui.soulSummary.textContent = reflection;
     ui.soulSummary.classList.remove("ms-placeholder");
   } else {
     ui.soulSummary.textContent = "Complete your profile to see your Soul Summary ✨";
