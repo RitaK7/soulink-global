@@ -42,6 +42,20 @@
     return (v == null ? "" : String(v)).trim();
   }
 
+  function cleanDisplayText(value) {
+    let text = normaliseText(value);
+    if (!text) return "";
+    const fixes = [
+      [/\bAffirmtion\b/gi, "Affirmation"],
+      [/\bspituality\b/gi, "spirituality"],
+      [/\bsprituality\b/gi, "spirituality"]
+    ];
+    fixes.forEach(([pattern, replacement]) => {
+      text = text.replace(pattern, replacement);
+    });
+    return text;
+  }
+
   function toArray(v) {
     if (!v && v !== 0) return [];
     return Array.isArray(v) ? v : [v];
@@ -282,15 +296,15 @@
   function listFromSoul(data, keys) {
     for (const key of keys) {
       if (!data) continue;
-      if (Array.isArray(data[key])) return data[key].map((s) => normaliseText(s)).filter(Boolean);
+      if (Array.isArray(data[key])) return data[key].map((s) => cleanDisplayText(s)).filter(Boolean);
       if (typeof data[key] === "string" && data[key].includes(",")) {
         return data[key]
           .split(",")
-          .map((s) => s.trim())
+          .map((s) => cleanDisplayText(s))
           .filter(Boolean);
       }
       if (typeof data[key] === "string") {
-        const v = normaliseText(data[key]);
+        const v = cleanDisplayText(data[key]);
         if (v) return [v];
       }
     }
@@ -299,9 +313,9 @@
 
   function getPrimaryLoveLanguage(soul) {
     const list = toArray(soul.loveLanguages || soul.loveLanguage || []);
-    const fromField = normaliseText(soul.loveLanguage);
+    const fromField = cleanDisplayText(soul.loveLanguage);
     if (fromField) return fromField;
-    if (list.length) return normaliseText(list[0]);
+    if (list.length) return cleanDisplayText(list[0]);
     return "";
   }
 
@@ -406,17 +420,17 @@
       return;
     }
 
-    if (ui.meName) ui.meName.textContent = normaliseText(soul.name) || "—";
-    if (ui.meCt) ui.meCt.textContent = normaliseText(soul.connectionType) || "—";
+    if (ui.meName) ui.meName.textContent = cleanDisplayText(soul.name) || "—";
+    if (ui.meCt) ui.meCt.textContent = cleanDisplayText(soul.connectionType) || "—";
 
     const primaryLove = getPrimaryLoveLanguage(soul);
-    if (ui.meLl) ui.meLl.textContent = primaryLove || "—";
+    if (ui.meLl) ui.meLl.textContent = cleanDisplayText(primaryLove) || "—";
 
     const hobbies = listFromSoul(soul, ["hobbies", "interests"]);
     const values = listFromSoul(soul, ["values"]);
 
-    if (ui.meHobbies) ui.meHobbies.textContent = hobbies.length ? hobbies.join(", ") : "—";
-    if (ui.meValues) ui.meValues.textContent = values.length ? values.join(", ") : "—";
+    if (ui.meHobbies) ui.meHobbies.textContent = hobbies.length ? hobbies.map(cleanDisplayText).join(", ") : "—";
+    if (ui.meValues) ui.meValues.textContent = values.length ? values.map(cleanDisplayText).join(", ") : "—";
   }
 
   let emailJsReady = false;
@@ -719,9 +733,9 @@
       lines.push(`Match: ${view.name}`);
       if (view.kind === "friendship") lines.push("Mode: Friendship");
       else lines.push("Mode: Romantic");
-      if (view.loveLanguage) lines.push(`Love Language: ${view.loveLanguage}`);
-      if (view.sharedValues && view.sharedValues.length) lines.push(`Shared values: ${sentenceFromList(view.sharedValues)}`);
-      if (view.sharedHobbies && view.sharedHobbies.length) lines.push(`Shared hobbies: ${sentenceFromList(view.sharedHobbies)}`);
+      if (view.loveLanguage) lines.push(`Love Language: ${cleanDisplayText(view.loveLanguage)}`);
+      if (view.sharedValues && view.sharedValues.length) lines.push(`Shared values: ${sentenceFromList(view.sharedValues.map(cleanDisplayText))}`);
+      if (view.sharedHobbies && view.sharedHobbies.length) lines.push(`Shared hobbies: ${sentenceFromList(view.sharedHobbies.map(cleanDisplayText))}`);
       showToast(ui.fbToast, lines.join(" • "), "info");
     };
 
@@ -762,9 +776,9 @@
 
     if (ui.topOverview) {
       if (totalMatches) {
-        ui.topOverview.textContent = `We tuned ${totalMatches} matches based on your love language, values, and hobbies.`;
+        ui.topOverview.textContent = `We tuned ${totalMatches} saved connection${totalMatches === 1 ? "" : "s"} based on your love language, values, and hobbies.`;
       } else {
-        ui.topOverview.textContent = "Once you start adding friends and connections, their matches will appear here.";
+        ui.topOverview.textContent = "Explore Match, add someone to your circle, and your saved connection insights will appear here.";
       }
     }
 
@@ -775,11 +789,11 @@
 
       if (totalMatches && loveMatches) {
         ui.insights.textContent =
-          `You share the same primary love language with ${loveMatches} of your matches. ` +
+          `You share the same primary love language with ${loveMatches} saved connection${loveMatches === 1 ? "" : "s"}. ` +
           `Use the Love Language Weight slider to see how strongly this shapes your scores.`;
       } else if (totalMatches) {
         ui.insights.textContent =
-          "Your matches are currently driven more by shared values and hobbies than by love language.";
+          "Your saved connections are currently driven more by shared values and hobbies than by love language.";
       } else {
         ui.insights.textContent = "";
       }
@@ -801,13 +815,13 @@
       kind,
       name,
       connectionLabel:
-        normaliseText(c.connectionLabel) ||
-        normaliseText(c.connectionType) ||
+        cleanDisplayText(c.connectionLabel) ||
+        cleanDisplayText(c.connectionType) ||
         (kind === "romantic" ? "Saved romantic connection" : "Saved soul friend"),
-      loveLanguage: normaliseText(c.loveLanguage) || normaliseText(toArray(c.loveLanguages || [])[0]) || "",
+      loveLanguage: cleanDisplayText(c.loveLanguage) || cleanDisplayText(toArray(c.loveLanguages || [])[0]) || "",
       hobbies: listFromSoul(c, ["hobbies", "interests", "passions"]),
       values: listFromSoul(c, ["values", "coreValues"]),
-      about: normaliseText(c.about || c.aboutMe || c.description || c.vibeTag),
+      about: cleanDisplayText(c.about || c.aboutMe || c.description || c.vibeTag),
       contact: normaliseText(c.contact || c.contactHandle || c.email || c.url),
       score: Number.isFinite(scoreValue) ? scoreValue : null,
       source: "saved-circle",
@@ -815,13 +829,9 @@
   }
 
   function buildResultsDataSource(soul, savedList) {
-    const saved = normaliseFriendsShape(savedList).map(normaliseSavedConnectionAsMatch);
-
-    if (saved.length) {
-      return saved;
-    }
-
-    return buildBaseMatches(soul);
+    // Soft beta: show only real saved connections from Friends/Match.
+    // We intentionally do not fall back to demo people here, so Results never looks like a fake match feed.
+    return normaliseFriendsShape(savedList).map(normaliseSavedConnectionAsMatch);
   }
 
   function initMatches() {

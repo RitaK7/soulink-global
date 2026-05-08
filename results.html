@@ -5,7 +5,12 @@
   <meta charset="utf-8" />
   <title>Soulink — Results</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Soulink Results — your snapshot, insights, matches, export and feedback." />
+  <meta name="description" content="Soulink Results — a private summary of your soul profile, saved connections, export tools and feedback." />
+  <meta property="og:title" content="Soulink — Results" />
+  <meta property="og:description" content="Your private Soulink snapshot, saved connections and soft beta feedback space." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://soulink.global/results.html" />
+  <meta name="twitter:card" content="summary_large_image" />
 
   <link rel="stylesheet" href="style.css" />
 
@@ -21,6 +26,7 @@
   <style>
     .results-page { position: relative; }
     .results-page .page-inner { max-width: 1120px; margin: 0 auto; padding: 1.75rem 1.25rem 2.5rem; box-sizing: border-box; }
+    .results-page .footer-note, .footer-note { max-width: 1120px; margin: 0 auto; padding: 1rem 1.25rem 2rem; text-align: center; box-sizing: border-box; }
 
     .topnav .brand { flex-shrink: 0; }
     .topnav .nav-links { flex-wrap: wrap; gap: 0.65rem 0.85rem; justify-content: flex-end; }
@@ -463,16 +469,16 @@
   <main class="page results-page">
     <div class="page-inner">
       <section class="r-hero" aria-label="Results overview">
-        <p class="r-kicker">Results</p>
-        <h1 class="r-title">Your Soul Snapshot & Match Insights</h1>
+        <p class="r-kicker">Private results</p>
+        <h1 class="r-title">Your Soul Snapshot & Saved Connection Insights</h1>
         <p id="topOverview" class="r-subtitle">
-          Your Results will appear here after you complete the Quiz and profile.
+          Your private results will appear here after you complete the Quiz and save your profile.
         </p>
 
         <div class="r-pill-row" aria-label="Quick insights">
-          <span class="r-pill"><span>Mode</span><span>Romantic + Friendship</span></span>
+          <span class="r-pill"><span>Private</span><span>Saved on your profile</span></span>
           <span class="r-pill"><span>Export</span><span>JSON / PDF</span></span>
-          <span class="r-pill r-pill-muted"><span>Powered</span><span>By Soulprint</span></span>
+          <span class="r-pill r-pill-muted"><span>Soft beta</span><span>Feedback welcome</span></span>
         </div>
 
         <p id="insights" class="r-overview"></p>
@@ -483,7 +489,7 @@
           <header class="r-surface-header">
             <h2 class="r-surface-title">My snapshot</h2>
           </header>
-          <p class="r-surface-sub">A quick read of your base profile that powers scoring.</p>
+          <p class="r-surface-sub">A quick read of your saved profile. You can refine this anytime from Quiz or Edit Profile.</p>
           <div class="r-surface-body">
             <dl class="r-dl">
               <dt>Name</dt><dd id="me-name">—</dd>
@@ -499,7 +505,7 @@
           <header class="r-surface-header">
             <h2 class="r-surface-title">Tuning & export</h2>
           </header>
-          <p class="r-surface-sub">Adjust the weight and export your results.</p>
+          <p class="r-surface-sub">Adjust how strongly love language shapes saved-connection scores, then export your results.</p>
           <div class="r-surface-body">
             <div class="r-controls">
               <div class="r-slider">
@@ -526,7 +532,7 @@
           <header class="r-surface-header">
             <h2 class="r-surface-title">Feedback</h2>
           </header>
-          <p class="r-surface-sub">Help us improve Soulink. Your feedback goes straight to the team.</p>
+          <p class="r-surface-sub">Help us improve Soulink during soft beta. Your feedback goes straight to the team.</p>
           <div class="r-surface-body">
             <form class="r-form" autocomplete="off">
               <label>Rating</label>
@@ -550,26 +556,26 @@
 
       <section class="r-section" aria-label="Matches">
         <div class="r-section-header">
-          <h2>Matches</h2>
-          <p id="empty">No matches yet. Complete your Quiz to generate Results.</p>
+          <h2>Saved connection insights</h2>
+          <p id="empty">No saved connections yet. Explore Match, add someone to your circle, then return here.</p>
         </div>
 
         <div class="r-matches-grid" aria-label="Match lists">
-          <section class="r-surface" aria-label="Romantic matches">
+          <section class="r-surface" aria-label="Romantic saved connections">
             <header class="r-surface-header">
               <h3 class="r-surface-title" style="font-size:1rem;">Romantic</h3>
             </header>
-            <p class="r-surface-sub">Matches tuned for romantic energy.</p>
+            <p class="r-surface-sub">Saved romantic connections, tuned by your profile signals.</p>
             <div class="r-surface-body">
               <div id="romantic" class="r-matches-grid" aria-label="Romantic match cards"></div>
             </div>
           </section>
 
-          <section class="r-surface" aria-label="Friendship matches">
+          <section class="r-surface" aria-label="Friendship saved connections">
             <header class="r-surface-header">
               <h3 class="r-surface-title" style="font-size:1rem;">Friendship</h3>
             </header>
-            <p class="r-surface-sub">Matches tuned for friendship and shared life energy.</p>
+            <p class="r-surface-sub">Saved friendship connections, tuned by shared values and everyday energy.</p>
             <div class="r-surface-body">
               <div id="friendship" class="r-matches-grid" aria-label="Friendship match cards"></div>
             </div>
@@ -580,6 +586,7 @@
       <section class="r-section" aria-label="Back navigation">
         <div class="r-actions">
           <a href="friends.html" class="btn outline">← Back to Friends</a>
+          <a href="edit-profile.html" class="btn outline">Refine Profile</a>
         </div>
       </section>
     </div>
