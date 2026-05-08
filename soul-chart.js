@@ -22,7 +22,8 @@
   // ---------- helpers ----------
 
   function normaliseText(v) {
-    return (v == null ? "" : String(v)).trim();
+    const clean = (v == null ? "" : String(v)).trim();
+    return clean.replace(/spituality/gi, "Spirituality");
   }
 
   function toArray(v) {
@@ -875,11 +876,11 @@
       ui.scOrbitMain.textContent = name || "Soul online";
       const bits = [];
       if (primaryLove) bits.push(primaryLove);
-      if (topValues.length) bits.push("values: " + topValues.join(", "));
-      if (topHobbies.length) bits.push("joy: " + topHobbies.join(", "));
+      if (topValues.length) bits.push(topValues[0]);
+      if (topHobbies.length) bits.push(topHobbies[0]);
       ui.scOrbitSub.textContent = bits.length
-        ? "Snapshot: " + bits.join(" • ") + "."
-        : "Ready to translate your inner map into clear charts.";
+        ? bits.slice(0, 3).join(" • ")
+        : "Your chart will bloom as your profile grows.";
     }
 
     if (!ui.scSummarySection || !ui.scSummaryText || !ui.scSummaryMeta) return;
@@ -898,9 +899,18 @@
 
     if (!pieces.length) {
       ui.scSummaryText.textContent =
-        who + " has a Soul Chart ready — add a little more data in Quiz or Edit Profile to unlock it.";
+        who + " has a Soul Chart waiting — add a little more data in Quiz or Edit Profile to let the map bloom.";
     } else {
-      ui.scSummaryText.textContent = who + " — " + pieces.join(" ");
+      const tone = [];
+      if (topValues.length) tone.push("guided by " + topValues.join(" and "));
+      if (primaryLove) tone.push("opening through " + primaryLove.toLowerCase());
+      if (topHobbies.length) tone.push("recharging through " + topHobbies.join(" and "));
+
+      ui.scSummaryText.textContent =
+        who + " carries a chart " +
+        (tone.length ? tone.join(", ") + ". " : "built from your saved Soulink signals. ") +
+        pieces.join(" ") +
+        " These signals are a gentle mirror for self-understanding, not a fixed label.";
     }
 
     ui.scSummaryMeta.textContent =
