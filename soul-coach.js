@@ -13,6 +13,14 @@
     return (v == null ? "" : String(v)).trim();
   }
 
+  function cleanDisplayLabel(v) {
+    const text = normaliseText(v);
+    if (!text) return "";
+    return text
+      .replace(/\bAffirmtion\b/gi, "Affirmation")
+      .replace(/\bspituality\b/gi, "spirituality");
+  }
+
   function toArray(v) {
     if (v == null) return [];
     return Array.isArray(v) ? v : [v];
@@ -152,15 +160,15 @@
   }
 
   function pickPrimaryLoveLanguage(soul) {
-    const direct = normaliseText(soul.loveLanguage);
+    const direct = cleanDisplayLabel(soul.loveLanguage);
     if (direct) return direct;
     const list = toArray(soul.loveLanguages || []);
-    if (list.length) return normaliseText(list[0]);
+    if (list.length) return cleanDisplayLabel(list[0]);
     return "";
   }
 
   function canonicalLoveKey(labelRaw) {
-    const label = normaliseText(labelRaw).toLowerCase();
+    const label = cleanDisplayLabel(labelRaw).toLowerCase();
     if (!label) return "";
     if (label.includes("affirmation") || label.includes("words")) return "words";
     if (label.includes("quality")) return "quality";
@@ -184,7 +192,7 @@
     const out = [];
     const seen = new Set();
     toArray(listLike).forEach((item) => {
-      const t = normaliseText(item);
+      const t = cleanDisplayLabel(item);
       if (!t) return;
       if (isContactLike(t)) return;
       const key = t.toLowerCase();
@@ -279,8 +287,8 @@
   // ===================== Render helpers =====================
 
   function renderHero(soul) {
-    const name = normaliseText(soul.name) || "beautiful soul";
-    const conn = normaliseText(soul.connectionType) || "";
+    const name = cleanDisplayLabel(soul.name) || "beautiful soul";
+    const conn = cleanDisplayLabel(soul.connectionType) || "";
     const lifePath = numericLifePath(soul.lifePathNumber);
     const primaryLove = pickPrimaryLoveLanguage(soul);
 
@@ -423,7 +431,7 @@
 
     ui.loveActions.innerHTML = "";
     toArray(data.actions).forEach((item) => {
-      const t = normaliseText(item);
+      const t = cleanDisplayLabel(item);
       if (!t) return;
       const li = document.createElement("li");
       li.textContent = t;
