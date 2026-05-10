@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <title>Soulink — Match</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Soulink Match — discover compatibility through love language, values, shared joys, and symbolic soul patterns." />
+  <meta name="description" content="Soulink Match Lab — demo matches now, clean path to real users later." />
   <link rel="stylesheet" href="style.css" />
   <script src="auth.js" defer></script>
   <script src="data-helpers.js" defer></script>
@@ -323,14 +323,6 @@
       justify-content: space-between;
     }
     .m-flow-nav .btn { min-width: 180px; }
-    .match-footer {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 1rem 1.25rem 2rem;
-  text-align: center;
-  opacity: 0.85;
-  box-sizing: border-box;
-}
 
     @media (max-width: 640px) {
       .m-flow-nav { justify-content: stretch; }
@@ -386,9 +378,9 @@
   <main class="page match-page">
     <div class="page-inner">
       <section id="matchEmpty" class="m-empty-card" hidden aria-live="polite">
-        <div class="m-empty-title"><span>✨</span><span>Your Match Preview Is Preparing</span></div>
+        <div class="m-empty-title"><span>🌱</span><span>No public testers found yet</span></div>
         <p class="m-empty-subtitle">
-          Complete your Soul Quiz to unlock a glowing preview of romantic and friendship compatibility.
+          No other public tester profiles are available yet. Ask another tester to turn on “Show my profile to other Soulink testers”, then refresh this page.
         </p>
         <div class="m-empty-actions">
           <a href="quiz.html" class="btn outline">Go to Quiz</a>
@@ -399,19 +391,19 @@
       <section id="matchLayout">
         <section id="matchHero" class="m-hero match-section-animated m-delay-1">
           <div class="m-hero-left">
-            <p class="m-kicker">Soul Match Preview</p>
-            <h1 class="m-title">Explore souls aligned with your emotional pattern</h1>
+            <p class="m-kicker">Match Lab</p>
+            <h1 class="m-title">Demo matches computed from your real profile</h1>
             <p class="m-subtitle">
-              Soulink reads your love language, values, shared joys, and symbolic patterns to create a gentle compatibility portrait. Real-user matching is opening gradually during soft beta.
+              Private testing mode: discoverable tester profiles can appear here when people choose to be visible. If no visible tester profiles are available, Soulink shows sample profiles to demonstrate the compatibility engine.
             </p>
 
             <div class="m-pill-row">
               <span class="m-pill"><span class="m-pill-label">Type</span><span class="m-pill-value" id="matchModeLabel">All connections</span></span>
               <span class="m-pill"><span class="m-pill-label">Base</span><span class="m-pill-value" id="baseSoulStatus">Loaded</span></span>
-              <span class="m-pill m-pill-muted"><span class="m-pill-label">Mode</span><span class="m-pill-value" id="matchSourceStatus">Checking</span></span>
+              <span class="m-pill m-pill-muted"><span class="m-pill-label">Source</span><span class="m-pill-value" id="matchSourceStatus">Checking</span></span>
             </div>
 
-            <p class="m-hero-footer">Tap any card to reveal why this connection may feel harmonious, challenging, or worth exploring.</p>
+            <p class="m-hero-footer">Click any card to update the snapshot with a deeper view of that connection.</p>
           </div>
 
           <aside class="m-hero-right" aria-label="Selected match snapshot">
@@ -422,7 +414,7 @@
               </header>
 
               <p id="matchSnapshotBody" class="m-snapshot-body">
-                Tap a card to see a gentle compatibility portrait — love language, values, shared joys, and symbolic astro &amp; numbers.
+                Tap a card in the Match Lab to see a gentle compatibility portrait — love language, values, joys, and symbolic astro &amp; numbers.
               </p>
 
               <div class="m-snapshot-meta">
@@ -479,9 +471,7 @@
     </div>
   </main>
 
-  <footer class="match-footer">
-  © 2026 Soulink.global | Created with love by Soulink Team.
-</footer>
+  <footer class="footer-note">© 2026 Soulink.global | Created with love by Soulink Team.</footer>
   <script type="module" src="auth-guard.js"></script>
 </body>
 </html>

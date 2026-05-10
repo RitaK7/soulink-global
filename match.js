@@ -83,6 +83,8 @@
       chineseZodiac: "Dragon",
       lifePathNumber: 7,
       birthday: "1986-12-03",
+      contactHandle: "@aurora_soul",
+      contactPlatform: "Telegram",
     },
     {
       id: "match-luna",
@@ -109,6 +111,8 @@
       chineseZodiac: "Goat",
       lifePathNumber: 11,
       birthday: "1992-03-15",
+      contactHandle: "river@demo.soulink.global",
+      contactPlatform: "Email",
     },
     {
       id: "match-nova",
@@ -148,6 +152,8 @@
       chineseZodiac: "Tiger",
       lifePathNumber: 5,
       birthday: "1984-08-01",
+      contactHandle: "@leo_vibes",
+      contactPlatform: "Telegram",
     },
   ];
 
@@ -579,10 +585,10 @@
         publicMatches.push(publicProfileToMatch(data, docSnap.id));
       });
     } catch (err) {
-      console.warn("[Soulink][Match] Could not read public tester profiles; using demo fallback", err);
+      console.warn("[Soulink][Match] Could not read public tester profiles; showing empty state", err);
     }
 
-    state.matchSource = publicMatches.length ? "public" : "demo";
+    state.matchSource = publicMatches.length ? "public" : "empty";
     return { profile, friends, publicMatches };
   }
 
@@ -590,7 +596,11 @@
     if (Array.isArray(state.sourceProfiles) && state.sourceProfiles.length) {
       return state.sourceProfiles.slice().map((m) => ({ ...m }));
     }
-    return DEMO_MATCHES.slice().map((m) => ({ ...m, source: "demo" }));
+
+    // Soft beta launch rule:
+    // never show demo people to logged-in users or cold visitors.
+    // If there are no public tester profiles yet, Match should show the empty state.
+    return [];
   }
 
   function safeReadFriends(uid) {
@@ -790,7 +800,7 @@
     if (!hasMatch) {
       if (ui.snapshotTitle) ui.snapshotTitle.textContent = "No match selected yet";
       if (ui.snapshotScore) ui.snapshotScore.textContent = "–%";
-      if (ui.snapshotBody) ui.snapshotBody.textContent = "Tap a card to see a gentle compatibility portrait — love language, values, shared joys, and symbolic astro & numbers.";
+      if (ui.snapshotBody) ui.snapshotBody.textContent = "Tap a card in the Match Lab to see a gentle compatibility portrait — love language, values, joys, and symbolic astro & numbers.";
       if (ui.snapshotFocus) ui.snapshotFocus.textContent = "Romantic & Friendship";
       if (ui.snapshotHighlight) ui.snapshotHighlight.textContent = "Scores are information, not fate. Communication and boundaries matter more than any number.";
       return;
@@ -828,7 +838,7 @@
 
     const labelSpan = document.createElement("span");
     labelSpan.className = "m-score-label";
-    labelSpan.textContent = "Match";
+    labelSpan.textContent = "Compat";
 
     inner.appendChild(valueSpan);
     inner.appendChild(labelSpan);
@@ -1064,6 +1074,26 @@
 
     actions.appendChild(viewBtn);
 
+    const contact = getContactHandle(match);
+    if (contact) {
+      const msgBtn = document.createElement("button");
+      msgBtn.type = "button";
+      msgBtn.className = "btn outline";
+      msgBtn.textContent = "Message";
+      msgBtn.setAttribute("aria-label", "Copy contact handle for " + (normaliseText(match.name) || "this match"));
+      msgBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        copyToClipboard(contact).then((ok) => {
+          const platform = normaliseText(match.contactPlatform) || "Contact";
+          const text = platform + ": " + contact;
+          if (!ok) alert(text);
+          else alert("Copied: " + text);
+        });
+      });
+      actions.appendChild(msgBtn);
+    }
+
     const addBtn = document.createElement("button");
     addBtn.type = "button";
     addBtn.className = "btn outline m-add-circle-btn";
@@ -1141,7 +1171,7 @@
 
     if (!matches.length) {
       const note = document.createElement("p");
-      note.textContent = "No connections fit this filter yet. Try another type or sort.";
+      note.textContent = "No matches fit this filter yet. Try another type or sort.";
       ui.list.appendChild(note);
       return;
     }
@@ -1224,13 +1254,12 @@
     ui.baseSoulStatus.textContent = hasAny ? "Loaded" : "Empty";
     if (ui.matchSourceStatus) {
       if (state.matchSource === "public") ui.matchSourceStatus.textContent = "Live beta";
-      else ui.matchSourceStatus.textContent = "Preview";
+      else ui.matchSourceStatus.textContent = "Waiting for testers";
     }
   }
 
   async function init() {
     try {
-      if (ui.matchSourceStatus) ui.matchSourceStatus.textContent = "Preview";
       const loaded = await loadFirestoreContext();
       state.friends = loaded.friends || [];
       state.baseSoul = loaded.profile || {};
@@ -1255,17 +1284,14 @@
       animatePageOnce();
     } catch (err) {
       console.error("[Soulink][Match] Init failed", err);
-      state.matchSource = "demo";
+      state.matchSource = "empty";
       state.friends = safeReadFriends();
       state.baseSoul = loadBaseSoul();
       state.sourceProfiles = [];
       updateBaseSoulStatus();
       computeMatches();
       renderMatchList();
-      if (state.matches.length) {
-        state.selectedId = stableIdForMatch(state.matches[0]);
-        renderSnapshot(state.matches[0]);
-      }
+      renderSnapshot(null);
       animatePageOnce();
     }
   }
