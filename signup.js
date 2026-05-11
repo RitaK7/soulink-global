@@ -1,8 +1,8 @@
 import { auth, db } from "./firebase-config.js";
-
 import {
   createUserWithEmailAndPassword,
-  updateProfile
+  updateProfile,
+  sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
@@ -80,6 +80,16 @@ if (form) {
       await updateProfile(user, {
         displayName: name
       });
+      try {
+  await sendEmailVerification(user, {
+    url: "https://soulink.global/login.html"
+  });
+
+  console.log("[Soulink] Verification email sent");
+} catch (verifyErr) {
+  console.warn("[Soulink] Verification email could not be sent:", verifyErr);
+}
+msg.textContent = "Account created ✓ Please check your email to verify your account.";
 
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
