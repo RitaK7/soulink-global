@@ -1324,10 +1324,18 @@ import {
       try {
         await deleteUser(user);
         showSaveStatus("Soulink account deleted", true);
-      } catch (err) {
+           } catch (err) {
         console.warn("[Soulink] Auth account delete skipped; recent login may be required", err);
+
+        window.alert(
+          "Your Soulink profile data has been deleted.\n\n" +
+          "To also remove your login email from our system, please log in one more time and confirm deletion again — Firebase requires this as a security step.\n\n" +
+          "If you skip this, your email may stay registered but holds no Soulink profile data, and you may not be able to re-sign up with the same email.\n\n" +
+          "We recommend logging in again if you want to finish full account deletion."
+        );
+
         await signOut(auth);
-        showSaveStatus("Profile data deleted. Login account may require recent sign-in to remove fully.", true);
+        showSaveStatus("Profile data deleted. Login again to finish deleting the login email.", true);
       }
 
       window.setTimeout(() => {
