@@ -78,42 +78,51 @@ if (form) {
       clearOldSoulData();
 
       await updateProfile(user, {
-        displayName: name
-      });
-      try {
+  displayName: name
+});
+
+let verificationSent = false;
+
+try {
   await sendEmailVerification(user, {
-    url: "https://soulink.global/login.html"
+    url: "https://soulink.global/login.html",
+    handleCodeInApp: false
   });
 
-  console.log("[Soulink] Verification email sent");
+  verificationSent = true;
+  console.log("[Soulink] Verification email sent to:", user.email);
 } catch (verifyErr) {
   console.warn("[Soulink] Verification email could not be sent:", verifyErr);
 }
-msg.textContent = "Account created ✓ Please check your email to verify your account.";
 
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
-        name,
-        email,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        profileCompleted: false
-      });
+await setDoc(doc(db, "users", user.uid), {
+  uid: user.uid,
+  name,
+  email,
+  emailVerified: user.emailVerified === true,
+  createdAt: serverTimestamp(),
+  updatedAt: serverTimestamp(),
+  profileCompleted: false
+});
 
-      localStorage.setItem(
-        "soulinkUser",
-        JSON.stringify({
-          uid: user.uid,
-          name,
-          email
-        })
-      );
+localStorage.setItem(
+  "soulinkUser",
+  JSON.stringify({
+    uid: user.uid,
+    name,
+    email
+  })
+);
 
-      msg.textContent = "Account created successfully ✓";
+if (verificationSent) {
+  msg.textContent = "Account created ✓ Please check your email to verify your account.";
+} else {
+  msg.textContent = "Account created ✓ Verification email was not sent. You can still continue and we will fix verification next.";
+}
 
       setTimeout(() => {
         window.location.href = "quiz.html";
-      }, 1200);
+      }, 3500);
     } catch (err) {
       console.error("[Soulink] Signup failed:", err);
       msg.textContent = err.message || "Signup failed. Please try again.";
