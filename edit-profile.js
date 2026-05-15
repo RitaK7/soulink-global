@@ -706,39 +706,47 @@ import {
     };
   }
 
+  async function refreshEmailVerification(user) {
+    if (!user) return false;
+
+    try {
+      if (typeof user.reload === "function") {
+        await user.reload();
+      }
+    } catch (err) {
+      console.warn("[Soulink] Could not refresh email verification state", err);
+    }
+
+    const freshUser = auth.currentUser || user;
+    return !!(freshUser && freshUser.emailVerified);
+  }
+
+  function forcePrivateProfile(reasonMessage) {
+    state.discoverableProfile = false;
+    state.publicProfileVisible = false;
+
+    if (ui.discoverableProfile) {
+      ui.discoverableProfile.checked = false;
+    }
+
+    state = persistPatch({
+      discoverableProfile: false,
+      publicProfileVisible: false
+    });
+
+    if (reasonMessage) {
+      showSaveStatus(reasonMessage, false);
+    }
+
+    updatePreview();
+  }
+
   async function syncPublicProfile(user, profilePayload) {
     if (!user) return;
 
     const wantsPublic = !!(profilePayload && profilePayload.discoverableProfile);
     const publicRef = doc(db, "publicProfiles", user.uid);
 
-    // Email verification gate:
-    // users can save private profile, but cannot appear in Match/publicProfiles
-    // until their email is verified.
-    if (wantsPublic && !user.emailVerified) {
-      try {
-        await deleteDoc(publicRef);
-      } catch (err) {
-        console.warn("[Soulink] Public tester profile cleanup skipped for unverified user", err);
-      }
-
-      state.discoverableProfile = false;
-      state.publicProfileVisible = false;
-
-      persistPatch({
-        discoverableProfile: false,
-        publicProfileVisible: false
-      });
-
-      if (ui.discoverableProfile) {
-        ui.discoverableProfile.checked = false;
-      }
-
-      showSaveStatus("Please verify your email before making your profile visible.", false);
-      console.warn("[Soulink] Public profile blocked: email not verified");
-      return;
-    }
-
     if (!wantsPublic) {
       try {
         await deleteDoc(publicRef);
@@ -749,17 +757,16 @@ import {
       return;
     }
 
-    await setDoc(publicRef, buildPublicProfilePayload(profilePayload, user), { merge: true });
-    console.log("[Soulink] Public tester profile synced");
-  }
-
-    if (!wantsPublic) {
+    const verified = await refreshEmailVerification(user);
+    if (!verified) {
       try {
         await deleteDoc(publicRef);
-        console.log("[Soulink] Public tester profile disabled");
       } catch (err) {
-        console.warn("[Soulink] Public tester profile delete skipped", err);
+        console.warn("[Soulink] Public profile cleanup skipped for unverified user", err);
       }
+
+      forcePrivateProfile("Please verify your email before making your profile visible.");
+      console.warn("[Soulink] Public tester profile blocked: email is not verified");
       return;
     }
 
@@ -1078,13 +1085,44 @@ import {
   function bindDiscoverableProfile() {
     if (!ui.discoverableProfile) return;
     ui.discoverableProfile.checked = !!state.discoverableProfile;
-    ui.discoverableProfile.addEventListener("change", () => {
-      state.discoverableProfile = !!ui.discoverableProfile.checked;
-      state.publicProfileVisible = !!state.discoverableProfile;
+
+    ui.discoverableProfile.addEventListener("change", async () => {
+      const wantsPublic = !!ui.discoverableProfile.checked;
+
+      if (wantsPublic) {
+        const user = await waitForAuthUser();
+
+        if (!user) {
+          forcePrivateProfile("Please log in before making your profile visible.");
+          return;
+        }
+
+        const verified = await refreshEmailVerification(user);
+
+        if (!verified) {
+          forcePrivateProfile("Please verify your email before making your profile visible.");
+          return;
+        }
+      }
+
+      state.discoverableProfile = wantsPublic;
+      state.publicProfileVisible = wantsPublic;
       state = persistPatch({
-        discoverableProfile: state.discoverableProfile,
-        publicProfileVisible: state.publicProfileVisible
+        discoverableProfile: wantsPublic,
+        publicProfileVisible: wantsPublic
       });
+
+      if (!wantsPublic) {
+        const user = await waitForAuthUser();
+        if (user) {
+          try {
+            await deleteDoc(doc(db, "publicProfiles", user.uid));
+            console.log("[Soulink] Public tester profile disabled from checkbox");
+          } catch (err) {
+            console.warn("[Soulink] Public tester profile delete skipped", err);
+          }
+        }
+      }
     });
   }
 
@@ -1253,9 +1291,20 @@ import {
       payload.publicProfileVisible = !!discoverableEl.checked;
     }
 
+    if (payload.discoverableProfile && user) {
+      const verified = await refreshEmailVerification(user);
+
+      if (!verified) {
+        payload.discoverableProfile = false;
+        payload.publicProfileVisible = false;
+        forcePrivateProfile("Please verify your email before making your profile visible.");
+      }
+    }
+
     console.log("[Soulink] Save payload discoverable:", {
       checked: discoverableEl ? discoverableEl.checked : null,
-      payloadDiscoverable: payload.discoverableProfile
+      payloadDiscoverable: payload.discoverableProfile,
+      emailVerified: user ? !!(auth.currentUser || user).emailVerified : null
     });
 
     state = normaliseStateFromRaw(Object.assign({}, state, payload));
