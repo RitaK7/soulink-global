@@ -712,6 +712,47 @@ import {
     const wantsPublic = !!(profilePayload && profilePayload.discoverableProfile);
     const publicRef = doc(db, "publicProfiles", user.uid);
 
+    // Email verification gate:
+    // users can save private profile, but cannot appear in Match/publicProfiles
+    // until their email is verified.
+    if (wantsPublic && !user.emailVerified) {
+      try {
+        await deleteDoc(publicRef);
+      } catch (err) {
+        console.warn("[Soulink] Public tester profile cleanup skipped for unverified user", err);
+      }
+
+      state.discoverableProfile = false;
+      state.publicProfileVisible = false;
+
+      persistPatch({
+        discoverableProfile: false,
+        publicProfileVisible: false
+      });
+
+      if (ui.discoverableProfile) {
+        ui.discoverableProfile.checked = false;
+      }
+
+      showSaveStatus("Please verify your email before making your profile visible.", false);
+      console.warn("[Soulink] Public profile blocked: email not verified");
+      return;
+    }
+
+    if (!wantsPublic) {
+      try {
+        await deleteDoc(publicRef);
+        console.log("[Soulink] Public tester profile disabled");
+      } catch (err) {
+        console.warn("[Soulink] Public tester profile delete skipped", err);
+      }
+      return;
+    }
+
+    await setDoc(publicRef, buildPublicProfilePayload(profilePayload, user), { merge: true });
+    console.log("[Soulink] Public tester profile synced");
+  }
+
     if (!wantsPublic) {
       try {
         await deleteDoc(publicRef);
