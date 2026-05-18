@@ -3,7 +3,8 @@ import { auth, db, storage } from "./firebase-config.js";
 import {
   onAuthStateChanged,
   signOut,
-  deleteUser
+  deleteUser,
+  sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
@@ -721,6 +722,23 @@ import {
     return !!(freshUser && freshUser.emailVerified);
   }
 
+  async function sendVerificationReminder(user) {
+    if (!user || user.emailVerified) return false;
+
+    try {
+      await sendEmailVerification(user, {
+        url: "https://soulink.global/login.html",
+        handleCodeInApp: false
+      });
+
+      console.log("[Soulink] Verification email resent to:", user.email);
+      return true;
+    } catch (err) {
+      console.warn("[Soulink] Verification email resend failed:", err);
+      return false;
+    }
+  }
+
   function forcePrivateProfile(reasonMessage) {
     state.discoverableProfile = false;
     state.publicProfileVisible = false;
@@ -1100,7 +1118,12 @@ import {
         const verified = await refreshEmailVerification(user);
 
         if (!verified) {
-          forcePrivateProfile("Please verify your email before making your profile visible.");
+          const resent = await sendVerificationReminder(user);
+          forcePrivateProfile(
+            resent
+              ? "Please verify your email first. We sent a new verification link. Check inbox or spam."
+              : "Please verify your email before making your profile visible. Log in again to resend the link."
+          );
           return;
         }
       }

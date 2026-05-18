@@ -78,51 +78,42 @@ if (form) {
       clearOldSoulData();
 
       await updateProfile(user, {
-  displayName: name
-});
-
-let verificationSent = false;
-
-try {
+        displayName: name
+      });
+      try {
   await sendEmailVerification(user, {
-    url: "https://soulink.global/login.html",
-    handleCodeInApp: false
+    url: "https://soulink.global/login.html"
   });
 
-  verificationSent = true;
-  console.log("[Soulink] Verification email sent to:", user.email);
+  console.log("[Soulink] Verification email sent");
 } catch (verifyErr) {
   console.warn("[Soulink] Verification email could not be sent:", verifyErr);
 }
+msg.textContent = "Account created ✓ Please check your email to verify your account. If you do not see it, check Spam/Junk.";
 
-await setDoc(doc(db, "users", user.uid), {
-  uid: user.uid,
-  name,
-  email,
-  emailVerified: user.emailVerified === true,
-  createdAt: serverTimestamp(),
-  updatedAt: serverTimestamp(),
-  profileCompleted: false
-});
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        name,
+        email,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        profileCompleted: false
+      });
 
-localStorage.setItem(
-  "soulinkUser",
-  JSON.stringify({
-    uid: user.uid,
-    name,
-    email
-  })
-);
+      localStorage.setItem(
+        "soulinkUser",
+        JSON.stringify({
+          uid: user.uid,
+          name,
+          email
+        })
+      );
 
-if (verificationSent) {
-  msg.textContent = "Account created ✓ Please check your email to verify your account.";
-} else {
-  msg.textContent = "Account created ✓ Verification email was not sent. You can still continue and we will fix verification next.";
-}
+      msg.textContent = "Account created successfully ✓";
 
       setTimeout(() => {
         window.location.href = "quiz.html";
-      }, 3500);
+      }, 1200);
     } catch (err) {
       console.error("[Soulink] Signup failed:", err);
       msg.textContent = err.message || "Signup failed. Please try again.";

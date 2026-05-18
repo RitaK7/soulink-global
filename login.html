@@ -11,12 +11,16 @@
     .wrap{max-width:420px;margin:10vh auto;padding:1.5rem;background:#014247;border-radius:16px;box-shadow:0 0 24px rgba(0,253,216,.45)}
     h1{margin:0 0 .75rem;color:#00fdd8;font-size:1.4rem;text-align:center}
     label{display:block;margin:.75rem 0 .25rem}
-    input{width:100%;padding:.7rem;border-radius:10px;border:0;background:#003c43;color:#eaffff}
+    input{width:100%;padding:.7rem;border-radius:10px;border:0;background:#003c43;color:#eaffff;box-sizing:border-box}
     button{width:100%;padding:.8rem;margin-top:1rem;border:0;border-radius:12px;background:#00fdd8;color:#003c43;font-weight:700;cursor:pointer}
     button:disabled{opacity:.6;cursor:not-allowed}
-    .note{font-size:.9rem;opacity:.9;margin:.5rem 0 0}
-    .msg{margin-top:.75rem;min-height:1.2rem;text-align:center}
+    .secondary-btn{background:transparent;color:#dff;border:1px solid rgba(0,253,216,.55)}
+    .note{font-size:.9rem;opacity:.9;margin:.5rem 0 0;line-height:1.45}
+    .msg{margin-top:.75rem;min-height:1.2rem;text-align:center;line-height:1.45}
+    .login-actions{display:none;margin-top:.75rem}
+    .login-actions.is-visible{display:block}
     footer{margin:2rem auto 1rem;text-align:center;color:#bff}
+    footer a{color:#00fdd8}
     nav{background:#002e30;box-shadow:0 0 12px rgba(0,253,216,.25)}
     nav .container{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 1rem}
     nav a{color:#dff;text-decoration:none;padding:.35rem .55rem;border-radius:10px}
@@ -39,21 +43,31 @@
     <h1>Welcome back</h1>
     <form id="loginForm" novalidate>
 
-  <label for="email">Email</label>
-  <input id="email" name="email" type="email" autocomplete="email" required />
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" autocomplete="email" required />
 
-  <label for="password">Password</label>
-  <input id="password" name="password" type="password" autocomplete="current-password" required />
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required />
 
-  <button id="loginBtn" type="submit">Log In</button>
+      <button id="loginBtn" type="submit">Log In</button>
 
-  <div id="msg" class="msg"></div>
+      <button id="forgotBtn" class="secondary-btn" type="button">Forgot password?</button>
 
-</form>
+      <div id="msg" class="msg"></div>
+
+      <div id="verificationActions" class="login-actions">
+        <p class="note">
+          You can continue privately, but your profile will not appear to other Soulink members until your email is verified.
+        </p>
+        <button id="resendVerificationBtn" class="secondary-btn" type="button">Resend verification email</button>
+        <button id="continuePrivateBtn" type="button">Continue privately</button>
+      </div>
+
+    </form>
   </main>
 
   <footer>© 2026 Soulink.global · Made with love · <a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a></footer>
 
-  <script type="module" src="login.js?v=20260511"></script>
+  <script type="module" src="login.js?v=20260518-verification-resend"></script>
 </body>
 </html>
