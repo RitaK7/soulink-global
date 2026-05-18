@@ -12,6 +12,11 @@ import {
   getStorage
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
+import {
+  initializeAppCheck,
+  ReCaptchaEnterpriseProvider
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyC5NOF2wAQM7-9SoEtm_9Mc3QuX0h2m1lg",
   authDomain: "soulink-342bb.firebaseapp.com",
@@ -22,6 +27,11 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
+initializeAppCheck(app, {
+  provider: new ReCaptchaEnterpriseProvider("6LePR-8sAAAAAHsPk7GPda0Z3b5Im0pdQ4f3n3Cq"),
+  isTokenAutoRefreshEnabled: true
+});
 
 const auth = getAuth(app);
 const db = getFirestore(app);
