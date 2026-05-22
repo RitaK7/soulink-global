@@ -1,20 +1,22 @@
-const CACHE_NAME = 'soulink-v1';
+const CACHE_NAME = "soulink-v2";
+
 const APP_SHELL = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  "/",
+  "/index.html",
+  "/manifest.json",
+  "/icon-192.png",
+  "/icon-512.png"
 ];
 
-self.addEventListener('install', (event) => {
+self.addEventListener("install", (event) => {
+  self.skipWaiting();
+
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
   );
-  self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
     Promise.all([
       caches.keys().then((keys) =>
@@ -29,27 +31,38 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-self.addEventListener('fetch', (event) => {
+self.addEventListener("fetch", (event) => {
   const request = event.request;
 
-  if (request.method !== 'GET') return;
+  if (request.method !== "GET") return;
 
   const url = new URL(request.url);
 
   if (url.origin !== self.location.origin) return;
 
-  if (request.mode === 'navigate') {
+  const isHtml =
+    request.mode === "navigate" ||
+    request.destination === "document";
+
+  const isCodeAsset =
+    request.destination === "script" ||
+    request.destination === "style" ||
+    url.pathname.endsWith(".js") ||
+    url.pathname.endsWith(".css") ||
+    url.pathname.endsWith(".html");
+
+  if (isHtml || isCodeAsset) {
     event.respondWith(
       fetch(request)
         .then((response) => {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put('/index.html', copy);
+            cache.put(request, copy);
           });
           return response;
         })
         .catch(() =>
-          caches.match(request).then((r) => r || caches.match('/index.html'))
+          caches.match(request).then((cached) => cached || caches.match("/index.html"))
         )
     );
     return;
