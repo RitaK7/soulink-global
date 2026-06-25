@@ -1,4 +1,5 @@
 import { auth, db } from "./firebase-config.js";
+
 import {
   createUserWithEmailAndPassword,
   updateProfile,
@@ -45,22 +46,28 @@ if (form) {
     const agree = document.getElementById("agree").checked;
 
     if (!name) {
-      msg.textContent = "Please enter your name";
+      msg.textContent = "Please enter your name.";
       return;
     }
 
     if (!email) {
-      msg.textContent = "Please enter your email";
+      msg.textContent = "Please enter your email.";
+      return;
+    }
+
+    if (!password) {
+      msg.textContent = "Please enter a password.";
       return;
     }
 
     if (password !== confirm) {
-      msg.textContent = "Passwords do not match";
+      msg.textContent = "Passwords do not match.";
       return;
     }
 
     if (!agree) {
-      msg.textContent = "Please read and accept the Terms of Use and Privacy Policy before creating your account.";
+      msg.textContent =
+        "Please read and accept the Terms of Use and Privacy Policy before creating your account.";
       return;
     }
 
@@ -80,16 +87,6 @@ if (form) {
       await updateProfile(user, {
         displayName: name
       });
-      try {
-  await sendEmailVerification(user, {
-    url: "https://soulink.global/login.html"
-  });
-
-  console.log("[Soulink] Verification email sent");
-} catch (verifyErr) {
-  console.warn("[Soulink] Verification email could not be sent:", verifyErr);
-}
-msg.textContent = "Account created ✓ Please check your email to verify your account. If you do not see it, check Spam/Junk.";
 
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
@@ -109,11 +106,28 @@ msg.textContent = "Account created ✓ Please check your email to verify your ac
         })
       );
 
-      msg.textContent = "Account created successfully ✓";
+      try {
+        await sendEmailVerification(user, {
+          url: "https://soulink.global/login.html"
+        });
+
+        console.log("[Soulink] Verification email sent to:", email);
+
+        msg.textContent =
+          `Account created ✓ We've sent a verification link to ${email}. ` +
+          "It can take up to 2 minutes and may land in your Spam, Junk or Promotions folder — please check there first. " +
+          "You can still explore Soulink while you wait. Public visibility in Match unlocks once your email is verified.";
+      } catch (verifyErr) {
+        console.warn("[Soulink] Verification email could not be sent:", verifyErr);
+
+        msg.textContent =
+          "Account created ✓ but the verification email could not be sent right now. " +
+          "You can still explore Soulink privately, but public visibility in Match will unlock only after your email is verified.";
+      }
 
       setTimeout(() => {
         window.location.href = "quiz.html";
-      }, 1200);
+      }, 6500);
     } catch (err) {
       console.error("[Soulink] Signup failed:", err);
       msg.textContent = err.message || "Signup failed. Please try again.";
