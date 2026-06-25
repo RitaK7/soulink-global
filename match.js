@@ -800,7 +800,7 @@
     if (!hasMatch) {
       if (ui.snapshotTitle) ui.snapshotTitle.textContent = "No match selected yet";
       if (ui.snapshotScore) ui.snapshotScore.textContent = "–%";
-      if (ui.snapshotBody) ui.snapshotBody.textContent = "Tap a card in the Match Lab to see a gentle compatibility portrait — love language, values, joys, and symbolic astro & numbers.";
+      if (ui.snapshotBody) ui.snapshotBody.textContent = "Tap a card above to see a gentle compatibility portrait — love language, values, joys, and symbolic astro and numbers.";
       if (ui.snapshotFocus) ui.snapshotFocus.textContent = "Romantic & Friendship";
       if (ui.snapshotHighlight) ui.snapshotHighlight.textContent = "Scores are information, not fate. Communication and boundaries matter more than any number.";
       return;
