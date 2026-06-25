@@ -542,6 +542,42 @@
         color: #00fdd8;
       }
 
+
+      .journey-strip {
+        margin: 0 0 0.9rem;
+        padding: 0.5rem 0.8rem;
+        border: 1px solid rgba(0, 253, 216, 0.35);
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.42);
+        color: rgba(235, 255, 252, 0.92);
+        font-size: 0.78rem;
+        line-height: 1.35;
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.32rem;
+        box-shadow: 0 0 14px rgba(0, 253, 216, 0.16);
+      }
+
+      .journey-strip strong,
+      .journey-current {
+        color: #00fdd8;
+        font-weight: 800;
+        text-shadow: 0 0 10px rgba(0, 253, 216, 0.5);
+      }
+
+      .journey-step {
+        opacity: 0.72;
+      }
+
+      @media (max-width: 560px) {
+        .journey-strip {
+          border-radius: 16px;
+          font-size: 0.74rem;
+          display: flex;
+        }
+      }
+
       /* --- Footer alignment for quiz --- */
 
       .quiz-page + .footer-note {
@@ -598,6 +634,14 @@
       <div class="page-inner">
         <section class="page-hero glass-card">
           <div class="page-hero-text">
+            <div class="journey-strip" aria-label="Soulink journey">
+              <strong>Step 3 of 5</strong>
+              <span>·</span><span class="journey-step">Account</span>
+              <span>·</span><span class="journey-step">Verify</span>
+              <span>·</span><span class="journey-current">Quiz</span>
+              <span>·</span><span class="journey-step">My Soul</span>
+              <span>·</span><span class="journey-step">Match</span>
+            </div>
             <h1 class="page-title section-title">Soulink Quiz</h1>
             <p class="page-subtitle hint">
               Build your private Soulink profile in about 5–8 minutes.
