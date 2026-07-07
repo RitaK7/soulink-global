@@ -192,6 +192,62 @@
     "Receiving Gifts",
   ];
 
+  const LIFE_PATH_DESCRIPTIONS = {
+    1: {
+      title: "1 — The Pioneer",
+      text: "Independent, brave and original. You are here to create your own path and learn healthy leadership. In connection, you need respect, freedom and someone who believes in your direction."
+    },
+    2: {
+      title: "2 — The Harmonizer",
+      text: "Sensitive, intuitive and diplomatic. You naturally feel the emotional atmosphere around you. In connection, you need gentleness, loyalty and emotional safety."
+    },
+    3: {
+      title: "3 — The Creative Soul",
+      text: "Expressive, playful and imaginative. Your gift is bringing light through words, beauty, humor or art. In connection, you need joy, openness and room to be yourself."
+    },
+    4: {
+      title: "4 — The Builder",
+      text: "Grounded, loyal and practical. You value honesty, structure and long-term trust. In connection, you need reliability, consistency and a shared sense of building something real."
+    },
+    5: {
+      title: "5 — The Free Spirit",
+      text: "Curious, adventurous and growth-oriented. You are here to explore life, change and new experiences. In connection, you need closeness without control and freedom without emotional distance."
+    },
+    6: {
+      title: "6 — The Nurturer",
+      text: "Caring, protective and heart-centered. You often bring warmth, beauty and responsibility into relationships. In connection, you need appreciation, tenderness and mutual support."
+    },
+    7: {
+      title: "7 — The Seeker",
+      text: "Thoughtful, intuitive and drawn to deeper meaning. You may need solitude, reflection and spiritual or intellectual depth. In connection, you need honesty and someone who respects your inner world."
+    },
+    8: {
+      title: "8 — The Manifestor",
+      text: "Strong, ambitious and connected to real-world results. You are here to learn power, responsibility and balance between success and the heart. In connection, you need respect, loyalty and shared growth."
+    },
+    9: {
+      title: "9 — The Humanitarian",
+      text: "Compassionate, wise and emotionally deep. You may feel called to create something meaningful or help others. In connection, you need sincerity, maturity and shared values."
+    },
+    11: {
+      title: "11 — The Intuitive Messenger",
+      text: "Highly sensitive, visionary and spiritually aware. You may sense things that are difficult to explain. In connection, you need truth, inspiration and a soul-level bond."
+    },
+    22: {
+      title: "22 — The Master Builder",
+      text: "Visionary and practical at the same time. You carry potential to turn big dreams into something real. In connection, you need stability, purpose and someone who believes in your mission."
+    },
+    33: {
+      title: "33 — The Heart Teacher",
+      text: "Compassionate, healing and deeply heart-led. Your path may involve guiding, teaching or uplifting others. In connection, you need kindness, emotional depth and love that feels meaningful."
+    }
+  };
+
+  function getLifePathMeaning(value) {
+    const key = String(value == null ? "" : value).trim();
+    return LIFE_PATH_DESCRIPTIONS[key] || null;
+  }
+
   function normaliseLoveLanguageLabel(raw) {
     const s = normaliseText(raw);
     if (!s) return "";
@@ -603,6 +659,7 @@
     valuesChips: $("#valuesChips"),
 
     zodiacLine: $("#zodiacLine"),
+    lifePathMeaning: $("#lifePathMeaning"),
     zodiacChips: $("#zodiacChips"),
 
     refreshBtn: $("#scRefreshBtn"),
@@ -791,6 +848,10 @@
     if (!zodiac && !chinese && lp == null) {
       ui.zodiacLine.textContent =
         "Add your birthday in Quiz or Edit Profile to see your zodiac, Chinese sign and life path number here.";
+      if (ui.lifePathMeaning) {
+        ui.lifePathMeaning.textContent =
+          "Your Life Path meaning will appear here after you add your birthday.";
+      }
       if (ui.zodiacChips) ui.zodiacChips.textContent = "";
       return;
     }
@@ -801,6 +862,16 @@
     if (lp != null) parts.push("Life Path " + lp);
 
     ui.zodiacLine.textContent = name + " carries: " + parts.join(" • ") + ".";
+
+    if (ui.lifePathMeaning) {
+      const meaning = getLifePathMeaning(lp);
+      if (meaning) {
+        ui.lifePathMeaning.textContent = `${meaning.title}: ${meaning.text}`;
+      } else {
+        ui.lifePathMeaning.textContent =
+          "Add your birthday in Quiz or Edit Profile to reveal what your Life Path number means.";
+      }
+    }
 
     if (ui.zodiacChips) {
       ui.zodiacChips.textContent = "";
@@ -895,7 +966,15 @@
     if (topHobbies.length) pieces.push("Top joys: " + topHobbies.join(", ") + ".");
     if (zodiac) pieces.push("Zodiac: " + zodiac + ".");
     if (chinese) pieces.push("Chinese zodiac: " + chinese + ".");
-    if (lp != null && Number.isFinite(Number(lp))) pieces.push("Life path: " + lp + ".");
+    const lpMeaningForSummary = getLifePathMeaning(lp);
+    if (lp != null && Number.isFinite(Number(lp))) {
+      pieces.push(
+        "Life path: " +
+          lp +
+          (lpMeaningForSummary ? " — " + lpMeaningForSummary.title.replace(/^\\d+\\s+—\\s+/, "") : "") +
+          "."
+      );
+    }
 
     if (!pieces.length) {
       ui.scSummaryText.textContent =
