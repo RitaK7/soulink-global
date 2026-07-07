@@ -971,7 +971,7 @@
       pieces.push(
         "Life path: " +
           lp +
-          (lpMeaningForSummary ? " — " + lpMeaningForSummary.title.replace(/^\\d+\\s+—\\s+/, "") : "") +
+          (lpMeaningForSummary ? " — " + lpMeaningForSummary.title.replace(/^\d+\s+—\s+/, "") : "") +
           "."
       );
     }
