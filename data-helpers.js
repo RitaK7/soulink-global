@@ -41,7 +41,17 @@
       lifePathNumber: "",
       profilePhoto1: "",
       profilePhoto2: "",
-      profilePhoto3: ""
+      profilePhoto3: "",
+
+      // Optional public contact bridge while in-app messages are coming soon.
+      // Login email is never shared automatically; only fields the user enters here can be shown.
+      showPublicContact: false,
+      publicContactVisible: false,
+      publicEmail: "",
+      publicInstagram: "",
+      publicFacebook: "",
+      publicContactOther: "",
+      publicContact: {}
     };
 
     if (!data || typeof data !== "object") {

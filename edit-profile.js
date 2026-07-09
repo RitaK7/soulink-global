@@ -174,6 +174,11 @@ import {
     main3: $("#main3"),
 
     discoverableProfile: $("#discoverableProfile"),
+    showPublicContact: $("#showPublicContact"),
+    publicEmail: $("#publicEmail"),
+    publicInstagram: $("#publicInstagram"),
+    publicFacebook: $("#publicFacebook"),
+    publicContactOther: $("#publicContactOther"),
 
     backQuiz: $("#backQuiz"),
     saveBtn: $("#saveBtn"),
@@ -667,6 +672,32 @@ import {
     return value === true || value === "true" || value === 1 || value === "1";
   }
 
+  function publicContactFrom(data) {
+    const source = data && typeof data === "object" ? data : {};
+    const nested = source.publicContact && typeof source.publicContact === "object" ? source.publicContact : {};
+
+    return {
+      email: norm(source.publicEmail || source.publicContactEmail || source.contactEmail || nested.email),
+      instagram: norm(source.publicInstagram || source.instagram || nested.instagram),
+      facebook: norm(source.publicFacebook || source.facebook || nested.facebook),
+      other: norm(source.publicContactOther || source.contactOther || nested.other)
+    };
+  }
+
+  function hasPublicContact(contact) {
+    const c = contact && typeof contact === "object" ? contact : {};
+    return !!(norm(c.email) || norm(c.instagram) || norm(c.facebook) || norm(c.other));
+  }
+
+  function firstPublicContact(contact) {
+    const c = contact && typeof contact === "object" ? contact : {};
+    if (norm(c.email)) return { platform: "Email", value: norm(c.email) };
+    if (norm(c.instagram)) return { platform: "Instagram", value: norm(c.instagram) };
+    if (norm(c.facebook)) return { platform: "Facebook", value: norm(c.facebook) };
+    if (norm(c.other)) return { platform: "Contact", value: norm(c.other) };
+    return { platform: "", value: "" };
+  }
+
   function bestPublicPhoto(data) {
     if (!data || typeof data !== "object") return "";
     const slot = Number(data.mainPhotoSlot || data.primaryPhotoSlot || 1);
@@ -678,6 +709,10 @@ import {
     const data = privateProfile && typeof privateProfile === "object" ? privateProfile : {};
     const displayName = norm(data.name || (user && user.displayName) || "Soulink tester");
     const publicPhoto = bestPublicPhoto(data);
+
+    const publicContact = publicContactFrom(data);
+    const showPublicContact = !!(boolFromAny(data.showPublicContact || data.publicContactVisible || data.sharePublicContact) && hasPublicContact(publicContact));
+    const firstContact = showPublicContact ? firstPublicContact(publicContact) : { platform: "", value: "" };
 
     return {
       uid: user.uid,
@@ -703,6 +738,18 @@ import {
       publicPhoto,
       profilePhoto1: publicPhoto,
       shortAbout: norm(data.about || data.aboutMe || data.soulSummary).slice(0, 280),
+
+      // Optional contact bridge while in-app messages are coming soon.
+      showPublicContact,
+      publicContactVisible: showPublicContact,
+      publicContact: showPublicContact ? publicContact : {},
+      publicEmail: showPublicContact ? publicContact.email : "",
+      publicInstagram: showPublicContact ? publicContact.instagram : "",
+      publicFacebook: showPublicContact ? publicContact.facebook : "",
+      publicContactOther: showPublicContact ? publicContact.other : "",
+      contactPlatform: firstContact.platform,
+      contactHandle: firstContact.value,
+
       updatedAt: serverTimestamp()
     };
   }
@@ -1003,6 +1050,16 @@ import {
     out.mantra = norm(raw.mantra);
     out.spiritualBeliefs = norm(raw.spiritualBeliefs);
     out.soulSummary = norm(raw.soulSummary);
+
+    const contact = publicContactFrom(raw);
+    out.publicEmail = contact.email;
+    out.publicInstagram = contact.instagram;
+    out.publicFacebook = contact.facebook;
+    out.publicContactOther = contact.other;
+    out.publicContact = contact;
+    out.showPublicContact = boolFromAny(raw.showPublicContact || raw.publicContactVisible || raw.sharePublicContact);
+    out.publicContactVisible = !!(out.showPublicContact && hasPublicContact(contact));
+
     out.discoverableProfile = boolFromAny(raw.discoverableProfile || raw.discoverable || raw.showInDiscovery || raw.publicProfileVisible);
     out.profilePhoto1 = norm(raw.profilePhoto1);
     out.profilePhoto2 = norm(raw.profilePhoto2);
@@ -1022,6 +1079,8 @@ import {
   function collectPayloadFromState() {
     const love = normaliseLoveLanguages(state.loveLanguages, state.loveLanguages[0]);
     const birthdayInfo = computeBirthdayInfo(state.birthday);
+    const publicContact = publicContactFrom(state);
+    const publicContactVisible = !!(state.showPublicContact && hasPublicContact(publicContact));
 
     return {
       name: norm(state.name),
@@ -1057,6 +1116,15 @@ import {
       mantra: norm(state.mantra),
       spiritualBeliefs: norm(state.spiritualBeliefs),
       soulSummary: norm(state.soulSummary),
+
+      showPublicContact: !!state.showPublicContact,
+      publicContactVisible,
+      publicContact,
+      publicEmail: publicContact.email,
+      publicInstagram: publicContact.instagram,
+      publicFacebook: publicContact.facebook,
+      publicContactOther: publicContact.other,
+
       discoverableProfile: !!state.discoverableProfile,
       publicProfileVisible: !!state.discoverableProfile,
       profilePhoto1: norm(state.profilePhoto1),
@@ -1073,6 +1141,11 @@ import {
     if (ui.birthday) ui.birthday.value = state.birthday || "";
     if (ui.boundaries) ui.boundaries.value = state.unacceptable || "";
     if (ui.aboutMe) ui.aboutMe.value = state.about || "";
+    if (ui.showPublicContact) ui.showPublicContact.checked = !!state.showPublicContact;
+    if (ui.publicEmail) ui.publicEmail.value = state.publicEmail || "";
+    if (ui.publicInstagram) ui.publicInstagram.value = state.publicInstagram || "";
+    if (ui.publicFacebook) ui.publicFacebook.value = state.publicFacebook || "";
+    if (ui.publicContactOther) ui.publicContactOther.value = state.publicContactOther || "";
     if (ui.discoverableProfile) ui.discoverableProfile.checked = !!state.discoverableProfile;
   }
 
@@ -1148,6 +1221,28 @@ import {
       }
     });
   }
+
+  function bindPublicContact() {
+    if (ui.showPublicContact) {
+      ui.showPublicContact.checked = !!state.showPublicContact;
+      ui.showPublicContact.addEventListener("change", () => {
+        state.showPublicContact = !!ui.showPublicContact.checked;
+        const publicContact = publicContactFrom(state);
+        state.publicContactVisible = !!(state.showPublicContact && hasPublicContact(publicContact));
+        state = persistPatch({
+          showPublicContact: state.showPublicContact,
+          publicContactVisible: state.publicContactVisible
+        });
+        updatePreview();
+      });
+    }
+
+    bindText(ui.publicEmail, "publicEmail");
+    bindText(ui.publicInstagram, "publicInstagram");
+    bindText(ui.publicFacebook, "publicFacebook");
+    bindText(ui.publicContactOther, "publicContactOther");
+  }
+
 
   function initChips() {
     buildSingleChips(ui.connectionChips, CONNECTION_TYPE_LABELS, state.connectionType, (lbl) => {
@@ -1297,14 +1392,21 @@ import {
     // Hard sync checkbox from DOM before collecting payload.
     // This prevents old state/localStorage from overriding the visible checkbox.
     const discoverableEl = document.getElementById("discoverableProfile");
+    const contactEl = document.getElementById("showPublicContact");
     if (discoverableEl) {
       state.discoverableProfile = !!discoverableEl.checked;
       state.publicProfileVisible = !!discoverableEl.checked;
-      writeSoulRaw(Object.assign({}, state, {
-        discoverableProfile: state.discoverableProfile,
-        publicProfileVisible: state.publicProfileVisible
-      }));
     }
+    if (contactEl) {
+      state.showPublicContact = !!contactEl.checked;
+      state.publicContactVisible = !!(state.showPublicContact && hasPublicContact(publicContactFrom(state)));
+    }
+    writeSoulRaw(Object.assign({}, state, {
+      discoverableProfile: state.discoverableProfile,
+      publicProfileVisible: state.publicProfileVisible,
+      showPublicContact: !!state.showPublicContact,
+      publicContactVisible: !!state.publicContactVisible
+    }));
 
     const payload = collectPayloadFromState();
 
@@ -1552,6 +1654,7 @@ if (topNextSoul) {
     bindText(ui.boundaries, "unacceptable");
     bindText(ui.aboutMe, "about");
     bindDiscoverableProfile();
+    bindPublicContact();
 
     initChips();
     initTagGroups();

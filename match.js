@@ -201,6 +201,49 @@
     return Math.max(a, Math.min(b, x));
   }
 
+  function boolFromAny(value) {
+    return value === true || value === "true" || value === 1 || value === "1";
+  }
+
+  function addContact(list, label, value) {
+    const clean = normaliseText(value);
+    if (!clean) return;
+    const key = (normaliseText(label) + ":" + clean).toLowerCase();
+    if (list.some((item) => (item.label + ":" + item.value).toLowerCase() === key)) return;
+    list.push({ label: normaliseText(label) || "Contact", value: clean });
+  }
+
+  function getPublicContacts(person) {
+    const p = person && typeof person === "object" ? person : {};
+    const list = [];
+
+    // Legacy demo/contactHandle support.
+    const legacyHandle = normaliseText(p.contactHandle || (p.contact && p.contact.handle));
+    const legacyPlatform = normaliseText(p.contactPlatform || (p.contact && p.contact.platform)) || "Contact";
+    if (legacyHandle && (p.source !== "public-profile" || boolFromAny(p.showPublicContact || p.publicContactVisible))) {
+      addContact(list, legacyPlatform, legacyHandle);
+    }
+
+    const visible = boolFromAny(p.showPublicContact || p.publicContactVisible || p.sharePublicContact);
+    if (!visible) return list;
+
+    const c = p.publicContact && typeof p.publicContact === "object" ? p.publicContact : {};
+    addContact(list, "Email", p.publicEmail || p.publicContactEmail || c.email);
+    addContact(list, "Instagram", p.publicInstagram || p.instagram || c.instagram);
+    addContact(list, "Facebook", p.publicFacebook || p.facebook || c.facebook);
+    addContact(list, "Contact", p.publicContactOther || p.contactOther || c.other);
+    return list;
+  }
+
+  function formatContactsForCopy(person) {
+    return getPublicContacts(person).map((item) => item.label + ": " + item.value).join("\n");
+  }
+
+  function getContactPlatform(match) {
+    const contacts = getPublicContacts(match);
+    return contacts.length ? contacts[0].label : "";
+  }
+
   function isContactLike(strRaw) {
     const str = normaliseText(strRaw).toLowerCase();
     if (!str) return false;
@@ -406,12 +449,8 @@
   }
 
   function getContactHandle(match) {
-    if (!match || typeof match !== "object") return "";
-    const a = normaliseText(match.contactHandle);
-    if (a) return a;
-    const b = normaliseText(match.contact && match.contact.handle);
-    if (b) return b;
-    return "";
+    const contacts = getPublicContacts(match);
+    return contacts.length ? contacts[0].value : "";
   }
 
   function stableIdForMatch(match) {
@@ -527,8 +566,15 @@
       chineseZodiac: normaliseText(p.chineseZodiac),
       lifePathNumber: toLifePath(p.lifePathNumber || p.lifePath),
       publicPhoto: normaliseText(p.publicPhoto || p.profilePhoto1),
-      contactHandle: null,
-      contactPlatform: null
+      showPublicContact: boolFromAny(p.showPublicContact || p.publicContactVisible),
+      publicContactVisible: boolFromAny(p.publicContactVisible || p.showPublicContact),
+      publicContact: p.publicContact && typeof p.publicContact === "object" ? p.publicContact : {},
+      publicEmail: normaliseText(p.publicEmail || p.publicContactEmail),
+      publicInstagram: normaliseText(p.publicInstagram || p.instagram),
+      publicFacebook: normaliseText(p.publicFacebook || p.facebook),
+      publicContactOther: normaliseText(p.publicContactOther || p.contactOther),
+      contactHandle: normaliseText(p.contactHandle),
+      contactPlatform: normaliseText(p.contactPlatform)
     };
   }
 
@@ -663,8 +709,16 @@
       chineseZodiac: normaliseText(match.chineseZodiac) || null,
       lifePathNumber: toLifePath(match.lifePathNumber),
       publicPhoto: normaliseText(match.publicPhoto || match.profilePhoto1) || null,
+      showPublicContact: !!getPublicContacts(match).length,
+      publicContactVisible: !!getPublicContacts(match).length,
+      publicContact: match.publicContact && typeof match.publicContact === "object" ? match.publicContact : {},
+      publicEmail: normaliseText(match.publicEmail || match.publicContactEmail) || null,
+      publicInstagram: normaliseText(match.publicInstagram || match.instagram) || null,
+      publicFacebook: normaliseText(match.publicFacebook || match.facebook) || null,
+      publicContactOther: normaliseText(match.publicContactOther || match.contactOther) || null,
       contactHandle: normaliseText(getContactHandle(match)) || null,
-      contactPlatform: normaliseText(match.contactPlatform) || null,
+      contactPlatform: normaliseText(getContactPlatform(match) || match.contactPlatform) || null,
+      contactSummary: formatContactsForCopy(match) || null,
       createdAt: new Date().toISOString(),
     };
 
@@ -1074,21 +1128,20 @@
 
     actions.appendChild(viewBtn);
 
-    const contact = getContactHandle(match);
-    if (contact) {
+    const contactText = formatContactsForCopy(match);
+    if (contactText) {
       const msgBtn = document.createElement("button");
       msgBtn.type = "button";
       msgBtn.className = "btn outline";
-      msgBtn.textContent = "Message";
-      msgBtn.setAttribute("aria-label", "Copy contact handle for " + (normaliseText(match.name) || "this match"));
+      msgBtn.textContent = "Contact";
+      msgBtn.setAttribute("aria-label", "Copy public contact for " + (normaliseText(match.name) || "this match"));
       msgBtn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        copyToClipboard(contact).then((ok) => {
-          const platform = normaliseText(match.contactPlatform) || "Contact";
-          const text = platform + ": " + contact;
-          if (!ok) alert(text);
-          else alert("Copied: " + text);
+        copyToClipboard(contactText).then((ok) => {
+          const intro = "Messages are coming soon. This member shared:\n";
+          if (!ok) alert(intro + contactText);
+          else alert("Copied public contact:\n" + contactText);
         });
       });
       actions.appendChild(msgBtn);

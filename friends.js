@@ -83,6 +83,86 @@
     return n;
   }
 
+  function boolFromAny(value) {
+    return value === true || value === "true" || value === 1 || value === "1";
+  }
+
+  function addContact(list, label, value) {
+    const clean = normaliseText(value);
+    if (!clean) return;
+    const key = (normaliseText(label) + ":" + clean).toLowerCase();
+    if (list.some((item) => (item.label + ":" + item.value).toLowerCase() === key)) return;
+    list.push({ label: normaliseText(label) || "Contact", value: clean });
+  }
+
+  function getPublicContacts(friend) {
+    const f = friend && typeof friend === "object" ? friend : {};
+    const list = [];
+
+    const legacyHandle = normaliseText(f.contactHandle || (f.contact && f.contact.handle));
+    const legacyPlatform = normaliseText(f.contactPlatform || (f.contact && f.contact.platform)) || "Contact";
+    if (legacyHandle) addContact(list, legacyPlatform, legacyHandle);
+
+    const visible = boolFromAny(f.showPublicContact || f.publicContactVisible || f.sharePublicContact) || !!legacyHandle;
+    if (!visible) return list;
+
+    const c = f.publicContact && typeof f.publicContact === "object" ? f.publicContact : {};
+    addContact(list, "Email", f.publicEmail || f.publicContactEmail || c.email);
+    addContact(list, "Instagram", f.publicInstagram || f.instagram || c.instagram);
+    addContact(list, "Facebook", f.publicFacebook || f.facebook || c.facebook);
+    addContact(list, "Contact", f.publicContactOther || f.contactOther || c.other);
+    return list;
+  }
+
+  function formatContactsForCopy(friend) {
+    return getPublicContacts(friend).map((item) => item.label + ": " + item.value).join("\n");
+  }
+
+  function copyToClipboard(text) {
+    const clean = normaliseText(text);
+    if (!clean) return Promise.resolve(false);
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      return navigator.clipboard.writeText(clean).then(() => true).catch(() => false);
+    }
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = clean;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return Promise.resolve(!!ok);
+    } catch (_err) {
+      return Promise.resolve(false);
+    }
+  }
+
+  function createPublicContactBlock(friend) {
+    const contacts = getPublicContacts(friend);
+    const wrap = document.createElement("div");
+    wrap.className = "friends-contact-note";
+
+    const title = document.createElement("div");
+    title.className = "friends-contact-title";
+    title.textContent = "Contact";
+
+    const line = document.createElement("div");
+    line.className = "friends-contact-line";
+    if (contacts.length) {
+      line.textContent = "Messages are coming soon. This member shared: " +
+        contacts.map((item) => item.label + ": " + item.value).join(" • ");
+    } else {
+      line.textContent = "Messages are coming soon. This member has not shared a public contact method yet.";
+    }
+
+    wrap.appendChild(title);
+    wrap.appendChild(line);
+    return wrap;
+  }
+
   // ===================== Soul data helpers =====================
 
   function safeGetSoulData() {
@@ -758,6 +838,8 @@
     desc.className = "friends-description";
     desc.textContent = buildConnectionDescription(friend);
 
+    const contactBlock = createPublicContactBlock(friend);
+
     const actions = document.createElement("div");
     actions.className = "friends-card-actions";
 
@@ -767,6 +849,23 @@
     viewBtn.href = idForLink ? "match-profile.html#id=" + idForLink : "match-profile.html";
     viewBtn.textContent = "View Match Profile";
 
+    const contactText = formatContactsForCopy(friend);
+    let contactBtn = null;
+    if (contactText) {
+      contactBtn = document.createElement("button");
+      contactBtn.className = "btn";
+      contactBtn.type = "button";
+      contactBtn.textContent = "Copy Contact";
+      contactBtn.addEventListener("click", function () {
+        copyToClipboard(contactText).then(function (ok) {
+          if (!ok) {
+            window.alert("Messages are coming soon. This member shared:\n" + contactText);
+          } else {
+            window.alert("Copied public contact:\n" + contactText);
+          }
+        });
+      });
+    }
 
     const removeBtn = document.createElement("button");
     removeBtn.className = "friends-remove-btn";
@@ -777,10 +876,12 @@
     });
 
     actions.appendChild(viewBtn);
+    if (contactBtn) actions.appendChild(contactBtn);
     actions.appendChild(removeBtn);
 
     inner.appendChild(top);
     inner.appendChild(desc);
+    inner.appendChild(contactBlock);
     inner.appendChild(actions);
 
     card.appendChild(inner);
