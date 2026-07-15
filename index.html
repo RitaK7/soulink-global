@@ -20,6 +20,11 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" href="/favicon.ico">
   <meta name="theme-color" content="#00fdd8">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Soulink">
+  <link rel="apple-touch-icon" href="/icon-192.png">
 
   <script src="auth.js" defer></script>
 
@@ -405,6 +410,38 @@
       line-height:1.65;
     }
 
+    .install-actions {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:.75rem;
+      margin:1.25rem auto .35rem;
+    }
+
+    .install-btn[disabled] {
+      cursor:wait;
+      opacity:.66;
+      transform:none;
+      box-shadow:none;
+    }
+
+    .install-status {
+      min-height:1.5em;
+      max-width:720px;
+      margin:0;
+      color:var(--muted);
+      line-height:1.55;
+    }
+
+    .install-status.success {
+      color:var(--accent);
+      font-weight:800;
+    }
+
+    .install-note strong {
+      color:#fff;
+    }
+
     footer {
       margin-top:3rem;
       padding:1.2rem;
@@ -652,23 +689,35 @@
       </p>
     </section>
 
-    <section class="section-card install-card">
+    <section class="section-card install-card" id="install-soulink">
       <h2>Want Soulink on your phone?</h2>
 
       <p class="intro">
-        You can add Soulink to your home screen after trying your profile.
+        Install Soulink on your home screen and open it with one tap — almost like a regular app.
       </p>
 
+      <div class="install-actions">
+        <button class="btn install-btn" id="installAppBtn" type="button" disabled>
+          Preparing install…
+        </button>
+
+        <p class="install-status" id="installStatus" role="status" aria-live="polite">
+          Checking whether this device can install Soulink…
+        </p>
+      </div>
+
       <div class="install-grid">
-        <div class="install-note">
+        <div class="install-note" id="androidInstallNote">
           📱 <strong>Android:</strong><br>
-          tap ⋮ in your browser → <strong>Install app</strong><br>
-          or → <strong>Add to Home screen</strong>
+          tap the turquoise <strong>Install Soulink</strong> button above.<br>
+          If installation is unavailable, use your browser menu and choose
+          <strong>Install app</strong> or <strong>Add to Home screen</strong>.
         </div>
 
-        <div class="install-note">
+        <div class="install-note" id="iosInstallNote">
           🍎 <strong>iPhone / iPad:</strong><br>
-          tap Share ⬆️ → <strong>Add to Home Screen</strong>
+          open Soulink in Safari, tap Share ⬆️, then choose
+          <strong>Add to Home Screen</strong>.
         </div>
       </div>
     </section>
@@ -684,16 +733,130 @@
   </footer>
 
   <script>
+    // Register the service worker so Soulink can qualify as an installable PWA.
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/sw.js', { scope: '/' })
-        .then((reg) => {
-          console.log('SW registered', reg);
-        })
-        .catch((err) => {
-          console.error('SW registration failed', err);
-        });
+      window.addEventListener('load', () => {
+        navigator.serviceWorker
+          .register('/sw.js', { scope: '/' })
+          .then((reg) => {
+            console.log('SW registered', reg);
+            reg.update().catch(() => {});
+          })
+          .catch((err) => {
+            console.error('SW registration failed', err);
+          });
+      });
     }
+
+    // Custom PWA installation flow.
+    (() => {
+      const installButton = document.getElementById('installAppBtn');
+      const installStatus = document.getElementById('installStatus');
+
+      if (!installButton || !installStatus) return;
+
+      let deferredInstallPrompt = null;
+
+      const ua = navigator.userAgent || '';
+      const isIOS = /iPad|iPhone|iPod/i.test(ua);
+      const isAndroid = /Android/i.test(ua);
+      const isStandalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true;
+
+      const setStatus = (message, success = false) => {
+        installStatus.textContent = message;
+        installStatus.classList.toggle('success', success);
+      };
+
+      const showInstalledState = () => {
+        installButton.hidden = true;
+        setStatus('✓ Soulink is already installed on this device.', true);
+      };
+
+      if (isStandalone) {
+        showInstalledState();
+        return;
+      }
+
+      installButton.hidden = false;
+
+      if (isIOS) {
+        installButton.disabled = false;
+        installButton.textContent = 'How to add Soulink';
+        setStatus('On iPhone or iPad, use Safari: Share ⬆️ → Add to Home Screen.');
+      } else {
+        installButton.disabled = true;
+        installButton.textContent = 'Preparing install…';
+        setStatus('Waiting for your browser to make Soulink installable…');
+      }
+
+      window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+
+        installButton.hidden = false;
+        installButton.disabled = false;
+        installButton.textContent = 'Install Soulink';
+        setStatus('Soulink is ready to install.');
+      });
+
+      installButton.addEventListener('click', async () => {
+        if (deferredInstallPrompt) {
+          installButton.disabled = true;
+
+          try {
+            await deferredInstallPrompt.prompt();
+            const choice = await deferredInstallPrompt.userChoice;
+
+            if (choice.outcome === 'accepted') {
+              setStatus('Installing Soulink…', true);
+            } else {
+              installButton.disabled = false;
+              installButton.textContent = 'Install Soulink';
+              setStatus('Installation was cancelled. You can try again later.');
+            }
+          } catch (error) {
+            console.error('Install prompt failed', error);
+            installButton.disabled = false;
+            installButton.textContent = 'Install Soulink';
+            setStatus('The install window could not open. Reload the page and try once more.');
+          } finally {
+            deferredInstallPrompt = null;
+          }
+
+          return;
+        }
+
+        if (isIOS) {
+          setStatus('Open Soulink in Safari, tap Share ⬆️, then choose Add to Home Screen.');
+          return;
+        }
+
+        setStatus(
+          isAndroid
+            ? 'Open Soulink in Chrome, wait a moment, then use the browser menu → Install app or Add to Home screen.'
+            : 'Use your browser menu and choose Install app or Add to Home screen.'
+        );
+      });
+
+      window.addEventListener('appinstalled', () => {
+        deferredInstallPrompt = null;
+        showInstalledState();
+      });
+
+      // Do not leave the button looking frozen forever if the browser does not
+      // support beforeinstallprompt or the app is not yet considered installable.
+      window.setTimeout(() => {
+        if (!deferredInstallPrompt && !isIOS && !isStandalone) {
+          installButton.disabled = false;
+          installButton.textContent = 'How to install Soulink';
+          setStatus(
+            'If the Install Soulink window does not appear, reload once and use Chrome’s Install app or Add to Home screen option.'
+          );
+        }
+      }, 3500);
+    })();
   </script>
 
 </body>
