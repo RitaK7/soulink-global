@@ -702,16 +702,16 @@
         </button>
 
         <p class="install-status" id="installStatus" role="status" aria-live="polite">
-          Checking whether this device can install Soulink…
+          Tap once and keep this page open while Soulink prepares the install option…
         </p>
       </div>
 
       <div class="install-grid">
         <div class="install-note" id="androidInstallNote">
           📱 <strong>Android:</strong><br>
-          tap the turquoise <strong>Install Soulink</strong> button above.<br>
-          If installation is unavailable, use your browser menu and choose
-          <strong>Install app</strong> or <strong>Add to Home screen</strong>.
+          tap the turquoise button above and follow the message beneath it.<br>
+          Chrome may ask for one tap, about 30 seconds on the page, and one reload
+          before the real installation window becomes available.
         </div>
 
         <div class="install-note" id="iosInstallNote">
@@ -845,17 +845,55 @@
         showInstalledState();
       });
 
-      // Do not leave the button looking frozen forever if the browser does not
-      // support beforeinstallprompt or the app is not yet considered installable.
-      window.setTimeout(() => {
-        if (!deferredInstallPrompt && !isIOS && !isStandalone) {
+      // Chrome may require a little engagement before it offers installation:
+      // at least one tap/click and some time spent on the page. Guide the user
+      // through that instead of switching to a vague fallback after 3.5 seconds.
+      let firstInteractionTime = null;
+      let engagementTimer = null;
+
+      const beginEngagementCountdown = () => {
+        if (isIOS || isStandalone || deferredInstallPrompt || firstInteractionTime) return;
+
+        firstInteractionTime = Date.now();
+        installButton.disabled = true;
+        installButton.textContent = 'Preparing install…';
+        setStatus('Good — keep this page open for about 30 seconds. Soulink is preparing the install option.');
+
+        engagementTimer = window.setTimeout(() => {
+          if (deferredInstallPrompt || isStandalone) return;
+
           installButton.disabled = false;
-          installButton.textContent = 'How to install Soulink';
-          setStatus(
-            'If the Install Soulink window does not appear, reload once and use Chrome’s Install app or Add to Home screen option.'
-          );
+          installButton.textContent = 'Reload to enable install';
+          setStatus('Chrome may need one reload after the 30-second check. Tap the button, then return here.');
+        }, 32000);
+      };
+
+      ['pointerdown', 'touchstart', 'click'].forEach((eventName) => {
+        document.addEventListener(eventName, beginEngagementCountdown, {
+          once: true,
+          passive: true
+        });
+      });
+
+      installButton.addEventListener('click', () => {
+        if (
+          !deferredInstallPrompt &&
+          !isIOS &&
+          !isStandalone &&
+          installButton.textContent === 'Reload to enable install'
+        ) {
+          window.location.reload();
         }
-      }, 3500);
+      });
+
+      // Fallback for browsers that never dispatch beforeinstallprompt.
+      window.setTimeout(() => {
+        if (!deferredInstallPrompt && !isIOS && !isStandalone && !firstInteractionTime) {
+          installButton.disabled = false;
+          installButton.textContent = 'Tap to prepare install';
+          setStatus('Tap the button once, keep the page open for about 30 seconds, then reload when asked.');
+        }
+      }, 5000);
     })();
   </script>
 
